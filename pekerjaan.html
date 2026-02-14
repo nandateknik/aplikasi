@@ -3,75 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Order CRM</title>
+    <title>Work Order & Nota CRM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
-        .card { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        #map { height: 250px; border-radius: 15px; margin: 10px 0; border: 2px solid #fff; }
-        .is-valid-email { color: #198754; font-size: 0.8rem; display: none; }
-        .btn-register { display: none; margin-top: 5px; }
-        .price-box { background: #e9ecef; padding: 15px; border-radius: 10px; margin-top: 15px; }
+        body { background: #f4f7f6; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        #map { height: 250px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #ddd; }
+        .is-valid-email { color: #198754; font-size: 0.85rem; display: none; font-weight: 600; }
+        .btn-register { display: none; margin-top: 8px; }
+        .price-box { background: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #dee2e6; margin-top: 20px; }
+        .item-list { max-height: 200px; overflow-y: auto; margin-top: 10px; }
+        .badge-jasa { background: #eef2ff; color: #4e73df; border: 1px solid #4e73df; }
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
+<div class="loader-overlay" id="loader">
+    <div class="spinner-border text-primary" role="status"></div>
+    <span class="mt-2 fw-bold">Memproses Data...</span>
+</div>
+
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-7 col-lg-6">
             <div class="card p-4">
-                <h5 class="fw-bold mb-4 text-center">Buat Work Order</h5>
+                <h4 class="fw-bold mb-4 text-center text-primary"><i class="fas fa-file-invoice"></i> Buat Work Order</h4>
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Email Pelanggan</label>
                     <div class="input-group">
-                        <input type="email" id="email" class="form-control" placeholder="Cari email..." oninput="checkEmailDelay()">
-                        <span class="input-group-text bg-white" id="statusIcon"><i class="fas fa-search text-muted"></i></span>
+                        <span class="input-group-text bg-white"><i class="fas fa-envelope text-muted"></i></span>
+                        <input type="email" id="email" class="form-control" placeholder="Masukkan email pelanggan..." oninput="checkEmailDelay()">
+                        <span class="input-group-text bg-white" id="statusIcon"><i class="fas fa-search"></i></span>
                     </div>
-                    <div id="emailMsg" class="is-valid-email mt-1"><i class="fas fa-check-circle"></i> Pelanggan Terdaftar</div>
-                    <button id="btnReg" class="btn btn-sm btn-danger btn-register w-100" onclick="location.href='pelanggan.html'">Email tidak ada. Daftar Sekarang?</button>
+                    <div id="emailMsg" class="is-valid-email mt-2"><i class="fas fa-check-circle"></i> Pelanggan ditemukan di database</div>
+                    <button id="btnReg" class="btn btn-sm btn-outline-danger btn-register w-100" onclick="location.href='pelanggan.html'">
+                        Email tidak terdaftar. Klik untuk Daftar Baru
+                    </button>
                 </div>
 
-                <div class="form-check mb-3">
+                <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
-                    <label class="form-check-label small" for="syncAddress">Alamat sama dengan data pendaftaran</label>
+                    <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat sesuai data pendaftaran</label>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Titik Lokasi Pekerjaan</label>
                     <div id="map"></div>
-                    <textarea id="alamat" class="form-control" rows="2" placeholder="Detail alamat pekerjaan..."></textarea>
+                    <label class="form-label small text-muted">Detail Alamat Pekerjaan:</label>
+                    <textarea id="alamat" class="form-control" rows="2" placeholder="Alamat otomatis muncul saat pin digeser..."></textarea>
                     <input type="hidden" id="lat">
                     <input type="hidden" id="lang">
                 </div>
 
+                <hr>
+
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Jenis Jasa</label>
-                    <select id="jasaSelect" class="form-select" onchange="hitungTotal()">
-                        <option value="manual">-- Input Manual --</option>
-                    </select>
-                    <input type="number" id="jasaManual" class="form-control mt-2" placeholder="Input harga jasa (Rp)" oninput="hitungTotal()">
+                    <label class="form-label fw-bold">Tambah Jasa / Pekerjaan</label>
+                    <div class="input-group mb-2">
+                        <select id="jasaSelect" class="form-select">
+                            <option value="">-- Pilih dari Daftar Harga --</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="tambahJasaList()">Tambah</button>
+                    </div>
+                    <div class="input-group mb-2">
+                        <input type="text" id="manualNama" class="form-control w-50" placeholder="Nama Jasa Manual">
+                        <input type="number" id="manualHarga" class="form-control w-25" placeholder="Harga">
+                        <button class="btn btn-secondary" onclick="tambahJasaManual()">Manual</button>
+                    </div>
+                </div>
+
+                <div id="itemContainer" style="display:none;">
+                    <h6 class="fw-bold small">Daftar Item:</h6>
+                    <ul class="list-group item-list mb-3" id="itemList"></ul>
                 </div>
 
                 <div class="price-box">
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Jarak dari Kantor (5km free):</span>
-                        <span id="txtJarak">0 km</span>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span>Subtotal Jasa:</span>
+                        <span class="fw-bold" id="txtSubtotalJasa">Rp 0</span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Ongkos Bensin:</span>
-                        <span id="txtBensin">Rp 0</span>
+                    <div class="d-flex justify-content-between small mb-2">
+                        <span>Bensin (Jarak: <span id="valJarak">0</span> km):</span>
+                        <span class="fw-bold" id="txtBensin">Rp 0</span>
                     </div>
-                    <div class="d-flex justify-content-between fw-bold border-top pt-2">
-                        <span>TOTAL BIAYA:</span>
+                    <div class="d-flex justify-content-between fs-5 fw-bold border-top pt-2 text-primary">
+                        <span>TOTAL AKHIR:</span>
                         <span id="txtTotal">Rp 0</span>
                     </div>
                 </div>
 
-                <button class="btn btn-primary w-100 mt-4 p-3 fw-bold" onclick="simpanBooking()">SIMPAN WORK ORDER</button>
+                <button class="btn btn-primary w-100 mt-4 p-3 fw-bold shadow" onclick="simpanDataNota()">
+                    <i class="fas fa-save"></i> SIMPAN WORK ORDER & NOTA
+                </button>
             </div>
         </div>
     </div>
@@ -82,20 +109,26 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzu_BavPA7Y87dDJRyLBYv-rdFF5u-Ws93hBK3bW7_yv8Rai1FDTiG7pMFjY2dyhULz/exec';
-    const KANTOR_COORDS = { lat: -6.2000, lng: 106.8166 }; // Ganti koordinat kantor anda
-    let map, marker, pelangganData = null, timeoutCheck;
+    // --- KONFIGURASI ---
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwtYKeWb6iO5LB0j7c1S2d_TWQ6p7fAlJlD_7Inh1ejS24QFvFQtEqEHLroQPvXHfL_/exec';
+    const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; // Koordinat Kantor Anda
+    
+    let map, marker, timeoutCheck;
+    let pelangganData = null;
+    let selectedItems = [];
+    let bensinCost = 0;
 
     window.onload = () => {
         initMap();
         loadDaftarHarga();
     };
 
+    // --- LOGIKA MAP ---
     function initMap() {
         map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         
-        L.Control.geocoder({ defaultMarkGeocode: false }).on('markgeocode', function(e) {
+        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Cari Alamat..." }).on('markgeocode', function(e) {
             let center = e.geocode.center;
             map.setView(center, 16);
             marker.setLatLng(center);
@@ -107,9 +140,11 @@
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
-                map.setView([pos.coords.latitude, pos.coords.longitude], 15);
-                marker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
-                updateLocationInfo(pos.coords.latitude, pos.coords.longitude);
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                map.setView([lat, lng], 15);
+                marker.setLatLng([lat, lng]);
+                updateLocationInfo(lat, lng);
             });
         }
     }
@@ -120,11 +155,11 @@
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(res => res.json()).then(data => {
                 document.getElementById('alamat').value = data.display_name;
-                hitungTotal();
+                hitungBiaya();
             });
     }
 
-    // Cek Email Realtime (Debounce)
+    // --- VALIDASI EMAIL & SINKRONISASI ---
     function checkEmailDelay() {
         clearTimeout(timeoutCheck);
         timeoutCheck = setTimeout(checkEmail, 800);
@@ -134,7 +169,7 @@
         const email = document.getElementById('email').value;
         if(email.length < 5) return;
 
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
         const result = await res.json();
 
         if(result.success) {
@@ -159,48 +194,125 @@
             document.getElementById('alamat').value = pelangganData.alamat;
             document.getElementById('lat').value = lat;
             document.getElementById('lang').value = lng;
-            hitungTotal();
+            hitungBiaya();
         }
     }
 
+    // --- LOGIKA JASA & KERANJANG ---
     async function loadDaftarHarga() {
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
-        const result = await res.json();
-        const select = document.getElementById('jasaSelect');
-        result.data.forEach(item => {
-            select.innerHTML += `<option value="${item[1]}">${item[0]} (Rp ${item[1].toLocaleString()})</option>`;
-        });
+        try {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+            const result = await res.json();
+            const select = document.getElementById('jasaSelect');
+            result.data.forEach(item => {
+                select.innerHTML += `<option value="${item[1]}">${item[0]}</option>`;
+            });
+        } catch(e) { console.error("Gagal load harga"); }
     }
 
-    function hitungTotal() {
+    function tambahJasaList() {
+        const select = document.getElementById('jasaSelect');
+        const nama = select.options[select.selectedIndex].text;
+        const harga = parseInt(select.value);
+        if(!harga) return;
+        selectedItems.push({ nama, harga });
+        renderItems();
+    }
+
+    function tambahJasaManual() {
+        const nama = document.getElementById('manualNama').value;
+        const harga = parseInt(document.getElementById('manualHarga').value);
+        if(!nama || !harga) return Swal.fire('Error', 'Isi nama dan harga jasa manual', 'error');
+        selectedItems.push({ nama, harga });
+        document.getElementById('manualNama').value = '';
+        document.getElementById('manualHarga').value = '';
+        renderItems();
+    }
+
+    function removeItem(index) {
+        selectedItems.splice(index, 1);
+        renderItems();
+    }
+
+    function renderItems() {
+        const list = document.getElementById('itemList');
+        list.innerHTML = '';
+        selectedItems.forEach((item, index) => {
+            list.innerHTML += `
+                <li class="list-group-item d-flex justify-content-between align-items-center small">
+                    <div><b>${item.nama}</b><br><span class="text-muted">Rp ${item.harga.toLocaleString()}</span></div>
+                    <button class="btn btn-sm btn-link text-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button>
+                </li>`;
+        });
+        document.getElementById('itemContainer').style.display = selectedItems.length > 0 ? 'block' : 'none';
+        hitungBiaya();
+    }
+
+    // --- KALKULASI TOTAL ---
+    function hitungBiaya() {
         const lat = document.getElementById('lat').value;
         const lng = document.getElementById('lang').value;
         if(!lat) return;
 
-        // Hitung Jarak (Haversine Formula)
+        // Hitung Jarak
         const jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
-        document.getElementById('txtJarak').innerText = jarak.toFixed(2) + " km";
+        document.getElementById('valJarak').innerText = jarak.toFixed(1);
 
-        // Hitung Bensin: (Jarak - 5km) * 10000
-        let ongkosBensin = 0;
+        // Hitung Bensin (Free 5km)
+        bensinCost = 0;
         if(jarak > 5) {
-            ongkosBensin = Math.ceil(jarak - 5) * 10000;
+            bensinCost = Math.ceil(jarak - 5) * 10000;
         }
-        document.getElementById('txtBensin').innerText = "Rp " + ongkosBensin.toLocaleString();
+        document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
 
-        // Harga Jasa
-        let hargaJasa = 0;
-        const select = document.getElementById('jasaSelect');
-        if(select.value === 'manual') {
-            document.getElementById('jasaManual').style.display = 'block';
-            hargaJasa = parseInt(document.getElementById('jasaManual').value) || 0;
-        } else {
-            document.getElementById('jasaManual').style.display = 'none';
-            hargaJasa = parseInt(select.value);
+        // Subtotal Jasa
+        const subtotalJasa = selectedItems.reduce((acc, curr) => acc + curr.harga, 0);
+        document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotalJasa.toLocaleString();
+
+        // Total
+        const totalSemua = subtotalJasa + bensinCost;
+        document.getElementById('txtTotal').innerText = "Rp " + totalSemua.toLocaleString();
+        return totalSemua;
+    }
+
+    // --- SIMPAN KE GOOGLE SHEETS ---
+    async function simpanDataNota() {
+        const email = document.getElementById('email').value;
+        const finalTotal = hitungBiaya();
+
+        if(!email || selectedItems.length === 0) {
+            return Swal.fire('Peringatan', 'Lengkapi Email dan pilih minimal 1 Jasa', 'warning');
         }
 
-        const total = ongkosBensin + hargaJasa;
-        document.getElementById('txtTotal').innerText = "Rp " + total.toLocaleString();
+        document.getElementById('loader').style.display = 'flex';
+
+        try {
+            const payload = {
+                action: 'createNota', // Mengarah ke fungsi baru di Apps Script
+                email: email,
+                items: selectedItems, // JSON Array
+                total: finalTotal,
+                lat: document.getElementById('lat').value,
+                lang: document.getElementById('lang').value,
+                alamat: document.getElementById('alamat').value
+            };
+
+            const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
+
+            document.getElementById('loader').style.display = 'none';
+
+            if(result.success) {
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Nota: ' + result.notaId + ' telah disimpan.',
+                    icon: 'success'
+                }).then(() => location.reload());
+            }
+        } catch(e) {
+            document.getElementById('loader').style.display = 'none';
+            Swal.fire('Error', 'Gagal mengirim data ke server', 'error');
+        }
     }
 </script>
 </body>
