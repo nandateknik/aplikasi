@@ -362,44 +362,47 @@
     }
 
     // PDF PRECISION CROP
-    function downloadPDF() {
-        const element = document.getElementById('cardNota');
-        const notaId = document.getElementById('notaIdDisplay').innerText;
-        
-        const originalWidth = element.style.width;
-        const originalPadding = element.style.padding;
-        const originalMargin = element.style.margin;
+  function downloadPDF() {
+    const element = document.getElementById('cardNota');
+    const notaId = document.getElementById('notaIdDisplay').innerText;
 
-        element.style.width = '800px'; 
-        element.style.margin = '0 auto';
-        element.style.padding = '20px';
+    // 1. Tampilkan loading
+    Swal.fire({
+        title: 'Menyiapkan Nota...',
+        text: 'Mohon tunggu, sedang memproses kualitas HD',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
 
-        const opt = {
-            margin:       [5, 0, 5, 0],
-            filename:     `Nota_NandaTeknik_${notaId}.pdf`,
-            image:        { type: 'jpeg', quality: 1.0 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true,
-                scrollY: 0,
-                windowWidth: 800
-            },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
+    // 2. Settingan sakti agar tidak kepotong dan presisi
+    const opt = {
+        margin: [10, 10, 10, 10], // Margin 1cm di tiap sisi
+        filename: `Nota_NandaTeknik_${notaId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 3, // Skala diperbesar agar teks tajam (HD)
+            useCORS: true,
+            letterRendering: true,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: 850 // Kunci lebar jendela browser bayangan ke 850px
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-        Swal.fire({
-            title: 'Menyiapkan PDF...',
-            text: 'Menghilangkan ruang kosong...',
-            didOpen: () => { Swal.showLoading(); }
-        });
+    // 3. Jalankan proses dengan pembersihan style sementara
+    const originalStyle = element.style.cssText;
+    element.style.width = "800px"; // Paksa lebar elemen pas dengan A4
+    element.style.backgroundColor = "white";
 
-        html2pdf().set(opt).from(element).save().then(() => {
-            element.style.width = originalWidth;
-            element.style.padding = originalPadding;
-            element.style.margin = originalMargin;
-            Swal.fire('Berhasil!', 'Nota sudah presisi.', 'success');
-        });
-    }
+    html2pdf().set(opt).from(element).save().then(() => {
+        element.style.cssText = originalStyle; // Kembalikan ke desain web semula
+        Swal.fire('Berhasil!', 'Nota sudah terunduh dengan sempurna.', 'success');
+    }).catch(err => {
+        console.error(err);
+        Swal.fire('Error', 'Gagal membuat PDF', 'error');
+    });
+}
 
     async function updateStatusProgress() {
         const id = document.getElementById('woIdDisplay').innerText;
