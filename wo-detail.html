@@ -117,8 +117,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // URL Web App Google Script Anda
     const API_URL = 'https://script.google.com/macros/s/AKfycbxl-YIdypbqkdHh60bCkTUIZP_FuwmAxae5wr0aEnZI1EZX28x8e3UdNJdlWhb1fK6s/exec';
+    
+    // Global variable untuk menyimpan data yang ditarik agar mudah diakses PDF
+    let currentHistoryData = [];
 
     async function loadHistory() {
         const email = document.getElementById('searchEmail').value.trim();
@@ -137,16 +139,14 @@
             const container = document.getElementById('historyContainer');
             container.innerHTML = '';
 
-            if(!result.success || result.data.length === 0) {
-                container.innerHTML = `
-                    <div class="alert alert-warning text-center border-0 shadow-sm py-4" style="border-radius:15px;">
-                        <i class="fas fa-exclamation-circle fa-2x mb-2"></i><br>
-                        Data tidak ditemukan untuk email <b>${email}</b>.
-                    </div>`;
+            if(!result.success || !result.data || result.data.length === 0) {
+                container.innerHTML = `<div class="alert alert-warning text-center border-0 shadow-sm py-4">Data tidak ditemukan.</div>`;
                 return;
             }
 
-            result.data.forEach(item => {
+            currentHistoryData = result.data; // Simpan ke variable global
+
+            result.data.forEach((item, index) => {
                 const notaId = item.id_nota || "WO-Nanda";
                 let items = [];
                 try { items = JSON.parse(item.items_json); } catch(e) { items = []; }
@@ -155,7 +155,6 @@
                 const statusBayar = item.status_bayar || "Belum Bayar";
                 const badgeClass = statusBayar === 'Lunas' ? 'bg-success' : 'bg-danger';
 
-                // Render Timeline (Terbaru di Atas)
                 let timelineHtml = progress.slice().reverse().map(p => `
                     <div class="timeline-item">
                         <span class="timeline-date">${p.tgl}</span>
@@ -175,15 +174,11 @@
                                 <i class="fas ${statusBayar === 'Lunas' ? 'fa-check-circle' : 'fa-clock'}"></i> ${statusBayar}
                             </span>
                         </div>
-                        
                         <hr>
                         <p class="small fw-bold text-muted mb-3"><i class="fas fa-stream"></i> Progress Pekerjaan:</p>
-                        <div class="timeline mb-4">
-                            ${timelineHtml || '<p class="small text-muted italic">Pekerjaan sedang dijadwalkan.</p>'}
-                        </div>
-
+                        <div class="timeline mb-4">${timelineHtml || 'Pekerjaan sedang dijadwalkan.'}</div>
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
-                            <button class="btn btn-outline-dark btn-sm px-3" onclick="downloadPDF('${notaId}', '${item.email}', '${item.items_json.replace(/'/g, "\\'")}', '${item.total}', '${statusBayar}')">
+                            <button class="btn btn-outline-dark btn-sm px-3" onclick="downloadPDF(${index})">
                                 <i class="fas fa-file-pdf"></i> Download Nota
                             </button>
                             ${statusBayar !== 'Lunas' ? `
@@ -196,22 +191,27 @@
                 `;
             });
         } catch (e) {
-            console.error(e);
-            Swal.fire('Error', 'Gagal terhubung ke server. Periksa koneksi internet Anda.', 'error');
+            Swal.fire('Error', 'Gagal memuat data.', 'error');
         }
     }
 
-    function downloadPDF(id, email, itemsJson, total, status) {
-        let items = [];
-        try { items = JSON.parse(itemsJson); } catch(e) { items = []; }
+    function downloadPDF(index) {
+        const data = currentHistoryData[index];
+        if(!data) return;
 
-        document.getElementById('invNumber').innerText = '#' + id;
+        const notaId = data.id_nota || "INV";
+        const email = data.email || "-";
+        const status = data.status_bayar || "Belum Bayar";
+        const total = data.total || 0;
+        let items = [];
+        try { items = JSON.parse(data.items_json); } catch(e) { items = []; }
+
+        // Fill Invoice Template
+        document.getElementById('invNumber').innerText = '#' + notaId;
         document.getElementById('invCustomerEmail').innerText = email;
         document.getElementById('invStatusText').innerText = status.toUpperCase();
         document.getElementById('invDate').innerText = 'Tanggal: ' + new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-        
-        const totalNum = Number(total) || 0;
-        document.getElementById('invTotal').innerText = 'Rp ' + totalNum.toLocaleString('id-ID');
+        document.getElementById('invTotal').innerText = 'Rp ' + Number(total).toLocaleString('id-ID');
         
         const wm = document.getElementById('invoiceWatermark');
         wm.innerText = status === 'Lunas' ? 'PAID' : 'UNPAID';
@@ -223,12 +223,13 @@
         });
         document.getElementById('invItems').innerHTML = tableContent;
 
+        // Generate PDF
         const element = document.getElementById('invoice-template');
         element.style.display = 'block';
         
         const opt = {
             margin: 10,
-            filename: `Nota_NandaTeknik_${id}.pdf`,
+            filename: `Nota_NandaTeknik_${notaId}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -246,16 +247,14 @@
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#25d366',
-            confirmButtonText: 'Ya, Kirim WA',
-            cancelButtonText: 'Nanti saja'
+            confirmButtonText: 'Ya, Kirim WA'
         }).then((result) => {
             if (result.isConfirmed) {
-                const pesan = `Halo Nanda Teknik, saya ingin konfirmasi pembayaran untuk *Nota ID: ${id}*. Berikut saya lampirkan bukti transfernya.`;
+                const pesan = `Halo Nanda Teknik, saya ingin konfirmasi pembayaran untuk Nota ID: ${id}.`;
                 window.open(`https://wa.me/6282331201148?text=${encodeURIComponent(pesan)}`, '_blank');
             }
         });
     }
 </script>
-
 </body>
 </html>
