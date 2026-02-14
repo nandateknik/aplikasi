@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nanda Teknik - Pro Admin</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     
@@ -14,7 +18,6 @@
         :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 90px; }
         
-        /* Header Blue Premium */
         .premium-header {
             background: var(--p-grad);
             padding: 40px 20px 70px;
@@ -33,9 +36,10 @@
         .wo-card {
             background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px;
             border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            transition: 0.2s;
         }
+        .wo-card:active { transform: scale(0.97); }
 
-        /* Section Divider */
         .section-title {
             font-size: 0.75rem; font-weight: 800; color: #1e293b;
             text-transform: uppercase; letter-spacing: 1px;
@@ -45,7 +49,6 @@
 
         .update-box { background: #f8fafc; border-radius: 20px; padding: 18px; border: 1px solid #eef2f7; }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white;
             height: 75px; display: flex; align-items: center;
@@ -61,7 +64,7 @@
 <body>
 
 <div class="premium-header">
-    <div class="d-flex justify-content-between align-items-center text-center w-100">
+    <div class="d-flex justify-content-between align-items-center w-100">
         <div class="text-start">
             <h4 class="fw-bold mb-0">Nanda Teknik</h4>
             <small class="opacity-75">Admin Control Panel</small>
@@ -97,20 +100,22 @@
                 
                 <div class="section-title">Rincian Nota & Biaya</div>
                 <div class="update-box mb-4">
-                    <div class="row g-2 mb-2">
-                        <div class="col-8">
-                            <select id="jasaSelect" class="form-select border-0 shadow-sm"></select>
+                    <div id="inputNotaContainer">
+                        <div class="row g-2 mb-2">
+                            <div class="col-8">
+                                <select id="jasaSelect" class="form-select border-0 shadow-sm"></select>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-primary w-100" onclick="tambahItem(false)"><i class="fas fa-plus"></i> Daftar</button>
+                            </div>
                         </div>
-                        <div class="col-4 text-end">
-                            <button class="btn btn-primary w-100" onclick="tambahItem(false)"><i class="fas fa-plus"></i> Daftar</button>
-                        </div>
-                    </div>
-                    <div class="p-2 border rounded-3 bg-white mb-3">
-                        <small class="text-muted d-block mb-1">Input Manual (Part/Lainnya):</small>
-                        <div class="d-flex gap-2">
-                            <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Barang">
-                            <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
-                            <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Tambah</button>
+                        <div class="p-2 border rounded-3 bg-white mb-3">
+                            <small class="text-muted d-block mb-1">Input Manual:</small>
+                            <div class="d-flex gap-2">
+                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Barang">
+                                <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
+                                <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Tambah</button>
+                            </div>
                         </div>
                     </div>
                     
@@ -129,7 +134,7 @@
                         <option value="Proses">⚙️ Proses Pengerjaan</option>
                         <option value="Selesai">✅ Selesai & Lunas</option>
                     </select>
-                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="3" placeholder="Tambahkan catatan progres baru..."></textarea>
+                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="3" placeholder="Catatan baru..."></textarea>
                 </div>
 
                 <div class="section-title">Riwayat Timeline</div>
@@ -137,9 +142,9 @@
 
             </div>
             <div class="modal-footer border-0 p-3 shadow-lg">
-                <button class="btn btn-pdf me-auto" id="btnPdf" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-                <button class="btn btn-light text-danger fw-bold" id="btnHapus">Hapus</button>
-                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Simpan Update</button>
+                <button class="btn btn-pdf me-auto" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn btn-light text-danger fw-bold" onclick="hapusPekerjaan()">Hapus</button>
+                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Simpan</button>
             </div>
         </div>
     </div>
@@ -148,9 +153,14 @@
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwt6YEltdaYf8RKZJZpqx1gmfdEbNXIKXoamu6rkShsjtaOKuBe4MSG7_3Jq537nwDz/exec'; 
     let allData = [], selectedItems = [], currentId = null, currentTab = 'Ongoing', fullDataDetail = null;
-    const myModal = new bootstrap.Modal(document.getElementById('modalUpdate'));
+    let myModal;
 
-    window.onload = () => { loadRiwayat(); loadDaftarHarga(); };
+    window.onload = () => {
+        // Inisialisasi modal setelah bootstrap load
+        myModal = new bootstrap.Modal(document.getElementById('modalUpdate'));
+        loadRiwayat(); 
+        loadDaftarHarga(); 
+    };
 
     async function loadRiwayat() {
         document.getElementById('listPekerjaan').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
@@ -202,8 +212,10 @@
             renderItems();
             renderTimeline(fullDataDetail.history);
             
-            // Sembunyikan tombol simpan kalau sudah selesai biar gak asal ubah, tapi PDF tetep ada
-            document.getElementById('btnSimpan').style.display = (fullDataDetail.status === 'Selesai') ? 'none' : 'block';
+            // Sembunyikan input jika sudah selesai, tapi biarkan nota terlihat
+            const isDone = fullDataDetail.status === 'Selesai';
+            document.getElementById('inputNotaContainer').style.display = isDone ? 'none' : 'block';
+            document.getElementById('btnSimpan').style.display = isDone ? 'none' : 'block';
             
             myModal.show();
         }
@@ -220,9 +232,7 @@
         } else {
             const sel = document.getElementById('jasaSelect');
             const nm = sel.options[sel.selectedIndex].text;
-            const ex = selectedItems.find(i => i.nama === nm);
-            if(ex) ex.qty++;
-            else selectedItems.push({nama: nm, harga: parseInt(sel.value), qty: 1});
+            selectedItems.push({nama: nm, harga: parseInt(sel.value), qty: 1});
         }
         renderItems();
     }
@@ -230,6 +240,7 @@
     function renderItems() {
         const list = document.getElementById('itemList');
         let total = 0;
+        const isDone = fullDataDetail && fullDataDetail.status === 'Selesai';
         list.innerHTML = selectedItems.map((it, idx) => {
             total += (it.harga * it.qty);
             return `
@@ -237,7 +248,7 @@
                     <div style="font-size: 0.8rem"><b>${it.nama}</b><br>Rp${it.harga.toLocaleString()} x ${it.qty}</div>
                     <div class="d-flex align-items-center">
                         <span class="small fw-bold me-2">Rp${(it.harga*it.qty).toLocaleString()}</span>
-                        <i class="fas fa-trash text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
+                        ${!isDone ? `<i class="fas fa-trash text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i>` : ''}
                     </div>
                 </div>`;
         }).join('');
@@ -261,6 +272,7 @@
     }
 
     async function saveSemuaPerubahan() {
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
         const payload = {
             action: 'updateFullData', id: currentId,
             status: document.getElementById('statusSelect').value,
@@ -275,35 +287,27 @@
     function downloadPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
         doc.setFontSize(18); doc.setTextColor(0, 82, 212);
         doc.text("NOTA NANDA TEKNIK", 14, 20);
-        
         doc.setFontSize(10); doc.setTextColor(100);
-        doc.text(`ID Transaksi: ${fullDataDetail.woId}`, 14, 30);
-        doc.text(`Pelanggan: ${fullDataDetail.email}`, 14, 35);
-        doc.text(`Alamat: ${fullDataDetail.alamat}`, 14, 40);
-
+        doc.text(`ID: ${fullDataDetail.woId}`, 14, 30);
+        doc.text(`Client: ${fullDataDetail.email}`, 14, 35);
         const rows = selectedItems.map(it => [it.nama, it.qty, `Rp${it.harga.toLocaleString()}`, `Rp${(it.harga*it.qty).toLocaleString()}`]);
-        let totalVal = 0; selectedItems.forEach(it => totalVal += (it.harga * it.qty));
-
         doc.autoTable({
-            startY: 50,
-            head: [['Deskripsi Jasa/Part', 'Qty', 'Harga Satuan', 'Subtotal']],
+            startY: 45,
+            head: [['Deskripsi', 'Qty', 'Harga', 'Subtotal']],
             body: rows,
-            theme: 'striped',
             headStyles: { fillColor: [0, 82, 212] }
         });
-
-        doc.setFontSize(12); doc.setTextColor(0);
-        doc.text(`TOTAL PEMBAYARAN: Rp${totalVal.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10);
-        doc.text(`Status: ${fullDataDetail.status}`, 14, doc.lastAutoTable.finalY + 17);
-        
         doc.save(`Nota-${fullDataDetail.woId}.pdf`);
     }
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    async function hapusPekerjaan() {
+        const conf = await Swal.fire({ title: 'Hapus data ini?', icon: 'warning', showCancelButton: true });
+        if(conf.isConfirmed) {
+            // Logika hapus panggil action delete di GS lo
+        }
+    }
+</script>
 </body>
 </html>
