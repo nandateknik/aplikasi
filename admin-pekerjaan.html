@@ -7,214 +7,162 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg-body: #f1f5f9;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--bg-body); 
-            padding-bottom: 90px;
-        }
-
-        /* Header Style */
-        .premium-header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 30px 20px 60px;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            color: white;
-        }
-
-        /* Search & Filter Bar */
-        .action-bar {
-            margin-top: -30px;
-            padding: 0 20px;
-        }
-        .search-pill {
-            background: white;
-            border-radius: 15px;
-            padding: 12px 20px;
-            box-shadow: var(--card-shadow);
-            border: none;
-            width: 100%;
-        }
-
-        /* Work Order Card */
-        .wo-card {
-            background: white;
-            border-radius: 20px;
-            padding: 18px;
-            margin-bottom: 15px;
-            border: none;
-            box-shadow: var(--card-shadow);
-            transition: 0.2s;
-        }
-        .wo-card:active { transform: scale(0.97); }
-        .status-badge {
-            font-size: 0.7rem;
-            padding: 5px 12px;
-            border-radius: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        /* MODAL PREMIUM STYLE */
-        .modal-content { border-radius: 25px; border: none; }
-        .modal-header { border-bottom: 1px solid #f1f5f9; padding: 20px; }
+        :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 90px; }
         
-        /* Section Divider (Pemisah yang lo minta) */
-        .section-title {
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 20px 0 12px;
-            display: flex;
-            align-items: center;
-        }
-        .section-title::after {
-            content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 10px;
+        /* Header Blue Premium */
+        .premium-header {
+            background: var(--p-grad);
+            padding: 40px 20px 70px;
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.2);
         }
 
-        .update-box {
-            background: #f8fafc;
-            border-radius: 18px;
-            padding: 15px;
-            border: 1px solid #e2e8f0;
+        .action-bar { margin-top: -35px; padding: 0 20px; }
+        .search-pill {
+            background: white; border-radius: 18px; padding: 15px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; width: 100%;
         }
+
+        .wo-card {
+            background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px;
+            border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        }
+
+        /* Section Divider */
+        .section-title {
+            font-size: 0.75rem; font-weight: 800; color: #1e293b;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin: 25px 0 12px; display: flex; align-items: center;
+        }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 10px; }
+
+        .update-box { background: #f8fafc; border-radius: 20px; padding: 18px; border: 1px solid #eef2f7; }
 
         /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white;
             height: 75px; display: flex; align-items: center;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            z-index: 1000; padding-bottom: 10px;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000;
         }
-        .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; }
-        .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+        .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
+        .nav-link.active { color: var(--p-blue); }
+        .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
 
-        .fab-add {
-            width: 60px; height: 60px; background: var(--primary);
-            color: white; border-radius: 20px; display: flex;
-            align-items: center; justify-content: center;
-            margin-top: -45px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
-            border: 5px solid white;
-        }
+        .btn-pdf { background: #ff4757; color: white; border-radius: 12px; font-weight: 600; border: none; padding: 8px 15px; }
     </style>
 </head>
 <body>
 
 <div class="premium-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h4 class="fw-bold mb-1">Nanda Dashboard</h4>
-            <p class="text-white-50 small mb-0"><i class="fas fa-circle text-success me-1" style="font-size: 8px;"></i> System Online</p>
+    <div class="d-flex justify-content-between align-items-center text-center w-100">
+        <div class="text-start">
+            <h4 class="fw-bold mb-0">Nanda Teknik</h4>
+            <small class="opacity-75">Admin Control Panel</small>
         </div>
-        <button class="btn btn-link text-white p-0" onclick="loadRiwayat()"><i class="fas fa-sync-alt fa-lg"></i></button>
+        <i class="fas fa-user-shield fa-2x opacity-50"></i>
     </div>
 </div>
 
 <div class="action-bar">
-    <input type="text" id="searchBox" class="search-pill" placeholder="Cari ID WO atau nama kerjaan..." oninput="applyFilter()">
-    
+    <input type="text" id="searchBox" class="search-pill" placeholder="Cari ID WO atau Nama..." oninput="applyFilter()">
     <div class="d-flex gap-2 mt-3">
-        <button class="btn btn-dark rounded-pill flex-fill py-2 small shadow-sm" id="tabOng" onclick="switchTab('Ongoing')">Aktif</button>
-        <button class="btn btn-outline-secondary rounded-pill flex-fill py-2 small" id="tabSel" onclick="switchTab('Selesai')">Riwayat</button>
+        <button class="btn btn-primary rounded-pill flex-fill py-2 shadow" id="tabOng" onclick="switchTab('Ongoing')">Aktif</button>
+        <button class="btn btn-light rounded-pill flex-fill py-2 shadow-sm" id="tabSel" onclick="switchTab('Selesai')">Riwayat</button>
     </div>
 </div>
 
-<div class="container mt-4" id="listPekerjaan">
-    </div>
+<div class="container mt-4" id="listPekerjaan"></div>
 
 <div class="bottom-nav">
-    <a href="#" class="nav-link active"><i class="fas fa-layer-group"></i>Jobs</a>
-    <a href="buat-nota.html" class="fab-add"><i class="fas fa-plus"></i></a>
-    <a href="pelanggan.html" class="nav-link"><i class="fas fa-user-friends"></i>Clients</a>
+    <a href="#" class="nav-link active" onclick="loadRiwayat()"><i class="fas fa-tasks"></i>Work Order</a>
+    <a href="buat-nota.html" class="nav-link"><i class="fas fa-plus-circle" style="font-size: 2.5rem; color: var(--p-blue);"></i></a>
+    <a href="pelanggan.html" class="nav-link"><i class="fas fa-users"></i>Pelanggan</a>
 </div>
 
 <div class="modal fade" id="modalUpdate" tabindex="-1">
-    <div class="modal-dialog modal-fullscreen-sm-down">
+    <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="fw-bold mb-0">Manajemen Order</h6>
+            <div class="modal-header border-0 shadow-sm">
+                <h6 class="fw-bold mb-0" id="modalTitleID">Detail Pekerjaan</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 
-                <div class="section-title">Update Nota & Biaya</div>
+                <div class="section-title">Rincian Nota & Biaya</div>
                 <div class="update-box mb-4">
-                    <label class="small fw-bold text-muted mb-2">Tambah Jasa/Part:</label>
-                    <div class="input-group mb-2">
-                        <select id="jasaSelect" class="form-select border-0 shadow-sm" style="border-radius: 12px 0 0 12px;"></select>
-                        <button class="btn btn-primary" onclick="tambahJasaList()" style="border-radius: 0 12px 12px 0;"><i class="fas fa-plus"></i></button>
+                    <div class="row g-2 mb-2">
+                        <div class="col-8">
+                            <select id="jasaSelect" class="form-select border-0 shadow-sm"></select>
+                        </div>
+                        <div class="col-4 text-end">
+                            <button class="btn btn-primary w-100" onclick="tambahItem(false)"><i class="fas fa-plus"></i> Daftar</button>
+                        </div>
+                    </div>
+                    <div class="p-2 border rounded-3 bg-white mb-3">
+                        <small class="text-muted d-block mb-1">Input Manual (Part/Lainnya):</small>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Barang">
+                            <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
+                            <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Tambah</button>
+                        </div>
                     </div>
                     
-                    <div id="itemList" class="mt-3">
-                        </div>
+                    <div id="itemList" class="mt-2"></div>
                     
                     <div class="d-flex justify-content-between mt-3 pt-2 border-top">
-                        <span class="fw-bold">ESTIMASI TOTAL</span>
+                        <span class="fw-bold">TOTAL BIAYA</span>
                         <span class="fw-bold text-primary" id="txtTotal">Rp 0</span>
                     </div>
                 </div>
 
-                <div class="section-title">Progres & Status Kerja</div>
-                <div class="update-box">
-                    <label class="small fw-bold text-muted mb-2">Status Saat Ini:</label>
-                    <select id="statusSelect" class="form-select border-0 shadow-sm mb-3" style="border-radius: 12px;">
-                        <option value="Pending">Pending (Antrean)</option>
-                        <option value="Proses">⚙️ Sedang Dikerjakan</option>
-                        <option value="Menunggu Part">📦 Menunggu Part</option>
+                <div class="section-title">Status & Progress</div>
+                <div class="update-box mb-4">
+                    <select id="statusSelect" class="form-select border-0 shadow-sm mb-3">
+                        <option value="Pending">Pending</option>
+                        <option value="Proses">⚙️ Proses Pengerjaan</option>
                         <option value="Selesai">✅ Selesai & Lunas</option>
                     </select>
-
-                    <label class="small fw-bold text-muted mb-2">Catatan Teknisi:</label>
-                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="3" style="border-radius: 12px;" placeholder="Tulis rincian apa yang dikerjakan..."></textarea>
+                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="3" placeholder="Tambahkan catatan progres baru..."></textarea>
                 </div>
 
                 <div class="section-title">Riwayat Timeline</div>
-                <div id="timelineList" class="mt-2"></div>
+                <div id="timelineList"></div>
 
             </div>
-            <div class="modal-footer border-0 p-4">
-                <button class="btn btn-light rounded-4 px-4 py-2 text-danger fw-bold me-auto" id="btnHapus">Hapus</button>
-                <button class="btn btn-primary rounded-4 px-5 py-2 fw-bold" onclick="saveSemuaPerubahan()">Simpan</button>
+            <div class="modal-footer border-0 p-3 shadow-lg">
+                <button class="btn btn-pdf me-auto" id="btnPdf" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn btn-light text-danger fw-bold" id="btnHapus">Hapus</button>
+                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Simpan Update</button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwt6YEltdaYf8RKZJZpqx1gmfdEbNXIKXoamu6rkShsjtaOKuBe4MSG7_3Jq537nwDz/exec'; 
-    let allData = [], selectedItems = [], currentId = null, currentTab = 'Ongoing';
+    let allData = [], selectedItems = [], currentId = null, currentTab = 'Ongoing', fullDataDetail = null;
     const myModal = new bootstrap.Modal(document.getElementById('modalUpdate'));
 
     window.onload = () => { loadRiwayat(); loadDaftarHarga(); };
 
     async function loadRiwayat() {
-        const container = document.getElementById('listPekerjaan');
-        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
-        
-        try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getRiwayatAdmin' }) });
-            const result = await res.json();
-            if(result.success) { allData = result.data; applyFilter(); }
-        } catch(e) { container.innerHTML = "Gagal memuat data."; }
+        document.getElementById('listPekerjaan').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getRiwayatAdmin' }) });
+        const result = await res.json();
+        if(result.success) { allData = result.data; applyFilter(); }
     }
 
     function switchTab(t) {
         currentTab = t;
-        document.getElementById('tabOng').className = t === 'Ongoing' ? 'btn btn-dark rounded-pill flex-fill py-2 small shadow-sm' : 'btn btn-outline-secondary rounded-pill flex-fill py-2 small';
-        document.getElementById('tabSel').className = t === 'Selesai' ? 'btn btn-dark rounded-pill flex-fill py-2 small shadow-sm' : 'btn btn-outline-secondary rounded-pill flex-fill py-2 small';
+        document.getElementById('tabOng').className = t === 'Ongoing' ? 'btn btn-primary rounded-pill flex-fill py-2 shadow' : 'btn btn-light rounded-pill flex-fill py-2 shadow-sm';
+        document.getElementById('tabSel').className = t === 'Selesai' ? 'btn btn-primary rounded-pill flex-fill py-2 shadow' : 'btn btn-light rounded-pill flex-fill py-2 shadow-sm';
         applyFilter();
     }
 
@@ -228,41 +176,55 @@
     }
 
     function renderList(data) {
-        const container = document.getElementById('listPekerjaan');
-        if(data.length === 0) { container.innerHTML = '<div class="text-center mt-5 text-muted small">Tidak ada pekerjaan.</div>'; return; }
-        
-        container.innerHTML = data.map(item => {
-            let badgeColor = item.status === 'Selesai' ? 'bg-success' : (item.status === 'Proses' ? 'bg-primary' : 'bg-warning text-dark');
-            return `
-                <div class="wo-card" onclick="viewDetail('${item.id}')">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="status-badge ${badgeColor}">${item.status}</span>
-                        <span class="text-muted" style="font-size: 0.65rem;">${item.tgl.split(',')[0]}</span>
-                    </div>
-                    <h6 class="fw-bold mb-1">${item.judul}</h6>
-                    <small class="text-secondary d-block mb-2">${item.id}</small>
+        document.getElementById('listPekerjaan').innerHTML = data.map(item => `
+            <div class="wo-card" onclick="viewDetail('${item.id}')">
+                <div class="d-flex justify-content-between mb-2 small fw-bold">
+                    <span class="text-primary">${item.id}</span>
+                    <span class="${item.status === 'Selesai' ? 'text-success' : 'text-warning'}">${item.status}</span>
                 </div>
-            `;
-        }).join('');
+                <h6 class="fw-bold mb-1">${item.judul}</h6>
+                <div class="text-muted small"><i class="far fa-calendar-alt"></i> ${item.tgl}</div>
+            </div>
+        `).join('');
     }
 
     async function viewDetail(id) {
         currentId = id;
         Swal.fire({ title: 'Memuat...', showConfirmButton: false, didOpen: () => Swal.showLoading() });
-        
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
         const r = await res.json();
         Swal.close();
-        
         if(r.success) {
-            const d = r.data;
-            document.getElementById('statusSelect').value = d.status;
-            document.getElementById('catatanProgres').value = '';
-            selectedItems = d.notaItems || [];
+            fullDataDetail = r.data;
+            document.getElementById('modalTitleID').innerText = "Detail " + id;
+            document.getElementById('statusSelect').value = fullDataDetail.status;
+            selectedItems = fullDataDetail.notaItems || [];
             renderItems();
-            renderTimeline(d.history);
+            renderTimeline(fullDataDetail.history);
+            
+            // Sembunyikan tombol simpan kalau sudah selesai biar gak asal ubah, tapi PDF tetep ada
+            document.getElementById('btnSimpan').style.display = (fullDataDetail.status === 'Selesai') ? 'none' : 'block';
+            
             myModal.show();
         }
+    }
+
+    function tambahItem(isManual) {
+        if(isManual) {
+            const n = document.getElementById('manualNama').value;
+            const h = parseInt(document.getElementById('manualHarga').value);
+            if(!n || !h) return;
+            selectedItems.push({nama: n, harga: h, qty: 1});
+            document.getElementById('manualNama').value = '';
+            document.getElementById('manualHarga').value = '';
+        } else {
+            const sel = document.getElementById('jasaSelect');
+            const nm = sel.options[sel.selectedIndex].text;
+            const ex = selectedItems.find(i => i.nama === nm);
+            if(ex) ex.qty++;
+            else selectedItems.push({nama: nm, harga: parseInt(sel.value), qty: 1});
+        }
+        renderItems();
     }
 
     function renderItems() {
@@ -271,61 +233,77 @@
         list.innerHTML = selectedItems.map((it, idx) => {
             total += (it.harga * it.qty);
             return `
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded-3 shadow-sm border">
-                    <div style="max-width: 70%">
-                        <div class="small fw-bold">${it.nama}</div>
-                        <div class="x-small text-muted">Rp${it.harga.toLocaleString()} x ${it.qty}</div>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded-3 border">
+                    <div style="font-size: 0.8rem"><b>${it.nama}</b><br>Rp${it.harga.toLocaleString()} x ${it.qty}</div>
                     <div class="d-flex align-items-center">
                         <span class="small fw-bold me-2">Rp${(it.harga*it.qty).toLocaleString()}</span>
-                        <i class="fas fa-minus-circle text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
+                        <i class="fas fa-trash text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
                     </div>
                 </div>`;
         }).join('');
         document.getElementById('txtTotal').innerText = "Rp " + total.toLocaleString();
     }
 
-    async function loadDaftarHarga() {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
-        const result = await res.json();
-        document.getElementById('jasaSelect').innerHTML = result.data.map(it => `<option value="${it[1]}">${it[0]}</option>`).join('');
-    }
-
-    function tambahJasaList() {
-        const sel = document.getElementById('jasaSelect');
-        const nm = sel.options[sel.selectedIndex].text;
-        const ex = selectedItems.find(i => i.nama === nm);
-        if(ex) ex.qty++;
-        else selectedItems.push({nama: nm, harga: parseInt(sel.value), qty: 1});
-        renderItems();
-    }
-
     function renderTimeline(h) {
         document.getElementById('timelineList').innerHTML = h.map(t => `
-            <div class="border-start border-2 border-primary ps-3 mb-3 position-relative">
-                <div class="position-absolute bg-primary" style="width:10px; height:10px; border-radius:50%; left:-6px; top:5px;"></div>
-                <div class="fw-bold small">${t.status}</div>
-                <div class="text-muted" style="font-size:10px">${t.tgl}</div>
-                <div class="small bg-white p-2 rounded-3 mt-1 shadow-sm border" style="font-size: 0.75rem;">${t.detail}</div>
+            <div class="border-start border-2 border-primary ps-3 mb-3 small">
+                <div class="fw-bold">${t.status}</div>
+                <div class="text-muted" style="font-size: 9px;">${t.tgl}</div>
+                <div class="bg-light p-2 rounded-2 mt-1">${t.detail}</div>
             </div>
         `).reverse().join('');
     }
 
+    async function loadDaftarHarga() {
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+        const r = await res.json();
+        document.getElementById('jasaSelect').innerHTML = r.data.map(it => `<option value="${it[1]}">${it[0]}</option>`).join('');
+    }
+
     async function saveSemuaPerubahan() {
-        Swal.fire({ title: 'Menyimpan...', showConfirmButton: false, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const payload = {
             action: 'updateFullData', id: currentId,
             status: document.getElementById('statusSelect').value,
-            keterangan: document.getElementById('catatanProgres').value,
+            keterangan: document.getElementById('catatanProgres').value || "Update data",
             items: selectedItems
         };
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
-        if(result.success) {
-            myModal.hide();
-            Swal.fire('Sukses!', 'Data berhasil diperbarui', 'success').then(() => loadRiwayat());
-        }
+        const r = await res.json();
+        if(r.success) { myModal.hide(); Swal.fire('Berhasil!', '', 'success').then(() => loadRiwayat()); }
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18); doc.setTextColor(0, 82, 212);
+        doc.text("NOTA NANDA TEKNIK", 14, 20);
+        
+        doc.setFontSize(10); doc.setTextColor(100);
+        doc.text(`ID Transaksi: ${fullDataDetail.woId}`, 14, 30);
+        doc.text(`Pelanggan: ${fullDataDetail.email}`, 14, 35);
+        doc.text(`Alamat: ${fullDataDetail.alamat}`, 14, 40);
+
+        const rows = selectedItems.map(it => [it.nama, it.qty, `Rp${it.harga.toLocaleString()}`, `Rp${(it.harga*it.qty).toLocaleString()}`]);
+        let totalVal = 0; selectedItems.forEach(it => totalVal += (it.harga * it.qty));
+
+        doc.autoTable({
+            startY: 50,
+            head: [['Deskripsi Jasa/Part', 'Qty', 'Harga Satuan', 'Subtotal']],
+            body: rows,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 82, 212] }
+        });
+
+        doc.setFontSize(12); doc.setTextColor(0);
+        doc.text(`TOTAL PEMBAYARAN: Rp${totalVal.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 10);
+        doc.text(`Status: ${fullDataDetail.status}`, 14, doc.lastAutoTable.finalY + 17);
+        
+        doc.save(`Nota-${fullDataDetail.woId}.pdf`);
     }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
