@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Update WO & Nota</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .card-update { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .item-row { background: #f8f9fa; border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid #dee2e6; }
+        .btn-add { border-style: dashed; }
+        .loader-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; align-items:center; justify-content:center; flex-direction:column; }
+    </style>
+</head>
+<body>
+
+<div class="loader-overlay" id="loader">
+    <div class="spinner-border text-primary"></div>
+    <span class="mt-2 fw-bold">Memproses Data...</span>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="index.html" class="btn btn-light rounded-circle me-3"><i class="fas fa-arrow-left"></i></a>
+                <h4 class="fw-bold mb-0">Update Work Order & Nota</h4>
+            </div>
+
+            <div class="card card-update p-4 mb-4">
+                <label class="fw-bold mb-2">Cari ID WO atau ID Nota</label>
+                <div class="input-group">
+                    <input type="text" id="targetId" class="form-control" placeholder="Contoh: WO-2024001 atau INV-2320">
+                    <button class="btn btn-primary px-4" onclick="loadData()">Buka Data</button>
+                </div>
+            </div>
+
+            <div id="formContainer" style="display: none;">
+                
+                <div class="card card-update p-4 mb-4">
+                    <h5 class="fw-bold text-primary mb-3"><i class="fas fa-tasks me-2"></i>Status Pekerjaan</h5>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Status Saat Ini:</label>
+                        <select id="updateStatus" class="form-select border-primary">
+                            <option value="Proses">⚙️ Dalam Pengerjaan</option>
+                            <option value="Menunggu Part">📦 Menunggu Sparepart</option>
+                            <option value="Selesai">✅ Selesai</option>
+                            <option value="Dibatalkan">❌ Dibatalkan</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Catatan / Progress Tambahan:</label>
+                        <textarea id="updateKet" class="form-control" rows="2" placeholder="Tulis progress terbaru di sini..."></textarea>
+                    </div>
+                </div>
+
+                <div class="card card-update p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-success mb-0"><i class="fas fa-file-invoice me-2"></i>Rincian Biaya & Material</h5>
+                        <button class="btn btn-sm btn-outline-success rounded-pill" onclick="addRow()">
+                            <i class="fas fa-plus me-1"></i> Tambah Item
+                        </button>
+                    </div>
+                    
+                    <div id="itemContainer">
+                        </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                        <span class="fw-bold">Estimasi Total:</span>
+                        <h5 class="fw-bold text-primary mb-0" id="totalDisplay">Rp 0</h5>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary btn-lg rounded-4 shadow" onclick="saveAll()">
+                        <i class="fas fa-save me-2"></i> Simpan Semua Perubahan
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby_8lfE1idNkZidnNt7BlMmQxSKDJ1VzWg60KdxAGgVK4YFPKikArikJbaWcP7gtpEa/exec; // Ganti dengan URL deployment Script kamu
+    let currentItems = [];
+
+    async function loadData() {
+        const id = document.getElementById('targetId').value.trim();
+        if(!id) return;
+
+        showLoader(true);
+        try {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getDetailAll', keyword: id })
+            });
+            const result = await res.json();
+            showLoader(false);
+
+            if(result.success) {
+                document.getElementById('formContainer').style.display = 'block';
+                // Jika itu WO, set statusnya
+                if(result.type === 'WO') {
+                    document.getElementById('updateStatus').value = result.data.status;
+                }
+                
+                // Isi item nota jika ada (dari database)
+                const items = result.type === 'Nota' ? result.data.items : (result.data.notaItems || []);
+                renderItems(items);
+            } else {
+                Swal.fire('Oops!', 'Data tidak ditemukan', 'warning');
+            }
+        } catch(e) {
+            showLoader(false);
+            Swal.fire('Error', 'Gagal memuat data', 'error');
+        }
+    }
+
+    function renderItems(items) {
+        const container = document.getElementById('itemContainer');
+        container.innerHTML = '';
+        items.forEach((it, idx) => addRow(it.nama, it.qty, it.harga));
+        hitungTotal();
+    }
+
+    function addRow(nama = '', qty = 1, harga = 0) {
+        const container = document.getElementById('itemContainer');
+        const div = document.createElement('div');
+        div.className = 'item-row';
+        div.innerHTML = `
+            <div class="row g-2">
+                <div class="col-12 col-md-6">
+                    <input type="text" class="form-control form-control-sm in-nama" placeholder="Nama Jasa/Material" value="${nama}">
+                </div>
+                <div class="col-4 col-md-2">
+                    <input type="number" class="form-control form-control-sm in-qty" placeholder="Qty" value="${qty}" onchange="hitungTotal()">
+                </div>
+                <div class="col-5 col-md-3">
+                    <input type="number" class="form-control form-control-sm in-harga" placeholder="Harga" value="${harga}" onchange="hitungTotal()">
+                </div>
+                <div class="col-3 col-md-1 text-end">
+                    <button class="btn btn-sm btn-danger w-100" onclick="this.parentElement.parentElement.parentElement.remove(); hitungTotal();">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        container.appendChild(div);
+        hitungTotal();
+    }
+
+    function hitungTotal() {
+        let total = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const qty = row.querySelector('.in-qty').value || 0;
+            const harga = row.querySelector('.in-harga').value || 0;
+            total += (qty * harga);
+        });
+        document.getElementById('totalDisplay').innerText = "Rp " + total.toLocaleString();
+    }
+
+    async function saveAll() {
+        const id = document.getElementById('targetId').value.trim();
+        const status = document.getElementById('updateStatus').value;
+        const ket = document.getElementById('updateKet').value;
+        
+        // Ambil semua data dari baris item
+        const items = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            items.push({
+                nama: row.querySelector('.in-nama').value,
+                qty: row.querySelector('.in-qty').value,
+                harga: row.querySelector('.in-harga').value
+            });
+        });
+
+        const confirm = await Swal.fire({
+            title: 'Simpan Perubahan?',
+            text: "Data status dan nota akan diperbarui",
+            icon: 'question',
+            showCancelButton: true
+        });
+
+        if(confirm.isConfirmed) {
+            showLoader(true);
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateFullData', // Kita butuh case baru di GS
+                        id: id,
+                        status: status,
+                        keterangan: ket,
+                        items: items
+                    })
+                });
+                const result = await res.json();
+                showLoader(false);
+                if(result.success) {
+                    Swal.fire('Berhasil!', 'Data dan Nota telah diperbarui.', 'success');
+                }
+            } catch(e) {
+                showLoader(false);
+                Swal.fire('Error', 'Gagal menyimpan perubahan', 'error');
+            }
+        }
+    }
+
+    function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
+</script>
+
+</body>
+</html>
