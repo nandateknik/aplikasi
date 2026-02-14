@@ -8,46 +8,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { background: #f0f2f5; font-family: 'Inter', sans-serif; }
-        .card-tracking { border-radius: 15px; border: none; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: white; }
+        body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .card-tracking { border-radius: 15px; border: none; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: white; transition: 0.3s; }
+        .card-tracking:hover { transform: translateY(-5px); }
         
-        /* Timeline Style ala Tokopedia */
+        /* Timeline Style */
         .timeline { list-style: none; padding: 0; position: relative; }
         .timeline:before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: #e9ecef; left: 20px; }
         .timeline-item { position: relative; padding-left: 50px; margin-bottom: 20px; }
-        .timeline-item:after { content: ''; position: absolute; width: 12px; height: 12px; background: #007bff; border: 2px solid #fff; border-radius: 50%; left: 15px; top: 5px; z-index: 1; }
-        .timeline-date { font-size: 0.75rem; color: #6c757d; display: block; }
-        .timeline-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
-        .timeline-desc { font-size: 0.85rem; color: #495057; }
+        .timeline-item:after { content: ''; position: absolute; width: 14px; height: 14px; background: #007bff; border: 3px solid #fff; border-radius: 50%; left: 14px; top: 5px; z-index: 1; }
+        .timeline-date { font-size: 0.75rem; color: #6c757d; display: block; font-weight: 600; }
+        .timeline-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+        .timeline-desc { font-size: 0.85rem; color: #495057; line-height: 1.4; }
 
-        /* Invoice Watermark Template */
-        #invoice-template { padding: 40px; position: relative; background: #fff; color: #000; display: none; width: 800px; }
-        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; font-weight: bold; opacity: 0.1; white-space: nowrap; pointer-events: none; z-index: 0; }
+        /* Invoice Template (Hidden) */
+        #invoice-template { padding: 40px; position: relative; background: #fff; color: #000; display: none; width: 790px; }
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 120px; font-weight: bold; opacity: 0.08; white-space: nowrap; pointer-events: none; z-index: 0; }
         
-        .btn-primary { background-color: #007bff; border: none; border-radius: 8px; }
-        .input-group .form-control { border-radius: 8px 0 0 8px; }
-        .input-group .btn { border-radius: 0 8px 8px 0; }
+        .btn-primary { background-color: #007bff; border: none; border-radius: 8px; font-weight: 600; }
+        .badge-status { font-size: 0.8rem; padding: 6px 12px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-9 col-lg-8">
             <h3 class="fw-bold mb-4 text-center"><i class="fas fa-search-location text-primary"></i> Lacak Pesanan & Nota</h3>
             
-            <div class="card p-4 mb-4 shadow-sm border-0" style="border-radius: 15px;">
-                <label class="form-label fw-bold small text-muted">Masukkan Email Terdaftar</label>
+            <div class="card p-4 mb-5 shadow-sm border-0" style="border-radius: 15px;">
+                <label class="form-label fw-bold small text-muted">Masukkan Email Pelanggan</label>
                 <div class="input-group shadow-sm">
-                    <input type="email" id="searchEmail" class="form-control" placeholder="contoh: pelanggan@email.com">
+                    <input type="email" id="searchEmail" class="form-control" placeholder="pelanggan@email.com" onkeypress="if(event.key === 'Enter') loadHistory()">
                     <button class="btn btn-primary px-4" onclick="loadHistory()">Cari Data</button>
                 </div>
+                <div class="form-text mt-2">Gunakan email yang terdaftar saat pemesanan.</div>
             </div>
 
             <div id="historyContainer">
                 <div class="text-center text-muted py-5">
-                    <i class="fas fa-receipt fa-3x mb-3 opacity-25"></i>
-                    <p>Riwayat pekerjaan dan nota digital Anda akan muncul di sini.</p>
+                    <i class="fas fa-receipt fa-4x mb-3 opacity-25"></i>
+                    <p>Masukkan email untuk melihat riwayat pekerjaan dan mengunduh nota digital.</p>
                 </div>
             </div>
         </div>
@@ -56,12 +57,11 @@
 
 <div id="invoice-template">
     <div class="watermark" id="invoiceWatermark">UNPAID</div>
-    <div class="row border-bottom pb-3">
+    <div class="row border-bottom border-primary border-3 pb-3">
         <div class="col-7">
             <h4 class="fw-bold text-primary mb-1">NANDA TEKNIK BANYUWANGI</h4>
             <p class="small mb-0">Sukowidi Indah Residence D5, Banyuwangi 68421</p>
-            <p class="small mb-0">WA: 082331201148 | Email: nandateknik02@gmail.com</p>
-            <p class="small mb-0">Website: www.nandateknik.com</p>
+            <p class="small mb-0">WA: 0823-3120-1148 | Email: nandateknik02@gmail.com</p>
         </div>
         <div class="col-5 text-end">
             <h5 class="fw-bold mb-0" id="invNumber">#INV-0000</h5>
@@ -70,36 +70,46 @@
     </div>
 
     <div class="py-4">
-        <p class="small mb-1">Diberikan Kepada:</p>
-        <h6 class="fw-bold" id="invCustomerEmail">-</h6>
+        <div class="row">
+            <div class="col-6">
+                <p class="small text-muted mb-1">Diberikan Kepada:</p>
+                <h6 class="fw-bold" id="invCustomerEmail">-</h6>
+            </div>
+            <div class="col-6 text-end">
+                <p class="small text-muted mb-1">Status Pembayaran:</p>
+                <h6 class="fw-bold" id="invStatusText">-</h6>
+            </div>
+        </div>
     </div>
 
-    <table class="table table-bordered small">
-        <thead class="bg-light text-center">
+    <table class="table table-striped small">
+        <thead class="bg-primary text-white">
             <tr>
-                <th>Deskripsi Pekerjaan / Unit</th>
-                <th style="width: 150px;">Total</th>
+                <th>Deskripsi Jasa / Pekerjaan</th>
+                <th class="text-end" style="width: 150px;">Subtotal</th>
             </tr>
         </thead>
         <tbody id="invItems"></tbody>
         <tfoot>
-            <tr>
-                <th class="text-end">Total Pembayaran</th>
-                <th class="text-end" id="invTotal">Rp 0</th>
+            <tr class="table-light">
+                <th class="text-end">TOTAL AKHIR</th>
+                <th class="text-end" id="invTotal" style="font-size: 1.1rem; color: #007bff;">Rp 0</th>
             </tr>
         </tfoot>
     </table>
 
     <div class="row mt-5 small">
         <div class="col-7">
-            <p class="fw-bold mb-1">Informasi Pembayaran:</p>
-            <p class="mb-0">Transfer Bank: **BCA**</p>
-            <p class="mb-0">No. Rekening: **082331201148**</p>
-            <p>Atas Nama: **Nanda Teknik**</p>
+            <p class="fw-bold mb-1">Informasi Transfer:</p>
+            <div class="p-2 border rounded bg-light">
+                <p class="mb-0">Bank: <b>BCA</b></p>
+                <p class="mb-0">No. Rekening: <b>082331201148</b></p>
+                <p class="mb-0">Atas Nama: <b>Nanda Teknik</b></p>
+            </div>
         </div>
         <div class="col-5 text-center">
             <p class="mb-5">Hormat Kami,</p>
-            <br>
+            <br><br>
             <p class="fw-bold mb-0">Nanda Teknik</p>
         </div>
     </div>
@@ -107,17 +117,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // GANTI URL DI BAWAH DENGAN URL WEB APP GOOGLE SCRIPT ANDA
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzlGSxM7LexNj1YOn4hvbyaQMtaxNwRT7jWEV58kjIXYLdNWqcQ_B5OvIhf2Ap7S4B5/exec';
+    // URL Web App Google Script Anda
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxl-YIdypbqkdHh60bCkTUIZP_FuwmAxae5wr0aEnZI1EZX28x8e3UdNJdlWhb1fK6s/exec';
 
     async function loadHistory() {
-        const email = document.getElementById('searchEmail').value;
-        if(!email) {
-            Swal.fire('Info', 'Silakan masukkan email Anda', 'info');
-            return;
-        }
+        const email = document.getElementById('searchEmail').value.trim();
+        if(!email) return Swal.fire('Info', 'Silakan masukkan email Anda', 'info');
 
-        Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Mencari data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
             const res = await fetch(API_URL, { 
@@ -131,17 +138,25 @@
             container.innerHTML = '';
 
             if(!result.success || result.data.length === 0) {
-                container.innerHTML = '<div class="alert alert-warning text-center">Data tidak ditemukan. Pastikan email Anda benar.</div>';
+                container.innerHTML = `
+                    <div class="alert alert-warning text-center border-0 shadow-sm py-4" style="border-radius:15px;">
+                        <i class="fas fa-exclamation-circle fa-2x mb-2"></i><br>
+                        Data tidak ditemukan untuk email <b>${email}</b>.
+                    </div>`;
                 return;
             }
 
             result.data.forEach(item => {
                 const notaId = item.id_nota || "WO-Nanda";
-                const items = JSON.parse(item.items_json || '[]');
+                let items = [];
+                try { items = JSON.parse(item.items_json); } catch(e) { items = []; }
+                
                 const progress = item.progress || [];
                 const statusBayar = item.status_bayar || "Belum Bayar";
-                
-                let timelineHtml = progress.map(p => `
+                const badgeClass = statusBayar === 'Lunas' ? 'bg-success' : 'bg-danger';
+
+                // Render Timeline (Terbaru di Atas)
+                let timelineHtml = progress.slice().reverse().map(p => `
                     <div class="timeline-item">
                         <span class="timeline-date">${p.tgl}</span>
                         <div class="timeline-title text-primary">${p.status}</div>
@@ -150,60 +165,61 @@
                 `).join('');
 
                 container.innerHTML += `
-                    <div class="card card-tracking p-4 border-0 shadow-sm">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="badge bg-light text-dark border px-3 py-2">ID: ${notaId}</span>
-                            <span class="fw-bold ${statusBayar === 'Lunas' ? 'text-success' : 'text-danger'}">
+                    <div class="card card-tracking p-4 border-0">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge bg-light text-dark border px-3 py-2 mb-2">Nota: ${notaId}</span>
+                                <h5 class="fw-bold mb-0">${items.map(i => i.nama).join(', ')}</h5>
+                            </div>
+                            <span class="badge badge-status ${badgeClass} shadow-sm">
                                 <i class="fas ${statusBayar === 'Lunas' ? 'fa-check-circle' : 'fa-clock'}"></i> ${statusBayar}
                             </span>
                         </div>
-                        <h6 class="fw-bold mb-3">Unit: ${items.map(i => i.nama).join(', ')}</h6>
                         
                         <hr>
-                        <p class="small fw-bold text-muted mb-3"><i class="fas fa-history"></i> Track Record Pekerjaan:</p>
+                        <p class="small fw-bold text-muted mb-3"><i class="fas fa-stream"></i> Progress Pekerjaan:</p>
                         <div class="timeline mb-4">
-                            ${timelineHtml || '<p class="small text-muted italic">Data progress belum diperbarui admin.</p>'}
+                            ${timelineHtml || '<p class="small text-muted italic">Pekerjaan sedang dijadwalkan.</p>'}
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
-                            <button class="btn btn-outline-dark btn-sm" onclick="downloadPDF('${notaId}', '${item.email}', '${item.items_json.replace(/'/g, "\\'")}', '${item.total}', '${statusBayar}')">
+                            <button class="btn btn-outline-dark btn-sm px-3" onclick="downloadPDF('${notaId}', '${item.email}', '${item.items_json.replace(/'/g, "\\'")}', '${item.total}', '${statusBayar}')">
                                 <i class="fas fa-file-pdf"></i> Download Nota
                             </button>
-                            <button class="btn btn-success btn-sm" onclick="confirmPay('${notaId}')">
-                                <i class="fab fa-whatsapp"></i> Konfirmasi Bayar
-                            </button>
+                            ${statusBayar !== 'Lunas' ? `
+                                <button class="btn btn-success btn-sm px-3" onclick="confirmPay('${notaId}')">
+                                    <i class="fab fa-whatsapp"></i> Konfirmasi Bayar
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
             });
         } catch (e) {
             console.error(e);
-            Swal.fire('Error', 'Gagal memuat data dari server.', 'error');
+            Swal.fire('Error', 'Gagal terhubung ke server. Periksa koneksi internet Anda.', 'error');
         }
     }
 
     function downloadPDF(id, email, itemsJson, total, status) {
-        const items = JSON.parse(itemsJson);
+        let items = [];
+        try { items = JSON.parse(itemsJson); } catch(e) { items = []; }
+
         document.getElementById('invNumber').innerText = '#' + id;
         document.getElementById('invCustomerEmail').innerText = email;
+        document.getElementById('invStatusText').innerText = status.toUpperCase();
         document.getElementById('invDate').innerText = 'Tanggal: ' + new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
         
         const totalNum = Number(total) || 0;
         document.getElementById('invTotal').innerText = 'Rp ' + totalNum.toLocaleString('id-ID');
         
         const wm = document.getElementById('invoiceWatermark');
-        if(status === 'Lunas') {
-            wm.innerText = 'PAID';
-            wm.style.color = 'green';
-        } else {
-            wm.innerText = 'UNPAID';
-            wm.style.color = 'red';
-        }
+        wm.innerText = status === 'Lunas' ? 'PAID' : 'UNPAID';
+        wm.style.color = status === 'Lunas' ? '#198754' : '#dc3545';
 
         let tableContent = '';
         items.forEach(i => {
-            const harga = Number(i.harga) || 0;
-            tableContent += `<tr><td>${i.nama}</td><td class="text-end">Rp ${harga.toLocaleString('id-ID')}</td></tr>`;
+            tableContent += `<tr><td class="py-2">${i.nama}</td><td class="text-end py-2">Rp ${Number(i.harga).toLocaleString('id-ID')}</td></tr>`;
         });
         document.getElementById('invItems').innerHTML = tableContent;
 
@@ -212,9 +228,9 @@
         
         const opt = {
             margin: 10,
-            filename: `Nota_Nanda_Teknik_${id}.pdf`,
+            filename: `Nota_NandaTeknik_${id}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, logging: false },
+            html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
@@ -225,16 +241,16 @@
 
     function confirmPay(id) {
         Swal.fire({
-            title: 'Konfirmasi Pembayaran',
-            text: 'Anda akan diarahkan ke WhatsApp untuk mengirimkan bukti transfer.',
+            title: 'Konfirmasi Bayar',
+            text: 'Kirim bukti transfer ke WhatsApp Nanda Teknik?',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#25d366',
-            confirmButtonText: 'Buka WhatsApp',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Ya, Kirim WA',
+            cancelButtonText: 'Nanti saja'
         }).then((result) => {
             if (result.isConfirmed) {
-                const pesan = `Halo Nanda Teknik, saya ingin konfirmasi pembayaran untuk Nota ID: ${id}. Mohon lampirkan foto bukti transfernya di sini ya.`;
+                const pesan = `Halo Nanda Teknik, saya ingin konfirmasi pembayaran untuk *Nota ID: ${id}*. Berikut saya lampirkan bukti transfernya.`;
                 window.open(`https://wa.me/6282331201148?text=${encodeURIComponent(pesan)}`, '_blank');
             }
         });
