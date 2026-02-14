@@ -15,6 +15,14 @@
         /* Kop Surat & Nota Style */
         .invoice-header { border-bottom: 3px solid #0d6efd; padding-bottom: 15px; margin-bottom: 20px; }
         .invoice-footer { border-top: 1px solid #eee; margin-top: 20px; padding-top: 15px; }
+
+        #cardNota {
+            width: 100%; /* Pastikan di web tetap fleksibel */
+        }
+        
+        #cardNota table {
+            width: 100% !important; /* Paksa tabel penuhi lebar nota */
+        }
         
         /* Timeline style for WO */
         .status-step { border-left: 2px solid #e9ecef; padding-left: 25px; position: relative; padding-bottom: 20px; }
@@ -311,44 +319,41 @@
         document.getElementById('notaItems').innerHTML = html;
     }
 
-    function downloadPDF() {
+ function downloadPDF() {
     const element = document.getElementById('cardNota');
     const notaId = document.getElementById('notaIdDisplay').innerText;
     
-    // Simpan gaya asli supaya tampilan di web tidak rusak setelah download
+    // Simpan gaya asli
     const originalWidth = element.style.width;
-    const originalShadow = element.style.boxShadow;
+    const originalPadding = element.style.padding;
 
-    // Paksa ukuran elemen agar pas dengan kertas A4 (mencegah kepotong)
-    element.style.width = '800px'; 
-    element.style.boxShadow = 'none'; // Hilangkan shadow agar bersih di PDF
+    // PAKSA LEBAR & PADDING AGAR PENUH DI KERTAS
+    element.style.width = '1000px'; // Lebar lebih besar agar detail tajam
+    element.style.padding = '40px'; // Beri ruang napas di dalam nota
 
     const opt = {
-        margin:       [10, 10, 10, 10], // Atas, kiri, bawah, kanan
+        margin:       0, // Margin nol karena kita atur padding di elemen
         filename:     `Nota_NandaTeknik_${notaId}.pdf`,
-        image:        { type: 'jpeg', quality: 1.0 }, // Kualitas maksimal
+        image:        { type: 'jpeg', quality: 1.0 },
         html2canvas:  { 
             scale: 2, 
-            useCORS: true, 
-            letterRendering: true,
-            width: 800 // Kunci lebar canvas agar tidak lari
+            useCORS: true,
+            width: 1000 // Samakan dengan lebar elemen
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     Swal.fire({
         title: 'Menyiapkan PDF...',
-        text: 'Sedang mengatur presisi dokumen',
+        text: 'Mengatur tata letak agar presisi',
         didOpen: () => { Swal.showLoading(); }
     });
 
-    // Proses konversi
     html2pdf().set(opt).from(element).save().then(() => {
-        // Kembalikan ke tampilan semula untuk user
+        // Kembalikan ke tampilan semula
         element.style.width = originalWidth;
-        element.style.boxShadow = originalShadow;
-        
-        Swal.fire('Berhasil!', 'Nota telah diunduh dengan ukuran presisi.', 'success');
+        element.style.padding = originalPadding;
+        Swal.fire('Berhasil!', 'Nota sudah memenuhi kertas.', 'success');
     });
 }
 
