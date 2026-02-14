@@ -16,13 +16,8 @@
         .invoice-header { border-bottom: 3px solid #0d6efd; padding-bottom: 15px; margin-bottom: 20px; }
         .invoice-footer { border-top: 1px solid #eee; margin-top: 20px; padding-top: 15px; }
 
-        #cardNota {
-            width: 100%; /* Pastikan di web tetap fleksibel */
-        }
-        
-        #cardNota table {
-            width: 100% !important; /* Paksa tabel penuhi lebar nota */
-        }
+        #cardNota { width: 100%; }
+        #cardNota table { width: 100% !important; }
         
         /* Timeline style for WO */
         .status-step { border-left: 2px solid #e9ecef; padding-left: 25px; position: relative; padding-bottom: 20px; }
@@ -35,7 +30,9 @@
         
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* Khusus tampilan cetak */
+        .pagination-btn { transition: 0.2s; }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
         @media print {
             .no-print { display: none !important; }
             .card-custom { box-shadow: none !important; border: 1px solid #eee !important; display: block !important; }
@@ -69,6 +66,7 @@
             <div id="cardHistory" class="card card-custom p-4 bg-white no-print">
                 <h5 class="fw-bold mb-3"><i class="fas fa-history text-primary me-2"></i>Riwayat Layanan</h5>
                 <div id="historyList"></div>
+                <div id="paginationControls"></div>
             </div>
 
             <div id="cardWO" class="card card-custom bg-white no-print">
@@ -150,8 +148,7 @@
                                     <th class="text-end">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody id="notaItems">
-                                </tbody>
+                            <tbody id="notaItems"></tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Total Akhir</td>
@@ -208,6 +205,11 @@
 
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec';
+    
+    // PAGINATION VARIABLES
+    let currentPage = 1;
+    const rowsPerPage = 5;
+    let globalHistoryData = [];
 
     window.onload = () => {
         checkAdminUI();
@@ -227,8 +229,11 @@
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
         if(!kw) return;
+        
+        currentPage = 1; // Reset page on new search
         showLoader(true);
         resetTampilan();
+        
         try {
             const res = await fetch(WEB_APP_URL, {
                 method: 'POST',
@@ -237,7 +242,10 @@
             const result = await res.json();
             showLoader(false);
             if(result.success) {
-                if(result.type === 'LIST') showHistoryList(result.data);
+                if(result.type === 'LIST') {
+                    globalHistoryData = result.data;
+                    renderHistory();
+                }
                 else if(result.type === 'WO') showWO(result.data);
                 else if(result.type === 'Nota') showNota(result.data);
             } else {
@@ -249,25 +257,59 @@
         }
     }
 
-    function showHistoryList(data) {
+    // RENDER HISTORY DENGAN PAGINATION (MAX 5)
+    function renderHistory() {
         document.getElementById('cardHistory').style.display = 'block';
-        const container = document.getElementById('historyList');
-        container.innerHTML = '';
-        data.forEach(item => {
+        const listContainer = document.getElementById('historyList');
+        const paginationContainer = document.getElementById('paginationControls');
+        listContainer.innerHTML = '';
+        paginationContainer.innerHTML = '';
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageItems = globalHistoryData.slice(start, end);
+
+        pageItems.forEach(item => {
             const isWO = item.type === 'WO';
             const icon = isWO ? 'fa-tools text-primary' : 'fa-file-invoice-dollar text-success';
-            container.innerHTML += `
+            listContainer.innerHTML += `
                 <div class="history-item d-flex justify-content-between align-items-center" onclick="quickView('${item.id}')">
                     <div class="d-flex align-items-center">
                         <div class="bg-light p-2 rounded-3 me-3"><i class="fas ${icon} fa-fw"></i></div>
                         <div>
-                            <div class="fw-bold text-dark">${item.id}</div>
-                            <div class="text-muted small">${item.judul}</div>
+                            <div class="fw-bold text-dark" style="font-size:0.9rem;">${item.id}</div>
+                            <div class="text-muted" style="font-size:0.8rem;">${item.judul}</div>
                         </div>
                     </div>
-                    <span class="badge bg-light text-primary border">${item.status}</span>
+                    <div class="text-end">
+                        <span class="badge bg-light text-primary border mb-1" style="font-size:0.7rem;">${item.status}</span>
+                        <div class="text-muted" style="font-size:0.65rem;">${new Date(item.tgl).toLocaleDateString('id-ID')}</div>
+                    </div>
                 </div>`;
         });
+
+        // Pagination Controls
+        if (globalHistoryData.length > rowsPerPage) {
+            const totalPages = Math.ceil(globalHistoryData.length / rowsPerPage);
+            paginationContainer.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 pagination-btn" 
+                        ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">
+                        <i class="fas fa-chevron-left me-1"></i> Prev
+                    </button>
+                    <span class="small fw-bold text-muted">Hal ${currentPage} / ${totalPages}</span>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 pagination-btn" 
+                        ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(1)">
+                        Next <i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                </div>`;
+        }
+    }
+
+    function changePage(step) {
+        currentPage += step;
+        renderHistory();
+        document.getElementById('cardHistory').scrollIntoView({ behavior: 'smooth' });
     }
 
     function quickView(id) {
@@ -319,47 +361,45 @@
         document.getElementById('notaItems').innerHTML = html;
     }
 
- function downloadPDF() {
-    const element = document.getElementById('cardNota');
-    const notaId = document.getElementById('notaIdDisplay').innerText;
-    
-    // Simpan gaya asli
-    const originalWidth = element.style.width;
-    const originalPadding = element.style.padding;
-    const originalMargin = element.style.margin;
+    // PDF PRECISION CROP
+    function downloadPDF() {
+        const element = document.getElementById('cardNota');
+        const notaId = document.getElementById('notaIdDisplay').innerText;
+        
+        const originalWidth = element.style.width;
+        const originalPadding = element.style.padding;
+        const originalMargin = element.style.margin;
 
-    // FIX: Paksa elemen nempel ke atas dan punya lebar standar cetak
-    element.style.width = '800px'; 
-    element.style.margin = '0 auto';
-    element.style.padding = '20px'; // Ruang aman di dalam nota
+        element.style.width = '800px'; 
+        element.style.margin = '0 auto';
+        element.style.padding = '20px';
 
-    const opt = {
-        margin:       [5, 0, 5, 0], // Margin tipis [atas, kiri, bawah, kanan]
-        filename:     `Nota_NandaTeknik_${notaId}.pdf`,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true,
-            scrollY: 0, // PAKSA koordinat Y ke 0 agar tidak ada spasi kosong di atas
-            windowWidth: 800
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+        const opt = {
+            margin:       [5, 0, 5, 0],
+            filename:     `Nota_NandaTeknik_${notaId}.pdf`,
+            image:        { type: 'jpeg', quality: 1.0 },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true,
+                scrollY: 0,
+                windowWidth: 800
+            },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
 
-    Swal.fire({
-        title: 'Menyiapkan PDF...',
-        text: 'Menghilangkan ruang kosong...',
-        didOpen: () => { Swal.showLoading(); }
-    });
+        Swal.fire({
+            title: 'Menyiapkan PDF...',
+            text: 'Menghilangkan ruang kosong...',
+            didOpen: () => { Swal.showLoading(); }
+        });
 
-    html2pdf().set(opt).from(element).save().then(() => {
-        // Kembalikan gaya ke tampilan web
-        element.style.width = originalWidth;
-        element.style.padding = originalPadding;
-        element.style.margin = originalMargin;
-        Swal.fire('Berhasil!', 'Nota sudah presisi di atas kertas.', 'success');
-    });
-}
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.width = originalWidth;
+            element.style.padding = originalPadding;
+            element.style.margin = originalMargin;
+            Swal.fire('Berhasil!', 'Nota sudah presisi.', 'success');
+        });
+    }
 
     async function updateStatusProgress() {
         const id = document.getElementById('woIdDisplay').innerText;
