@@ -3,56 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Pelanggan</title>
+    <title>CRM Pelanggan - Pendaftaran</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
     <style>
-        body { background: #f8f9fa; font-family: sans-serif; }
-        #map { height: 300px; border-radius: 10px; margin-bottom: 15px; }
-        .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; justify-content: center; align-items: center; }
+        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; color: #333; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #map { height: 250px; border-radius: 10px; margin: 15px 0; border: 1px solid #ddd; }
+        .btn-primary { background-color: #007bff; border: none; border-radius: 8px; padding: 10px; }
+        .loader-wrapper { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .step-box { display: none; }
+        .step-active { display: block; }
     </style>
 </head>
 <body>
 
-<div class="spinner-overlay" id="loader">
-    <div class="spinner-border text-primary" role="status"></div>
+<div class="loader-wrapper" id="loader">
+    <div class="spinner-border text-primary mb-2"></div>
+    <span>Mohon tunggu...</span>
 </div>
 
 <div class="container py-4">
-    <h4 class="mb-4 text-center">Registrasi Pelanggan</h4>
-    
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div id="step1">
-                <div class="mb-3">
-                    <label>Email</label>
-                    <input type="email" id="email" class="form-control" placeholder="user@mail.com">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h3 class="text-center fw-bold mb-4">CRM Pelanggan</h3>
+            
+            <div class="card p-4">
+                <div id="step-email" class="step-box step-active">
+                    <label class="form-label fw-semibold">Masukkan Email Anda</label>
+                    <input type="email" id="inp-email" class="form-control mb-3" placeholder="contoh@email.com">
+                    <button onclick="handleCekEmail()" class="btn btn-primary w-100">Cek Pendaftaran</button>
                 </div>
-                <button onclick="prosesEmail()" class="btn btn-primary w-100">Lanjut</button>
+
+                <div id="step-otp" class="step-box">
+                    <div class="alert alert-info small">Kami telah mengirimkan kode OTP ke email Anda.</div>
+                    <label class="form-label fw-semibold">Kode OTP</label>
+                    <input type="number" id="inp-otp" class="form-control mb-3" placeholder="4 Digit">
+                    <button onclick="handleVerifikasiOTP()" class="btn btn-success w-100 mb-2">Verifikasi OTP</button>
+                    <button id="btn-resend" onclick="handleSendOTP()" class="btn btn-light btn-sm w-100" disabled>Kirim Ulang (30s)</button>
+                </div>
+
+                <div id="step-form" class="step-box">
+                    <h5 class="fw-bold mb-3">Lengkapi Data Diri</h5>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Nama Lengkap</label>
+                        <input type="text" id="inp-nama" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Nomor WhatsApp</label>
+                        <input type="tel" id="inp-wa" class="form-control" placeholder="081xxx">
+                    </div>
+                    
+                    <label class="small fw-bold">Lokasi Pemasangan</label>
+                    <div id="map"></div>
+                    <div class="mb-3">
+                        <textarea id="inp-alamat" class="form-control small" rows="2" placeholder="Nama jalan muncul otomatis..." readonly></textarea>
+                        <input type="hidden" id="inp-lat">
+                        <input type="hidden" id="inp-lang">
+                    </div>
+
+                    <button onclick="handleSimpan()" class="btn btn-primary w-100">Daftar Sekarang</button>
+                </div>
             </div>
 
-            <div id="stepForm" class="d-none">
-                <div class="mb-3"><input type="text" id="nama" class="form-control" placeholder="Nama Lengkap"></div>
-                <div class="mb-3"><input type="text" id="whatsapp" class="form-control" placeholder="No WhatsApp"></div>
-                <div id="map"></div>
-                <div class="mb-3">
-                    <input type="text" id="alamat" class="form-control" placeholder="Alamat Otomatis..." readonly>
-                    <input type="hidden" id="lat"> <input type="hidden" id="lang">
-                </div>
-                <div id="otpSection" class="d-none">
-                    <hr>
-                    <input type="text" id="otpInput" class="form-control mb-2" placeholder="Masukkan OTP">
-                    <button id="btnResend" onclick="sendOTP()" class="btn btn-sm btn-link" disabled>Kirim Ulang (30s)</button>
-                </div>
-                <button onclick="simpanData()" class="btn btn-success w-100 mt-3">Konfirmasi & Simpan</button>
+            <div class="mt-5">
+                <h5 class="fw-bold">Pelanggan Terdaftar</h5>
+                <hr>
+                <div id="pelanggan-list"></div>
+                <div id="pagination" class="d-flex justify-content-center mt-3"></div>
             </div>
         </div>
     </div>
-
-    <h5 class="mb-3">Daftar Pelanggan</h5>
-    <div id="listPelanggan" class="list-group mb-3"></div>
-    <nav><ul class="pagination justify-content-center" id="pagination"></ul></nav>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -60,74 +84,78 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1K6EyZEMBqALn_V85YWOr_XU6oy8vqNplNG9nuisrqXw0d79RhyEhwsguIO8Z6D4J/exec";
-    let map, marker, currentOTP;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1K6EyZEMBqALn_V85YWOr_XU6oy8vqNplNG9nuisrqXw0d79RhyEhwsguIO8Z6D4J/exec"; // Paste URL /exec di sini
+    let serverOTP = "";
+    let map, marker;
     let countdown = 30;
 
-    // Inisialisasi Map
-    function initMap() {
-        map = L.map('map').setView([-6.2000, 106.8166], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        // Fitur Cari Alamat
-        L.Control.geocoder().addTo(map);
+    // --- FUNGSI NAVIGASI ---
+    function showStep(stepId) {
+        document.querySelectorAll('.step-box').forEach(el => el.classList.remove('step-active'));
+        document.getElementById(stepId).classList.add('step-active');
+    }
 
-        marker = L.marker([-6.2000, 106.8166], {draggable: true}).addTo(map);
-        
-        marker.on('dragend', function(e) {
-            updatePosisi(e.target.getLatLng());
+    function toggleLoader(show) {
+        document.getElementById('loader').style.display = show ? 'flex' : 'none';
+    }
+
+    // --- LOGIKA CEK EMAIL ---
+    async function handleCekEmail() {
+        const email = document.getElementById('inp-email').value;
+        if (!email.includes('@')) return Swal.fire('Oops!', 'Masukkan email valid', 'warning');
+
+        toggleLoader(true);
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'checkEmail', email: email })
+            });
+            const res = await response.json();
+            
+            if (res.exists) {
+                Swal.fire({
+                    title: 'Sudah Terdaftar!',
+                    text: `Halo ${res.nama}, Anda sudah terdaftar. Lanjut buat Work Order?`,
+                    icon: 'success',
+                    confirmButtonText: 'Ya, Lanjut'
+                }).then(() => {
+                    window.location.href = "pekerjaan.html";
+                });
+            } else {
+                handleSendOTP(); // Jika belum ada, kirim OTP
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Gagal cek email: ' + e.message, 'error');
+        }
+        toggleLoader(false);
+    }
+
+    // --- LOGIKA OTP ---
+    async function handleSendOTP() {
+        const email = document.getElementById('inp-email').value;
+        toggleLoader(true);
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'sendOTP', email: email })
         });
+        const res = await response.json();
+        toggleLoader(false);
 
-        getLocation();
-    }
-
-    function getLocation() {
-        document.getElementById('loader').style.display = 'flex';
-        navigator.geolocation.getCurrentPosition(pos => {
-            const p = {lat: pos.coords.latitude, lng: pos.coords.longitude};
-            map.setView(p, 15);
-            marker.setLatLng(p);
-            updatePosisi(p);
-            document.getElementById('loader').style.display = 'none';
-        });
-    }
-
-    async function updatePosisi(latlng) {
-        document.getElementById('lat').value = latlng.lat;
-        document.getElementById('lang').value = latlng.lng;
-        // Reverse Geocoding sederhana
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
-        const data = await res.json();
-        document.getElementById('alamat').value = data.display_name;
-    }
-
-    async function prosesEmail() {
-        const email = document.getElementById('email').value;
-        if(!email) return Swal.fire('Error', 'Isi email dulu', 'error');
-
-        // Cek Email ke GAS
-        const res = await fetch(`${SCRIPT_URL}?action=checkEmail&email=${email}`); // Perbaikan: Sesuaikan metode GET/POST di GAS
-        // Logika: Jika exists, arahkan ke pekerjaan.html, jika tidak tampilkan form registrasi + kirim OTP
-        document.getElementById('step1').classList.add('d-none');
-        document.getElementById('stepForm').classList.remove('d-none');
-        initMap();
-        sendOTP();
-    }
-
-    function sendOTP() {
-        // Logika hitung mundur 30 detik
-        startTimer();
-        Swal.fire('OTP Terkirim', 'Silahkan cek email Anda', 'success');
-        // Panggil fetch ke GAS untuk kirim email
+        if (res.success) {
+            serverOTP = res.otp;
+            showStep('step-otp');
+            startTimer();
+            Swal.fire('OTP Terkirim', 'Silahkan cek inbox/spam email Anda', 'info');
+        }
     }
 
     function startTimer() {
-        let btn = document.getElementById('btnResend');
+        let btn = document.getElementById('btn-resend');
         btn.disabled = true;
         let timer = setInterval(() => {
             countdown--;
             btn.innerText = `Kirim Ulang (${countdown}s)`;
-            if(countdown <= 0) {
+            if (countdown <= 0) {
                 clearInterval(timer);
                 btn.disabled = false;
                 btn.innerText = "Kirim Ulang";
@@ -136,7 +164,105 @@
         }, 1000);
     }
 
-    // Fungsi CRUD lainnya (Simpan, Read, Delete) menyusul dengan fetch ke SCRIPT_URL
+    function handleVerifikasiOTP() {
+        const userOTP = document.getElementById('inp-otp').value;
+        if (userOTP === serverOTP) {
+            Swal.fire('Berhasil!', 'Email terverifikasi.', 'success');
+            showStep('step-form');
+            initMap();
+        } else {
+            Swal.fire('Gagal', 'Kode OTP salah!', 'error');
+        }
+    }
+
+    // --- LOGIKA MAPS ---
+    function initMap() {
+        if (map) return;
+        map = L.map('map').setView([-6.2000, 106.8166], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        L.Control.geocoder({ defaultMarkGeocode: false })
+            .on('markgeocode', function(e) {
+                const bbox = e.geocode.bbox;
+                const poly = L.polygon([
+                    [bbox.getSouthEast().lat, bbox.getSouthEast().lng],
+                    [bbox.getNorthEast().lat, bbox.getNorthEast().lng],
+                    [bbox.getNorthWest().lat, bbox.getNorthWest().lng],
+                    [bbox.getSouthWest().lat, bbox.getSouthWest().lng]
+                ]);
+                map.fitBounds(poly.getBounds());
+                updateMarker(e.geocode.center);
+            })
+            .addTo(map);
+
+        marker = L.marker([-6.2000, 106.8166], { draggable: true }).addTo(map);
+        marker.on('dragend', (e) => updateMarker(e.target.getLatLng()));
+        
+        // Ambil lokasi saat ini
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(p => {
+                const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
+                map.setView(pos, 16);
+                updateMarker(pos);
+            });
+        }
+    }
+
+    async function updateMarker(latlng) {
+        marker.setLatLng(latlng);
+        document.getElementById('inp-lat').value = latlng.lat;
+        document.getElementById('inp-lang').value = latlng.lng;
+        
+        // Reverse Geocode
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
+        const data = await res.json();
+        document.getElementById('inp-alamat').value = data.display_name || "Alamat tidak ditemukan";
+    }
+
+    // --- LOGIKA SIMPAN ---
+    async function handleSimpan() {
+        const data = {
+            action: 'register',
+            nama: document.getElementById('inp-nama').value,
+            email: document.getElementById('inp-email').value,
+            whatsapp: document.getElementById('inp-wa').value,
+            lat: document.getElementById('inp-lat').value,
+            lang: document.getElementById('inp-lang').value,
+            alamat: document.getElementById('inp-alamat').value
+        };
+
+        if (!data.nama || !data.whatsapp) return Swal.fire('Error', 'Lengkapi semua kolom!', 'warning');
+
+        toggleLoader(true);
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        const result = await res.json();
+        toggleLoader(false);
+
+        if (result.success) {
+            Swal.fire('Sukses!', 'Pendaftaran berhasil.', 'success').then(() => location.reload());
+        }
+    }
+
+    // --- LOAD DATA (READ) ---
+    async function loadPelanggan(page = 1) {
+        const res = await fetch(`${SCRIPT_URL}?action=read&page=${page}`);
+        const result = await res.json();
+        const container = document.getElementById('pelanggan-list');
+        container.innerHTML = result.data.map(p => `
+            <div class="card p-3 mb-2 small shadow-sm">
+                <div class="d-flex justify-content-between">
+                    <b>${p[0]}</b>
+                    <span class="badge bg-success">Aktif</span>
+                </div>
+                <div>${p[1]} | ${p[3]}</div>
+                <div class="text-muted mt-1" style="font-size: 10px;">${p[7]}</div>
+            </div>
+        `).join('');
+    }
+
+    // Jalankan saat load
+    loadPelanggan();
 </script>
+
 </body>
 </html>
