@@ -326,34 +326,38 @@
     // Simpan gaya asli
     const originalWidth = element.style.width;
     const originalPadding = element.style.padding;
+    const originalMargin = element.style.margin;
 
-    // PAKSA LEBAR & PADDING AGAR PENUH DI KERTAS
-    element.style.width = '1000px'; // Lebar lebih besar agar detail tajam
-    element.style.padding = '40px'; // Beri ruang napas di dalam nota
+    // FIX: Paksa elemen nempel ke atas dan punya lebar standar cetak
+    element.style.width = '800px'; 
+    element.style.margin = '0 auto';
+    element.style.padding = '20px'; // Ruang aman di dalam nota
 
     const opt = {
-        margin:       0, // Margin nol karena kita atur padding di elemen
+        margin:       [5, 0, 5, 0], // Margin tipis [atas, kiri, bawah, kanan]
         filename:     `Nota_NandaTeknik_${notaId}.pdf`,
         image:        { type: 'jpeg', quality: 1.0 },
         html2canvas:  { 
             scale: 2, 
             useCORS: true,
-            width: 1000 // Samakan dengan lebar elemen
+            scrollY: 0, // PAKSA koordinat Y ke 0 agar tidak ada spasi kosong di atas
+            windowWidth: 800
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     Swal.fire({
         title: 'Menyiapkan PDF...',
-        text: 'Mengatur tata letak agar presisi',
+        text: 'Menghilangkan ruang kosong...',
         didOpen: () => { Swal.showLoading(); }
     });
 
     html2pdf().set(opt).from(element).save().then(() => {
-        // Kembalikan ke tampilan semula
+        // Kembalikan gaya ke tampilan web
         element.style.width = originalWidth;
         element.style.padding = originalPadding;
-        Swal.fire('Berhasil!', 'Nota sudah memenuhi kertas.', 'success');
+        element.style.margin = originalMargin;
+        Swal.fire('Berhasil!', 'Nota sudah presisi di atas kertas.', 'success');
     });
 }
 
