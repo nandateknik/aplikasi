@@ -11,26 +11,26 @@
     
     <style>
         :root { --primary-color: #4e73df; --bg-color: #f4f7f6; }
-        body { background-color: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+        body { background-color: var(--bg-color); font-family: 'Segoe UI', sans-serif; color: #333; }
         .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
         .header-section { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; padding: 30px 20px; text-align: center; }
         .form-label { font-weight: 600; font-size: 0.85rem; color: #555; }
         .form-control { border-radius: 10px; padding: 12px; border: 1px solid #ddd; font-size: 0.9rem; }
-        .form-control:focus { box-shadow: 0 0 0 0.25 row rgba(78, 115, 223, 0.25); border-color: var(--primary-color); }
         #map { height: 280px; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .btn-primary { border-radius: 10px; padding: 12px; font-weight: 600; background: var(--primary-color); border: none; }
         .btn-verify { border-radius: 0 10px 10px 0; }
         .admin-badge { background: #ffc107; color: #000; font-size: 0.7rem; padding: 2px 8px; border-radius: 5px; margin-left: 5px; }
-        
-        /* Spinner Loader */
         .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+        /* Animasi */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="spinner-overlay" id="loader">
     <div class="spinner-border text-primary" role="status"></div>
-    <span class="mt-2 fw-bold">Memproses Lokasi...</span>
+    <span class="mt-2 fw-bold">Memproses...</span>
 </div>
 
 <div class="container py-4">
@@ -39,59 +39,56 @@
             <div class="card main-card">
                 <div class="header-section">
                     <h4 class="mb-1">Registrasi Pelanggan</h4>
-                    <p class="small mb-0 opacity-75">Lengkapi data untuk pendaftaran member baru</p>
+                    <p class="small mb-0 opacity-75">Sistem Manajemen Pelanggan Terpadu</p>
                 </div>
                 
                 <div class="card-body p-4">
-                    <div class="form-check form-switch mb-4">
+                    <div id="adminPanel" class="form-check form-switch mb-4" style="display: none;">
                         <input class="form-check-input" type="checkbox" id="isAdmin">
-                        <label class="form-check-label small" for="isAdmin text-muted">Input sebagai Admin <span class="admin-badge">Tanpa OTP</span></label>
+                        <label class="form-check-label small fw-bold" for="isAdmin">
+                            Mode Admin <span class="admin-badge">Bypass OTP Aktif</span>
+                        </label>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label">Alamat Email</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
-                            <input type="email" id="email" class="form-control border-start-0" placeholder="contoh@mail.com">
-                            <button class="btn btn-primary btn-verify" onclick="verifyEmail()">Verifikasi</button>
+                            <input type="email" id="email" class="form-control border-start-0" placeholder="user@mail.com">
+                            <button class="btn btn-primary btn-verify" onclick="verifyEmail()">Cek Email</button>
                         </div>
                     </div>
 
-                    <div id="fullForm" style="display:none;" class="animate__animated animate__fadeIn">
+                    <div id="fullForm" style="display:none;" class="fade-in">
                         <hr class="my-4">
-                        
                         <div class="mb-3">
                             <label class="form-label">Nama Lengkap</label>
-                            <input type="text" id="nama" class="form-control" placeholder="Nama sesuai KTP">
+                            <input type="text" id="nama" class="form-control">
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Nomor WhatsApp</label>
-                            <input type="number" id="whatsapp" class="form-control" placeholder="628123xxx">
+                            <input type="number" id="whatsapp" class="form-control" placeholder="628xxx">
                         </div>
-
                         <div class="mb-3">
-                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Titik Lokasi & Alamat</label>
+                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan</label>
                             <div id="map"></div>
-                            <p class="text-muted style" style="font-size: 0.7rem; margin-top: 5px;">*Geser pin merah ke lokasi yang tepat</p>
-                            <textarea id="alamat" class="form-control mt-2" rows="3" placeholder="Alamat lengkap otomatis muncul di sini..."></textarea>
+                            <textarea id="alamat" class="form-control mt-2" rows="3" placeholder="Detail alamat..."></textarea>
                             <input type="hidden" id="lat">
                             <input type="hidden" id="lang">
                         </div>
 
                         <div id="otpSection" class="card bg-light border-0 p-3 mb-4" style="display:none;">
-                            <label class="form-label">Masukkan Kode OTP</label>
-                            <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="000000">
-                            <button class="btn btn-sm btn-link text-decoration-none p-0" id="resendBtn" disabled onclick="sendOTP()">Kirim Ulang OTP (30s)</button>
+                            <label class="form-label">Verifikasi OTP</label>
+                            <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="Kode 6 Digit">
+                            <button class="btn btn-sm btn-link text-decoration-none p-0" id="resendBtn" disabled onclick="sendOTP()">Kirim Ulang (30s)</button>
                         </div>
 
                         <button class="btn btn-primary w-100 shadow" onclick="processRegistration()">
-                            <i class="fas fa-save me-2"></i> Simpan Data Pelanggan
+                            <i class="fas fa-check-circle me-2"></i> Konfirmasi Pendaftaran
                         </button>
                     </div>
                 </div>
             </div>
-            <p class="text-center mt-4 text-muted small">v1.0 CRM Dashboard &copy; 2024</p>
         </div>
     </div>
 </div>
@@ -101,48 +98,39 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzApRUQZUaGXqChQ9whxyHm_O78a-f7rabjQJ29L6aytFcOaYKJKdpPXEnJdVrfTJ2d/exec'; // Ganti dengan URL Google Apps Script Anda
-    let map, marker, geocoder, serverOTP;
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzApRUQZUaGXqChQ9whxyHm_O78a-f7rabjQJ29L6aytFcOaYKJKdpPXEnJdVrfTJ2d/exec';
+    let map, marker, serverOTP;
 
-    // Inisialisasi Peta
+    // Cek Role Admin saat halaman dimuat
+    window.onload = function() {
+        if(localStorage.getItem('role') === 'admin') {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+    };
+
     function initMap() {
-        if (map) return; // Mencegah inisialisasi ulang
-        
+        if (map) return;
         map = L.map('map').setView([-6.200000, 106.816666], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         
-        // Fitur Cari Nama Tempat
-        L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: "Cari nama jalan/tempat..."
-        }).on('markgeocode', function(e) {
-            let bbox = e.geocode.bbox;
+        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Cari alamat..." })
+        .on('markgeocode', function(e) {
             let center = e.geocode.center;
-            map.fitBounds(bbox);
+            map.setView(center, 16);
             marker.setLatLng(center);
             updateLocationInfo(center.lat, center.lng);
         }).addTo(map);
 
         marker = L.marker([-6.200000, 106.816666], {draggable: true}).addTo(map);
-        
-        marker.on('dragend', function(e) {
-            let pos = e.target.getLatLng();
-            updateLocationInfo(pos.lat, pos.lng);
-        });
+        marker.on('dragend', (e) => updateLocationInfo(e.target.getLatLng().lat, e.target.getLatLng().lng));
 
-        // Ambil Lokasi Terkini Otomatis
         if (navigator.geolocation) {
-            document.getElementById('loader').style.display = 'flex';
             navigator.geolocation.getCurrentPosition(pos => {
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
                 map.setView([lat, lng], 16);
                 marker.setLatLng([lat, lng]);
                 updateLocationInfo(lat, lng);
-                document.getElementById('loader').style.display = 'none';
-            }, () => {
-                document.getElementById('loader').style.display = 'none';
-                Swal.fire('Info', 'Gagal mengambil lokasi otomatis, silakan cari manual.', 'info');
             });
         }
     }
@@ -151,17 +139,16 @@
         document.getElementById('lat').value = lat;
         document.getElementById('lang').value = lng;
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json()).then(data => {
                 document.getElementById('alamat').value = data.display_name;
             });
     }
 
     async function verifyEmail() {
         const email = document.getElementById('email').value;
-        const isAdmin = document.getElementById('isAdmin').checked;
+        const isAdminMode = document.getElementById('isAdmin').checked;
         
-        if(!email) return Swal.fire('Error', 'Masukkan email terlebih dahulu', 'error');
+        if(!email) return Swal.fire('Peringatan', 'Isi email dulu ya', 'warning');
         
         document.getElementById('loader').style.display = 'flex';
         try {
@@ -175,28 +162,26 @@
             if(result.exists) {
                 Swal.fire({
                     title: 'Email Terdaftar!',
-                    text: 'Email ini sudah ada di sistem. Mau buat Work Order?',
-                    icon: 'info',
+                    text: 'Lanjut bikin Work Order?',
+                    icon: 'success',
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, Buat WO'
-                }).then((res) => {
-                    if(res.isConfirmed) window.location.href = 'pekerjaan.html';
-                });
+                    confirmButtonText: 'Ya, Lanjut'
+                }).then((res) => { if(res.isConfirmed) window.location.href = 'pekerjaan.html'; });
             } else {
-                // Tampilkan form pendaftaran
                 document.getElementById('fullForm').style.display = 'block';
-                setTimeout(() => { initMap(); }, 200); // Tunggu render peta
+                initMap();
                 
-                if (!isAdmin) {
+                // Jika bukan mode admin, kirim OTP
+                if (!isAdminMode) {
                     sendOTP();
                 } else {
                     document.getElementById('otpSection').style.display = 'none';
-                    Swal.fire('Admin Mode', 'Anda dapat mengisi data tanpa OTP', 'success');
+                    Swal.fire('Admin Mode', 'Input data tanpa verifikasi email', 'info');
                 }
             }
         } catch(e) {
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Gagal menghubungi server', 'error');
+            Swal.fire('Error', 'Koneksi bermasalah', 'error');
         }
     }
 
@@ -204,15 +189,19 @@
         const email = document.getElementById('email').value;
         document.getElementById('otpSection').style.display = 'block';
         
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'sendOTP', email: email })
-        });
-        const result = await response.json();
-        if(result.success) {
-            serverOTP = result.otp;
-            startResendTimer();
-            Swal.fire('Terkirim', 'Cek kode OTP di email Anda', 'success');
+        try {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'sendOTP', email: email })
+            });
+            const result = await res.json();
+            if(result.success) {
+                serverOTP = result.otp;
+                startResendTimer();
+                Swal.fire('OTP Terkirim', 'Silakan cek kotak masuk email Anda', 'success');
+            }
+        } catch (e) {
+            Swal.fire('Gagal', 'Gagal mengirim email OTP', 'error');
         }
     }
 
@@ -226,22 +215,22 @@
                 btn.innerText = "Kirim Ulang Aktivasi";
                 btn.disabled = false;
             } else {
-                btn.innerText = `Kirim Ulang OTP (${timeLeft}s)`;
+                btn.innerText = `Kirim Ulang (${timeLeft}s)`;
                 timeLeft--;
             }
         }, 1000);
     }
 
     async function processRegistration() {
-        const isAdmin = document.getElementById('isAdmin').checked;
+        const isAdminMode = document.getElementById('isAdmin').checked;
         const otpInput = document.getElementById('otpInput').value;
         
-        if (!isAdmin && otpInput != serverOTP) {
-            return Swal.fire('Error', 'Kode OTP tidak valid!', 'error');
+        if (!isAdminMode && otpInput != serverOTP) {
+            return Swal.fire('OTP Salah', 'Kode yang Anda masukkan tidak sesuai', 'error');
         }
 
         const data = {
-            action: 'create',
+            action: 'createPelanggan', // Sinkron dengan Backend All-in-One
             nama: document.getElementById('nama').value,
             email: document.getElementById('email').value,
             whatsapp: document.getElementById('whatsapp').value,
@@ -250,21 +239,23 @@
             alamat: document.getElementById('alamat').value
         };
 
-        if(!data.nama || !data.whatsapp || !data.alamat) {
-            return Swal.fire('Peringatan', 'Lengkapi semua data!', 'warning');
-        }
+        if(!data.nama || !data.whatsapp) return Swal.fire('Info', 'Nama & WA wajib diisi', 'warning');
 
         document.getElementById('loader').style.display = 'flex';
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
-        const result = await res.json();
-        document.getElementById('loader').style.display = 'none';
+        try {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
+            const result = await res.json();
+            document.getElementById('loader').style.display = 'none';
 
-        if(result.success) {
-            Swal.fire('Berhasil', 'Data pelanggan telah tersimpan!', 'success')
-            .then(() => location.reload());
+            if(result.success) {
+                Swal.fire('Berhasil', 'Pelanggan baru telah didaftarkan!', 'success')
+                .then(() => location.reload());
+            }
+        } catch(e) {
+            document.getElementById('loader').style.display = 'none';
+            Swal.fire('Error', 'Gagal menyimpan ke database', 'error');
         }
     }
 </script>
-
 </body>
 </html>
