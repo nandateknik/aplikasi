@@ -15,9 +15,9 @@
         .is-valid-email { color: #198754; font-size: 0.85rem; display: none; font-weight: 600; }
         .btn-register { display: none; margin-top: 8px; }
         .price-box { background: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #dee2e6; margin-top: 20px; }
-        .item-list { max-height: 200px; overflow-y: auto; margin-top: 10px; }
-        .badge-jasa { background: #eef2ff; color: #4e73df; border: 1px solid #4e73df; }
+        .item-list { max-height: 300px; overflow-y: auto; margin-top: 10px; }
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .qty-controls .btn { padding: 0px 8px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -77,7 +77,7 @@
                 </div>
 
                 <div id="itemContainer" style="display:none;">
-                    <h6 class="fw-bold small">Daftar Item:</h6>
+                    <h6 class="fw-bold small text-muted">KERANJANG JASA:</h6>
                     <ul class="list-group item-list mb-3" id="itemList"></ul>
                 </div>
 
@@ -109,13 +109,12 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // --- KONFIGURASI ---
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxl-YIdypbqkdHh60bCkTUIZP_FuwmAxae5wr0aEnZI1EZX28x8e3UdNJdlWhb1fK6s/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
     
     let map, marker, timeoutCheck;
     let pelangganData = null;
-    let selectedItems = [];
+    let selectedItems = []; // Array of {nama, harga, qty}
     let bensinCost = 0;
 
     window.onload = () => {
@@ -136,16 +135,6 @@
 
         marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
         marker.on('dragend', (e) => updateLocationInfo(e.target.getLatLng().lat, e.target.getLatLng().lng));
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                map.setView([lat, lng], 15);
-                marker.setLatLng([lat, lng]);
-                updateLocationInfo(lat, lng);
-            });
-        }
     }
 
     function updateLocationInfo(lat, lng) {
@@ -166,10 +155,8 @@
     async function checkEmail() {
         const email = document.getElementById('email').value;
         if(email.length < 5) return;
-
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
         const result = await res.json();
-
         if(result.success) {
             pelangganData = result.data;
             document.getElementById('statusIcon').innerHTML = '<i class="fas fa-check text-success"></i>';
@@ -212,7 +199,13 @@
         const nama = select.options[select.selectedIndex].text;
         const harga = parseInt(select.value);
         if(!harga) return;
-        selectedItems.push({ nama, harga });
+
+        const existing = selectedItems.find(i => i.nama === nama);
+        if(existing) {
+            existing.qty += 1;
+        } else {
+            selectedItems.push({ nama, harga, qty: 1 });
+        }
         renderItems();
     }
 
@@ -220,9 +213,23 @@
         const nama = document.getElementById('manualNama').value;
         const harga = parseInt(document.getElementById('manualHarga').value);
         if(!nama || !harga) return Swal.fire('Error', 'Isi nama dan harga jasa manual', 'error');
-        selectedItems.push({ nama, harga });
+
+        const existing = selectedItems.find(i => i.nama === nama);
+        if(existing) {
+            existing.qty += 1;
+        } else {
+            selectedItems.push({ nama, harga, qty: 1 });
+        }
         document.getElementById('manualNama').value = '';
         document.getElementById('manualHarga').value = '';
+        renderItems();
+    }
+
+    function updateQty(index, delta) {
+        selectedItems[index].qty += delta;
+        if(selectedItems[index].qty <= 0) {
+            selectedItems.splice(index, 1);
+        }
         renderItems();
     }
 
@@ -235,10 +242,21 @@
         const list = document.getElementById('itemList');
         list.innerHTML = '';
         selectedItems.forEach((item, index) => {
+            const sub = item.harga * item.qty;
             list.innerHTML += `
-                <li class="list-group-item d-flex justify-content-between align-items-center small">
-                    <div><b>${item.nama}</b><br><span class="text-muted">Rp ${item.harga.toLocaleString()}</span></div>
-                    <button class="btn btn-sm btn-link text-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div style="max-width: 60%">
+                        <div class="fw-bold">${item.nama}</div>
+                        <div class="small text-muted">Rp ${item.harga.toLocaleString()} x ${item.qty}</div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="fw-bold me-2 small">Rp ${sub.toLocaleString()}</span>
+                        <div class="btn-group btn-group-sm qty-controls">
+                            <button class="btn btn-outline-secondary" onclick="updateQty(${index}, -1)">-</button>
+                            <button class="btn btn-outline-secondary" onclick="updateQty(${index}, 1)">+</button>
+                            <button class="btn btn-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
                 </li>`;
         });
         document.getElementById('itemContainer').style.display = selectedItems.length > 0 ? 'block' : 'none';
@@ -248,18 +266,16 @@
     function hitungBiaya() {
         const lat = document.getElementById('lat').value;
         const lng = document.getElementById('lang').value;
-        if(!lat) return 0;
-
-        const jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+        let jarak = 0;
+        if(lat && lng) {
+            jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+        }
         document.getElementById('valJarak').innerText = jarak.toFixed(1);
 
-        bensinCost = 0;
-        if(jarak > 5) {
-            bensinCost = Math.ceil(jarak - 5) * 10000;
-        }
+        bensinCost = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
 
-        const subtotalJasa = selectedItems.reduce((acc, curr) => acc + curr.harga, 0);
+        const subtotalJasa = selectedItems.reduce((acc, curr) => acc + (curr.harga * curr.qty), 0);
         document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotalJasa.toLocaleString();
 
         const totalSemua = subtotalJasa + bensinCost;
@@ -274,47 +290,34 @@
         const alamat = document.getElementById('alamat').value;
         const finalTotal = hitungBiaya();
 
-        if(!email || selectedItems.length === 0) {
-            return Swal.fire('Peringatan', 'Lengkapi Email dan pilih minimal 1 Jasa', 'warning');
-        }
-
-        if(!lat || !alamat) {
-            return Swal.fire('Peringatan', 'Tentukan lokasi pekerjaan di map terlebih dahulu', 'warning');
-        }
+        if(!email || selectedItems.length === 0) return Swal.fire('Peringatan', 'Lengkapi Email dan pilih minimal 1 Jasa', 'warning');
+        if(!lat || !alamat) return Swal.fire('Peringatan', 'Tentukan lokasi pekerjaan di map', 'warning');
 
         document.getElementById('loader').style.display = 'flex';
-
         try {
             const payload = {
                 action: 'createNota', 
                 email: email,
-                items: selectedItems, 
+                items: selectedItems, // Mengirim data lengkap dengan qty
                 total: finalTotal,
                 lat: lat,
                 lang: lang,
                 alamat: alamat
             };
 
-            const response = await fetch(WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify(payload) 
-            });
+            const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await response.json();
-
             document.getElementById('loader').style.display = 'none';
 
             if(result.success) {
-                Swal.fire({
-                    title: 'Berhasil!',
-                    html: `Nota: <b>${result.notaId}</b><br>WO: <b>${result.woId}</b><br>Telah berhasil disimpan.`,
-                    icon: 'success'
-                }).then(() => location.reload());
+                Swal.fire({ title: 'Berhasil!', html: `Nota: <b>${result.notaId}</b><br>WO: <b>${result.woId}</b>`, icon: 'success' })
+                .then(() => location.reload());
             } else {
-                Swal.fire('Gagal', result.message || 'Terjadi kesalahan', 'error');
+                Swal.fire('Gagal', result.message, 'error');
             }
         } catch(e) {
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Gagal mengirim data: ' + e.message, 'error');
+            Swal.fire('Error', e.message, 'error');
         }
     }
 </script>
