@@ -312,26 +312,45 @@
     }
 
     function downloadPDF() {
-        const element = document.getElementById('cardNota');
-        const notaId = document.getElementById('notaIdDisplay').innerText;
+    const element = document.getElementById('cardNota');
+    const notaId = document.getElementById('notaIdDisplay').innerText;
+    
+    // Simpan gaya asli supaya tampilan di web tidak rusak setelah download
+    const originalWidth = element.style.width;
+    const originalShadow = element.style.boxShadow;
+
+    // Paksa ukuran elemen agar pas dengan kertas A4 (mencegah kepotong)
+    element.style.width = '800px'; 
+    element.style.boxShadow = 'none'; // Hilangkan shadow agar bersih di PDF
+
+    const opt = {
+        margin:       [10, 10, 10, 10], // Atas, kiri, bawah, kanan
+        filename:     `Nota_NandaTeknik_${notaId}.pdf`,
+        image:        { type: 'jpeg', quality: 1.0 }, // Kualitas maksimal
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            letterRendering: true,
+            width: 800 // Kunci lebar canvas agar tidak lari
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    Swal.fire({
+        title: 'Menyiapkan PDF...',
+        text: 'Sedang mengatur presisi dokumen',
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    // Proses konversi
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Kembalikan ke tampilan semula untuk user
+        element.style.width = originalWidth;
+        element.style.boxShadow = originalShadow;
         
-        const opt = {
-            margin:       10,
-            filename:     `Nota_NandaTeknik_${notaId}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        Swal.fire({
-            title: 'Menyiapkan PDF...',
-            didOpen: () => { Swal.showLoading(); }
-        });
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            Swal.fire('Berhasil!', 'Nota telah diunduh.', 'success');
-        });
-    }
+        Swal.fire('Berhasil!', 'Nota telah diunduh dengan ukuran presisi.', 'success');
+    });
+}
 
     async function updateStatusProgress() {
         const id = document.getElementById('woIdDisplay').innerText;
