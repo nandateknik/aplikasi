@@ -8,18 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
+        :root { --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); --p-blue: #0052d4; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
         .header-section { background: var(--p-grad); padding: 30px 20px 60px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; color: white; text-align: center; }
         .summary-card { background: white; border-radius: 20px; padding: 20px; margin-top: -40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; }
-        .trx-card { background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .trx-card { background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: 0.2s; cursor: pointer; }
+        .trx-card:active { transform: scale(0.98); background: #f8fafc; }
         .icon-box { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1.2rem; }
         .bg-in { background: #e8f5e9; color: #2e7d32; }
         .bg-out { background: #ffebee; color: #c62828; }
         .fab-add { position: fixed; bottom: 95px; right: 20px; width: 55px; height: 55px; border-radius: 18px; background: var(--p-grad); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,82,212,0.3); border: none; z-index: 1000; }
         .form-control, .form-select { border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; padding: 10px 15px; }
         .btn-pay-method { border-radius: 10px; border: 1px solid #eef2f7; background: #f8fafc; color: #64748b; font-weight: 600; }
-        .btn-pay-method.active { background: #0052d4; color: white; border-color: #0052d4; }
+        .btn-pay-method.active { background: var(--p-blue); color: white; border-color: var(--p-blue); }
     </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
 
 <div class="container">
     <div class="summary-card text-center">
-        <small class="text-muted fw-bold">SALDO BERSIH BULAN INI</small>
+        <small class="text-muted fw-bold text-uppercase">Saldo Bersih Bulan Ini</small>
         <h2 class="fw-bold text-primary mt-1" id="labaBersih">Rp 0</h2>
         <hr class="opacity-25">
         <div class="row">
@@ -52,13 +53,16 @@
         </div>
         <div class="col-5">
             <select id="fThn" class="form-select shadow-sm" onchange="loadKeuangan()">
-                <option value="2025">2025</option><option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
             </select>
         </div>
     </div>
 
     <div id="listKeuangan">
-        <div class="text-center py-5 text-muted small">Memuat riwayat kas...</div>
+        <div class="text-center py-5 text-muted small">
+            <div class="spinner-border text-primary spinner-border-sm me-2"></div> Memuat riwayat kas...
+        </div>
     </div>
 </div>
 
@@ -84,7 +88,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">JENIS / ITEM</label>
-                    <input type="text" id="trxJenis" class="form-control" placeholder="Servis AC / Freon / Gaji">
+                    <input type="text" id="trxJenis" class="form-control" placeholder="Servis AC / Sparepart / Gaji">
                 </div>
                 <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">NOMINAL (RP)</label>
@@ -93,8 +97,8 @@
                 <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">METODE PEMBAYARAN</label>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-pay-method flex-fill active" onclick="setMethod('Tunai', this)">Tunai</button>
-                        <button class="btn btn-pay-method flex-fill" onclick="setMethod('Transfer', this)">Transfer</button>
+                        <button class="btn btn-pay-method flex-fill active" id="btnTunai" onclick="setMethod('Tunai', this)">Tunai</button>
+                        <button class="btn btn-pay-method flex-fill" id="btnTransfer" onclick="setMethod('Transfer', this)">Transfer</button>
                     </div>
                     <input type="hidden" id="trxMetode" value="Tunai">
                 </div>
@@ -106,24 +110,24 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">KETERANGAN</label>
+                    <label class="small fw-bold text-muted mb-1">KETERANGAN TAMBAHAN</label>
                     <textarea id="trxKet" class="form-control" rows="2"></textarea>
                 </div>
                 
                 <div class="d-flex gap-2">
                     <button id="btnHapus" class="btn btn-outline-danger px-4 rounded-4 d-none" onclick="hapusTrx()">Hapus</button>
-                    <button class="btn btn-primary flex-grow-1 py-3 fw-bold rounded-4" onclick="simpanTrx()">SIMPAN DATA</button>
+                    <button class="btn btn-primary flex-grow-1 py-3 fw-bold rounded-4" onclick="simpanTrx()" style="background: var(--p-blue);">SIMPAN DATA</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    const API = 'https://script.google.com/macros/s/AKfycbyTPEvTXoivjyQoLu0upHWmfrlYa_YHB19i2pmD4vE3MnrdV0PAHIEbpxjsDAUw6Vgg/exec';
     let myModal;
     const bulanIndo = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
@@ -135,6 +139,7 @@
         const d = new Date();
         blnSelect.value = d.getMonth();
         document.getElementById('fThn').value = d.getFullYear();
+        
         loadKeuangan();
     });
 
@@ -154,7 +159,10 @@
             document.getElementById('trxKet').value = data[3];
             document.getElementById('trxNominal').value = data[4];
             document.getElementById('trxStatus').value = data[7];
-            setMethod(data[5], document.querySelectorAll('.btn-pay-method')[data[5] === 'Tunai' ? 0 : 1]);
+            
+            const isTunai = data[5] === 'Tunai';
+            setMethod(data[5], isTunai ? document.getElementById('btnTunai') : document.getElementById('btnTransfer'));
+            
             document.getElementById('btnHapus').classList.remove('d-none');
         } else {
             document.getElementById('modalTitle').innerText = "Catat Transaksi";
@@ -163,89 +171,129 @@
             document.getElementById('trxJenis').value = "";
             document.getElementById('trxNominal').value = "";
             document.getElementById('trxKet').value = "";
+            document.getElementById('trxKat').value = "Pemasukan";
+            document.getElementById('trxStatus').value = "Lunas";
+            setMethod('Tunai', document.getElementById('btnTunai'));
         }
         myModal.show();
     }
 
     async function loadKeuangan() {
-        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) });
-        const result = await res.json();
-        if(result.success) {
-            const bln = parseInt(document.getElementById('fBln').value);
-            const thn = parseInt(document.getElementById('fThn').value);
-            let masuk = 0, keluar = 0;
-            const container = document.getElementById('listKeuangan');
-
-            const filtered = result.data.filter(r => {
-                const t = new Date(r[0]);
-                return t.getMonth() === bln && t.getFullYear() === thn;
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getLabaRugi' }) 
             });
+            const result = await res.json();
+            
+            if(result.success) {
+                const bln = parseInt(document.getElementById('fBln').value);
+                const thn = parseInt(document.getElementById('fThn').value);
+                let masuk = 0, keluar = 0;
+                const container = document.getElementById('listKeuangan');
 
-            container.innerHTML = filtered.map((r, i) => {
-                const nom = Number(r[4]);
-                const isIn = r[1] === 'Pemasukan';
-                if(r[7] === 'Lunas') { if(isIn) masuk += nom; else keluar += nom; }
-                
-                return `
-                    <div class="trx-card" onclick='bukaModal(${JSON.stringify(r)})'>
-                        <div class="d-flex align-items-center">
-                            <div class="icon-box ${isIn ? 'bg-in' : 'bg-out'}">
-                                <i class="fas ${isIn ? 'fa-wallet' : 'fa-shopping-cart'}"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold small">${r[2]}</div>
-                                <div class="text-muted" style="font-size:0.65rem">${r[5]} • ${r[3]}</div>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold ${isIn ? 'text-success' : 'text-danger'}" style="font-size:0.85rem">
-                                ${isIn ? '+' : '-'} ${nom.toLocaleString()}
-                            </div>
-                            <span class="badge ${r[7] === 'Lunas' ? 'bg-light text-muted' : 'bg-warning text-dark'}" style="font-size:0.5rem">${r[7]}</span>
-                        </div>
-                    </div>`;
-            }).reverse().join('') || '<div class="text-center py-5">Belum ada data, Cah.</div>';
+                const filtered = result.data.filter(r => {
+                    const t = new Date(r[0]);
+                    return t.getMonth() === bln && t.getFullYear() === thn;
+                });
 
-            document.getElementById('totalMasuk').innerText = "Rp " + masuk.toLocaleString();
-            document.getElementById('totalKeluar').innerText = "Rp " + keluar.toLocaleString();
-            document.getElementById('labaBersih').innerText = "Rp " + (masuk - keluar).toLocaleString();
+                container.innerHTML = filtered.map((r) => {
+                    const nom = Number(r[4]);
+                    const isIn = r[1] === 'Pemasukan';
+                    // Hitung saldo bersih hanya dari yang Lunas
+                    if(r[7] === 'Lunas') { 
+                        if(isIn) masuk += nom; else keluar += nom; 
+                    }
+                    
+                    return `
+                        <div class="trx-card" onclick='bukaModal(${JSON.stringify(r)})'>
+                            <div class="d-flex align-items-center">
+                                <div class="icon-box ${isIn ? 'bg-in' : 'bg-out'}">
+                                    <i class="fas ${isIn ? 'fa-wallet' : 'fa-shopping-cart'}"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold small">${r[2]}</div>
+                                    <div class="text-muted" style="font-size:0.65rem">${r[5]} • ${r[3]}</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold ${isIn ? 'text-success' : 'text-danger'}" style="font-size:0.85rem">
+                                    ${isIn ? '+' : '-'} ${nom.toLocaleString()}
+                                </div>
+                                <span class="badge ${r[7] === 'Lunas' ? 'bg-light text-muted' : 'bg-warning text-dark'}" style="font-size:0.55rem">${r[7].toUpperCase()}</span>
+                            </div>
+                        </div>`;
+                }).reverse().join('') || '<div class="text-center py-5 text-muted">Ora ono data transaksi nang sasi iki, Cah.</div>';
+
+                document.getElementById('totalMasuk').innerText = "Rp " + masuk.toLocaleString();
+                document.getElementById('totalKeluar').innerText = "Rp " + keluar.toLocaleString();
+                document.getElementById('labaBersih').innerText = "Rp " + (masuk - keluar).toLocaleString();
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('listKeuangan').innerHTML = '<div class="text-center py-5 text-danger">Gagal nyambung server!</div>';
         }
     }
 
     async function simpanTrx() {
         const oldKet = document.getElementById('editOldKet').value;
+        const nom = document.getElementById('trxNominal').value;
+        const jenis = document.getElementById('trxJenis').value;
+
+        if(!nom || !jenis) return Swal.fire('Kurang!', 'Isi jenis transaksi lan nominale.', 'warning');
+
         const data = {
             action: oldKet ? 'updateTransaksi' : 'addTransaksi',
             oldKet: oldKet,
             oldNom: document.getElementById('editOldNom').value,
             kategori: document.getElementById('trxKat').value,
-            jenis: document.getElementById('trxJenis').value,
-            nominal: document.getElementById('trxNominal').value,
+            jenis: jenis,
+            nominal: nom,
             metode: document.getElementById('trxMetode').value,
             status: document.getElementById('trxStatus').value,
             keterangan: document.getElementById('trxKet').value
         };
 
-        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(API, { method: 'POST', body: JSON.stringify(data) });
-        if((await res.json()).success) {
-            myModal.hide();
-            Swal.fire('Berhasil', 'Data kas diperbarui', 'success').then(() => loadKeuangan());
+        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+        
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
+            const result = await res.json();
+            if(result.success) {
+                myModal.hide();
+                Swal.fire('Sip!', 'Data kas wis diupdate.', 'success').then(() => loadKeuangan());
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Gagal nyimpen data.', 'error');
         }
     }
 
     async function hapusTrx() {
-        const confirm = await Swal.fire({ title: 'Hapus Data?', text: "Data tidak bisa dikembalikan!", icon: 'warning', showCancelButton: true });
+        const confirm = await Swal.fire({ 
+            title: 'Hapus Data?', 
+            text: "Data sing wis dibusak ora iso dibalekne!", 
+            icon: 'warning', 
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Ya, Hapus'
+        });
+
         if(confirm.isConfirmed) {
+            Swal.showLoading();
             const data = { 
                 action: 'hapusTransaksi', 
                 keterangan: document.getElementById('editOldKet').value, 
                 nominal: document.getElementById('editOldNom').value 
             };
-            const res = await fetch(API, { method: 'POST', body: JSON.stringify(data) });
-            if((await res.json()).success) {
-                myModal.hide();
-                loadKeuangan();
+            try {
+                const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
+                const result = await res.json();
+                if(result.success) {
+                    myModal.hide();
+                    Swal.fire('Terhapus', 'Data kas wis ilang.', 'success').then(() => loadKeuangan());
+                }
+            } catch (e) {
+                Swal.fire('Error', 'Gagal mbusak data.', 'error');
             }
         }
     }
