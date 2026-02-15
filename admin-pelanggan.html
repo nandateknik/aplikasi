@@ -3,101 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Pelanggan - Nanda Teknik</title>
+    <title>Database Pelanggan | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --primary-color: #4e73df; --bg-color: #f8f9fc; --text-dark: #5a5c69; }
-        body { background-color: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 80px; padding-top: 65px; }
-        
-        /* Header & Bottom Nav (Konsisten dengan App Sebelumnya) */
-        .app-header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: fixed; top: 0; width: 100%; z-index: 1000; padding: 12px 20px; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #fff; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
-        .nav-item { text-align: center; color: #858796; text-decoration: none; font-size: 0.75rem; transition: 0.3s; }
-        .nav-item.active { color: var(--primary-color); }
-        .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        :root { --primary: #4e73df; --bg-main: #f4f7f6; --text-gray: #5a5c69; }
+        body { background-color: var(--bg-main); font-family: 'Segoe UI', sans-serif; padding-top: 70px; padding-bottom: 80px; }
 
-        /* Tabs UI */
-        .nav-tabs-custom { display: flex; background: #e3e6f0; border-radius: 12px; padding: 5px; margin-bottom: 20px; }
-        .tab-link { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #5a5c69; transition: 0.3s; }
-        .tab-link.active { background: white; color: var(--primary-color); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        /* Header Dashboard */
+        .app-header { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
 
-        /* Card & UI */
-        .card { border: none; border-radius: 15px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); margin-bottom: 20px; }
-        .search-box { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        #map { height: 250px; border-radius: 12px; border: 1px solid #d1d3e2; margin-top: 10px; }
+        /* Tab Navigation Modern */
+        .tab-wrapper { background: white; border-radius: 12px; padding: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; }
+        .tab-btn { flex: 1; border: none; background: transparent; padding: 12px; font-weight: 600; color: var(--text-gray); border-radius: 10px; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        /* Card Design (Identik dengan WO) */
+        .admin-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; background: white; margin-bottom: 20px; }
+        .card-header-gradient { background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%); padding: 20px; border-bottom: 1px solid #e3e6f0; }
         
-        .list-group-item { border: none; border-bottom: 1px solid #e3e6f0; padding: 15px; }
-        .list-group-item:last-child { border-bottom: none; }
-        
-        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .form-label { font-weight: 600; font-size: 0.85rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control { border-radius: 10px; padding: 12px; border: 1px solid #ddd; font-size: 0.95rem; }
+        .form-control:focus { border-color: var(--primary); box-shadow: none; }
+
+        #map { height: 280px; border-radius: 15px; margin: 10px 0; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* Bottom Nav (Konsisten) */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #fff; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { text-align: center; color: #b7b9cc; text-decoration: none; font-size: 0.7rem; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+
+        /* List UI */
+        .cust-item { padding: 20px; border-bottom: 1px solid #f1f1f1; transition: 0.2s; }
+        .cust-item:hover { background-color: #f8f9fc; }
+        .avatar-circle { width: 45px; height: 45px; background: #eef2ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+
+        .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
-<div class="app-header d-flex justify-content-between align-items-center">
-    <h5 class="m-0 fw-bold text-primary"><i class="fas fa-database me-2"></i> CRM Pelanggan</h5>
-    <div class="badge bg-primary rounded-pill">Admin</div>
-</div>
-
-<div class="loader-overlay" id="loader">
+<div class="spinner-overlay" id="loader">
     <div class="spinner-border text-primary" role="status"></div>
-    <span class="mt-2 fw-bold">Sedang Memproses...</span>
+    <span class="mt-2 fw-bold">Memproses...</span>
 </div>
 
-<div class="container mt-3">
-    <div class="nav-tabs-custom">
-        <div class="tab-link active" onclick="switchTab('input')"><i class="fas fa-user-plus me-1"></i> Input Baru</div>
-        <div class="tab-link" onclick="switchTab('data')"><i class="fas fa-list me-1"></i> Semua Data</div>
+<div class="app-header d-flex justify-content-between align-items-center">
+    <h5 class="m-0 fw-bold"><i class="fas fa-users-cog me-2"></i>CRM Database</h5>
+    <i class="fas fa-bell"></i>
+</div>
+
+<div class="container py-3">
+    <div class="tab-wrapper">
+        <button class="tab-btn active" onclick="switchTab('input', this)"><i class="fas fa-user-plus me-2"></i>Tambah</button>
+        <button class="tab-btn" onclick="switchTab('data', this)"><i class="fas fa-address-book me-2"></i>Data Pelanggan</button>
     </div>
 
-    <div id="tabInput">
-        <div class="search-box card">
-            <label class="form-label fw-bold small text-muted">CEK EMAIL PELANGGAN</label>
-            <div class="input-group">
-                <input type="email" id="emailInput" class="form-control" placeholder="user@mail.com">
-                <button class="btn btn-primary" onclick="cekPelanggan()">PROSES</button>
+    <div id="section-input">
+        <div class="card admin-card">
+            <div class="card-header-gradient">
+                <h6 class="m-0 fw-bold text-primary">Validasi & Input Pelanggan</h6>
             </div>
-            <div id="msgBox" class="mt-2 p-2 rounded small" style="display:none"></div>
-            <div id="actionArea" class="mt-2 text-end" style="display:none">
-                <button id="btnNext" class="btn btn-sm btn-primary fw-bold"></button>
-            </div>
-        </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <label class="form-label text-primary">Cek Email Database</label>
+                    <div class="input-group shadow-sm">
+                        <input type="email" id="emailCek" class="form-control" placeholder="pelanggan@mail.com">
+                        <button class="btn btn-primary px-4" onclick="cekData()"><i class="fas fa-search"></i></button>
+                    </div>
+                    <div id="statusNotif" class="mt-2" style="display:none;"></div>
+                </div>
 
-        <div class="card" id="formPendaftaran" style="display:none">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">Lengkapi Data Baru</h6>
-                <div class="mb-3">
-                    <label class="form-label small">Nama Lengkap</label>
-                    <input type="text" id="nama" class="form-control">
+                <div id="formLengkap" style="display:none;" class="animate-fade">
+                    <hr class="my-4">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" id="nama" class="form-control" placeholder="Input nama lengkap">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nomor WhatsApp</label>
+                        <input type="number" id="whatsapp" class="form-control" placeholder="628xxx">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-primary"><i class="fas fa-map-marker-alt me-1"></i> Lokasi Pemasangan</label>
+                        <div id="map"></div>
+                        <textarea id="alamat" class="form-control mt-3" rows="3" placeholder="Alamat detail..."></textarea>
+                    </div>
+                    <button class="btn btn-primary w-100 shadow p-3 fw-bold" onclick="saveCustomer()">
+                        <i class="fas fa-save me-2"></i> SIMPAN PELANGGAN
+                    </button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label small">Nomor WhatsApp</label>
-                    <input type="number" id="wa" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small">Lokasi Pengerjaan</label>
-                    <div id="map"></div>
-                    <textarea id="alamat" class="form-control mt-2" rows="2" placeholder="Detail alamat..."></textarea>
-                    <input type="hidden" id="lat">
-                    <input type="hidden" id="lang">
-                </div>
-                <button class="btn btn-success w-100 fw-bold p-3" onclick="submitPelanggan()">SIMPAN KE DATABASE</button>
             </div>
         </div>
     </div>
 
-    <div id="tabData" style="display:none">
-        <div class="card">
-            <div class="card-body p-0">
-                <div class="p-3 border-bottom">
-                    <input type="text" id="searchData" class="form-control" placeholder="Cari nama atau email..." oninput="filterData()">
+    <div id="section-data" style="display:none;">
+        <div class="card admin-card">
+            <div class="p-3 border-bottom bg-light">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="cariPelanggan" class="form-control border-start-0" placeholder="Cari Nama/Email..." oninput="searchList()">
                 </div>
-                <ul class="list-group list-group-flush" id="containerPelanggan">
-                    </ul>
             </div>
+            <div id="listContainer">
+                </div>
         </div>
     </div>
 </div>
@@ -113,163 +125,94 @@
         <i class="fas fa-file-invoice"></i>Buat WO
     </a>
     <a href="admin-setting.html" class="nav-item">
-        <i class="fas fa-cog"></i>Settings
+        <i class="fas fa-cog"></i>Pengaturan
     </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxl-YIdypbqkdHh60bCkTUIZP_FuwmAxae5wr0aEnZI1EZX28x8e3UdNJdlWhb1fK6s/exec';
-    let map, marker, allPelanggan = [];
-    const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 };
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzYHg4GancnzifepaUK02Eboq8Gp5X7twalj4SCcww-ztpCwSXPgJVCHrxqYaHjaSD4/exec';
+    let map, marker, listData = [];
 
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-link').forEach(el => el.classList.remove('active'));
-        document.getElementById('tabInput').style.display = tab === 'input' ? 'block' : 'none';
-        document.getElementById('tabData').style.display = tab === 'data' ? 'block' : 'none';
-        event.currentTarget.classList.add('active');
-        if(tab === 'data') loadAllPelanggan();
+    function switchTab(type, el) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('section-input').style.display = type === 'input' ? 'block' : 'none';
+        document.getElementById('section-data').style.display = type === 'data' ? 'block' : 'none';
+        if(type === 'data') fetchAllPelanggan();
     }
 
-    // --- LOGIKA TAB 1: CEK & INPUT ---
-    async function cekPelanggan() {
-        const email = document.getElementById('emailInput').value;
+    async function cekData() {
+        const email = document.getElementById('emailCek').value;
         if(!email) return;
-        showLoader(true);
-        try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
-            const result = await res.json();
-            showLoader(false);
+        
+        loading(true);
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'getPelangganByEmail', email}) });
+        const data = await res.json();
+        loading(false);
 
-            const msg = document.getElementById('msgBox');
-            const action = document.getElementById('actionArea');
-            const btn = document.getElementById('btnNext');
-            msg.style.display = 'block'; action.style.display = 'block';
+        const notif = document.getElementById('statusNotif');
+        notif.style.display = 'block';
 
-            if(result.success) {
-                msg.className = "mt-2 p-2 rounded small bg-light text-primary border";
-                msg.innerHTML = `Terdaftar: <b>${result.data.nama}</b>`;
-                btn.innerHTML = `Buat Work Order <i class="fas fa-arrow-right ms-1"></i>`;
-                btn.onclick = () => window.location.href = `admin-buat-wo.html?email=${email}`;
-                document.getElementById('formPendaftaran').style.display = 'none';
-            } else {
-                msg.className = "mt-2 p-2 rounded small bg-light text-success border";
-                msg.innerHTML = `Email baru. Bisa didaftarkan.`;
-                btn.innerHTML = `Buka Form Input <i class="fas fa-edit ms-1"></i>`;
-                btn.onclick = () => initForm(email);
-            }
-        } catch(e) { showLoader(false); }
+        if(data.success) {
+            notif.innerHTML = `<div class="alert alert-info py-2 small fw-bold"><i class="fas fa-check-circle me-1"></i> Pelanggan ditemukan: ${data.data.nama} <br> <button class="btn btn-sm btn-primary mt-2" onclick="location.href='admin-buat-wo.html?email=${email}'">Langsung Buat WO</button></div>`;
+            document.getElementById('formLengkap').style.display = 'none';
+        } else {
+            notif.innerHTML = `<div class="alert alert-success py-2 small fw-bold"><i class="fas fa-info-circle me-1"></i> Email belum terdaftar. Silakan isi form di bawah.</div>`;
+            document.getElementById('formLengkap').style.display = 'block';
+            initMap();
+        }
     }
 
-    function initForm(email) {
-        document.getElementById('formPendaftaran').style.display = 'block';
-        setTimeout(() => {
-            if(!map) {
-                map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
-                marker.on('dragend', (e) => {
-                    const pos = e.target.getLatLng();
-                    document.getElementById('lat').value = pos.lat;
-                    document.getElementById('lang').value = pos.lng;
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`)
-                    .then(r => r.json()).then(d => document.getElementById('alamat').value = d.display_name);
-                });
-            }
-            map.invalidateSize();
-        }, 300);
+    function initMap() {
+        if (map) return;
+        map = L.map('map').setView([-6.2, 106.8], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        marker = L.marker([-6.2, 106.8], {draggable: true}).addTo(map);
+        marker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`)
+            .then(r => r.json()).then(d => document.getElementById('alamat').value = d.display_name);
+        });
     }
 
-    async function submitPelanggan() {
-        const data = {
-            action: 'createPelanggan',
-            nama: document.getElementById('nama').value,
-            email: document.getElementById('emailInput').value,
-            wa: document.getElementById('wa').value,
-            alamat: document.getElementById('alamat').value,
-            lat: document.getElementById('lat').value,
-            lang: document.getElementById('lang').value
-        };
-        if(!data.nama || !data.wa) return Swal.fire('Error', 'Nama dan WA wajib!', 'error');
-        showLoader(true);
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
-        const result = await res.json();
-        showLoader(false);
-        if(result.success) Swal.fire('Berhasil', 'Data disimpan', 'success').then(() => location.reload());
+    async function fetchAllPelanggan() {
+        loading(true);
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'getAllPelanggan'}) });
+        const data = await res.json();
+        listData = data.data;
+        renderList(listData);
+        loading(false);
     }
 
-    // --- LOGIKA TAB 2: CRUD ALL DATA ---
-    async function loadAllPelanggan() {
-        showLoader(true);
-        try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
-            const result = await res.json();
-            allPelanggan = result.data; // Simpan ke global
-            renderPelanggan(allPelanggan);
-        } catch(e) { console.error(e); }
-        showLoader(false);
-    }
-
-    function renderPelanggan(data) {
-        const container = document.getElementById('containerPelanggan');
-        container.innerHTML = '';
-        data.forEach((p, index) => {
-            // p[0]=Nama, p[1]=Email, p[2]=WA, p[3]=Alamat, p[4]=Lat, p[5]=Lang
-            container.innerHTML += `
-                <li class="list-group-item">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="fw-bold text-dark">${p[0]}</div>
-                            <div class="small text-muted"><i class="fas fa-envelope me-1"></i>${p[1]}</div>
-                            <div class="small text-muted"><i class="fab fa-whatsapp me-1 text-success"></i>${p[2]}</div>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-light btn-sm" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                <li><a class="dropdown-item" href="admin-buat-wo.html?email=${p[1]}"><i class="fas fa-file-invoice me-2 text-primary"></i>Buat WO</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="editPelanggan('${p[1]}')"><i class="fas fa-edit me-2 text-warning"></i>Edit</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="#" onclick="deletePelanggan('${p[1]}')"><i class="fas fa-trash me-2"></i>Hapus</a></li>
-                            </ul>
-                        </div>
+    function renderList(data) {
+        const container = document.getElementById('listContainer');
+        container.innerHTML = data.map(p => `
+            <div class="cust-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-circle me-3">${p[0].charAt(0)}</div>
+                    <div>
+                        <div class="fw-bold text-dark">${p[0]}</div>
+                        <div class="small text-muted">${p[1]}</div>
                     </div>
-                </li>`;
-        });
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                    <ul class="dropdown-menu shadow border-0">
+                        <li><a class="dropdown-item" href="admin-buat-wo.html?email=${p[1]}"><i class="fas fa-plus-circle me-2"></i>Buat WO</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="editUser('${p[1]}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteUser('${p[1]}')"><i class="fas fa-trash me-2"></i>Hapus</a></li>
+                    </ul>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function filterData() {
-        const query = document.getElementById('searchData').value.toLowerCase();
-        const filtered = allPelanggan.filter(p => p[0].toLowerCase().includes(query) || p[1].toLowerCase().includes(query));
-        renderPelanggan(filtered);
-    }
-
-    async function deletePelanggan(email) {
-        Swal.fire({
-            title: 'Hapus Pelanggan?',
-            text: "Data yang dihapus tidak bisa dikembalikan!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Ya, Hapus!'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                showLoader(true);
-                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePelanggan', email: email }) });
-                const resJson = await res.json();
-                showLoader(false);
-                if(resJson.success) {
-                    Swal.fire('Terhapus!', 'Data pelanggan telah dihapus.', 'success');
-                    loadAllPelanggan();
-                }
-            }
-        });
-    }
-
-    function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+    function loading(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
