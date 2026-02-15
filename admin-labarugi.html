@@ -3,31 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keuangan - Nanda Teknik</title>
+    <title>Arus Kas - Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         :root { --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
         .header-section { background: var(--p-grad); padding: 30px 20px 60px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; color: white; text-align: center; }
         .summary-card { background: white; border-radius: 20px; padding: 20px; margin-top: -40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; }
-        .trx-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
-        .icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+        .trx-card { background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .icon-box { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 1.2rem; }
         .bg-in { background: #e8f5e9; color: #2e7d32; }
         .bg-out { background: #ffebee; color: #c62828; }
-        .fab-add { position: fixed; bottom: 95px; right: 20px; width: 55px; height: 55px; border-radius: 18px; background: var(--p-grad); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,82,212,0.3); border: none; z-index: 1050; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; height: 75px; display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000; }
-        .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
-        .nav-link.active { color: #0052d4; }
-        .form-select, .form-control { border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; }
+        .fab-add { position: fixed; bottom: 95px; right: 20px; width: 55px; height: 55px; border-radius: 18px; background: var(--p-grad); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,82,212,0.3); border: none; z-index: 1000; }
+        .form-control, .form-select { border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; padding: 10px 15px; }
+        .btn-pay-method { border-radius: 10px; border: 1px solid #eef2f7; background: #f8fafc; color: #64748b; font-weight: 600; }
+        .btn-pay-method.active { background: #0052d4; color: white; border-color: #0052d4; }
     </style>
 </head>
 <body>
 
 <div class="header-section">
-    <h5 class="fw-bold mb-0">Laporan Keuangan</h5>
+    <h5 class="fw-bold mb-0">Arus Kas Keuangan</h5>
     <p class="small opacity-75">Nanda Teknik Management</p>
 </div>
 
@@ -38,11 +36,11 @@
         <hr class="opacity-25">
         <div class="row">
             <div class="col-6 border-end text-success">
-                <small class="text-muted d-block">Masuk</small>
+                <small class="text-muted d-block">Pemasukan</small>
                 <span class="fw-bold" id="totalMasuk">Rp 0</span>
             </div>
             <div class="col-6 text-danger">
-                <small class="text-muted d-block">Keluar</small>
+                <small class="text-muted d-block">Pengeluaran</small>
                 <span class="fw-bold" id="totalKeluar">Rp 0</span>
             </div>
         </div>
@@ -50,12 +48,7 @@
 
     <div class="row g-2 mb-3 mt-4">
         <div class="col-7">
-            <select id="fBln" class="form-select shadow-sm" onchange="loadKeuangan()">
-                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
-                <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
-                <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
-                <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
-            </select>
+            <select id="fBln" class="form-select shadow-sm" onchange="loadKeuangan()"></select>
         </div>
         <div class="col-5">
             <select id="fThn" class="form-select shadow-sm" onchange="loadKeuangan()">
@@ -65,139 +58,195 @@
     </div>
 
     <div id="listKeuangan">
-        <div class="text-center py-5 text-muted small">Memuat data transaksi...</div>
+        <div class="text-center py-5 text-muted small">Memuat riwayat kas...</div>
     </div>
 </div>
 
-<button class="fab-add" onclick="bukaModal()">
-    <i class="fas fa-plus fa-lg"></i>
-</button>
+<button class="fab-add" onclick="bukaModal()"><i class="fas fa-plus fa-lg"></i></button>
 
-<div class="modal fade" id="modalTrx" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalTrx" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 p-2" style="border-radius: 25px;">
             <div class="modal-header border-0">
-                <h6 class="fw-bold mb-0">Catat Keuangan</h6>
+                <h6 class="fw-bold mb-0" id="modalTitle">Catat Transaksi</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-0">
+                <input type="hidden" id="editOldKet">
+                <input type="hidden" id="editOldNom">
+                
                 <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">KATEGORI</label>
                     <select id="trxKat" class="form-select">
                         <option value="Pemasukan">Pemasukan (Uang Masuk)</option>
-                        <option value="Pengeluaran">Pengeluaran (Biaya/Beli)</option>
+                        <option value="Pengeluaran">Pengeluaran (Uang Keluar)</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">JENIS / NAMA ITEM</label>
-                    <input type="text" id="trxJenis" class="form-control" placeholder="Servis AC / Beli Freon">
+                    <label class="small fw-bold text-muted mb-1">JENIS / ITEM</label>
+                    <input type="text" id="trxJenis" class="form-control" placeholder="Servis AC / Freon / Gaji">
                 </div>
                 <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">NOMINAL (RP)</label>
                     <input type="number" id="trxNominal" class="form-control" placeholder="0">
                 </div>
                 <div class="mb-3">
+                    <label class="small fw-bold text-muted mb-1">METODE PEMBAYARAN</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-pay-method flex-fill active" onclick="setMethod('Tunai', this)">Tunai</button>
+                        <button class="btn btn-pay-method flex-fill" onclick="setMethod('Transfer', this)">Transfer</button>
+                    </div>
+                    <input type="hidden" id="trxMetode" value="Tunai">
+                </div>
+                <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">STATUS</label>
                     <select id="trxStatus" class="form-select">
                         <option value="Lunas">Lunas</option>
-                        <option value="Piutang">Piutang (Belum Bayar)</option>
+                        <option value="Piutang">Piutang</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="small fw-bold text-muted mb-1">KETERANGAN</label>
                     <textarea id="trxKet" class="form-control" rows="2"></textarea>
                 </div>
-                <button class="btn btn-primary w-100 py-3 fw-bold rounded-4" onclick="simpanTrx()">SIMPAN TRANSAKSI</button>
+                
+                <div class="d-flex gap-2">
+                    <button id="btnHapus" class="btn btn-outline-danger px-4 rounded-4 d-none" onclick="hapusTrx()">Hapus</button>
+                    <button class="btn btn-primary flex-grow-1 py-3 fw-bold rounded-4" onclick="simpanTrx()">SIMPAN DATA</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="bottom-nav">
-    <a href="#" class="nav-link"><i class="fas fa-th-large"></i>Beranda</a>
-    <a href="#" class="nav-link active"><i class="fas fa-wallet"></i>Keuangan</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxVW-5Xs0BS3VrPlWqQ8gASXRyGHgPof-Qq5UwHDSsdZ7y0bbmiRfG7r9hWKNeTqB8/exec';
+    const API = 'https://script.google.com/macros/s/AKfycbyTPEvTXoivjyQoLu0upHWmfrlYa_YHB19i2pmD4vE3MnrdV0PAHIEbpxjsDAUw6Vgg/exec';
     let myModal;
+    const bulanIndo = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
     document.addEventListener('DOMContentLoaded', function() {
         myModal = new bootstrap.Modal(document.getElementById('modalTrx'));
+        const blnSelect = document.getElementById('fBln');
+        bulanIndo.forEach((b, i) => blnSelect.add(new Option(b, i)));
+        
         const d = new Date();
-        document.getElementById('fBln').value = d.getMonth();
+        blnSelect.value = d.getMonth();
         document.getElementById('fThn').value = d.getFullYear();
         loadKeuangan();
     });
 
-    function bukaModal() { myModal.show(); }
+    function setMethod(m, el) {
+        document.getElementById('trxMetode').value = m;
+        document.querySelectorAll('.btn-pay-method').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function bukaModal(data = null) {
+        if(data) {
+            document.getElementById('modalTitle').innerText = "Edit Transaksi";
+            document.getElementById('editOldKet').value = data[3];
+            document.getElementById('editOldNom').value = data[4];
+            document.getElementById('trxKat').value = data[1];
+            document.getElementById('trxJenis').value = data[2];
+            document.getElementById('trxKet').value = data[3];
+            document.getElementById('trxNominal').value = data[4];
+            document.getElementById('trxStatus').value = data[7];
+            setMethod(data[5], document.querySelectorAll('.btn-pay-method')[data[5] === 'Tunai' ? 0 : 1]);
+            document.getElementById('btnHapus').classList.remove('d-none');
+        } else {
+            document.getElementById('modalTitle').innerText = "Catat Transaksi";
+            document.getElementById('editOldKet').value = "";
+            document.getElementById('btnHapus').classList.add('d-none');
+            document.getElementById('trxJenis').value = "";
+            document.getElementById('trxNominal').value = "";
+            document.getElementById('trxKet').value = "";
+        }
+        myModal.show();
+    }
 
     async function loadKeuangan() {
-        try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) });
-            const result = await res.json();
-            
-            if(result.success) {
-                const bln = parseInt(document.getElementById('fBln').value);
-                const thn = parseInt(document.getElementById('fThn').value);
-                let masuk = 0, keluar = 0;
+        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) });
+        const result = await res.json();
+        if(result.success) {
+            const bln = parseInt(document.getElementById('fBln').value);
+            const thn = parseInt(document.getElementById('fThn').value);
+            let masuk = 0, keluar = 0;
+            const container = document.getElementById('listKeuangan');
 
-                const filtered = result.data.filter(r => {
-                    const t = new Date(r[0]);
-                    return t.getMonth() === bln && t.getFullYear() === thn;
-                });
+            const filtered = result.data.filter(r => {
+                const t = new Date(r[0]);
+                return t.getMonth() === bln && t.getFullYear() === thn;
+            });
 
-                const html = filtered.map(r => {
-                    const nom = Number(r[4]);
-                    const isIn = r[1] === 'Pemasukan';
-                    if(r[6] === 'Lunas') { if(isIn) masuk += nom; else keluar += nom; }
-                    
-                    return `
-                        <div class="trx-card">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box ${isIn ? 'bg-in' : 'bg-out'}"><i class="fas ${isIn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i></div>
-                                <div>
-                                    <div class="fw-bold small">${r[2]}</div>
-                                    <div class="text-muted" style="font-size:0.6rem">${new Date(r[0]).toLocaleDateString()} • ${r[3]}</div>
-                                    ${r[6] === 'Piutang' ? '<span class="badge bg-warning text-dark" style="font-size:0.5rem">PIUTANG</span>' : ''}
-                                </div>
+            container.innerHTML = filtered.map((r, i) => {
+                const nom = Number(r[4]);
+                const isIn = r[1] === 'Pemasukan';
+                if(r[7] === 'Lunas') { if(isIn) masuk += nom; else keluar += nom; }
+                
+                return `
+                    <div class="trx-card" onclick='bukaModal(${JSON.stringify(r)})'>
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box ${isIn ? 'bg-in' : 'bg-out'}">
+                                <i class="fas ${isIn ? 'fa-wallet' : 'fa-shopping-cart'}"></i>
                             </div>
-                            <div class="fw-bold ${isIn ? 'text-success' : 'text-danger'}" style="font-size:0.8rem">
+                            <div>
+                                <div class="fw-bold small">${r[2]}</div>
+                                <div class="text-muted" style="font-size:0.65rem">${r[5]} • ${r[3]}</div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold ${isIn ? 'text-success' : 'text-danger'}" style="font-size:0.85rem">
                                 ${isIn ? '+' : '-'} ${nom.toLocaleString()}
                             </div>
-                        </div>`;
-                }).reverse().join('');
+                            <span class="badge ${r[7] === 'Lunas' ? 'bg-light text-muted' : 'bg-warning text-dark'}" style="font-size:0.5rem">${r[7]}</span>
+                        </div>
+                    </div>`;
+            }).reverse().join('') || '<div class="text-center py-5">Belum ada data, Cah.</div>';
 
-                document.getElementById('listKeuangan').innerHTML = html || '<div class="text-center py-5 text-muted">Gak ono transaksi sasi iki.</div>';
-                document.getElementById('totalMasuk').innerText = "Rp " + masuk.toLocaleString();
-                document.getElementById('totalKeluar').innerText = "Rp " + keluar.toLocaleString();
-                document.getElementById('labaBersih').innerText = "Rp " + (masuk - keluar).toLocaleString();
-            }
-        } catch (e) { console.error(e); }
+            document.getElementById('totalMasuk').innerText = "Rp " + masuk.toLocaleString();
+            document.getElementById('totalKeluar').innerText = "Rp " + keluar.toLocaleString();
+            document.getElementById('labaBersih').innerText = "Rp " + (masuk - keluar).toLocaleString();
+        }
     }
 
     async function simpanTrx() {
+        const oldKet = document.getElementById('editOldKet').value;
         const data = {
-            action: 'addTransaksi',
+            action: oldKet ? 'updateTransaksi' : 'addTransaksi',
+            oldKet: oldKet,
+            oldNom: document.getElementById('editOldNom').value,
             kategori: document.getElementById('trxKat').value,
             jenis: document.getElementById('trxJenis').value,
             nominal: document.getElementById('trxNominal').value,
+            metode: document.getElementById('trxMetode').value,
             status: document.getElementById('trxStatus').value,
             keterangan: document.getElementById('trxKet').value
         };
 
-        if(!data.nominal || !data.jenis) return Swal.fire('Oops', 'Isi nominal & jenisnya', 'warning');
-
-        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
-        const result = await res.json();
-        
-        if(result.success) {
+        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+        const res = await fetch(API, { method: 'POST', body: JSON.stringify(data) });
+        if((await res.json()).success) {
             myModal.hide();
-            Swal.fire('Berhasil', 'Transaksi dicatat', 'success').then(() => loadKeuangan());
+            Swal.fire('Berhasil', 'Data kas diperbarui', 'success').then(() => loadKeuangan());
+        }
+    }
+
+    async function hapusTrx() {
+        const confirm = await Swal.fire({ title: 'Hapus Data?', text: "Data tidak bisa dikembalikan!", icon: 'warning', showCancelButton: true });
+        if(confirm.isConfirmed) {
+            const data = { 
+                action: 'hapusTransaksi', 
+                keterangan: document.getElementById('editOldKet').value, 
+                nominal: document.getElementById('editOldNom').value 
+            };
+            const res = await fetch(API, { method: 'POST', body: JSON.stringify(data) });
+            if((await res.json()).success) {
+                myModal.hide();
+                loadKeuangan();
+            }
         }
     }
 </script>
