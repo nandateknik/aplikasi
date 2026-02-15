@@ -3,216 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Pelanggan | Nanda Teknik</title>
+    <title>Database Pelanggan - Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --primary: #4e73df; --bg-main: #f4f7f6; --text-gray: #5a5c69; }
-        body { background-color: var(--bg-main); font-family: 'Segoe UI', sans-serif; padding-top: 70px; padding-bottom: 80px; }
-
-        /* Header Dashboard */
-        .app-header { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-
-        /* Tab Navigation Modern */
-        .tab-wrapper { background: white; border-radius: 12px; padding: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; }
-        .tab-btn { flex: 1; border: none; background: transparent; padding: 12px; font-weight: 600; color: var(--text-gray); border-radius: 10px; transition: 0.3s; }
-        .tab-btn.active { background: var(--primary); color: white; }
-
-        /* Card Design (Identik dengan WO) */
-        .admin-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; background: white; margin-bottom: 20px; }
-        .card-header-gradient { background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%); padding: 20px; border-bottom: 1px solid #e3e6f0; }
+        body { background: #f4f7f6; font-family: 'Segoe UI', Tahoma, sans-serif; padding-bottom: 80px; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
         
-        .form-label { font-weight: 600; font-size: 0.85rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-control { border-radius: 10px; padding: 12px; border: 1px solid #ddd; font-size: 0.95rem; }
-        .form-control:focus { border-color: var(--primary); box-shadow: none; }
+        /* Tab Navigation Modern */
+        .nav-pills-custom { background: #fff; border-radius: 12px; padding: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .nav-pills-custom .nav-link { border-radius: 10px; color: #6c757d; font-weight: 600; transition: 0.3s; }
+        .nav-pills-custom .nav-link.active { background-color: #0d6efd; color: #fff; }
 
-        #map { height: 280px; border-radius: 15px; margin: 10px 0; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        /* Map & Status */
+        #map { height: 250px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #ddd; }
+        .status-badge { padding: 8px 15px; border-radius: 10px; font-size: 0.85rem; display: none; margin-bottom: 15px; }
 
-        /* Bottom Nav (Konsisten) */
+        /* List Pelanggan */
+        .customer-list { max-height: 500px; overflow-y: auto; }
+        .customer-item { border-bottom: 1px solid #edf2f7; transition: 0.2s; }
+        .customer-item:hover { background: #f8f9fa; }
+        .avatar-circle { width: 40px; height: 40px; background: #e7f1ff; color: #0d6efd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* Loader */
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #fff; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
-        .nav-item { text-align: center; color: #b7b9cc; text-decoration: none; font-size: 0.7rem; transition: 0.3s; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 3px; }
-
-        /* List UI */
-        .cust-item { padding: 20px; border-bottom: 1px solid #f1f1f1; transition: 0.2s; }
-        .cust-item:hover { background-color: #f8f9fc; }
-        .avatar-circle { width: 45px; height: 45px; background: #eef2ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
-
-        .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+        .nav-item-btn { text-align: center; color: #b7b9cc; text-decoration: none; font-size: 0.75rem; }
+        .nav-item-btn.active { color: #0d6efd; }
+        .nav-item-btn i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
-<div class="spinner-overlay" id="loader">
+<div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary" role="status"></div>
-    <span class="mt-2 fw-bold">Memproses...</span>
+    <span class="mt-2 fw-bold">Memproses Data...</span>
 </div>
 
-<div class="app-header d-flex justify-content-between align-items-center">
-    <h5 class="m-0 fw-bold"><i class="fas fa-users-cog me-2"></i>CRM Database</h5>
-    <i class="fas fa-bell"></i>
-</div>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            
+            <ul class="nav nav-pills nav-fill nav-pills-custom mb-4" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-input" data-bs-toggle="pill" data-bs-target="#content-input" type="button"><i class="fas fa-user-plus me-2"></i>Tambah</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-data" data-bs-toggle="pill" data-bs-target="#content-data" type="button" onclick="loadAllPelanggan()"><i class="fas fa-address-book me-2"></i>Database</button>
+                </li>
+            </ul>
 
-<div class="container py-3">
-    <div class="tab-wrapper">
-        <button class="tab-btn active" onclick="switchTab('input', this)"><i class="fas fa-user-plus me-2"></i>Tambah</button>
-        <button class="tab-btn" onclick="switchTab('data', this)"><i class="fas fa-address-book me-2"></i>Data Pelanggan</button>
-    </div>
+            <div class="tab-content" id="pills-tabContent">
+                
+                <div class="tab-pane fade show active" id="content-input" role="tabpanel">
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3 text-primary">Cek & Pendaftaran</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Pelanggan</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                <input type="email" id="email" class="form-control" placeholder="Masukkan email untuk cek..." oninput="resetStatus()">
+                                <button class="btn btn-primary fw-bold" onclick="cekPelanggan()">PROSES</button>
+                            </div>
+                        </div>
 
-    <div id="section-input">
-        <div class="card admin-card">
-            <div class="card-header-gradient">
-                <h6 class="m-0 fw-bold text-primary">Validasi & Input Pelanggan</h6>
+                        <div id="statusBox" class="status-badge"></div>
+
+                        <div id="formReg" style="display:none;">
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Nama Lengkap</label>
+                                <input type="text" id="nama" class="form-control" placeholder="Nama pelanggan">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Nomor WhatsApp</label>
+                                <input type="number" id="wa" class="form-control" placeholder="62812xxx">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Lokasi (Pin di Map)</label>
+                                <div id="map"></div>
+                                <textarea id="alamat" class="form-control" rows="2" placeholder="Alamat lengkap..."></textarea>
+                                <input type="hidden" id="lat">
+                                <input type="hidden" id="lang">
+                            </div>
+                            <button class="btn btn-success w-100 p-3 fw-bold shadow" onclick="simpanPelanggan()">
+                                <i class="fas fa-save me-2"></i>SIMPAN DATA PELANGGAN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="content-data" role="tabpanel">
+                    <div class="card p-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="searchBar" class="form-control border-start-0" placeholder="Cari nama atau email..." oninput="filterPelanggan()">
+                        </div>
+                        <div class="customer-list" id="listContainer">
+                            </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="card-body p-4">
-                <div class="mb-4">
-                    <label class="form-label text-primary">Cek Email Database</label>
-                    <div class="input-group shadow-sm">
-                        <input type="email" id="emailCek" class="form-control" placeholder="pelanggan@mail.com">
-                        <button class="btn btn-primary px-4" onclick="cekData()"><i class="fas fa-search"></i></button>
-                    </div>
-                    <div id="statusNotif" class="mt-2" style="display:none;"></div>
-                </div>
-
-                <div id="formLengkap" style="display:none;" class="animate-fade">
-                    <hr class="my-4">
-                    <div class="mb-3">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" id="nama" class="form-control" placeholder="Input nama lengkap">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nomor WhatsApp</label>
-                        <input type="number" id="whatsapp" class="form-control" placeholder="628xxx">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-primary"><i class="fas fa-map-marker-alt me-1"></i> Lokasi Pemasangan</label>
-                        <div id="map"></div>
-                        <textarea id="alamat" class="form-control mt-3" rows="3" placeholder="Alamat detail..."></textarea>
-                    </div>
-                    <button class="btn btn-primary w-100 shadow p-3 fw-bold" onclick="saveCustomer()">
-                        <i class="fas fa-save me-2"></i> SIMPAN PELANGGAN
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="section-data" style="display:none;">
-        <div class="card admin-card">
-            <div class="p-3 border-bottom bg-light">
-                <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" id="cariPelanggan" class="form-control border-start-0" placeholder="Cari Nama/Email..." oninput="searchList()">
-                </div>
-            </div>
-            <div id="listContainer">
-                </div>
         </div>
     </div>
 </div>
 
 <div class="bottom-nav">
-    <a href="admin-dashboard.html" class="nav-item">
-        <i class="fas fa-home"></i>Dashboard
-    </a>
-    <a href="admin-pelanggan.html" class="nav-item active">
-        <i class="fas fa-users"></i>Pelanggan
-    </a>
-    <a href="admin-buat-wo.html" class="nav-item">
-        <i class="fas fa-file-invoice"></i>Buat WO
-    </a>
-    <a href="admin-setting.html" class="nav-item">
-        <i class="fas fa-cog"></i>Pengaturan
-    </a>
+    <a href="admin-dashboard.html" class="nav-item-btn"><i class="fas fa-th-large"></i>Dashboard</a>
+    <a href="admin-pelanggan.html" class="nav-item-btn active"><i class="fas fa-users"></i>Pelanggan</a>
+    <a href="admin-buat-wo.html" class="nav-item-btn"><i class="fas fa-file-invoice"></i>Buat WO</a>
+    <a href="admin-setting.html" class="nav-item-btn"><i class="fas fa-cog"></i>Setting</a>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzYHg4GancnzifepaUK02Eboq8Gp5X7twalj4SCcww-ztpCwSXPgJVCHrxqYaHjaSD4/exec';
-    let map, marker, listData = [];
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxmzBeRK3ns-5O3KDHSwo_32JsGUCFP3Ee3vS-84z66gXqh2E5BVTlqKR-QIpsDV4_7/exec';
+    const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 };
+    let map, marker, allData = [];
 
-    function switchTab(type, el) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('section-input').style.display = type === 'input' ? 'block' : 'none';
-        document.getElementById('section-data').style.display = type === 'data' ? 'block' : 'none';
-        if(type === 'data') fetchAllPelanggan();
+    function resetStatus() {
+        document.getElementById('statusBox').style.display = 'none';
+        document.getElementById('formReg').style.display = 'none';
     }
 
-    async function cekData() {
-        const email = document.getElementById('emailCek').value;
+    async function cekPelanggan() {
+        const email = document.getElementById('email').value;
         if(!email) return;
-        
-        loading(true);
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'getPelangganByEmail', email}) });
-        const data = await res.json();
-        loading(false);
 
-        const notif = document.getElementById('statusNotif');
-        notif.style.display = 'block';
+        showLoading(true);
+        try {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
+            const result = await res.json();
+            showLoading(false);
 
-        if(data.success) {
-            notif.innerHTML = `<div class="alert alert-info py-2 small fw-bold"><i class="fas fa-check-circle me-1"></i> Pelanggan ditemukan: ${data.data.nama} <br> <button class="btn btn-sm btn-primary mt-2" onclick="location.href='admin-buat-wo.html?email=${email}'">Langsung Buat WO</button></div>`;
-            document.getElementById('formLengkap').style.display = 'none';
-        } else {
-            notif.innerHTML = `<div class="alert alert-success py-2 small fw-bold"><i class="fas fa-info-circle me-1"></i> Email belum terdaftar. Silakan isi form di bawah.</div>`;
-            document.getElementById('formLengkap').style.display = 'block';
-            initMap();
-        }
+            const statusBox = document.getElementById('statusBox');
+            statusBox.style.display = 'block';
+
+            if(result.success) {
+                statusBox.className = "status-badge bg-info-subtle text-primary border border-info";
+                statusBox.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle"></i> <b>${result.data.nama}</b> sudah terdaftar.</span>
+                        <a href="admin-buat-wo.html?email=${email}" class="btn btn-sm btn-primary">Buat WO</a>
+                    </div>`;
+            } else {
+                statusBox.className = "status-badge bg-success-subtle text-success border border-success";
+                statusBox.innerHTML = `<i class="fas fa-plus-circle"></i> Email belum terdaftar. Silakan lengkapi form di bawah.`;
+                document.getElementById('formReg').style.display = 'block';
+                initMap();
+            }
+        } catch(e) { showLoading(false); }
     }
 
     function initMap() {
         if (map) return;
-        map = L.map('map').setView([-6.2, 106.8], 13);
+        map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        marker = L.marker([-6.2, 106.8], {draggable: true}).addTo(map);
-        marker.on('dragend', function(e) {
+        marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
+        marker.on('dragend', (e) => {
             const pos = e.target.getLatLng();
+            document.getElementById('lat').value = pos.lat;
+            document.getElementById('lang').value = pos.lng;
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`)
-            .then(r => r.json()).then(d => document.getElementById('alamat').value = d.display_name);
+                .then(r => r.json()).then(d => document.getElementById('alamat').value = d.display_name);
         });
     }
 
-    async function fetchAllPelanggan() {
-        loading(true);
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'getAllPelanggan'}) });
-        const data = await res.json();
-        listData = data.data;
-        renderList(listData);
-        loading(false);
+    async function simpanPelanggan() {
+        const payload = {
+            action: 'createPelanggan',
+            nama: document.getElementById('nama').value,
+            email: document.getElementById('email').value,
+            wa: document.getElementById('wa').value,
+            alamat: document.getElementById('alamat').value,
+            lat: document.getElementById('lat').value,
+            lang: document.getElementById('lang').value
+        };
+
+        if(!payload.nama || !payload.wa || !payload.lat) return Swal.fire('Peringatan', 'Lengkapi data dan titik map', 'warning');
+
+        showLoading(true);
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        showLoading(false);
+
+        if(result.success) {
+            Swal.fire('Berhasil', 'Pelanggan disimpan!', 'success').then(() => location.reload());
+        }
+    }
+
+    async function loadAllPelanggan() {
+        showLoading(true);
+        try {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
+            const result = await res.json();
+            allData = result.data || [];
+            renderList(allData);
+        } catch(e) { }
+        showLoading(false);
     }
 
     function renderList(data) {
         const container = document.getElementById('listContainer');
+        if(!data || data.length === 0) {
+            container.innerHTML = '<div class="text-center p-4 text-muted small">Tidak ada data.</div>';
+            return;
+        }
         container.innerHTML = data.map(p => `
-            <div class="cust-item d-flex justify-content-between align-items-center">
+            <div class="customer-item p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <div class="avatar-circle me-3">${p[0].charAt(0)}</div>
+                    <div class="avatar-circle me-3">${p[0].charAt(0).toUpperCase()}</div>
                     <div>
-                        <div class="fw-bold text-dark">${p[0]}</div>
-                        <div class="small text-muted">${p[1]}</div>
+                        <div class="fw-bold small">${p[0]}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">${p[1]}</div>
                     </div>
                 </div>
                 <div class="dropdown">
-                    <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
-                    <ul class="dropdown-menu shadow border-0">
-                        <li><a class="dropdown-item" href="admin-buat-wo.html?email=${p[1]}"><i class="fas fa-plus-circle me-2"></i>Buat WO</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="editUser('${p[1]}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteUser('${p[1]}')"><i class="fas fa-trash me-2"></i>Hapus</a></li>
+                    <button class="btn btn-light btn-sm rounded-pill" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><a class="dropdown-item small" href="admin-buat-wo.html?email=${p[1]}"><i class="fas fa-file-invoice me-2 text-primary"></i>Buat WO</a></li>
+                        <li><a class="dropdown-item small text-danger" href="#" onclick="deleteUser('${p[1]}')"><i class="fas fa-trash me-2"></i>Hapus</a></li>
                     </ul>
                 </div>
             </div>
         `).join('');
     }
 
-    function loading(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+    function filterPelanggan() {
+        const key = document.getElementById('searchBar').value.toLowerCase();
+        const filtered = allData.filter(p => p[0].toLowerCase().includes(key) || p[1].toLowerCase().includes(key));
+        renderList(filtered);
+    }
+
+    async function deleteUser(email) {
+        const ask = await Swal.fire({ title: 'Hapus?', text: email, icon: 'warning', showCancelButton: true });
+        if(ask.isConfirmed) {
+            showLoading(true);
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePelanggan', email: email }) });
+            showLoading(false);
+            loadAllPelanggan();
+        }
+    }
+
+    function showLoading(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
 </script>
 </body>
 </html>
