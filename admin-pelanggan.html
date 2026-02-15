@@ -13,49 +13,16 @@
     <style>
         :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
-        
-        .header-section {
-            background: var(--p-grad); padding: 30px 20px 50px;
-            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
-            color: white; margin-bottom: -30px;
-        }
-
-        .search-container {
-            background: white; border-radius: 15px; padding: 5px 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
-            border: 1px solid #eef2f7;
-        }
-
-        .customer-card {
-            background: white; border-radius: 20px; padding: 15px; margin-bottom: 12px;
-            border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-            display: flex; align-items: center; justify-content: space-between;
-        }
-
-        .avatar-box {
-            width: 48px; height: 48px; background: #f0f7ff; color: var(--p-blue);
-            border-radius: 14px; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 1.1rem; margin-right: 15px;
-        }
-
-        #map, #mapEdit { height: 180px; border-radius: 15px; margin: 10px 0; border: 1px solid #e2e8f0; }
-
-        .fab-add {
-            position: fixed; bottom: 95px; right: 20px;
-            width: 55px; height: 55px; border-radius: 18px;
-            background: var(--p-grad); color: white;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999; border: none;
-        }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
-            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000;
-        }
+        .header-section { background: var(--p-grad); padding: 30px 20px 50px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; color: white; margin-bottom: -30px; }
+        .search-container { background: white; border-radius: 15px; padding: 5px 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eef2f7; }
+        .customer-card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 12px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between; }
+        .avatar-box { width: 48px; height: 48px; background: #f0f7ff; color: var(--p-blue); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; margin-right: 15px; }
+        #map { height: 180px; border-radius: 15px; margin: 10px 0; border: 1px solid #e2e8f0; }
+        .fab-add { position: fixed; bottom: 95px; right: 20px; width: 55px; height: 55px; border-radius: 18px; background: var(--p-grad); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999; border: none; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; height: 75px; display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
         .nav-link.active { color: var(--p-blue); }
         .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
-
         .form-label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         .form-control, .form-select { border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; padding: 10px; font-size: 0.9rem; }
         .modal-content { border-radius: 25px; border: none; }
@@ -128,7 +95,7 @@
                 <input type="hidden" id="custLat">
                 <input type="hidden" id="custLang">
                 
-                <div id="btnGroupEdit" class="d-flex gap-2 mt-3" style="display:none !important;">
+                <div id="btnGroupEdit" class="d-none gap-2 mt-3">
                     <button class="btn btn-light flex-fill py-3 fw-bold text-danger border" onclick="hapusPelanggan()">HAPUS</button>
                     <button class="btn btn-primary flex-fill py-3 fw-bold" onclick="prosesSimpan('updatePelanggan')">UPDATE DATA</button>
                 </div>
@@ -142,10 +109,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<script src="config.js"></script>
+
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzz6U_WDAp-kZvKGnk8U-zoLrnk-_9hp_HjF1dZCCcZmoRB-C5TGaP7SERDJ5k0QHTQ/exec';
-    const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 };
-    let map, marker, allData = [], mode = 'add';
+    let map, marker, allData = [];
     let modalCust;
 
     window.onload = () => {
@@ -159,7 +126,10 @@
 
     async function loadAllPelanggan() {
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getAllPelanggan' }) 
+            });
             const result = await res.json();
             allData = result.data || [];
             renderList(allData);
@@ -190,8 +160,9 @@
     }
 
     function initMap() {
-        const lat = parseFloat(document.getElementById('custLat').value) || KANTOR_COORDS.lat;
-        const lng = parseFloat(document.getElementById('custLang').value) || KANTOR_COORDS.lng;
+        // Manggil koordinat default seko CONFIG
+        const lat = parseFloat(document.getElementById('custLat').value) || CONFIG.KANTOR_COORDS.lat;
+        const lng = parseFloat(document.getElementById('custLang').value) || CONFIG.KANTOR_COORDS.lng;
 
         if (map) map.remove();
         map = L.map('map').setView([lat, lng], 15);
@@ -211,7 +182,6 @@
     }
 
     function bukaModalTambah() {
-        mode = 'add';
         document.getElementById('modalTitle').innerText = "Tambah Pelanggan Baru";
         document.getElementById('custEmail').disabled = false;
         document.getElementById('custEmail').value = "";
@@ -220,19 +190,20 @@
         document.getElementById('custTanggal').value = new Date().toISOString().split('T')[0];
         document.getElementById('custStatus').value = "Active";
         document.getElementById('custAlamat').value = "";
-        document.getElementById('custLat').value = KANTOR_COORDS.lat;
-        document.getElementById('custLang').value = KANTOR_COORDS.lng;
         
-        document.getElementById('btnSimpanBaru').style.setProperty('display', 'block', 'important');
-        document.getElementById('btnGroupEdit').style.setProperty('display', 'none', 'important');
+        // Default koordinat neng Kantor Pusat seko CONFIG
+        document.getElementById('custLat').value = CONFIG.KANTOR_COORDS.lat;
+        document.getElementById('custLang').value = CONFIG.KANTOR_COORDS.lng;
+        
+        document.getElementById('btnSimpanBaru').classList.remove('d-none');
+        document.getElementById('btnGroupEdit').classList.add('d-none');
         modalCust.show();
     }
 
     function bukaModalEdit(p) {
-        mode = 'edit';
         document.getElementById('modalTitle').innerText = "Update Data Pelanggan";
         document.getElementById('custEmail').value = p[1];
-        document.getElementById('custEmail').disabled = true; // Email tidak boleh diganti
+        document.getElementById('custEmail').disabled = true;
         document.getElementById('custNama').value = p[0];
         document.getElementById('custTanggal').value = formatTgl(p[2]);
         document.getElementById('custWa').value = p[3];
@@ -241,8 +212,9 @@
         document.getElementById('custStatus').value = p[6];
         document.getElementById('custAlamat').value = (p[7] === "undefined" || !p[7]) ? "" : p[7];
         
-        document.getElementById('btnSimpanBaru').style.setProperty('display', 'none', 'important');
-        document.getElementById('btnGroupEdit').style.setProperty('display', 'flex', 'important');
+        document.getElementById('btnSimpanBaru').classList.add('d-none');
+        document.getElementById('btnGroupEdit').classList.remove('d-none');
+        document.getElementById('btnGroupEdit').classList.add('d-flex');
         modalCust.show();
     }
 
@@ -267,24 +239,38 @@
 
         if(!payload.email || !payload.nama) return Swal.fire('Oops', 'Nama & Email wajib diisi', 'warning');
 
-        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
+        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
         
-        if(result.success) {
-            modalCust.hide();
-            Swal.fire('Berhasil', 'Data telah diperbarui', 'success').then(() => loadAllPelanggan());
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            if(result.success) {
+                modalCust.hide();
+                Swal.fire('Berhasil', 'Data wis diupdate!', 'success').then(() => loadAllPelanggan());
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Gagal kirim data', 'error');
         }
     }
 
     async function hapusPelanggan() {
         const email = document.getElementById('custEmail').value;
-        const confirm = await Swal.fire({ title: 'Hapus?', text: "Data pelanggan akan hilang!", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus' });
+        const confirm = await Swal.fire({ 
+            title: 'Hapus?', text: "Data bakal ilang permanen!", icon: 'warning', 
+            showCancelButton: true, confirmButtonText: 'Ya, Hapus' 
+        });
+        
         if(confirm.isConfirmed) {
             Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePelanggan', email: email }) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'deletePelanggan', email: email }) 
+            });
             const r = await res.json();
-            if(r.success) { modalCust.hide(); Swal.fire('Dihapus', 'Pelanggan berhasil dihapus', 'success').then(() => loadAllPelanggan()); }
+            if(r.success) { 
+                modalCust.hide(); 
+                Swal.fire('Dihapus', 'Pelanggan wis ilang.', 'success').then(() => loadAllPelanggan()); 
+            }
         }
     }
 
