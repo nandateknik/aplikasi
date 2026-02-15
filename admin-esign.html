@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Signature & Stempel | Nanda Teknik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    
+    <style>
+        :root { --primary: #4e73df; --bg-main: #f4f7f6; }
+        body { background-color: var(--bg-main); font-family: 'Segoe UI', sans-serif; padding-top: 70px; padding-bottom: 80px; }
+
+        .app-header { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; position: fixed; top: 0; width: 100%; z-index: 1000; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* Workspace Editor */
+        .editor-container { background: #525659; border-radius: 15px; padding: 20px; min-height: 500px; position: relative; overflow: auto; display: flex; justify-content: center; }
+        #pdf-canvas-wrapper { position: relative; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        .draggable-asset {
+            position: absolute;
+            cursor: move;
+            border: 2px dashed transparent;
+            width: 120px;
+            user-select: none;
+        }
+        .draggable-asset:hover { border-color: var(--primary); }
+        .draggable-asset img { width: 100%; pointer-events: none; }
+        
+        .admin-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); background: white; margin-bottom: 20px; }
+        
+        .toolbar { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .btn-tool { border-radius: 10px; font-weight: 600; padding: 10px 15px; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #fff; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { text-align: center; color: #b7b9cc; text-decoration: none; font-size: 0.7rem; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="app-header d-flex justify-content-between align-items-center">
+    <h5 class="m-0 fw-bold"><i class="fas fa-file-signature me-2"></i>E-Sign & Stempel</h5>
+    <button class="btn btn-sm btn-light fw-bold" onclick="exportPDF()">SIMPAN PDF</button>
+</div>
+
+<div class="container-fluid py-3">
+    <div class="toolbar shadow-sm">
+        <input type="file" id="pdf-upload" accept="application/pdf" hidden onchange="loadPDF(event)">
+        <button class="btn btn-primary btn-tool" onclick="document.getElementById('pdf-upload').click()">
+            <i class="fas fa-upload me-2"></i>Upload PDF
+        </button>
+        <button class="btn btn-outline-primary btn-tool" onclick="addAsset('ttd.png')">
+            <i class="fas fa-pen-nib me-2"></i>Tambah TTD
+        </button>
+        <button class="btn btn-outline-danger btn-tool" onclick="addAsset('stempel.png')">
+            <i class="fas fa-stamp me-2"></i>Tambah Stempel
+        </button>
+        <div class="ms-auto">
+            <button class="btn btn-success btn-tool" onclick="saveToDrive()">
+                <i class="fab fa-google-drive me-2"></i>Simpan ke Drive
+            </button>
+        </div>
+    </div>
+
+    <div class="admin-card p-2">
+        <div class="editor-container" id="editor">
+            <div id="pdf-canvas-wrapper">
+                <canvas id="pdf-render"></canvas>
+                </div>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <a href="admin-dashboard.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
+    <a href="admin-pelanggan.html" class="nav-item"><i class="fas fa-users"></i>Pelanggan</a>
+    <a href="admin-e-sign.html" class="nav-item active"><i class="fas fa-file-signature"></i>E-Sign</a>
+    <a href="admin-setting.html" class="nav-item"><i class="fas fa-cog"></i>Settings</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    let pdfDoc = null;
+    let pdfBytes = null;
+    let scale = 1.5;
+
+    // 1. Load PDF ke Canvas
+    async function loadPDF(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async function() {
+            pdfBytes = new Uint8Array(this.result);
+            const loadingTask = pdfjsLib.getDocument({data: pdfBytes});
+            pdfDoc = await loadingTask.promise;
+            renderPage(1);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    async function renderPage(num) {
+        const page = await pdfDoc.getPage(num);
+        const viewport = page.getViewport({scale: scale});
+        const canvas = document.getElementById('pdf-render');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = { canvasContext: context, viewport: viewport };
+        await page.render(renderContext).promise;
+        
+        document.getElementById('pdf-canvas-wrapper').style.width = canvas.width + 'px';
+        document.getElementById('pdf-canvas-wrapper').style.height = canvas.height + 'px';
+    }
+
+    // 2. Tambah Aset (TTD/Stempel)
+    function addAsset(imgSrc) {
+        if (!pdfDoc) return Swal.fire('Error', 'Upload PDF dulu bos!', 'error');
+
+        const id = 'asset-' + Date.now();
+        const wrapper = document.getElementById('pdf-canvas-wrapper');
+        const div = document.createElement('div');
+        div.className = 'draggable-asset';
+        div.id = id;
+        // Gunakan placeholder jika file asli belum ada
+        const source = imgSrc === 'ttd.png' ? 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Jon_Snow_Signature.png' : 'https://www.pngarts.com/files/1/Stamp-Transparent-Background-PNG.png';
+        
+        div.innerHTML = `<img src="${source}" data-type="${imgSrc}">`;
+        wrapper.appendChild(div);
+
+        // Aktifkan Drag & Drop
+        makeDraggable(id);
+    }
+
+    function makeDraggable(id) {
+        interact('#' + id).draggable({
+            listeners: {
+                move (event) {
+                    const target = event.target;
+                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+                }
+            }
+        }).resizable({
+            edges: { left: true, right: true, bottom: true, top: true }
+        }).on('resizemove', event => {
+            let target = event.target;
+            target.style.width = event.rect.width + 'px';
+        });
+    }
+
+    // 3. Proses Export PDF
+    async function exportPDF() {
+        if (!pdfBytes) return;
+        
+        const { PDFDocument } = PDFLib;
+        const loadedPdf = await PDFDocument.load(pdfBytes);
+        const pages = loadedPdf.getPages();
+        const firstPage = pages[0];
+        const { width, height } = firstPage.getSize();
+
+        // Loop semua aset di layar
+        const assets = document.querySelectorAll('.draggable-asset');
+        for (let asset of assets) {
+            const imgEl = asset.querySelector('img');
+            const imgBytes = await fetch(imgEl.src).then(res => res.arrayBuffer());
+            const image = await loadedPdf.embedPng(imgBytes);
+
+            const x = parseFloat(asset.getAttribute('data-x')) || 0;
+            const y = parseFloat(asset.getAttribute('data-y')) || 0;
+            const assetWidth = asset.offsetWidth;
+            const assetHeight = asset.offsetHeight;
+
+            // Konversi koordinat canvas ke koordinat PDF (PDF koordinat 0,0 di kiri bawah)
+            const pdfX = (x * width) / document.getElementById('pdf-render').width;
+            const pdfY = height - ((y + assetHeight) * height) / document.getElementById('pdf-render').height;
+            const pdfW = (assetWidth * width) / document.getElementById('pdf-render').width;
+            const pdfH = (assetHeight * height) / document.getElementById('pdf-render').height;
+
+            firstPage.drawImage(image, { x: pdfX, y: pdfY, width: pdfW, height: pdfH });
+        }
+
+        const savedBytes = await loadedPdf.save();
+        download(savedBytes, "Dokumen_TandaTangan.pdf", "application/pdf");
+    }
+
+    function download(data, filename, type) {
+        const file = new Blob([data], {type: type});
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 0);
+    }
+    
+    // Fungsi Simpan ke Drive (Integrasikan dengan backend Google Apps Script Anda)
+    function saveToDrive() {
+        Swal.fire('Info', 'Fitur ini memerlukan izin OAuth Google Drive di Apps Script backend Anda.', 'info');
+    }
+</script>
+</body>
+</html>
