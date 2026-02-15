@@ -23,28 +23,22 @@
             border-bottom-left-radius: 35px; border-bottom-right-radius: 35px;
             color: white; box-shadow: 0 10px 20px rgba(0, 82, 212, 0.2);
         }
-
         .action-bar { margin-top: -35px; padding: 0 20px; }
         .search-pill {
             background: white; border-radius: 18px; padding: 12px 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; width: 100%; font-weight: 600;
         }
-
         .wo-card {
             background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px;
             border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s;
         }
-        .wo-card:active { transform: scale(0.97); }
-
         .section-title {
             font-size: 0.7rem; font-weight: 800; color: #64748b;
             text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px;
             display: flex; align-items: center;
         }
         .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 10px; }
-
         .update-box { background: #f8fafc; border-radius: 20px; padding: 15px; border: 1px solid #eef2f7; }
-
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
             display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000;
@@ -52,20 +46,19 @@
         .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
         .nav-link.active { color: var(--p-blue); }
         .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
-
-        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 5px; }
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="premium-header text-center">
     <h4 class="fw-bold mb-0">Admin Nanda Teknik</h4>
-    <p class="small opacity-75">Manajemen Order & Progres</p>
+    <p class="small opacity-75">Banyuwangi Service Center</p>
 </div>
 
 <div class="action-bar">
     <div class="bg-white p-2 rounded-4 shadow-sm mb-3 text-center">
-        <small class="text-muted d-block mb-1 fw-bold">Filter Berdasarkan Tanggal:</small>
+        <small class="text-muted d-block mb-1 fw-bold">Cari Berdasarkan Tanggal:</small>
         <input type="date" id="searchDate" class="form-control border-0 text-center" onchange="applyFilter()">
     </div>
     
@@ -94,17 +87,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                
                 <div class="section-title">Update Nota & Biaya</div>
                 <div class="update-box mb-4">
                     <div id="inputNotaContainer">
                         <div class="row g-2 mb-2">
                             <div class="col-8"><select id="jasaSelect" class="form-select border-0 shadow-sm"></select></div>
-                            <div class="col-4"><button class="btn btn-primary w-100" onclick="tambahItem(false)">Tambah</button></div>
+                            <div class="col-4"><button class="btn btn-primary w-100" onclick="tambahItem(false)">Add</button></div>
                         </div>
                         <div class="p-2 border rounded-3 bg-white mb-2">
                             <div class="d-flex gap-2">
-                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Part">
+                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Barang">
                                 <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
                                 <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Ok</button>
                             </div>
@@ -126,16 +118,15 @@
                         <option value="Selesai">✅ Selesai (Belum Bayar)</option>
                         <option value="Lunas">💰 Lunas & Selesai</option>
                     </select>
-                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="3" placeholder="Catatan teknisi..."></textarea>
+                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="2" placeholder="Tulis progres..."></textarea>
                 </div>
 
                 <div class="section-title">Riwayat Log</div>
                 <div id="timelineList"></div>
-
             </div>
             <div class="modal-footer border-0 p-3 shadow-lg">
-                <button class="btn btn-pdf me-auto" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-                <button class="btn btn-primary px-5 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Simpan</button>
+                <button class="btn btn-danger me-auto" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Cetak Nota</button>
+                <button class="btn btn-primary px-5 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Update</button>
             </div>
         </div>
     </div>
@@ -154,32 +145,20 @@
 
     async function loadRiwayat() {
         document.getElementById('listPekerjaan').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
-        try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getRiwayatAdmin' }) });
-            const result = await res.json();
-            if(result.success) { allData = result.data; applyFilter(); }
-        } catch(e) { Swal.fire('Error', 'Gagal koneksi ke server', 'error'); }
-    }
-
-    function switchTab(t) {
-        currentTab = t;
-        currentPage = 1;
-        document.getElementById('tabOng').className = t === 'Ongoing' ? 'btn btn-primary rounded-pill flex-fill py-2 shadow' : 'btn btn-light rounded-pill flex-fill py-2 shadow-sm';
-        document.getElementById('tabSel').className = t === 'Selesai' ? 'btn btn-primary rounded-pill flex-fill py-2 shadow' : 'btn btn-light rounded-pill flex-fill py-2 shadow-sm';
-        applyFilter();
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getRiwayatAdmin' }) });
+        const result = await res.json();
+        if(result.success) { allData = result.data; applyFilter(); }
     }
 
     function applyFilter() {
-        const filterDate = document.getElementById('searchDate').value; // format YYYY-MM-DD
+        const fDate = document.getElementById('searchDate').value;
         filteredData = allData.filter(d => {
             const isDone = (d.status === 'Lunas' || d.status === 'Selesai');
             const matchStatus = (currentTab === 'Ongoing' ? !isDone : isDone);
-            
-            if (filterDate) {
-                // Konversi d.tgl (asumsi format dd/mm/yyyy atau serupa dari GS) ke format YYYY-MM-DD sederhana
-                const part = d.tgl.split(',')[0].split('/'); // Ubah ini sesuai format tgl lo
-                const formattedDate = `${part[2]}-${part[1].padStart(2,'0')}-${part[0].padStart(2,'0')}`;
-                return matchStatus && formattedDate === filterDate;
+            if (fDate) {
+                const part = d.tgl.split(',')[0].split('/'); 
+                const dFormatted = `${part[2]}-${part[1].padStart(2,'0')}-${part[0].padStart(2,'0')}`;
+                return matchStatus && dFormatted === fDate;
             }
             return matchStatus;
         });
@@ -187,46 +166,40 @@
     }
 
     function renderList() {
-        const start = (currentPage - 1) * pageSize;
-        const end = start + pageSize;
-        const paginatedData = filteredData.slice(start, end);
-
+        const paginated = filteredData.slice((currentPage-1)*pageSize, currentPage*pageSize);
         const container = document.getElementById('listPekerjaan');
-        if (paginatedData.length === 0) {
-            container.innerHTML = '<div class="text-center text-muted p-5">Tidak ada data ditemukan.</div>';
+        if (paginated.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted p-5">Data tidak ditemukan.</div>';
             document.getElementById('paginationCtrl').innerHTML = '';
             return;
         }
-
-        container.innerHTML = paginatedData.map(item => `
+        container.innerHTML = paginated.map(item => `
             <div class="wo-card" onclick="viewDetail('${item.id}')">
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="badge rounded-pill bg-primary" style="font-size:0.6rem;">${item.id}</span>
+                    <span class="badge bg-light text-primary border">${item.id}</span>
                     <span class="small fw-bold ${item.status === 'Lunas' ? 'text-success' : 'text-warning'}">${item.status}</span>
                 </div>
-                <h6 class="fw-bold mb-1">${item.judul}</h6>
-                <div class="small text-dark mb-1"><i class="fas fa-user me-1 text-primary"></i> ${item.namaPelanggan || 'User'}</div>
+                <h6 class="fw-bold mb-1 text-uppercase">${item.judul}</h6>
+                <div class="small mb-1"><i class="fas fa-user me-2 text-primary"></i>${item.namaPelanggan || item.pelanggan || 'Tanpa Nama'}</div>
                 <div class="text-muted" style="font-size: 0.7rem;">
-                    <i class="fas fa-envelope me-1"></i> ${item.email || '-'} <br>
-                    <i class="far fa-calendar-alt me-1"></i> ${item.tgl}
+                    <i class="fas fa-envelope me-2"></i>${item.email || '-'} <br>
+                    <i class="far fa-calendar-alt me-2"></i>${item.tgl}
                 </div>
             </div>
         `).join('');
-
         renderPagination();
     }
 
     function renderPagination() {
-        const totalPages = Math.ceil(filteredData.length / pageSize);
-        const ctrl = document.getElementById('paginationCtrl');
-        ctrl.innerHTML = `
-            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">Prev</button>
-            <span class="small fw-bold">Hal ${currentPage} / ${totalPages || 1}</span>
-            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} onclick="changePage(1)">Next</button>
+        const total = Math.ceil(filteredData.length / pageSize);
+        document.getElementById('paginationCtrl').innerHTML = `
+            <button class="btn btn-sm btn-outline-primary" ${currentPage === 1 ? 'disabled' : ''} onclick="currentPage--;renderList()">Prev</button>
+            <span class="small fw-bold">Hal ${currentPage} / ${total || 1}</span>
+            <button class="btn btn-sm btn-outline-primary" ${currentPage === total || total === 0 ? 'disabled' : ''} onclick="currentPage++;renderList()">Next</button>
         `;
     }
 
-    function changePage(dir) { currentPage += dir; renderList(); }
+    function switchTab(t) { currentTab = t; currentPage = 1; applyFilter(); }
 
     async function viewDetail(id) {
         currentId = id;
@@ -236,15 +209,11 @@
         Swal.close();
         if(r.success) {
             fullDataDetail = r.data;
-            document.getElementById('modalTitleID').innerText = id + " - " + (fullDataDetail.namaPelanggan || 'Detail');
+            document.getElementById('modalTitleID').innerText = id + " - " + (fullDataDetail.namaPelanggan || fullDataDetail.pelanggan || 'Detail');
             document.getElementById('statusSelect').value = fullDataDetail.status;
             selectedItems = fullDataDetail.notaItems || [];
             renderItems();
             renderTimeline(fullDataDetail.history);
-            
-            const isLunas = fullDataDetail.status === 'Lunas';
-            document.getElementById('inputNotaContainer').style.display = isLunas ? 'none' : 'block';
-            document.getElementById('btnSimpan').style.display = isLunas ? 'none' : 'block';
             myModal.show();
         }
     }
@@ -252,36 +221,25 @@
     function tambahItem(isManual) {
         let n, h;
         if(isManual) {
-            n = document.getElementById('manualNama').value;
-            h = parseInt(document.getElementById('manualHarga').value);
+            n = document.getElementById('manualNama').value; h = parseInt(document.getElementById('manualHarga').value);
             if(!n || !h) return;
-            document.getElementById('manualNama').value = '';
-            document.getElementById('manualHarga').value = '';
         } else {
-            const sel = document.getElementById('jasaSelect');
-            n = sel.options[sel.selectedIndex].text;
-            h = parseInt(sel.value);
+            const s = document.getElementById('jasaSelect'); n = s.options[s.selectedIndex].text; h = parseInt(s.value);
         }
-
-        const idx = selectedItems.findIndex(it => it.nama === n);
-        if(idx > -1) selectedItems[idx].qty++;
-        else selectedItems.push({nama: n, harga: h, qty: 1});
+        const idx = selectedItems.findIndex(i => i.nama === n);
+        if(idx > -1) selectedItems[idx].qty++; else selectedItems.push({nama: n, harga: h, qty: 1});
         renderItems();
     }
 
     function renderItems() {
         let total = 0;
-        const isLunas = fullDataDetail && fullDataDetail.status === 'Lunas';
         document.getElementById('itemList').innerHTML = selectedItems.map((it, idx) => {
             total += (it.harga * it.qty);
-            return `
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded-3 border">
-                    <div style="font-size: 0.75rem"><b>${it.nama}</b><br>Rp${it.harga.toLocaleString()} x ${it.qty}</div>
-                    <div class="d-flex align-items-center">
-                        <span class="small fw-bold me-2">Rp${(it.harga*it.qty).toLocaleString()}</span>
-                        ${!isLunas ? `<i class="fas fa-trash text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i>` : ''}
-                    </div>
-                </div>`;
+            return `<div class="d-flex justify-content-between p-2 bg-white rounded border mb-2 small">
+                <div><b>${it.nama}</b><br>Rp${it.harga.toLocaleString()} x ${it.qty}</div>
+                <div class="text-end"><span class="fw-bold">Rp${(it.harga*it.qty).toLocaleString()}</span><br>
+                <i class="fas fa-trash text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i></div>
+            </div>`;
         }).join('');
         document.getElementById('txtTotal').innerText = "Rp " + total.toLocaleString();
     }
@@ -289,9 +247,9 @@
     function renderTimeline(h) {
         document.getElementById('timelineList').innerHTML = h.map(t => `
             <div class="border-start border-2 border-primary ps-3 mb-3 small">
-                <div class="fw-bold">${t.status}</div>
-                <div class="text-muted" style="font-size: 9px;">${t.tgl}</div>
-                <div class="bg-light p-2 rounded-2 mt-1">${t.detail}</div>
+                <div class="fw-bold text-primary">${t.status}</div>
+                <div class="text-muted" style="font-size: 10px;">${t.tgl}</div>
+                <div class="bg-light p-2 rounded mt-1">${t.detail}</div>
             </div>
         `).reverse().join('');
     }
@@ -307,7 +265,7 @@
         const payload = {
             action: 'updateFullData', id: currentId,
             status: document.getElementById('statusSelect').value,
-            keterangan: document.getElementById('catatanProgres').value || "Update progres",
+            keterangan: document.getElementById('catatanProgres').value || "Update Progres",
             items: selectedItems
         };
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -318,13 +276,56 @@
     function downloadPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFontSize(18); doc.setTextColor(0, 82, 212);
-        doc.text("NOTA NANDA TEKNIK", 14, 20);
-        doc.setFontSize(10); doc.setTextColor(100);
-        doc.text(`ID: ${fullDataDetail.woId} | Pelanggan: ${fullDataDetail.namaPelanggan}`, 14, 30);
+        
+        // Header Label
+        doc.setFontSize(22); doc.setTextColor(0, 82, 212); doc.setFont("helvetica", "bold");
+        doc.text("NANDA TEKNIK", 105, 20, {align: "center"});
+        
+        doc.setFontSize(10); doc.setTextColor(80); doc.setFont("helvetica", "normal");
+        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 105, 26, {align: "center"});
+        doc.text("Email: nandateknik02@gmail.com | WA: 082331201148", 105, 31, {align: "center"});
+        doc.text("Website: www.nandateknik.com", 105, 36, {align: "center"});
+        
+        doc.setLineWidth(0.5); doc.setDrawColor(0, 82, 212);
+        doc.line(14, 40, 196, 40);
+
+        // Client Info
+        doc.setFontSize(11); doc.setTextColor(0);
+        doc.text("INFORMASI NOTA", 14, 50);
+        doc.setFontSize(10);
+        doc.text(`No. Order  : ${fullDataDetail.woId}`, 14, 57);
+        doc.text(`Pelanggan : ${fullDataDetail.namaPelanggan || fullDataDetail.pelanggan || '-'}`, 14, 62);
+        doc.text(`Email      : ${fullDataDetail.email || '-'}`, 14, 67);
+        doc.text(`Tanggal    : ${fullDataDetail.tgl}`, 14, 72);
+
+        // Table
         const rows = selectedItems.map(it => [it.nama, it.qty, `Rp${it.harga.toLocaleString()}`, `Rp${(it.harga*it.qty).toLocaleString()}`]);
-        doc.autoTable({ startY: 40, head: [['Item', 'Qty', 'Harga', 'Subtotal']], body: rows, headStyles: { fillColor: [0, 82, 212] } });
-        doc.save(`Nota-${fullDataDetail.woId}.pdf`);
+        let totalVal = 0; selectedItems.forEach(it => totalVal += (it.harga * it.qty));
+
+        doc.autoTable({
+            startY: 80,
+            head: [['Deskripsi Layanan / Part', 'Qty', 'Harga', 'Subtotal']],
+            body: rows,
+            headStyles: { fillColor: [0, 82, 212], textColor: 255 },
+            styles: { fontSize: 9 }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL PEMBAYARAN: Rp${totalVal.toLocaleString()}`, 196, finalY, {align: "right"});
+
+        // Payment Info
+        doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 82, 212);
+        doc.text("Metode Pembayaran Transfer:", 14, finalY + 15);
+        doc.setFont("helvetica", "normal"); doc.setTextColor(0);
+        doc.text("Bank BCA - 1801826011", 14, finalY + 22);
+        doc.text("A/N Nanda Krisbianto", 14, finalY + 27);
+
+        // Footer
+        doc.setFontSize(9); doc.setTextColor(150);
+        doc.text("Terima kasih telah mempercayakan service AC Anda kepada kami.", 105, 285, {align: "center"});
+
+        doc.save(`Nota-NandaTeknik-${fullDataDetail.woId}.pdf`);
     }
 </script>
 </body>
