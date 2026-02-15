@@ -19,14 +19,17 @@
             background: white; border-radius: 15px; border: none;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s;
         }
-        .form-control { border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .form-control { border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 15px; }
         .bottom-nav {
             position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
-            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05);
+            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000;
         }
         .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
         .nav-link.active { color: var(--p-blue); }
         .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
+        
+        /* Loading Overlay */
+        .loader-inline { display: none; }
     </style>
 </head>
 <body>
@@ -38,7 +41,7 @@
 
 <div class="container mt-4">
     <div class="card p-3 mb-4 shadow-sm border-0" style="border-radius: 20px;">
-        <h6 class="fw-bold mb-3 small text-muted">TAMBAH JASA BARU</h6>
+        <h6 class="fw-bold mb-3 small text-muted text-uppercase">Tambah Jasa Baru</h6>
         <div class="row g-2">
             <div class="col-7">
                 <input type="text" id="newNama" class="form-control" placeholder="Nama Jasa (ex: Cuci AC)">
@@ -68,15 +71,17 @@
     <a href="#" class="nav-link active"><i class="fas fa-tag"></i>Harga</a>
 </div>
 
+<script src="config.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbysKZYMgjPt1gZIuNPdxRAvtDPkHC6hFAXatCtL86tsvrDLgVlNlulfDaiyeHiVvUVv/exec';
-
+    // Load data pas halaman dibuka
     window.onload = loadHarga;
 
     async function loadHarga() {
         try {
-            const res = await fetch(WEB_APP_URL, { 
+            // Manggil URL seko CONFIG
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: 'getDaftarHarga' }) 
             });
@@ -84,16 +89,19 @@
             
             if(result.success) {
                 renderPriceList(result.data);
+            } else {
+                Swal.fire('Error', 'Gagal memuat data', 'error');
             }
         } catch (e) {
-            console.error(e);
+            console.error("Error Load Harga:", e);
+            document.getElementById('priceListContainer').innerHTML = '<div class="text-center text-danger small mt-4">Koneksi gagal. Cek URL GAS!</div>';
         }
     }
 
     function renderPriceList(data) {
         const container = document.getElementById('priceListContainer');
-        if (data.length === 0) {
-            container.innerHTML = '<div class="text-center text-muted small mt-4">Belum ada data jasa.</div>';
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted small mt-4">Belum ada data jasa, Cah.</div>';
             return;
         }
 
@@ -101,7 +109,7 @@
             <div class="card-price p-3 mb-2 d-flex justify-content-between align-items-center">
                 <div>
                     <div class="fw-bold" style="font-size: 0.9rem;">${item[0]}</div>
-                    <div class="text-primary fw-bold small">Rp ${item[1].toLocaleString()}</div>
+                    <div class="text-primary fw-bold small">Rp ${Number(item[1]).toLocaleString()}</div>
                 </div>
                 <button class="btn btn-light btn-sm text-danger border-0 shadow-sm" onclick="deleteHarga('${item[0]}')" style="border-radius: 10px;">
                     <i class="fas fa-trash-alt"></i>
@@ -114,43 +122,68 @@
         const nama = document.getElementById('newNama').value;
         const harga = document.getElementById('newHarga').value;
 
-        if(!nama || !harga) return Swal.fire('Oops!', 'Isi nama dan harga jasa', 'warning');
+        if(!nama || !harga) return Swal.fire('Oops!', 'Isi nama dan harga jasa dulu, Cah!', 'warning');
 
-        Swal.showLoading();
-        const res = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'updateHarga', mode: 'add', nama, harga: parseInt(harga) })
+        Swal.fire({
+            title: 'Menyimpan...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
         });
-        const result = await res.json();
 
-        if(result.success) {
-            Swal.fire('Berhasil!', 'Jasa baru telah ditambahkan', 'success');
-            document.getElementById('newNama').value = '';
-            document.getElementById('newHarga').value = '';
-            loadHarga();
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'updateHarga', 
+                    mode: 'add', 
+                    nama: nama, 
+                    harga: parseInt(harga) 
+                })
+            });
+            const result = await res.json();
+
+            if(result.success) {
+                Swal.fire('Berhasil!', 'Jasa baru wis mlebu database.', 'success');
+                document.getElementById('newNama').value = '';
+                document.getElementById('newHarga').value = '';
+                loadHarga();
+            }
+        } catch (e) {
+            Swal.fire('Gagal', 'Gagal nyambung server.', 'error');
         }
     }
 
     async function deleteHarga(nama) {
         const confirm = await Swal.fire({
             title: 'Hapus Jasa?',
-            text: `Hapus ${nama} dari daftar harga?`,
+            text: `Tenan arep mbusak "${nama}"?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus',
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Ya, Hapus!',
             cancelButtonText: 'Batal'
         });
 
         if(confirm.isConfirmed) {
-            Swal.showLoading();
-            const res = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'updateHarga', mode: 'delete', nama })
+            Swal.fire({
+                title: 'Menghapus...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
             });
-            const result = await res.json();
-            if(result.success) {
-                Swal.fire('Terhapus!', 'Data telah dihapus', 'success');
-                loadHarga();
+
+            try {
+                const res = await fetch(CONFIG.WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updateHarga', mode: 'delete', nama: nama })
+                });
+                const result = await res.json();
+                
+                if(result.success) {
+                    Swal.fire('Terhapus!', 'Data wis ilang seko daftar.', 'success');
+                    loadHarga();
+                }
+            } catch (e) {
+                Swal.fire('Gagal', 'Gagal mbusak data.', 'error');
             }
         }
     }
