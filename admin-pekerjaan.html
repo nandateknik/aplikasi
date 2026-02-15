@@ -76,8 +76,8 @@
 
 <div class="bottom-nav">
     <a href="#" class="nav-link active" onclick="location.reload()"><i class="fas fa-sync"></i>Refresh</a>
-    <a href="buat-nota.html" class="nav-link"><i class="fas fa-plus-circle" style="font-size: 2.5rem; color: var(--p-blue);"></i></a>
-    <a href="pelanggan.html" class="nav-link"><i class="fas fa-users"></i>Pelanggan</a>
+    <a href="buat-booking.html" class="nav-link"><i class="fas fa-plus-circle" style="font-size: 2.5rem; color: var(--p-blue);"></i></a>
+    <a href="keuangan.html" class="nav-link"><i class="fas fa-wallet"></i>Kas</a>
 </div>
 
 <div class="modal fade" id="modalUpdate" tabindex="-1">
@@ -136,14 +136,15 @@
             <div class="modal-footer border-0 p-3 shadow-lg bg-light">
                 <button class="btn btn-outline-danger me-auto" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i></button>
                 <button class="btn btn-danger" onclick="hapusData()"><i class="fas fa-trash"></i></button>
-                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Update Data</button>
+                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()" style="background: var(--p-blue);">Update Data</button>
             </div>
         </div>
     </div>
 </div>
 
+<script src="config.js"></script>
+
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyTPEvTXoivjyQoLu0upHWmfrlYa_YHB19i2pmD4vE3MnrdV0PAHIEbpxjsDAUw6Vgg/exec'; 
     let allData = [], filteredData = [], selectedItems = [], currentId = null, currentTab = 'Ongoing', fullDataDetail = null;
     let myModal, currentPage = 1, pageSize = 8;
 
@@ -154,9 +155,12 @@
     };
 
     async function loadRiwayat() {
-        document.getElementById('listPekerjaan').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+        document.getElementById('listPekerjaan').innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2 small text-muted">Loading Data...</p></div>';
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getRiwayatAdmin' }) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getRiwayatAdmin' }) 
+            });
             const result = await res.json();
             if(result.success) { 
                 allData = result.data; 
@@ -177,7 +181,6 @@
             const matchStatus = (currentTab === 'Ongoing' ? !isDone : isDone);
             
             if (fDate) {
-                // Parsing ID Tanggal ke YYYY-MM-DD
                 const part = d.tgl.split(',')[0].split('/'); 
                 const dFormatted = `${part[2]}-${part[1].padStart(2,'0')}-${part[0].padStart(2,'0')}`;
                 return matchStatus && dFormatted === fDate;
@@ -192,7 +195,7 @@
         const container = document.getElementById('listPekerjaan');
         
         if (paginated.length === 0) {
-            container.innerHTML = '<div class="text-center text-muted p-5">Tidak ada data ditemukan.</div>';
+            container.innerHTML = '<div class="text-center text-muted p-5">Ora ono data, Cah.</div>';
             document.getElementById('paginationCtrl').innerHTML = '';
             return;
         }
@@ -200,7 +203,7 @@
         container.innerHTML = paginated.map(item => `
             <div class="wo-card border" onclick="viewDetail('${item.id}')">
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">${item.id}</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">${item.id}</span>
                     <span class="badge-status fw-bold ${item.status === 'Lunas' ? 'bg-success text-white' : 'bg-warning text-dark'}">${item.status}</span>
                 </div>
                 <h6 class="fw-bold mb-1 text-uppercase text-truncate">${item.judul}</h6>
@@ -227,21 +230,23 @@
 
     async function viewDetail(id) {
         currentId = id;
-        Swal.fire({ title: 'Mengambil Data...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
         
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getDetailAll', keyword: id }) 
+            });
             const r = await res.json();
             Swal.close();
 
             if(r.success) {
                 fullDataDetail = r.data;
-                document.getElementById('modalTitleID').innerText = id;
+                document.getElementById('modalTitleID').innerText = "Detail: " + id;
                 document.getElementById('detNama').innerText = fullDataDetail.nama;
                 document.getElementById('detEmail').innerText = fullDataDetail.email;
                 document.getElementById('detAlamat').innerText = fullDataDetail.alamat || '-';
                 
-                // Cek Lokasi Maps
                 const btnMaps = document.getElementById('btnMapsContainer');
                 if(fullDataDetail.lat && fullDataDetail.lang) {
                     btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Petunjuk Jalan</a>`;
@@ -307,7 +312,7 @@
     }
 
     async function loadDaftarHarga() {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
         const r = await res.json();
         if(r.success) {
             document.getElementById('jasaSelect').innerHTML = r.data.map(it => `<option value="${it[1]}">${it[0]}</option>`).join('');
@@ -328,35 +333,38 @@
         };
 
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
             btn.disabled = false;
             if(r.success) { 
                 myModal.hide(); 
-                Swal.fire('Berhasil!', 'Database telah diperbarui', 'success').then(() => loadRiwayat()); 
+                Swal.fire('Sip!', 'Database wis diupdate.', 'success').then(() => loadRiwayat()); 
             }
         } catch(e) {
             btn.disabled = false;
-            Swal.fire('Gagal', 'Kesalahan koneksi', 'error');
+            Swal.fire('Gagal', 'Koneksi bermasalah.', 'error');
         }
     }
 
     async function hapusData() {
         const confirm = await Swal.fire({
             title: 'Hapus Data?',
-            text: "Data Work Order akan dihapus permanen!",
+            text: "Data Work Order bakal ilang permanen!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Ya, Hapus!'
         });
 
         if(confirm.isConfirmed) {
-            Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) });
+            Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) 
+            });
             const r = await res.json();
             if(r.success) {
                 myModal.hide();
-                Swal.fire('Terhapus', 'Data berhasil dibuang', 'success').then(() => loadRiwayat());
+                Swal.fire('Terhapus', 'Data wis ilang.', 'success').then(() => loadRiwayat());
             }
         }
     }
