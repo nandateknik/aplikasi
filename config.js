@@ -1,7 +1,7 @@
 // CONFIGURASI NANDA TEKNIK
 const CONFIG = {
     // Ganti URL iki sakwayah-wayah nek kowe bar Deploy anyar nang Google Apps Script
-    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbyTPEvTXoivjyQoLu0upHWmfrlYa_YHB19i2pmD4vE3MnrdV0PAHIEbpxjsDAUw6Vgg/exec',
+    WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbwe5Xx_kldjc_aKgquFlbuVVsJbWv8TJHgeGMkmSfg0ilGCz_UHN8_ETRoy4osjI0fQ/exec',
     
     // Koordinat Kantor (Pusat)
     KANTOR_COORDS: { 
