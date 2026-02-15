@@ -30,9 +30,7 @@
             background: white; border-radius: 20px; padding: 15px; margin-bottom: 12px;
             border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
             display: flex; align-items: center; justify-content: space-between;
-            transition: 0.3s;
         }
-        .customer-card:active { transform: scale(0.97); }
 
         .avatar-box {
             width: 48px; height: 48px; background: #f0f7ff; color: var(--p-blue);
@@ -47,8 +45,7 @@
             width: 55px; height: 55px; border-radius: 18px;
             background: var(--p-grad); color: white;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999;
-            border: none;
+            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999; border: none;
         }
 
         .bottom-nav {
@@ -60,8 +57,7 @@
         .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
 
         .form-label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-        .form-control { border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; padding: 12px; font-size: 0.9rem; }
-        .form-control:focus { background: white; border-color: var(--p-blue); box-shadow: none; }
+        .form-control, .form-select { border-radius: 12px; background: #f8fafc; border: 1px solid #eef2f7; padding: 10px; font-size: 0.9rem; }
         .modal-content { border-radius: 25px; border: none; }
     </style>
 </head>
@@ -77,75 +73,66 @@
         <i class="fas fa-search text-muted me-2"></i>
         <input type="text" id="searchBar" class="form-control border-0 bg-transparent" placeholder="Cari Nama/Email..." oninput="filterPelanggan()">
     </div>
-
     <div id="listPelanggan">
         <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
     </div>
 </div>
 
-<button class="fab-add" data-bs-toggle="modal" data-bs-target="#modalTambah">
+<button class="fab-add" onclick="bukaModalTambah()">
     <i class="fas fa-plus fa-lg"></i>
 </button>
 
 <div class="bottom-nav">
     <a href="index.html" class="nav-link"><i class="fas fa-th-large"></i>Beranda</a>
-    <a href="#" class="nav-link active" onclick="location.reload()"><i class="fas fa-users"></i>Pelanggan</a>
+    <a href="#" class="nav-link active"><i class="fas fa-users"></i>Pelanggan</a>
     <a href="buat-nota.html" class="nav-link"><i class="fas fa-plus-circle"></i>Buat Nota</a>
 </div>
 
-<div class="modal fade" id="modalTambah" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="modalCustomer" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
         <div class="modal-content p-2">
-            <div class="modal-header border-0">
-                <h6 class="fw-bold mb-0">Tambah Pelanggan Baru</h6>
+            <div class="modal-header border-0 pb-0">
+                <h6 class="fw-bold mb-0" id="modalTitle">Data Pelanggan</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body pt-0">
-                <div class="mb-2">
-                    <label class="form-label">Email</label>
-                    <input type="email" id="addEmail" class="form-control" placeholder="user@mail.com">
+            <div class="modal-body pt-2">
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label">Email (Kunci)</label>
+                        <input type="email" id="custEmail" class="form-control" placeholder="user@mail.com">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" id="custNama" class="form-control">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">WhatsApp</label>
+                        <input type="number" id="custWa" class="form-control" placeholder="628xxx">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Status</label>
+                        <select id="custStatus" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="Non-Active">Non-Active</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Tanggal Gabung</label>
+                        <input type="date" id="custTanggal" class="form-control">
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Nama Lengkap</label>
-                    <input type="text" id="addNama" class="form-control">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">WhatsApp</label>
-                    <input type="number" id="addWa" class="form-control" placeholder="628xxx">
-                </div>
-                <div id="map"></div>
-                <textarea id="addAlamat" class="form-control mb-2" rows="2" placeholder="Alamat lengkap..."></textarea>
-                <input type="hidden" id="addLat"><input type="hidden" id="addLang">
-                <button class="btn btn-primary w-100 py-3 fw-bold rounded-4 mt-2" onclick="simpanPelanggan()">SIMPAN PELANGGAN</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="modalEdit" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content p-2">
-            <div class="modal-header border-0">
-                <h6 class="fw-bold mb-0">Data Pelanggan</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <input type="hidden" id="editEmail">
-                <div class="mb-2">
-                    <label class="form-label">Nama Lengkap</label>
-                    <input type="text" id="editNama" class="form-control">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">WhatsApp</label>
-                    <input type="number" id="editWa" class="form-control">
-                </div>
-                <div id="mapEdit"></div>
-                <textarea id="editAlamat" class="form-control mb-2" rows="2"></textarea>
-                <input type="hidden" id="editLat"><input type="hidden" id="editLang">
-                <div class="d-flex gap-2 mt-3">
+                <div id="map"></div>
+                
+                <textarea id="custAlamat" class="form-control mb-2" rows="2" placeholder="Alamat lengkap..."></textarea>
+                <input type="hidden" id="custLat">
+                <input type="hidden" id="custLang">
+                
+                <div id="btnGroupEdit" class="d-flex gap-2 mt-3" style="display:none !important;">
                     <button class="btn btn-light flex-fill py-3 fw-bold text-danger border" onclick="hapusPelanggan()">HAPUS</button>
-                    <button class="btn btn-primary flex-fill py-3 fw-bold" onclick="updatePelanggan()">UPDATE</button>
+                    <button class="btn btn-primary flex-fill py-3 fw-bold" onclick="prosesSimpan('updatePelanggan')">UPDATE DATA</button>
                 </div>
+                <button id="btnSimpanBaru" class="btn btn-primary w-100 py-3 fw-bold rounded-4 mt-3" onclick="prosesSimpan('createPelanggan')">SIMPAN PELANGGAN</button>
             </div>
         </div>
     </div>
@@ -156,17 +143,18 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxmzBeRK3ns-5O3KDHSwo_32JsGUCFP3Ee3vS-84z66gXqh2E5BVTlqKR-QIpsDV4_7/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzz6U_WDAp-kZvKGnk8U-zoLrnk-_9hp_HjF1dZCCcZmoRB-C5TGaP7SERDJ5k0QHTQ/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 };
-    let map, marker, mapEdit, markerEdit, allData = [];
-    let modalTambah, modalEdit;
+    let map, marker, allData = [], mode = 'add';
+    let modalCust;
 
     window.onload = () => {
-        modalTambah = new bootstrap.Modal(document.getElementById('modalTambah'));
-        modalEdit = new bootstrap.Modal(document.getElementById('modalEdit'));
+        modalCust = new bootstrap.Modal(document.getElementById('modalCustomer'));
         loadAllPelanggan();
-        document.getElementById('modalTambah').addEventListener('shown.bs.modal', () => initMap('map', 'add'));
-        document.getElementById('modalEdit').addEventListener('shown.bs.modal', () => initMap('mapEdit', 'edit'));
+        
+        document.getElementById('modalCustomer').addEventListener('shown.bs.modal', function () {
+            initMap();
+        });
     };
 
     async function loadAllPelanggan() {
@@ -175,117 +163,135 @@
             const result = await res.json();
             allData = result.data || [];
             renderList(allData);
-        } catch(e) { 
-            Swal.fire('Error', 'Gagal memuat data', 'error');
-        }
+        } catch(e) { Swal.fire('Error', 'Gagal koneksi server', 'error'); }
     }
 
     function renderList(data) {
         const container = document.getElementById('listPelanggan');
         if(!data || data.length === 0) {
-            container.innerHTML = '<div class="text-center py-5 text-muted small">Data tidak tersedia.</div>';
+            container.innerHTML = '<div class="text-center py-5 text-muted small">Data kosong.</div>';
             return;
         }
         container.innerHTML = data.map(p => `
             <div class="customer-card">
-                <div class="d-flex align-items-center flex-grow-1" onclick="openEdit('${p[1]}', '${p[0]}', '${p[2]}', '${p[7]}', '${p[4]}', '${p[5]}')">
+                <div class="d-flex align-items-center flex-grow-1" onclick='bukaModalEdit(${JSON.stringify(p)})'>
                     <div class="avatar-box">${p[0].charAt(0).toUpperCase()}</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">${p[0]}</div>
-                        <div class="text-muted small" style="font-size: 0.75rem;">${p[1]}</div>
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">${p[0]}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">${p[1]}</div>
+                        <span class="badge ${p[6] == 'Active' ? 'bg-success' : 'bg-secondary'}" style="font-size:0.6rem">${p[6]}</span>
                     </div>
                 </div>
-                <a href="https://wa.me/${p[2]}" class="btn btn-light rounded-4 text-success border ms-2">
+                <a href="https://wa.me/${p[3]}" class="btn btn-light rounded-4 text-success border ms-2">
                     <i class="fab fa-whatsapp fa-lg"></i>
                 </a>
             </div>
         `).join('');
     }
 
-    function filterPelanggan() {
-        const key = document.getElementById('searchBar').value.toLowerCase();
-        const filtered = allData.filter(p => p[0].toLowerCase().includes(key) || p[1].toLowerCase().includes(key));
-        renderList(filtered);
+    function initMap() {
+        const lat = parseFloat(document.getElementById('custLat').value) || KANTOR_COORDS.lat;
+        const lng = parseFloat(document.getElementById('custLang').value) || KANTOR_COORDS.lng;
+
+        if (map) map.remove();
+        map = L.map('map').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+        marker.on('dragend', (e) => {
+            const pos = e.target.getLatLng();
+            document.getElementById('custLat').value = pos.lat;
+            document.getElementById('custLang').value = pos.lng;
+            updateAlamat(pos.lat, pos.lng);
+        });
     }
 
-    function initMap(divId, prefix) {
-        const lat = prefix === 'edit' ? (parseFloat(document.getElementById('editLat').value) || KANTOR_COORDS.lat) : KANTOR_COORDS.lat;
-        const lng = prefix === 'edit' ? (parseFloat(document.getElementById('editLang').value) || KANTOR_COORDS.lng) : KANTOR_COORDS.lng;
+    function updateAlamat(lat, lng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(r => r.json()).then(d => document.getElementById('custAlamat').value = d.display_name);
+    }
 
-        if (prefix === 'add') {
-            if (map) map.remove();
-            map = L.map(divId).setView([lat, lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-            marker.on('dragend', (e) => updateCoords(e.target.getLatLng(), prefix));
-        } else {
-            if (mapEdit) mapEdit.remove();
-            mapEdit = L.map(divId).setView([lat, lng], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapEdit);
-            markerEdit = L.marker([lat, lng], {draggable: true}).addTo(mapEdit);
-            markerEdit.on('dragend', (e) => updateCoords(e.target.getLatLng(), prefix));
+    function bukaModalTambah() {
+        mode = 'add';
+        document.getElementById('modalTitle').innerText = "Tambah Pelanggan Baru";
+        document.getElementById('custEmail').disabled = false;
+        document.getElementById('custEmail').value = "";
+        document.getElementById('custNama').value = "";
+        document.getElementById('custWa').value = "";
+        document.getElementById('custTanggal').value = new Date().toISOString().split('T')[0];
+        document.getElementById('custStatus').value = "Active";
+        document.getElementById('custAlamat').value = "";
+        document.getElementById('custLat').value = KANTOR_COORDS.lat;
+        document.getElementById('custLang').value = KANTOR_COORDS.lng;
+        
+        document.getElementById('btnSimpanBaru').style.setProperty('display', 'block', 'important');
+        document.getElementById('btnGroupEdit').style.setProperty('display', 'none', 'important');
+        modalCust.show();
+    }
+
+    function bukaModalEdit(p) {
+        mode = 'edit';
+        document.getElementById('modalTitle').innerText = "Update Data Pelanggan";
+        document.getElementById('custEmail').value = p[1];
+        document.getElementById('custEmail').disabled = true; // Email tidak boleh diganti
+        document.getElementById('custNama').value = p[0];
+        document.getElementById('custTanggal').value = formatTgl(p[2]);
+        document.getElementById('custWa').value = p[3];
+        document.getElementById('custLat').value = p[4];
+        document.getElementById('custLang').value = p[5];
+        document.getElementById('custStatus').value = p[6];
+        document.getElementById('custAlamat').value = (p[7] === "undefined" || !p[7]) ? "" : p[7];
+        
+        document.getElementById('btnSimpanBaru').style.setProperty('display', 'none', 'important');
+        document.getElementById('btnGroupEdit').style.setProperty('display', 'flex', 'important');
+        modalCust.show();
+    }
+
+    function formatTgl(tglStr) {
+        if(!tglStr) return "";
+        const d = new Date(tglStr);
+        return d.toISOString().split('T')[0];
+    }
+
+    async function prosesSimpan(action) {
+        const payload = {
+            action: action,
+            nama: document.getElementById('custNama').value,
+            email: document.getElementById('custEmail').value,
+            tanggal: document.getElementById('custTanggal').value,
+            wa: document.getElementById('custWa').value,
+            lat: document.getElementById('custLat').value,
+            lang: document.getElementById('custLang').value,
+            is_active: document.getElementById('custStatus').value,
+            alamat: document.getElementById('custAlamat').value
+        };
+
+        if(!payload.email || !payload.nama) return Swal.fire('Oops', 'Nama & Email wajib diisi', 'warning');
+
+        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if(result.success) {
+            modalCust.hide();
+            Swal.fire('Berhasil', 'Data telah diperbarui', 'success').then(() => loadAllPelanggan());
         }
     }
 
-    function updateCoords(pos, prefix) {
-        document.getElementById(prefix + 'Lat').value = pos.lat;
-        document.getElementById(prefix + 'Lang').value = pos.lng;
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}`)
-            .then(r => r.json()).then(d => document.getElementById(prefix + 'Alamat').value = d.display_name);
-    }
-
-    async function simpanPelanggan() {
-        const payload = {
-            action: 'createPelanggan',
-            nama: document.getElementById('addNama').value,
-            email: document.getElementById('addEmail').value,
-            wa: document.getElementById('addWa').value,
-            alamat: document.getElementById('addAlamat').value,
-            lat: document.getElementById('addLat').value,
-            lang: document.getElementById('addLang').value
-        };
-        if(!payload.email || !payload.nama) return Swal.fire('Oops', 'Nama & Email wajib diisi', 'warning');
-        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
-        if(result.success) { modalTambah.hide(); Swal.fire('Berhasil', 'Pelanggan ditambahkan', 'success').then(() => loadAllPelanggan()); }
-    }
-
-    function openEdit(email, nama, wa, alamat, lat, lang) {
-        document.getElementById('editEmail').value = email;
-        document.getElementById('editNama').value = nama;
-        document.getElementById('editWa').value = wa;
-        document.getElementById('editAlamat').value = (alamat === "undefined" || !alamat) ? "" : alamat;
-        document.getElementById('editLat').value = lat;
-        document.getElementById('editLang').value = lang;
-        modalEdit.show();
-    }
-
-    async function updatePelanggan() {
-        const payload = {
-            action: 'updatePelanggan',
-            email: document.getElementById('editEmail').value,
-            nama: document.getElementById('editNama').value,
-            wa: document.getElementById('editWa').value,
-            alamat: document.getElementById('editAlamat').value,
-            lat: document.getElementById('editLat').value,
-            lang: document.getElementById('editLang').value
-        };
-        Swal.fire({title: 'Memperbarui...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
-        if(result.success) { modalEdit.hide(); Swal.fire('Berhasil', 'Data diperbarui', 'success').then(() => loadAllPelanggan()); }
-    }
-
     async function hapusPelanggan() {
-        const email = document.getElementById('editEmail').value;
-        const confirm = await Swal.fire({ title: 'Hapus?', text: "Data akan hilang selamanya!", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus' });
+        const email = document.getElementById('custEmail').value;
+        const confirm = await Swal.fire({ title: 'Hapus?', text: "Data pelanggan akan hilang!", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus' });
         if(confirm.isConfirmed) {
             Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
             const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePelanggan', email: email }) });
             const r = await res.json();
-            if(r.success) { modalEdit.hide(); Swal.fire('Terhapus', 'Pelanggan berhasil dihapus', 'success').then(() => loadAllPelanggan()); }
+            if(r.success) { modalCust.hide(); Swal.fire('Dihapus', 'Pelanggan berhasil dihapus', 'success').then(() => loadAllPelanggan()); }
         }
+    }
+
+    function filterPelanggan() {
+        const key = document.getElementById('searchBar').value.toLowerCase();
+        const filtered = allData.filter(p => p[0].toLowerCase().includes(key) || p[1].toLowerCase().includes(key));
+        renderList(filtered);
     }
 </script>
 </body>
