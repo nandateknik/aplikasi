@@ -3,91 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laba Rugi - Nanda Teknik</title>
+    <title>Keuangan - Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
+        :root { --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
-        
-        .header-section {
-            background: var(--p-grad); padding: 30px 20px 60px;
-            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
-            color: white; text-align: center;
-        }
-
-        .summary-card {
-            background: white; border-radius: 20px; padding: 20px;
-            margin-top: -40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            border: none;
-        }
-
-        .trx-card {
-            background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px;
-            border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.03);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .icon-box {
-            width: 40px; height: 40px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; margin-right: 12px;
-        }
-
+        .header-section { background: var(--p-grad); padding: 30px 20px 60px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; color: white; text-align: center; }
+        .summary-card { background: white; border-radius: 20px; padding: 20px; margin-top: -40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; }
+        .trx-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
+        .icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
         .bg-in { background: #e8f5e9; color: #2e7d32; }
         .bg-out { background: #ffebee; color: #c62828; }
-
-        .fab-add {
-            position: fixed; bottom: 95px; right: 20px;
-            width: 55px; height: 55px; border-radius: 18px;
-            background: var(--p-grad); color: white; border: none;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999;
-        }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
-            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05);
-        }
+        .form-select { border-radius: 12px; border: none; font-weight: 600; font-size: 0.85rem; }
+        .fab-add { position: fixed; bottom: 95px; right: 20px; width: 55px; height: 55px; border-radius: 18px; background: var(--p-grad); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,82,212,0.3); border: none; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; height: 75px; display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); }
         .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
-        .nav-link.active { color: var(--p-blue); }
-        .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
-        
-        .form-control, .form-select { border-radius: 12px; padding: 12px; background: #f8fafc; border: 1px solid #eef2f7; }
+        .nav-link.active { color: #0052d4; }
     </style>
 </head>
 <body>
 
 <div class="header-section">
     <h5 class="fw-bold mb-0">Laporan Keuangan</h5>
-    <p class="small opacity-75">Nanda Teknik Management</p>
+    <p class="small opacity-75">Manajemen Nanda Teknik</p>
 </div>
 
 <div class="container">
     <div class="summary-card text-center">
-        <small class="text-muted fw-bold">LABA BERSIH BULAN INI</small>
+        <small class="text-muted fw-bold">SALDO BERSIH BULAN INI</small>
         <h2 class="fw-bold text-primary mt-1" id="labaBersih">Rp 0</h2>
         <hr class="opacity-25">
         <div class="row">
-            <div class="col-6 border-end">
-                <small class="text-muted d-block">Pemasukan</small>
-                <span class="text-success fw-bold" id="totalMasuk">Rp 0</span>
+            <div class="col-6 border-end text-success">
+                <small class="text-muted d-block">Masuk</small>
+                <span class="fw-bold" id="totalMasuk">Rp 0</span>
             </div>
-            <div class="col-6">
-                <small class="text-muted d-block">Pengeluaran</small>
-                <span class="text-danger fw-bold" id="totalKeluar">Rp 0</span>
+            <div class="col-6 text-danger">
+                <small class="text-muted d-block">Keluar</small>
+                <span class="fw-bold" id="totalKeluar">Rp 0</span>
             </div>
         </div>
     </div>
 
-    <div class="mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold mb-0">Riwayat Transaksi</h6>
-            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill" id="countPiutang" style="display:none">0 Piutang</span>
+    <div class="row g-2 mb-3 mt-4">
+        <div class="col-7">
+            <select id="fBln" class="form-select shadow-sm" onchange="loadKeuangan()">
+                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
+                <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
+                <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
+                <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
+            </select>
         </div>
-        <div id="listKeuangan">
-            <div class="text-center py-5 text-muted small">Memuat data transaksi...</div>
+        <div class="col-5">
+            <select id="fThn" class="form-select shadow-sm" onchange="loadKeuangan()">
+                <option value="2025">2025</option><option value="2026">2026</option>
+            </select>
         </div>
+    </div>
+
+    <div id="listKeuangan">
+        <div class="text-center py-5 text-muted small">Memuat data...</div>
     </div>
 </div>
 
@@ -95,145 +72,57 @@
     <i class="fas fa-plus fa-lg"></i>
 </button>
 
-<div class="modal fade" id="modalTrx" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 p-2" style="border-radius: 25px;">
-            <div class="modal-header border-0">
-                <h6 class="fw-bold mb-0">Catat Transaksi</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">KATEGORI</label>
-                    <select id="trxKat" class="form-select">
-                        <option value="Pemasukan">Pemasukan (Uang Masuk)</option>
-                        <option value="Pengeluaran">Pengeluaran (Biaya/Beli)</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">JENIS TRANSAKSI</label>
-                    <input type="text" id="trxJenis" class="form-control" placeholder="Servis AC / Beli Freon">
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">NOMINAL (RP)</label>
-                    <input type="number" id="trxNominal" class="form-control" placeholder="0">
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">STATUS</label>
-                    <select id="trxStatus" class="form-select">
-                        <option value="Lunas">Lunas</option>
-                        <option value="Piutang">Piutang (Belum Bayar)</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted mb-1">KETERANGAN</label>
-                    <textarea id="trxKet" class="form-control" rows="2" placeholder="Detail tambahan..."></textarea>
-                </div>
-                <button class="btn btn-primary w-100 py-3 fw-bold rounded-4 mt-2" onclick="simpanTrx()">SIMPAN DATA</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="bottom-nav">
-    <a href="index.html" class="nav-link"><i class="fas fa-th-large"></i>Beranda</a>
-    <a href="pelanggan.html" class="nav-link"><i class="fas fa-users"></i>Pelanggan</a>
-    <a href="#" class="nav-link active"><i class="fas fa-wallet"></i>Keuangan</a>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwWh85eLDvc3RwsYrwVeokhfKpuY2t5kY7lI7JYz6fLe-WFrOt921me-cBkI-sd4_Fp/exec';
+    const API = 'https://script.google.com/macros/s/AKfycbxVW-5Xs0BS3VrPlWqQ8gASXRyGHgPof-Qq5UwHDSsdZ7y0bbmiRfG7r9hWKNeTqB8/exec';
 
-    window.onload = () => loadKeuangan();
+    window.onload = () => {
+        const d = new Date();
+        document.getElementById('fBln').value = d.getMonth();
+        document.getElementById('fThn').value = d.getFullYear();
+        loadKeuangan();
+    };
 
     async function loadKeuangan() {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) });
+        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) });
         const result = await res.json();
         
         if(result.success) {
-            let masuk = 0, keluar = 0, piutang = 0;
-            const container = document.getElementById('listKeuangan');
-            
-            if(result.data.length === 0) {
-                container.innerHTML = '<div class="text-center py-5 text-muted">Belum ada transaksi.</div>';
-                return;
-            }
+            const bln = parseInt(document.getElementById('fBln').value);
+            const thn = parseInt(document.getElementById('fThn').value);
+            let inTotal = 0, outTotal = 0;
 
-            const html = result.data.map(tr => {
-                const nominal = Number(tr[4]);
-                const isMasuk = tr[1] === 'Pemasukan';
-                const status = tr[6];
+            const filtered = result.data.filter(r => {
+                const t = new Date(r[0]);
+                return t.getMonth() === bln && t.getFullYear() === thn;
+            });
 
-                if(status === 'Lunas') {
-                    if(isMasuk) masuk += nominal; else keluar += nominal;
-                } else {
-                    piutang++;
-                }
-
+            const html = filtered.map(r => {
+                const nom = Number(r[4]);
+                const isIn = r[1] === 'Pemasukan';
+                if(r[6] === 'Lunas') { if(isIn) inTotal += nom; else outTotal += nom; }
+                
                 return `
                     <div class="trx-card">
                         <div class="d-flex align-items-center">
-                            <div class="icon-box ${isMasuk ? 'bg-in' : 'bg-out'}">
-                                <i class="fas ${isMasuk ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
-                            </div>
+                            <div class="icon-box ${isIn ? 'bg-in' : 'bg-out'}"><i class="fas ${isIn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i></div>
                             <div>
-                                <div class="fw-bold small">${tr[2]}</div>
-                                <div class="text-muted" style="font-size:0.65rem">${new Date(tr[0]).toLocaleDateString('id-ID')} • ${tr[3]}</div>
-                                ${status === 'Piutang' ? '<span class="badge bg-warning text-dark" style="font-size:0.5rem">PIUTANG</span>' : ''}
+                                <div class="fw-bold small" style="font-size:0.75rem">${r[2]}</div>
+                                <div class="text-muted" style="font-size:0.6rem">${new Date(r[0]).toLocaleDateString()} • ${r[3]}</div>
+                                ${r[6] === 'Piutang' ? '<span class="badge bg-warning text-dark" style="font-size:0.5rem">PIUTANG</span>' : ''}
                             </div>
                         </div>
-                        <div class="text-end">
-                            <div class="fw-bold ${isMasuk ? 'text-success' : 'text-danger'}" style="font-size:0.85rem">
-                                ${isMasuk ? '+' : '-'} ${nominal.toLocaleString()}
-                            </div>
-                            <i class="fas fa-trash-alt text-light ms-2 small" onclick="hapusTrx('${tr[3]}', ${tr[4]})"></i>
+                        <div class="fw-bold ${isIn ? 'text-success' : 'text-danger'}" style="font-size:0.8rem">
+                            ${isIn ? '+' : '-'} ${nom.toLocaleString()}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).reverse().join('');
 
-            container.innerHTML = html;
-            document.getElementById('totalMasuk').innerText = "Rp " + masuk.toLocaleString();
-            document.getElementById('totalKeluar').innerText = "Rp " + keluar.toLocaleString();
-            document.getElementById('labaBersih').innerText = "Rp " + (masuk - keluar).toLocaleString();
-            
-            if(piutang > 0) {
-                document.getElementById('countPiutang').style.display = 'block';
-                document.getElementById('countPiutang').innerText = piutang + " Piutang";
-            }
-        }
-    }
-
-    async function simpanTrx() {
-        const data = {
-            action: 'addTransaksi',
-            kategori: document.getElementById('trxKat').value,
-            jenis: document.getElementById('trxJenis').value,
-            nominal: document.getElementById('trxNominal').value,
-            status: document.getElementById('trxStatus').value,
-            keterangan: document.getElementById('trxKet').value
-        };
-
-        if(!data.nominal || !data.jenis) return Swal.fire('Oops', 'Data belum lengkap', 'warning');
-
-        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
-        const result = await res.json();
-        
-        if(result.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalTrx')).hide();
-            Swal.fire('Berhasil', 'Transaksi dicatat', 'success').then(() => loadKeuangan());
-        }
-    }
-
-    async function hapusTrx(ket, nom) {
-        const confirm = await Swal.fire({ title: 'Hapus?', text: "Data keuangan akan dihapus", icon: 'warning', showCancelButton: true });
-        if(confirm.isConfirmed) {
-            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'hapusTransaksi', keterangan: ket, nominal: nom }) });
-            loadKeuangan();
+            document.getElementById('listKeuangan').innerHTML = html || '<div class="text-center py-5">Ora ono data, Cah.</div>';
+            document.getElementById('totalMasuk').innerText = "Rp " + inTotal.toLocaleString();
+            document.getElementById('totalKeluar').innerText = "Rp " + outTotal.toLocaleString();
+            document.getElementById('labaBersih').innerText = "Rp " + (inTotal - outTotal).toLocaleString();
         }
     }
 </script>
