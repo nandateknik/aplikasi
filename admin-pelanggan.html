@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Tambah Pelanggan | Nanda Teknik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --primary-color: #4e73df; --bg-color: #f4f7f6; }
+        body { background-color: var(--bg-color); font-family: 'Segoe UI', sans-serif; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .card-header-custom { background: white; border-bottom: 2px solid #f8f9fc; padding: 20px; border-radius: 15px 15px 0 0; }
+        .form-label { font-weight: 700; font-size: 0.85rem; color: #4e73df; text-transform: uppercase; }
+        .form-control { border-radius: 8px; padding: 10px; border: 1px solid #d1d3e2; }
+        .form-control:focus { border-color: #4e73df; box-shadow: none; }
+        #map { height: 300px; border-radius: 12px; margin-top: 10px; border: 1px solid #d1d3e2; }
+        .btn-admin { background: #4e73df; color: white; border-radius: 8px; padding: 12px; font-weight: 600; transition: 0.3s; }
+        .btn-admin:hover { background: #2e59d9; color: white; }
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="loader-overlay" id="loader">
+    <div class="spinner-border text-primary" role="status"></div>
+    <span class="mt-2 fw-bold">Menghubungkan ke Database...</span>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card main-card">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-primary mb-0"><i class="fas fa-user-plus me-2"></i>Registrasi Pelanggan Baru</h5>
+                        <small class="text-muted">Input Data Pelanggan (Mode Admin - Tanpa OTP)</small>
+                    </div>
+                    <span class="status-badge bg-primary text-white"><i class="fas fa-shield-alt"></i> Verified Admin</span>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label">Email Pelanggan</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+                            <input type="email" id="email" class="form-control" placeholder="contoh: budi@gmail.com">
+                            <button class="btn btn-primary px-4" onclick="cekEmailPelanggan()">Cek Data</button>
+                        </div>
+                        <div id="statusEmail" class="form-text mt-2"></div>
+                    </div>
+
+                    <div id="detailForm" style="display:none;" class="fade-in">
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" id="nama" class="form-control" placeholder="Nama pelanggan">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">WhatsApp</label>
+                                <input type="number" id="wa" class="form-control" placeholder="62812345678">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-map-marked-alt"></i> Titik Lokasi & Alamat</label>
+                            <div id="map"></div>
+                            <textarea id="alamat" class="form-control mt-2" rows="3" placeholder="Detail alamat (Jl, No Rumah, RT/RW)..."></textarea>
+                            
+                            <input type="hidden" id="lat">
+                            <input type="hidden" id="lang">
+                        </div>
+
+                        <button class="btn btn-admin w-100 mt-3 shadow-sm" onclick="simpanPelanggan()">
+                            <i class="fas fa-save me-2"></i> SIMPAN DATA PELANGGAN
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="index.html" class="text-decoration-none text-muted small"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<script>
+    // URL Backend Anda
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzYHg4GancnzifepaUK02Eboq8Gp5X7twalj4SCcww-ztpCwSXPgJVCHrxqYaHjaSD4/exec';
+    
+    let map, marker;
+    const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
+
+    function initMap() {
+        if (map) return;
+        map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Cari Alamat/Area..." })
+        .on('markgeocode', function(e) {
+            let center = e.geocode.center;
+            map.setView(center, 16);
+            marker.setLatLng(center);
+            updateLocationInfo(center.lat, center.lng);
+        }).addTo(map);
+
+        marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
+        marker.on('dragend', (e) => updateLocationInfo(e.target.getLatLng().lat, e.target.getLatLng().lng));
+    }
+
+    function updateLocationInfo(lat, lng) {
+        document.getElementById('lat').value = lat;
+        document.getElementById('lang').value = lng;
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(res => res.json()).then(data => {
+            document.getElementById('alamat').value = data.display_name;
+        });
+    }
+
+    async function cekEmailPelanggan() {
+        const email = document.getElementById('email').value;
+        if(!email) return Swal.fire('Email Kosong', 'Masukkan email pelanggan terlebih dahulu', 'warning');
+
+        document.getElementById('loader').style.display = 'flex';
+        try {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getPelangganByEmail', email: email })
+            });
+            const result = await res.json();
+            document.getElementById('loader').style.display = 'none';
+
+            if(result.success) {
+                Swal.fire({
+                    title: 'Email Sudah Ada!',
+                    text: `Pelanggan atas nama ${result.data.nama} sudah terdaftar. Lanjut ke buat Work Order?`,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Buat WO'
+                }).then((r) => {
+                    if(r.isConfirmed) window.location.href = 'pekerjaan.html?email=' + email;
+                });
+            } else {
+                // Email belum ada, buka form pendaftaran
+                document.getElementById('statusEmail').innerHTML = '<span class="text-success"><i class="fas fa-info-circle"></i> Email baru. Silakan lengkapi data di bawah.</span>';
+                document.getElementById('detailForm').style.display = 'block';
+                setTimeout(() => { 
+                    initMap(); 
+                    map.invalidateSize(); // Perbaiki bug map abu-abu dalam container hidden
+                }, 200);
+            }
+        } catch (e) {
+            document.getElementById('loader').style.display = 'none';
+            Swal.fire('Error', 'Gagal cek database', 'error');
+        }
+    }
+
+    async function simpanPelanggan() {
+        const data = {
+            action: 'createPelanggan',
+            nama: document.getElementById('nama').value,
+            email: document.getElementById('email').value,
+            wa: document.getElementById('wa').value,
+            alamat: document.getElementById('alamat').value,
+            lat: document.getElementById('lat').value,
+            lang: document.getElementById('lang').value
+        };
+
+        if(!data.nama || !data.wa || !data.lat) {
+            return Swal.fire('Data Belum Lengkap', 'Nama, WA, dan Titik Lokasi wajib diisi.', 'warning');
+        }
+
+        document.getElementById('loader').style.display = 'flex';
+        try {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            document.getElementById('loader').style.display = 'none';
+
+            if(result.success) {
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Pelanggan berhasil ditambahkan ke database.',
+                    icon: 'success'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Gagal', result.message, 'error');
+            }
+        } catch (e) {
+            document.getElementById('loader').style.display = 'none';
+            Swal.fire('Error', 'Koneksi bermasalah', 'error');
+        }
+    }
+</script>
+
+</body>
+</html>
