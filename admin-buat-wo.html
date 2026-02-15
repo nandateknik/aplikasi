@@ -153,7 +153,6 @@
     let map, marker, listEmails = [], selectedItems = [], bensinCost = 0, currentCustomer = null;
 
     window.onload = async () => {
-        // Set default tanggal hari ini
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
@@ -207,6 +206,9 @@
                 document.getElementById('selectedName').innerText = r.data.nama;
                 document.getElementById('selectedWA').innerText = r.data.wa;
                 document.getElementById('customerBadge').classList.remove('d-none');
+                
+                // Auto-sync jika switch sedang menyala
+                if(document.getElementById('useOldAddr').checked) syncWithCustomer();
             }
         } else {
             currentCustomer = null;
@@ -214,18 +216,30 @@
         }
     }
 
-    function toggleMapSync() {
-        const isSync = document.getElementById('useOldAddr').checked;
-        const mapDiv = document.getElementById('mapContainer');
-        if (isSync && currentCustomer) {
-            mapDiv.style.display = 'none';
+    function syncWithCustomer() {
+        if (currentCustomer) {
+            // Mengambil alamat asli dari data pelanggan (Kolom H di Sheet)
             document.getElementById('alamat').value = currentCustomer.alamat;
             document.getElementById('lat').value = currentCustomer.lat;
             document.getElementById('lng').value = currentCustomer.lang;
             calculateAll();
+        }
+    }
+
+    function toggleMapSync() {
+        const isSync = document.getElementById('useOldAddr').checked;
+        const mapDiv = document.getElementById('mapContainer');
+        if (isSync) {
+            if(!currentCustomer) {
+                Swal.fire('Info', 'Cari pelanggan dulu', 'info');
+                document.getElementById('useOldAddr').checked = false;
+                return;
+            }
+            mapDiv.style.display = 'none';
+            syncWithCustomer();
         } else {
             mapDiv.style.display = 'block';
-            map.invalidateSize();
+            setTimeout(() => { map.invalidateSize(); }, 200);
         }
     }
 
@@ -243,10 +257,12 @@
         const lat = document.getElementById('lat').value;
         const lng = document.getElementById('lng').value;
         if(!lat || !lng) return;
+        
         let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
         document.getElementById('txtJarak').innerText = jarak.toFixed(1);
         bensinCost = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
+        
         const totalJasa = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
         document.getElementById('txtTotal').innerText = "Rp " + (totalJasa + bensinCost).toLocaleString();
     }
@@ -289,14 +305,14 @@
         const alamat = document.getElementById('alamat').value;
         
         if(!email || !tgl || selectedItems.length === 0 || !lat) {
-            return Swal.fire('Error', 'Data belum lengkap (Pastikan email, tanggal, jasa, dan lokasi terisi)', 'warning');
+            return Swal.fire('Error', 'Data belum lengkap (Email, Tanggal, Jasa, & Lokasi)', 'warning');
         }
 
         document.getElementById('loader').style.display = 'flex';
         const payload = {
             action: 'createNota',
             email: email,
-            tglPengerjaan: tgl.replace('T', ' '), // Format YYYY-MM-DD HH:mm
+            tglPengerjaan: tgl.replace('T', ' '),
             items: selectedItems,
             total: selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0) + bensinCost,
             lat: lat,
