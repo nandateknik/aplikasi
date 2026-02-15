@@ -2,17 +2,39 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Booking Manual - Nanda Teknik</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nanda Teknik - Buat Booking</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
     <style>
-        :root { --p-blue: #0052d4; }
-        body { background: #f4f7fe; font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 50px; }
-        .card { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        #map { height: 250px; border-radius: 15px; margin-bottom: 15px; z-index: 1; }
-        .price-box { background: #f8fafc; border-radius: 15px; padding: 15px; border: 1px dashed #cbd5e1; }
+        :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
+        
+        .header-section {
+            background: var(--p-grad); padding: 30px 20px 50px;
+            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+            color: white; margin-bottom: -30px;
+        }
+        .card-main {
+            background: white; border-radius: 25px; padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none;
+        }
+        #map { height: 220px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .price-box { background: #f8fafc; border-radius: 18px; padding: 15px; border: 1px dashed #cbd5e1; }
+        
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
+            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
+        .nav-link.active { color: var(--p-blue); }
+        .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
+
         .loader-overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; 
@@ -23,76 +45,94 @@
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary"></div>
-    <span class="mt-2 fw-bold">Mengirim Data...</span>
+    <span class="mt-2 fw-bold">Menyimpan...</span>
 </div>
 
-<nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="admin.html"><i class="fas fa-arrow-left me-2"></i> Kembali</a>
-        <span class="navbar-text text-white">Input Booking Baru</span>
-    </div>
-</nav>
+<div class="header-section text-center">
+    <h5 class="fw-bold mb-0">Input Booking Manual</h5>
+    <p class="small opacity-75">Nanda Teknik Management</p>
+</div>
 
-<div class="container">
-    <div class="card p-4 mb-4">
-        <div class="mb-4">
-            <label class="form-label fw-bold small text-muted">CARI PELANGGAN (NAMA/EMAIL)</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                <input type="text" id="emailInput" class="form-control border-start-0 ps-0" list="emailList" placeholder="Ketik nama atau email..." oninput="checkSelection()">
-                <datalist id="emailList"></datalist>
-            </div>
-            <div id="customerInfo" class="mt-2 small text-success fw-bold" style="display:none">
-                <i class="fas fa-check-circle"></i> Terpilih: <span id="selectedName"></span>
+<div class="container mt-4">
+    <div class="card-main mb-3">
+        <label class="form-label small fw-bold text-muted">DATA PELANGGAN</label>
+        <div class="input-group mb-2">
+            <span class="input-group-text bg-light border-0"><i class="fas fa-search"></i></span>
+            <input type="text" id="emailInput" class="form-control bg-light border-0 shadow-none" list="emailList" placeholder="Cari Email/Nama..." oninput="checkSelection()">
+            <datalist id="emailList"></datalist>
+        </div>
+
+        <div id="customerBadge" class="alert alert-primary py-2 px-3 mb-3 d-none" style="border-radius: 12px; border: none;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-user-circle fs-4 me-2"></i>
+                <div>
+                    <div class="fw-bold small" id="selectedName">Nama Pelanggan</div>
+                    <div style="font-size: 0.65rem;" id="selectedWA">08123...</div>
+                </div>
             </div>
         </div>
 
-        <div class="section-title fw-bold small text-muted mb-2">LOKASI PENGERJAAN</div>
-        <div id="map"></div>
-        <textarea id="alamat" class="form-control form-control-sm mb-3" rows="2" placeholder="Detail Alamat..."></textarea>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label small fw-bold text-muted mb-0">LOKASI PENGERJAAN</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="useOldAddr" onchange="toggleMapSync()">
+                <label class="form-check-label small" for="useOldAddr">Gunakan Alamat Data</label>
+            </div>
+        </div>
+
+        <div id="mapContainer">
+            <div id="map"></div>
+        </div>
+        <textarea id="alamat" class="form-control border-0 bg-light mb-3" rows="2" placeholder="Detail Alamat Pengerjaan..." style="border-radius: 12px; font-size: 0.85rem;"></textarea>
+        
         <input type="hidden" id="lat">
         <input type="hidden" id="lng">
 
-        <hr>
+        <hr class="opacity-10">
 
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">TAMBAH JASA / SPAREPART</label>
-            <div class="row g-2">
-                <div class="col-9">
-                    <select id="jasaSelect" class="form-select border-0 bg-light shadow-sm"></select>
-                </div>
-                <div class="col-3">
-                    <button class="btn btn-primary w-100" onclick="addItem()">Tambah</button>
-                </div>
+        <label class="form-label small fw-bold text-muted">JASA / SPAREPART</label>
+        <div class="row g-2 mb-3">
+            <div class="col-8">
+                <select id="jasaSelect" class="form-select border-0 bg-light shadow-none" style="border-radius: 12px;"></select>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-primary w-100 fw-bold" onclick="addItem()" style="border-radius: 12px;">Add</button>
             </div>
         </div>
 
-        <div id="itemList" class="mb-3"></div>
+        <div id="itemContainer"></div>
 
-        <div class="price-box">
-            <div class="d-flex justify-content-between small mb-1">
+        <div class="price-box mt-3">
+            <div class="d-flex justify-content-between small text-muted mb-1">
                 <span>Bensin (Jarak <span id="txtJarak">0</span>km)</span>
                 <span id="txtBensin">Rp 0</span>
             </div>
-            <div class="d-flex justify-content-between fw-bold text-primary fs-5">
+            <div class="d-flex justify-content-between fw-bold text-primary">
                 <span>TOTAL AKHIR</span>
                 <span id="txtTotal">Rp 0</span>
             </div>
         </div>
 
-        <button class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow" onclick="submitBooking()">
-            <i class="fas fa-paper-plane me-2"></i> SIMPAN BOOKING
+        <button class="btn btn-primary w-100 mt-4 py-3 fw-bold shadow-sm" onclick="submitBooking()" style="border-radius: 18px; background: var(--p-blue);">
+            SIMPAN WORK ORDER
         </button>
     </div>
 </div>
 
+<div class="bottom-nav">
+    <a href="admin.html" class="nav-link"><i class="fas fa-list-ul"></i>Riwayat</a>
+    <a href="#" class="nav-link active"><i class="fas fa-plus-circle" style="font-size: 2.5rem; color: var(--p-blue);"></i></a>
+    <a href="pelanggan.html" class="nav-link"><i class="fas fa-users"></i>Pelanggan</a>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzt8UHiJaTihQSMtwO_5xlq408AilfFNRyqzzWYemekZ8sy_78gdTwn1AfteGDIAvxi/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 };
-    let map, marker, listEmails = [], selectedItems = [], bensinCost = 0;
+    let map, marker, listEmails = [], selectedItems = [], bensinCost = 0, currentCustomer = null;
 
     window.onload = async () => {
         initMap();
@@ -102,8 +142,20 @@
     function initMap() {
         map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
         
+        // Fitur Pencarian di Maps
+        L.Control.geocoder({
+            defaultMarkGeocode: false,
+            placeholder: "Cari Alamat/Lokasi..."
+        }).on('markgeocode', function(e) {
+            const bbox = e.geocode.bbox;
+            const center = e.geocode.center;
+            map.fitBounds(bbox);
+            marker.setLatLng(center);
+            updateLocation(center.lat, center.lng);
+        }).addTo(map);
+
+        marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
         marker.on('dragend', function(e) {
             const pos = e.target.getLatLng();
             updateLocation(pos.lat, pos.lng);
@@ -111,39 +163,62 @@
     }
 
     async function loadInitialData() {
-        // Load Email List for Autocomplete
-        const resE = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllEmails' }) });
-        const dataE = await resE.json();
-        if(dataE.success) {
-            listEmails = dataE.data;
-            const dl = document.getElementById('emailList');
-            dl.innerHTML = listEmails.map(u => `<option value="${u.email}">${u.nama}</option>`).join('');
-        }
+        try {
+            // Load Emails
+            const resE = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllEmails' }) });
+            const dataE = await resE.json();
+            if(dataE.success) {
+                listEmails = dataE.data;
+                document.getElementById('emailList').innerHTML = listEmails.map(u => `<option value="${u.email}">${u.nama}</option>`).join('');
+            }
 
-        // Load Jasa List
-        const resJ = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
-        const dataJ = await resJ.json();
-        if(dataJ.success) {
-            document.getElementById('jasaSelect').innerHTML = dataJ.data.map(i => `<option value="${i[1]}">${i[0]}</option>`).join('');
+            // Load Jasa
+            const resJ = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+            const dataJ = await resJ.json();
+            if(dataJ.success) {
+                document.getElementById('jasaSelect').innerHTML = dataJ.data.map(i => `<option value="${i[1]}">${i[0]}</option>`).join('');
+            }
+        } catch(e) { console.log(e) }
+    }
+
+    async function checkSelection() {
+        const email = document.getElementById('emailInput').value;
+        const user = listEmails.find(u => u.email === email);
+        if(user) {
+            // Tarik data lengkap (alamat, lat, lng)
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
+            const r = await res.json();
+            if(r.success) {
+                currentCustomer = r.data;
+                document.getElementById('selectedName').innerText = r.data.nama;
+                document.getElementById('selectedWA').innerText = r.data.wa;
+                document.getElementById('customerBadge').classList.remove('d-none');
+            }
+        } else {
+            currentCustomer = null;
+            document.getElementById('customerBadge').classList.add('d-none');
         }
     }
 
-    function checkSelection() {
-        const val = document.getElementById('emailInput').value;
-        const user = listEmails.find(u => u.email === val);
-        if(user) {
-            document.getElementById('selectedName').innerText = user.nama;
-            document.getElementById('customerInfo').style.display = 'block';
+    function toggleMapSync() {
+        const isSync = document.getElementById('useOldAddr').checked;
+        const mapDiv = document.getElementById('mapContainer');
+        
+        if (isSync && currentCustomer) {
+            mapDiv.style.display = 'none'; // Sembunyikan Maps
+            document.getElementById('alamat').value = currentCustomer.alamat;
+            document.getElementById('lat').value = currentCustomer.lat;
+            document.getElementById('lng').value = currentCustomer.lang;
+            calculateAll();
         } else {
-            document.getElementById('customerInfo').style.display = 'none';
+            mapDiv.style.display = 'block'; // Tampilkan Maps
+            map.invalidateSize(); // Refresh Leaflet
         }
     }
 
     function updateLocation(lat, lng) {
         document.getElementById('lat').value = lat;
         document.getElementById('lng').value = lng;
-        
-        // Reverse Geocoding (Optional)
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(r => r.json()).then(d => {
                 document.getElementById('alamat').value = d.display_name;
@@ -154,12 +229,11 @@
     function calculateAll() {
         const lat = document.getElementById('lat').value;
         const lng = document.getElementById('lng').value;
-        
-        // Hitung Jarak
+        if(!lat || !lng) return;
+
         let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
         document.getElementById('txtJarak').innerText = jarak.toFixed(1);
         
-        // Hitung Bensin (Contoh: > 5km kena 10rb/km)
         bensinCost = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
 
@@ -171,7 +245,8 @@
         const sel = document.getElementById('jasaSelect');
         const nama = sel.options[sel.selectedIndex].text;
         const harga = parseInt(sel.value);
-        
+        if(!harga) return;
+
         const idx = selectedItems.findIndex(i => i.nama === nama);
         if(idx > -1) selectedItems[idx].qty++;
         else selectedItems.push({nama, harga, qty: 1});
@@ -180,10 +255,10 @@
     }
 
     function renderItems() {
-        document.getElementById('itemList').innerHTML = selectedItems.map((it, idx) => `
-            <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded border mb-2 small">
-                <div><b>${it.nama}</b><br>Rp${it.harga.toLocaleString()} x ${it.qty}</div>
-                <i class="fas fa-trash text-danger" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
+        document.getElementById('itemContainer').innerHTML = selectedItems.map((it, idx) => `
+            <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded-4 border mb-2 small shadow-sm">
+                <div class="ps-2"><b>${it.nama}</b><br><span class="text-muted">Rp${it.harga.toLocaleString()} x ${it.qty}</span></div>
+                <button class="btn btn-sm text-danger border-0" onclick="selectedItems.splice(${idx},1);renderItems()"><i class="fas fa-trash"></i></button>
             </div>
         `).join('');
         calculateAll();
@@ -195,7 +270,7 @@
         const alamat = document.getElementById('alamat').value;
 
         if(!email || selectedItems.length === 0 || !lat) {
-            return Swal.fire('Error', 'Lengkapi data pelanggan, lokasi, dan jasa.', 'error');
+            return Swal.fire('Data Belum Lengkap', 'Pastikan pelanggan, lokasi, dan jasa sudah diisi.', 'warning');
         }
 
         document.getElementById('loader').style.display = 'flex';
@@ -214,14 +289,12 @@
             const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
             document.getElementById('loader').style.display = 'none';
-            
             if(r.success) {
-                Swal.fire('Berhasil!', `Nota ${r.notaId} telah dibuat.`, 'success')
-                    .then(() => window.location.href = 'admin.html');
+                Swal.fire('Berhasil!', `Work Order & Nota Berhasil Dibuat`, 'success').then(() => window.location.href = 'admin.html');
             }
         } catch(e) {
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Gagal mengirim data', 'error');
+            Swal.fire('Error', 'Terjadi kesalahan jaringan', 'error');
         }
     }
 </script>
