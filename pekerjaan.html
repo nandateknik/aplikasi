@@ -46,6 +46,14 @@
                     </button>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Jadwal Pengerjaan</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-calendar-alt text-muted"></i></span>
+                        <input type="datetime-local" id="tglBooking" class="form-control">
+                    </div>
+                </div>
+
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
                     <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat sesuai data pendaftaran</label>
@@ -109,15 +117,20 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxl-YIdypbqkdHh60bCkTUIZP_FuwmAxae5wr0aEnZI1EZX28x8e3UdNJdlWhb1fK6s/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzYHg4GancnzifepaUK02Eboq8Gp5X7twalj4SCcww-ztpCwSXPgJVCHrxqYaHjaSD4/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
     
     let map, marker, timeoutCheck;
     let pelangganData = null;
-    let selectedItems = []; // Array of {nama, harga, qty}
+    let selectedItems = []; 
     let bensinCost = 0;
 
     window.onload = () => {
+        // Set default tanggal hari ini
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
+
         initMap();
         loadDaftarHarga();
     };
@@ -199,13 +212,9 @@
         const nama = select.options[select.selectedIndex].text;
         const harga = parseInt(select.value);
         if(!harga) return;
-
         const existing = selectedItems.find(i => i.nama === nama);
-        if(existing) {
-            existing.qty += 1;
-        } else {
-            selectedItems.push({ nama, harga, qty: 1 });
-        }
+        if(existing) { existing.qty += 1; } 
+        else { selectedItems.push({ nama, harga, qty: 1 }); }
         renderItems();
     }
 
@@ -213,13 +222,7 @@
         const nama = document.getElementById('manualNama').value;
         const harga = parseInt(document.getElementById('manualHarga').value);
         if(!nama || !harga) return Swal.fire('Error', 'Isi nama dan harga jasa manual', 'error');
-
-        const existing = selectedItems.find(i => i.nama === nama);
-        if(existing) {
-            existing.qty += 1;
-        } else {
-            selectedItems.push({ nama, harga, qty: 1 });
-        }
+        selectedItems.push({ nama: "[M] " + nama, harga, qty: 1 });
         document.getElementById('manualNama').value = '';
         document.getElementById('manualHarga').value = '';
         renderItems();
@@ -227,9 +230,7 @@
 
     function updateQty(index, delta) {
         selectedItems[index].qty += delta;
-        if(selectedItems[index].qty <= 0) {
-            selectedItems.splice(index, 1);
-        }
+        if(selectedItems[index].qty <= 0) { selectedItems.splice(index, 1); }
         renderItems();
     }
 
@@ -271,13 +272,10 @@
             jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
         }
         document.getElementById('valJarak').innerText = jarak.toFixed(1);
-
         bensinCost = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
-
         const subtotalJasa = selectedItems.reduce((acc, curr) => acc + (curr.harga * curr.qty), 0);
         document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotalJasa.toLocaleString();
-
         const totalSemua = subtotalJasa + bensinCost;
         document.getElementById('txtTotal').innerText = "Rp " + totalSemua.toLocaleString();
         return totalSemua;
@@ -285,12 +283,15 @@
 
     async function simpanDataNota() {
         const email = document.getElementById('email').value;
+        const tgl = document.getElementById('tglBooking').value;
         const lat = document.getElementById('lat').value;
         const lang = document.getElementById('lang').value;
         const alamat = document.getElementById('alamat').value;
         const finalTotal = hitungBiaya();
 
-        if(!email || selectedItems.length === 0) return Swal.fire('Peringatan', 'Lengkapi Email dan pilih minimal 1 Jasa', 'warning');
+        if(!email || !tgl || selectedItems.length === 0) {
+            return Swal.fire('Peringatan', 'Lengkapi Email, Tanggal, dan minimal 1 Jasa', 'warning');
+        }
         if(!lat || !alamat) return Swal.fire('Peringatan', 'Tentukan lokasi pekerjaan di map', 'warning');
 
         document.getElementById('loader').style.display = 'flex';
@@ -298,7 +299,8 @@
             const payload = {
                 action: 'createNota', 
                 email: email,
-                items: selectedItems, // Mengirim data lengkap dengan qty
+                tglPengerjaan: tgl.replace('T', ' '), // Format YYYY-MM-DD HH:mm
+                items: selectedItems,
                 total: finalTotal,
                 lat: lat,
                 lang: lang,
