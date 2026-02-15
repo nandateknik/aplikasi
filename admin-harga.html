@@ -1,1 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Harga - Nanda Teknik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #6fb1fc 100%); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
+        .header-section {
+            background: var(--p-grad); padding: 30px 20px;
+            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+            color: white; text-align: center;
+        }
+        .card-price {
+            background: white; border-radius: 15px; border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s;
+        }
+        .form-control { border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
+            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05);
+        }
+        .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
+        .nav-link.active { color: var(--p-blue); }
+        .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
+    </style>
+</head>
+<body>
 
+<div class="header-section">
+    <h5 class="fw-bold mb-0">Daftar Harga Jasa</h5>
+    <p class="small opacity-75">Nanda Teknik Management</p>
+</div>
+
+<div class="container mt-4">
+    <div class="card p-3 mb-4 shadow-sm border-0" style="border-radius: 20px;">
+        <h6 class="fw-bold mb-3 small text-muted">TAMBAH JASA BARU</h6>
+        <div class="row g-2">
+            <div class="col-7">
+                <input type="text" id="newNama" class="form-control" placeholder="Nama Jasa (ex: Cuci AC)">
+            </div>
+            <div class="col-5">
+                <input type="number" id="newHarga" class="form-control" placeholder="Harga">
+            </div>
+            <div class="col-12 mt-2">
+                <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="saveHarga()" style="border-radius: 12px; background: var(--p-blue);">
+                    <i class="fas fa-plus-circle me-1"></i> Simpan ke Database
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="priceListContainer">
+        <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 small text-muted">Memuat data harga...</p>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <a href="admin.html" class="nav-link"><i class="fas fa-list-ul"></i>Riwayat</a>
+    <a href="buat-booking.html" class="nav-link"><i class="fas fa-plus-circle"></i>Booking</a>
+    <a href="#" class="nav-link active"><i class="fas fa-tag"></i>Harga</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzvFWiGDHC5MSL4Bs52PQL-qts4dNoVrqJLLtfW6eTkD0Jy1EJGnNNb8qaWqlm-RYik/exec';
+
+    window.onload = loadHarga;
+
+    async function loadHarga() {
+        try {
+            const res = await fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getDaftarHarga' }) 
+            });
+            const result = await res.json();
+            
+            if(result.success) {
+                renderPriceList(result.data);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function renderPriceList(data) {
+        const container = document.getElementById('priceListContainer');
+        if (data.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted small mt-4">Belum ada data jasa.</div>';
+            return;
+        }
+
+        container.innerHTML = data.map(item => `
+            <div class="card-price p-3 mb-2 d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="fw-bold" style="font-size: 0.9rem;">${item[0]}</div>
+                    <div class="text-primary fw-bold small">Rp ${item[1].toLocaleString()}</div>
+                </div>
+                <button class="btn btn-light btn-sm text-danger border-0 shadow-sm" onclick="deleteHarga('${item[0]}')" style="border-radius: 10px;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async function saveHarga() {
+        const nama = document.getElementById('newNama').value;
+        const harga = document.getElementById('newHarga').value;
+
+        if(!nama || !harga) return Swal.fire('Oops!', 'Isi nama dan harga jasa', 'warning');
+
+        Swal.showLoading();
+        const res = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'updateHarga', mode: 'add', nama, harga: parseInt(harga) })
+        });
+        const result = await res.json();
+
+        if(result.success) {
+            Swal.fire('Berhasil!', 'Jasa baru telah ditambahkan', 'success');
+            document.getElementById('newNama').value = '';
+            document.getElementById('newHarga').value = '';
+            loadHarga();
+        }
+    }
+
+    async function deleteHarga(nama) {
+        const confirm = await Swal.fire({
+            title: 'Hapus Jasa?',
+            text: `Hapus ${nama} dari daftar harga?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        });
+
+        if(confirm.isConfirmed) {
+            Swal.showLoading();
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'updateHarga', mode: 'delete', nama })
+            });
+            const result = await res.json();
+            if(result.success) {
+                Swal.fire('Terhapus!', 'Data telah dihapus', 'success');
+                loadHarga();
+            }
+        }
+    }
+</script>
+</body>
+</html>
