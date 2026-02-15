@@ -14,34 +14,16 @@
     <style>
         :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
-        
-        .header-section {
-            background: var(--p-grad); padding: 30px 20px 50px;
-            border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
-            color: white; margin-bottom: -30px;
-        }
-        .card-main {
-            background: white; border-radius: 25px; padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none;
-        }
+        .header-section { background: var(--p-grad); padding: 30px 20px 50px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; color: white; margin-bottom: -30px; }
+        .card-main { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; }
         #map { height: 220px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .price-box { background: #f8fafc; border-radius: 18px; padding: 15px; border: 1px dashed #cbd5e1; }
-        
         .form-control, .form-select { border-radius: 12px; border: none; background: #f1f5f9; padding: 10px 15px; font-size: 0.9rem; }
-        .form-control:focus, .form-select:focus { background: #e2e8f0; box-shadow: none; }
-        
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white; height: 75px;
-            display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000;
-        }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; height: 75px; display: flex; align-items: center; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-link { flex: 1; text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
         .nav-link.active { color: var(--p-blue); }
         .nav-link i { font-size: 1.5rem; display: block; margin-bottom: 3px; }
-
-        .loader-overlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; 
-        }
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
@@ -91,8 +73,7 @@
         </div>
         <textarea id="alamat" class="form-control mb-3 shadow-sm" rows="2" placeholder="Detail Alamat..."></textarea>
         
-        <input type="hidden" id="lat">
-        <input type="hidden" id="lng">
+        <input type="hidden" id="lat"><input type="hidden" id="lng">
 
         <hr class="opacity-10">
 
@@ -143,13 +124,13 @@
     <a href="pelanggan.html" class="nav-link"><i class="fas fa-users"></i>Pelanggan</a>
 </div>
 
+<script src="config.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyTPEvTXoivjyQoLu0upHWmfrlYa_YHB19i2pmD4vE3MnrdV0PAHIEbpxjsDAUw6Vgg/exec';
-    const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 };
     let map, marker, listEmails = [], selectedItems = [], bensinCost = 0, currentCustomer = null;
 
     window.onload = async () => {
@@ -162,52 +143,48 @@
     };
 
     function initMap() {
-        map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
+        map = L.map('map').setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         
-        L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: "Cari Lokasi/Jalan..."
-        }).on('markgeocode', function(e) {
-            const center = e.geocode.center;
-            map.setView(center, 16);
-            marker.setLatLng(center);
-            updateLocation(center.lat, center.lng);
-        }).addTo(map);
+        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Cari Lokasi/Jalan..." })
+            .on('markgeocode', function(e) {
+                const center = e.geocode.center;
+                map.setView(center, 16);
+                marker.setLatLng(center);
+                updateLocation(center.lat, center.lng);
+            }).addTo(map);
 
-        marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
+        marker = L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], {draggable: true}).addTo(map);
         marker.on('dragend', (e) => updateLocation(e.target.getLatLng().lat, e.target.getLatLng().lng));
     }
 
     async function loadInitialData() {
         try {
-            const resE = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllEmails' }) });
+            const resE = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllEmails' }) });
             const dataE = await resE.json();
             if(dataE.success) {
                 listEmails = dataE.data;
                 document.getElementById('emailList').innerHTML = listEmails.map(u => `<option value="${u.email}">${u.nama}</option>`).join('');
             }
-            const resJ = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+            const resJ = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
             const dataJ = await resJ.json();
             if(dataJ.success) {
                 document.getElementById('jasaSelect').innerHTML = dataJ.data.map(i => `<option value="${i[1]}">${i[0]}</option>`).join('');
             }
-        } catch(e) { console.log(e) }
+        } catch(e) { console.log("Load Error:", e) }
     }
 
     async function checkSelection() {
         const email = document.getElementById('emailInput').value;
         const user = listEmails.find(u => u.email.toLowerCase() === email.toLowerCase());
         if(user) {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
             const r = await res.json();
             if(r.success) {
                 currentCustomer = r.data;
                 document.getElementById('selectedName').innerText = r.data.nama;
                 document.getElementById('selectedWA').innerText = r.data.wa;
                 document.getElementById('customerBadge').classList.remove('d-none');
-                
-                // Auto-sync jika switch sedang menyala
                 if(document.getElementById('useOldAddr').checked) syncWithCustomer();
             }
         } else {
@@ -218,7 +195,6 @@
 
     function syncWithCustomer() {
         if (currentCustomer) {
-            // Mengambil alamat asli dari data pelanggan (Kolom H di Sheet)
             document.getElementById('alamat').value = currentCustomer.alamat;
             document.getElementById('lat').value = currentCustomer.lat;
             document.getElementById('lng').value = currentCustomer.lang;
@@ -258,9 +234,10 @@
         const lng = document.getElementById('lng').value;
         if(!lat || !lng) return;
         
-        let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+        let jarak = map.distance([lat, lng], [CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng]) / 1000;
         document.getElementById('txtJarak').innerText = jarak.toFixed(1);
-        bensinCost = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
+        
+        bensinCost = (jarak > CONFIG.BENSIN.FREE_KM) ? Math.ceil(jarak - CONFIG.BENSIN.FREE_KM) * CONFIG.BENSIN.PER_KM_COST : 0;
         document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
         
         const totalJasa = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
@@ -281,7 +258,7 @@
     function addManualItem() {
         const nama = document.getElementById('manualNama').value;
         const harga = parseInt(document.getElementById('manualHarga').value);
-        if(!nama || !harga) return Swal.fire('Error', 'Isi nama jasa dan harga manual', 'error');
+        if(!nama || !harga) return Swal.fire('Error', 'Isi nama & harga', 'error');
         selectedItems.push({nama: "[M] " + nama, harga: harga, qty: 1});
         document.getElementById('manualNama').value = "";
         document.getElementById('manualHarga').value = "";
@@ -302,10 +279,9 @@
         const email = document.getElementById('emailInput').value;
         const tgl = document.getElementById('tglBooking').value;
         const lat = document.getElementById('lat').value;
-        const alamat = document.getElementById('alamat').value;
         
         if(!email || !tgl || selectedItems.length === 0 || !lat) {
-            return Swal.fire('Error', 'Data belum lengkap (Email, Tanggal, Jasa, & Lokasi)', 'warning');
+            return Swal.fire('Error', 'Data belum lengkap', 'warning');
         }
 
         document.getElementById('loader').style.display = 'flex';
@@ -317,21 +293,21 @@
             total: selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0) + bensinCost,
             lat: lat,
             lang: document.getElementById('lng').value,
-            alamat: alamat
+            alamat: document.getElementById('alamat').value
         };
 
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
             document.getElementById('loader').style.display = 'none';
             if(r.success) {
-                Swal.fire('Berhasil!', 'Work Order telah tersimpan', 'success').then(() => window.location.href = 'admin.html');
+                Swal.fire('Berhasil!', 'Work Order tersimpan', 'success').then(() => window.location.href = 'admin.html');
             } else {
-                Swal.fire('Gagal', r.message || 'Terjadi kesalahan sistem', 'error');
+                Swal.fire('Gagal', r.message, 'error');
             }
         } catch(e) {
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Gagal menyambung ke server', 'error');
+            Swal.fire('Error', 'Server error', 'error');
         }
     }
 </script>
