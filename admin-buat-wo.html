@@ -125,15 +125,15 @@
 </div>
 
 <script src="config.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    let map, marker, listEmails = [], selectedItems = [], bensinCost = 0, currentCustomer = null;
+    let map, marker, listPelanggan = [], selectedItems = [], bensinCost = 0, currentCustomer = null;
 
     window.onload = async () => {
+        // Set Default Waktu
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
@@ -160,33 +160,36 @@
 
     async function loadInitialData() {
         try {
-            const resE = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllEmails' }) });
-            const dataE = await resE.json();
-            if(dataE.success) {
-                listEmails = dataE.data;
-                document.getElementById('emailList').innerHTML = listEmails.map(u => `<option value="${u.email}">${u.nama}</option>`).join('');
+            // Ambil Data Pelanggan (Ganti action dadi getAllPelanggan)
+            const resP = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
+            const dataP = await resP.json();
+            if(dataP.success) {
+                // Mapping data seko array GS dadi object ben gampang
+                listPelanggan = dataP.data.map(r => ({
+                    nama: r[0], email: r[1], wa: r[3], lat: r[4], lang: r[5], alamat: r[7]
+                }));
+                document.getElementById('emailList').innerHTML = listPelanggan.map(u => `<option value="${u.email}">${u.nama}</option>`).join('');
             }
+
+            // Ambil Daftar Harga
             const resJ = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
             const dataJ = await resJ.json();
             if(dataJ.success) {
                 document.getElementById('jasaSelect').innerHTML = dataJ.data.map(i => `<option value="${i[1]}">${i[0]}</option>`).join('');
             }
-        } catch(e) { console.log("Load Error:", e) }
+        } catch(e) { console.error("Load Error:", e) }
     }
 
-    async function checkSelection() {
-        const email = document.getElementById('emailInput').value;
-        const user = listEmails.find(u => u.email.toLowerCase() === email.toLowerCase());
+    function checkSelection() {
+        const emailVal = document.getElementById('emailInput').value.toLowerCase();
+        const user = listPelanggan.find(u => u.email.toLowerCase() === emailVal);
+        
         if(user) {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
-            const r = await res.json();
-            if(r.success) {
-                currentCustomer = r.data;
-                document.getElementById('selectedName').innerText = r.data.nama;
-                document.getElementById('selectedWA').innerText = r.data.wa;
-                document.getElementById('customerBadge').classList.remove('d-none');
-                if(document.getElementById('useOldAddr').checked) syncWithCustomer();
-            }
+            currentCustomer = user;
+            document.getElementById('selectedName').innerText = user.nama;
+            document.getElementById('selectedWA').innerText = user.wa;
+            document.getElementById('customerBadge').classList.remove('d-none');
+            if(document.getElementById('useOldAddr').checked) syncWithCustomer();
         } else {
             currentCustomer = null;
             document.getElementById('customerBadge').classList.add('d-none');
@@ -198,6 +201,12 @@
             document.getElementById('alamat').value = currentCustomer.alamat;
             document.getElementById('lat').value = currentCustomer.lat;
             document.getElementById('lng').value = currentCustomer.lang;
+            
+            // Pindah posisi marker neng map sisan
+            const latlng = [currentCustomer.lat, currentCustomer.lang];
+            marker.setLatLng(latlng);
+            map.setView(latlng, 16);
+            
             calculateAll();
         }
     }
@@ -207,7 +216,7 @@
         const mapDiv = document.getElementById('mapContainer');
         if (isSync) {
             if(!currentCustomer) {
-                Swal.fire('Info', 'Cari pelanggan dulu', 'info');
+                Swal.fire('Info', 'Cari/Pilih pelanggan dulu', 'info');
                 document.getElementById('useOldAddr').checked = false;
                 return;
             }
@@ -234,6 +243,7 @@
         const lng = document.getElementById('lng').value;
         if(!lat || !lng) return;
         
+        // Hitung Jarak seko Kantor (CONFIG)
         let jarak = map.distance([lat, lng], [CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng]) / 1000;
         document.getElementById('txtJarak').innerText = jarak.toFixed(1);
         
@@ -281,13 +291,14 @@
         const lat = document.getElementById('lat').value;
         
         if(!email || !tgl || selectedItems.length === 0 || !lat) {
-            return Swal.fire('Error', 'Data belum lengkap', 'warning');
+            return Swal.fire('Error', 'Data belum lengkap (Pilih Pelanggan, Jasa, & Lokasi)', 'warning');
         }
 
         document.getElementById('loader').style.display = 'flex';
         const payload = {
             action: 'createNota',
             email: email,
+            nama: currentCustomer ? currentCustomer.nama : "Pelanggan", // Tambah jeneng nggo Labarugi
             tglPengerjaan: tgl.replace('T', ' '),
             items: selectedItems,
             total: selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0) + bensinCost,
@@ -301,13 +312,13 @@
             const r = await res.json();
             document.getElementById('loader').style.display = 'none';
             if(r.success) {
-                Swal.fire('Berhasil!', 'Work Order tersimpan', 'success').then(() => window.location.href = 'admin.html');
+                Swal.fire('Berhasil!', 'Work Order & Nota tersimpan', 'success').then(() => window.location.href = 'admin.html');
             } else {
                 Swal.fire('Gagal', r.message, 'error');
             }
         } catch(e) {
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Server error', 'error');
+            Swal.fire('Error', 'Server error / Periksa koneksi', 'error');
         }
     }
 </script>
