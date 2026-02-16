@@ -9,22 +9,31 @@
     <link rel="stylesheet" href="layout.css">
     <style>
         body { background: #f4f7fe; padding-bottom: 100px; }
-        .admin-card { background: white; border-radius: 20px; border: none; margin-top: 20px; position: relative; z-index: 99; }
-        .btn-action { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; margin: 2px; border: none; }
+        /* Card ditaruh agak atas sedikit menutupi header wave sedikit */
+        .admin-card { 
+            background: white; 
+            border-radius: 25px; 
+            border: none; 
+            margin-top: -30px; /* Efek melayang di atas header */
+            position: relative; 
+            z-index: 10; 
+        }
+        .btn-action { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; margin: 2px; border: none; font-size: 0.8rem; }
         .badge-status { padding: 5px 12px; border-radius: 8px; font-weight: 600; font-size: 0.7rem; }
         .status-pending { background: #fff3cd; color: #856404; }
         .status-sent { background: #d1ecf1; color: #0c5460; }
         .status-approved { background: #d4edda; color: #155724; }
-        /* Style Search Suggester */
         #search-results { position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<script src="layout.js"></script>
+
+<div class="container position-relative">
     <div class="row justify-content-center">
         <div class="col-lg-11">
-            <div class="card admin-card p-4 shadow-sm">
+            <div class="card admin-card p-4 shadow-sm mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h5 class="fw-bold m-0 text-primary">Manajemen Penawaran</h5>
@@ -45,7 +54,8 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Email Pelanggan</th>
+                                <th>Perihal</th>
+                                <th>Pelanggan</th>
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th class="text-center">Aksi</th>
@@ -61,49 +71,56 @@
 
 <div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4 border-0">
-            <div class="modal-header border-0">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 bg-light rounded-top-4">
                 <h5 class="modal-title fw-bold" id="modalTitle">Buat Penawaran</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <form id="formPenawaran">
                     <input type="hidden" id="edit-id">
                     
-                    <div class="mb-3 position-relative">
-                        <label class="form-label small fw-bold">Cari Pelanggan (Nama/Email)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search"></i></span>
-                            <input type="text" id="search-pelanggan" class="form-control bg-light border-start-0" placeholder="Ketik nama pelanggan..." oninput="searchPelanggan(this.value)">
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-secondary">Cari Pelanggan</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-user"></i></span>
+                                <input type="text" id="search-pelanggan" class="form-control" placeholder="Nama/Email..." oninput="searchPelanggan(this.value)">
+                            </div>
+                            <div id="search-results" class="list-group shadow-sm"></div>
+                            <input type="hidden" id="form-email" required>
+                            <div id="selected-email-display" class="mt-1 small text-primary fw-bold"></div>
                         </div>
-                        <div id="search-results" class="list-group shadow-sm"></div>
-                        <input type="hidden" id="form-email" required>
-                        <div id="selected-email-display" class="mt-2 small text-primary fw-bold"></div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-secondary">Perihal / Project</label>
+                            <input type="text" id="form-perihal" class="form-control" placeholder="Contoh: Service AC Ruang Meeting" required>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Item Penawaran</label>
+                        <label class="form-label small fw-bold text-secondary">Item Penawaran</label>
                         <div id="items-container"></div>
-                        <button type="button" class="btn btn-light btn-sm mt-2 w-100" onclick="addItemRow()">
-                            <i class="fas fa-plus-circle me-1"></i> Tambah Baris
+                        <button type="button" class="btn btn-light btn-sm mt-2 w-100 border" onclick="addItemRow()">
+                            <i class="fas fa-plus-circle me-1"></i> Tambah Baris Item
                         </button>
                     </div>
 
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Status</label>
-                            <select id="form-status" class="form-select rounded-3">
+                    <div class="row align-items-center mt-4">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-secondary">Status</label>
+                            <select id="form-status" class="form-select">
                                 <option value="Pending">Pending</option>
                                 <option value="Sent">Sent</option>
                                 <option value="Approved">Approved</option>
                             </select>
                         </div>
-                        <div class="col-md-6 text-end">
-                            <label class="form-label small fw-bold">Total Estimasi</label>
-                            <h3 class="text-primary fw-bold" id="display-total">Rp 0</h3>
+                        <div class="col-6 text-end">
+                            <label class="form-label small fw-bold text-secondary">Total Estimasi</label>
+                            <h3 class="text-primary fw-bold mb-0" id="display-total">Rp 0</h3>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mt-4 rounded-3 py-2 fw-bold" id="btnSimpan">SIMPAN DATA</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-4 rounded-3 py-2 fw-bold" id="btnSimpan">SIMPAN PENAWARAN</button>
                 </form>
             </div>
         </div>
@@ -123,7 +140,7 @@
 
     window.onload = () => {
         loadPenawaran();
-        fetchPelanggan(); // Load data pelanggan buat fitur search
+        fetchPelanggan();
     };
 
     async function fetchPelanggan() {
@@ -162,13 +179,13 @@
     function selectPelanggan(nama, email) {
         document.getElementById('form-email').value = email;
         document.getElementById('search-pelanggan').value = nama;
-        document.getElementById('selected-email-display').innerText = "Email Terpilih: " + email;
+        document.getElementById('selected-email-display').innerText = "Kirim ke: " + email;
         document.getElementById('search-results').style.display = 'none';
     }
 
     async function loadPenawaran() {
         const tbody = document.getElementById('table-body');
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5"><div class="spinner-border text-primary"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center p-5"><div class="spinner-border text-primary"></div></td></tr>';
         
         try {
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
@@ -177,19 +194,20 @@
                 allData = result.data;
                 tbody.innerHTML = allData.map(row => `
                     <tr>
-                        <td class="fw-bold">#${row.id}</td>
-                        <td>${row.email}</td>
-                        <td class="fw-bold text-success">Rp ${Number(row.total).toLocaleString('id-ID')}</td>
+                        <td class="small fw-bold text-muted">#${row.id}</td>
+                        <td class="fw-bold">${row.perihal || '-'}</td>
+                        <td class="small">${row.email}</td>
+                        <td class="fw-bold text-primary">Rp ${Number(row.total).toLocaleString('id-ID')}</td>
                         <td><span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span></td>
                         <td class="text-center">
-                            <button class="btn btn-light btn-action" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-primary btn-action" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
-                            <button class="btn btn-danger btn-action" onclick="deletePenawaran('${row.id}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-light btn-action text-primary" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-light btn-action text-danger" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn btn-light btn-action text-secondary" onclick="deletePenawaran('${row.id}')"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `).join('');
             }
-        } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center">Gagal load data.</td></tr>'; }
+        } catch(e) { tbody.innerHTML = '<tr><td colspan="6" class="text-center">Gagal load data.</td></tr>'; }
     }
 
     function showAddModal() {
@@ -197,18 +215,19 @@
         document.getElementById('edit-id').value = '';
         document.getElementById('selected-email-display').innerText = '';
         document.getElementById('items-container').innerHTML = '';
+        document.getElementById('display-total').innerText = 'Rp 0';
         addItemRow();
         modalForm.show();
     }
 
     function addItemRow(nama = '', harga = 0, qty = 1) {
         const div = document.createElement('div');
-        div.className = 'row g-2 mb-2 item-row';
+        div.className = 'row g-2 mb-2 item-row align-items-center';
         div.innerHTML = `
-            <div class="col-6"><input type="text" placeholder="Nama Barang" class="form-control it-nama" value="${nama}" required></div>
+            <div class="col-5"><input type="text" placeholder="Nama Item" class="form-control it-nama" value="${nama}" required></div>
             <div class="col-3"><input type="number" placeholder="Harga" class="form-control it-harga" value="${harga}" oninput="calcTotal()" required></div>
             <div class="col-2"><input type="number" placeholder="Qty" class="form-control it-qty" value="${qty}" oninput="calcTotal()" required></div>
-            <div class="col-1"><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times"></i></button></div>
+            <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-trash-alt"></i></button></div>
         `;
         document.getElementById('items-container').appendChild(div);
     }
@@ -240,6 +259,7 @@
             action: id ? 'updatePenawaran' : 'createPenawaran',
             id: id,
             email: document.getElementById('form-email').value,
+            perihal: document.getElementById('form-perihal').value,
             items: items,
             total: calcTotal(),
             status: document.getElementById('form-status').value
@@ -251,7 +271,7 @@
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await res.json();
             if (result.success) {
-                Swal.fire('Berhasil!', 'Penawaran wis disimpan.', 'success');
+                Swal.fire('Berhasil!', 'Data Penawaran wis tersimpan.', 'success');
                 modalForm.hide();
                 loadPenawaran();
             }
@@ -265,18 +285,29 @@
         document.getElementById('edit-id').value = data.id;
         document.getElementById('form-email').value = data.email;
         document.getElementById('search-pelanggan').value = data.email;
+        document.getElementById('form-perihal').value = data.perihal || '';
         document.getElementById('form-status').value = data.status;
         document.getElementById('items-container').innerHTML = '';
-        data.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
+        if(data.items_json) {
+            data.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
+        }
         calcTotal();
         modalForm.show();
     }
 
     async function deletePenawaran(id) {
-        const confirm = await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true });
+        const confirm = await Swal.fire({ 
+            title: 'Hapus Penawaran?', 
+            text: "Data sing wis dihapus gak iso dibalekne!",
+            icon: 'warning', 
+            showCancelButton: true,
+            confirmButtonColor: '#d33'
+        });
         if (confirm.isConfirmed) {
+            Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() });
             await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePenawaran', id: id }) });
             loadPenawaran();
+            Swal.fire('Terhapus!', 'Penawaran wis dibusak.', 'success');
         }
     }
 
@@ -285,28 +316,49 @@
         const doc = new jsPDF();
         const items = data.items_json;
 
-        doc.setFontSize(20).setTextColor(0, 82, 212).text("NANDA TEKNIK", 105, 20, {align:"center"});
-        doc.setFontSize(10).setTextColor(100).text("Banyuwangi - Telp/WA: 082331201148", 105, 26, {align:"center"});
-        doc.line(14, 30, 196, 30);
+        // Header PDF
+        doc.setFontSize(18).setTextColor(0, 82, 212).text("NANDA TEKNIK", 105, 20, {align:"center"});
+        doc.setFontSize(9).setTextColor(100).text("Spesialis Service AC & Maintenance Teknik - Banyuwangi", 105, 26, {align:"center"});
+        doc.text("Telp/WA: 082331201148", 105, 30, {align:"center"});
+        doc.line(14, 35, 196, 35);
 
-        doc.setTextColor(0).setFontSize(14).text(`PENAWARAN HARGA #${data.id}`, 14, 45);
-        doc.setFontSize(10).text(`Tujuan: ${data.email}`, 14, 52);
-        doc.text(`Tanggal: ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 14, 58);
+        // Body PDF
+        doc.setTextColor(0).setFontSize(12).setFont(undefined, 'bold').text("PENAWARAN HARGA", 14, 45);
+        doc.setFont(undefined, 'normal').setFontSize(10);
+        doc.text(`Nomor    : #${data.id}`, 14, 52);
+        doc.text(`Tanggal  : ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 14, 57);
+        doc.text(`Perihal  : ${data.perihal || '-'}`, 14, 62);
+        
+        doc.text(`Kepada Yth:`, 140, 52);
+        doc.setFont(undefined, 'bold').text(`${data.email}`, 140, 57);
 
-        const tableBody = items.map((it, i) => [i + 1, it.nama, it.qty, `Rp ${it.harga.toLocaleString()}`, `Rp ${(it.qty * it.harga).toLocaleString()}`]);
+        const tableBody = items.map((it, i) => [
+            i + 1, 
+            it.nama, 
+            it.qty, 
+            `Rp ${it.harga.toLocaleString()}`, 
+            `Rp ${(it.qty * it.harga).toLocaleString()}`
+        ]);
 
         doc.autoTable({
-            startY: 65,
-            head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Subtotal']],
+            startY: 70,
+            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Subtotal']],
             body: tableBody,
             headStyles: { fillColor: [0, 82, 212] },
-            foot: [['', '', '', 'TOTAL', `Rp ${Number(data.total).toLocaleString()}`]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0], fontStyle: 'bold' }
+            theme: 'striped',
+            foot: [['', '', '', 'GRAND TOTAL', `Rp ${Number(data.total).toLocaleString()}`]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 82, 212], fontStyle: 'bold' }
         });
 
-        doc.text("Hormat Kami,", 150, doc.lastAutoTable.finalY + 20);
-        doc.text("Nanda Teknik Admin", 150, doc.lastAutoTable.finalY + 40);
-        doc.save(`Penawaran_${data.id}.pdf`);
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(10).setFont(undefined, 'normal').text("Catatan:", 14, finalY);
+        doc.setFontSize(9).text("- Penawaran berlaku selama 14 hari.", 14, finalY + 5);
+        doc.text("- Harga sudah termasuk biaya transport (Area Banyuwangi).", 14, finalY + 10);
+
+        doc.setFontSize(10).text("Hormat Kami,", 150, finalY + 15);
+        doc.setFont(undefined, 'bold').text("Nanda Teknik", 150, finalY + 35);
+        
+        doc.save(`Penawaran_${data.perihal || data.id}.pdf`);
     }
 </script>
 </body>
