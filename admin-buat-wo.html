@@ -15,7 +15,7 @@
         :root { --p-blue: #0052d4; --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
         .header-section { background: var(--p-grad); padding: 30px 20px 50px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; color: white; margin-bottom: -30px; }
-        .card-main { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; }
+        .card-main { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; position: relative; z-index: 10; }
         #map { height: 220px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .price-box { background: #f8fafc; border-radius: 18px; padding: 15px; border: 1px dashed #cbd5e1; }
         .form-control, .form-select { border-radius: 12px; border: none; background: #f1f5f9; padding: 10px 15px; font-size: 0.9rem; }
@@ -33,7 +33,7 @@
     <span class="mt-2 fw-bold">Menyimpan...</span>
 </div>
 
-<div class="header-section text-center">
+<div class="header-section text-center shadow">
     <h5 class="fw-bold mb-0">Input Booking Manual</h5>
     <p class="small opacity-75">Nanda Teknik Management</p>
 </div>
@@ -43,7 +43,7 @@
         <label class="form-label small fw-bold text-muted">DATA PELANGGAN</label>
         <div class="input-group mb-2 shadow-sm rounded-3 overflow-hidden">
             <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
-            <input type="text" id="emailInput" class="form-control bg-white" list="emailList" placeholder="Cari Email/Nama..." oninput="checkSelection()">
+            <input type="text" id="emailInput" class="form-control bg-white" list="emailList" placeholder="Cari Email/Nama..." oninput="BookingModule.checkSelection()">
             <datalist id="emailList"></datalist>
         </div>
 
@@ -63,16 +63,13 @@
         <div class="d-flex justify-content-between align-items-center mb-2 mt-2">
             <label class="form-label small fw-bold text-muted mb-0">LOKASI PENGERJAAN</label>
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="useOldAddr" onchange="toggleMapSync()">
+                <input class="form-check-input" type="checkbox" id="useOldAddr" onchange="MapModule.toggleMapSync()">
                 <label class="form-check-label small" for="useOldAddr">Data Pelanggan</label>
             </div>
         </div>
 
-        <div id="mapContainer">
-            <div id="map"></div>
-        </div>
+        <div id="mapContainer"><div id="map"></div></div>
         <textarea id="alamat" class="form-control mb-3 shadow-sm" rows="2" placeholder="Detail Alamat..."></textarea>
-        
         <input type="hidden" id="lat"><input type="hidden" id="lng">
 
         <hr class="opacity-10">
@@ -83,7 +80,7 @@
                 <select id="jasaSelect" class="form-select shadow-sm"></select>
             </div>
             <div class="col-4">
-                <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="addItem()" style="border-radius: 12px;">Add</button>
+                <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="BookingModule.addItem()" style="border-radius: 12px;">Add</button>
             </div>
         </div>
 
@@ -95,7 +92,7 @@
                 <input type="number" id="manualHarga" class="form-control shadow-sm" placeholder="Harga">
             </div>
             <div class="col-3">
-                <button class="btn btn-outline-primary w-100 fw-bold shadow-sm" onclick="addManualItem()" style="border-radius: 12px; font-size: 0.8rem;">Manual</button>
+                <button class="btn btn-outline-primary w-100 fw-bold shadow-sm" onclick="BookingModule.addManualItem()" style="border-radius: 12px; font-size: 0.8rem;">Manual</button>
             </div>
         </div>
 
@@ -112,7 +109,7 @@
             </div>
         </div>
 
-        <button class="btn btn-primary w-100 mt-4 py-3 fw-bold shadow" onclick="submitBooking()" style="border-radius: 20px; background: var(--p-blue);">
+        <button class="btn btn-primary w-100 mt-4 py-3 fw-bold shadow" onclick="BookingModule.submitBooking()" style="border-radius: 20px; background: var(--p-blue);">
             SIMPAN WORK ORDER & NOTA
         </button>
     </div>
@@ -129,198 +126,17 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+<script src="map-module.js"></script>
+<script src="booking-module.js"></script>
+
 <script>
-    let map, marker, listPelanggan = [], selectedItems = [], bensinCost = 0, currentCustomer = null;
-
+    // Inisialisasi pas load
     window.onload = async () => {
-        // Set Default Waktu
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
-        
-        initMap();
-        await loadInitialData();
+        BookingModule.initTime();
+        MapModule.init();
+        await BookingModule.loadInitialData();
     };
-
-    function initMap() {
-        map = L.map('map').setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Cari Lokasi/Jalan..." })
-            .on('markgeocode', function(e) {
-                const center = e.geocode.center;
-                map.setView(center, 16);
-                marker.setLatLng(center);
-                updateLocation(center.lat, center.lng);
-            }).addTo(map);
-
-        marker = L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], {draggable: true}).addTo(map);
-        marker.on('dragend', (e) => updateLocation(e.target.getLatLng().lat, e.target.getLatLng().lng));
-    }
-
-    async function loadInitialData() {
-        try {
-            // Ambil Data Pelanggan (Ganti action dadi getAllPelanggan)
-            const resP = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
-            const dataP = await resP.json();
-            if(dataP.success) {
-                // Mapping data seko array GS dadi object ben gampang
-                listPelanggan = dataP.data.map(r => ({
-                    nama: r[0], email: r[1], wa: r[3], lat: r[4], lang: r[5], alamat: r[7]
-                }));
-                document.getElementById('emailList').innerHTML = listPelanggan.map(u => `<option value="${u.email}">${u.nama}</option>`).join('');
-            }
-
-            // Ambil Daftar Harga
-            const resJ = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
-            const dataJ = await resJ.json();
-            if(dataJ.success) {
-                document.getElementById('jasaSelect').innerHTML = dataJ.data.map(i => `<option value="${i[1]}">${i[0]}</option>`).join('');
-            }
-        } catch(e) { console.error("Load Error:", e) }
-    }
-
-    function checkSelection() {
-        const emailVal = document.getElementById('emailInput').value.toLowerCase();
-        const user = listPelanggan.find(u => u.email.toLowerCase() === emailVal);
-        
-        if(user) {
-            currentCustomer = user;
-            document.getElementById('selectedName').innerText = user.nama;
-            document.getElementById('selectedWA').innerText = user.wa;
-            document.getElementById('customerBadge').classList.remove('d-none');
-            if(document.getElementById('useOldAddr').checked) syncWithCustomer();
-        } else {
-            currentCustomer = null;
-            document.getElementById('customerBadge').classList.add('d-none');
-        }
-    }
-
-    function syncWithCustomer() {
-        if (currentCustomer) {
-            document.getElementById('alamat').value = currentCustomer.alamat;
-            document.getElementById('lat').value = currentCustomer.lat;
-            document.getElementById('lng').value = currentCustomer.lang;
-            
-            // Pindah posisi marker neng map sisan
-            const latlng = [currentCustomer.lat, currentCustomer.lang];
-            marker.setLatLng(latlng);
-            map.setView(latlng, 16);
-            
-            calculateAll();
-        }
-    }
-
-    function toggleMapSync() {
-        const isSync = document.getElementById('useOldAddr').checked;
-        const mapDiv = document.getElementById('mapContainer');
-        if (isSync) {
-            if(!currentCustomer) {
-                Swal.fire('Info', 'Cari/Pilih pelanggan dulu', 'info');
-                document.getElementById('useOldAddr').checked = false;
-                return;
-            }
-            mapDiv.style.display = 'none';
-            syncWithCustomer();
-        } else {
-            mapDiv.style.display = 'block';
-            setTimeout(() => { map.invalidateSize(); }, 200);
-        }
-    }
-
-    function updateLocation(lat, lng) {
-        document.getElementById('lat').value = lat;
-        document.getElementById('lng').value = lng;
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-            .then(r => r.json()).then(d => {
-                document.getElementById('alamat').value = d.display_name;
-                calculateAll();
-            });
-    }
-
-    function calculateAll() {
-        const lat = document.getElementById('lat').value;
-        const lng = document.getElementById('lng').value;
-        if(!lat || !lng) return;
-        
-        // Hitung Jarak seko Kantor (CONFIG)
-        let jarak = map.distance([lat, lng], [CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng]) / 1000;
-        document.getElementById('txtJarak').innerText = jarak.toFixed(1);
-        
-        bensinCost = (jarak > CONFIG.BENSIN.FREE_KM) ? Math.ceil(jarak - CONFIG.BENSIN.FREE_KM) * CONFIG.BENSIN.PER_KM_COST : 0;
-        document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
-        
-        const totalJasa = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
-        document.getElementById('txtTotal').innerText = "Rp " + (totalJasa + bensinCost).toLocaleString();
-    }
-
-    function addItem() {
-        const sel = document.getElementById('jasaSelect');
-        const nama = sel.options[sel.selectedIndex].text;
-        const harga = parseInt(sel.value);
-        if(!harga) return;
-        const idx = selectedItems.findIndex(i => i.nama === nama);
-        if(idx > -1) selectedItems[idx].qty++;
-        else selectedItems.push({nama, harga, qty: 1});
-        renderItems();
-    }
-
-    function addManualItem() {
-        const nama = document.getElementById('manualNama').value;
-        const harga = parseInt(document.getElementById('manualHarga').value);
-        if(!nama || !harga) return Swal.fire('Error', 'Isi nama & harga', 'error');
-        selectedItems.push({nama: "[M] " + nama, harga: harga, qty: 1});
-        document.getElementById('manualNama').value = "";
-        document.getElementById('manualHarga').value = "";
-        renderItems();
-    }
-
-    function renderItems() {
-        document.getElementById('itemContainer').innerHTML = selectedItems.map((it, idx) => `
-            <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded-4 border mb-2 small shadow-sm">
-                <div class="ps-2"><b>${it.nama}</b><br><span class="text-muted">Rp${it.harga.toLocaleString()} x ${it.qty}</span></div>
-                <button class="btn btn-sm text-danger border-0" onclick="selectedItems.splice(${idx},1);renderItems()"><i class="fas fa-trash"></i></button>
-            </div>
-        `).join('');
-        calculateAll();
-    }
-
-    async function submitBooking() {
-        const email = document.getElementById('emailInput').value;
-        const tgl = document.getElementById('tglBooking').value;
-        const lat = document.getElementById('lat').value;
-        
-        if(!email || !tgl || selectedItems.length === 0 || !lat) {
-            return Swal.fire('Error', 'Data belum lengkap (Pilih Pelanggan, Jasa, & Lokasi)', 'warning');
-        }
-
-        document.getElementById('loader').style.display = 'flex';
-        const payload = {
-            action: 'createNota',
-            email: email,
-            nama: currentCustomer ? currentCustomer.nama : "Pelanggan", // Tambah jeneng nggo Labarugi
-            tglPengerjaan: tgl.replace('T', ' '),
-            items: selectedItems,
-            total: selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0) + bensinCost,
-            lat: lat,
-            lang: document.getElementById('lng').value,
-            alamat: document.getElementById('alamat').value
-        };
-
-        try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const r = await res.json();
-            document.getElementById('loader').style.display = 'none';
-            if(r.success) {
-                Swal.fire('Berhasil!', 'Work Order & Nota tersimpan', 'success').then(() => window.location.href = 'admin.html');
-            } else {
-                Swal.fire('Gagal', r.message, 'error');
-            }
-        } catch(e) {
-            document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Server error / Periksa koneksi', 'error');
-        }
-    }
 </script>
+
 </body>
 </html>
