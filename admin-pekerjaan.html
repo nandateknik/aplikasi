@@ -23,9 +23,6 @@
         .section-title { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px; display: flex; align-items: center; }
         .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 10px; }
         .update-box { background: #f8fafc; border-radius: 20px; padding: 15px; border: 1px solid #eef2f7; }
-        .swal2-container {
-            z-index: 3000 !important;
-        }
     </style>
 </head>
 <body>
@@ -301,35 +298,10 @@
         } catch(e) { console.error("Gagal load harga"); }
     }
 
-  async function saveSemuaPerubahan() {
-    const btn = document.getElementById('btnSimpan');
-    
-    // 1. Cek data dhisik
-    if (selectedItems.length === 0) {
-        return Swal.fire({
-            title: 'Nota Kosong?',
-            text: 'Yakin simpan tanpa isi nota?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Simpan',
-            target: document.getElementById('modalUpdate') // Ben popup muncul neng njero modal
-        }).then((result) => {
-            if (result.isConfirmed) eksekusiSimpan();
-        });
-    }
-
-    eksekusiSimpan();
-
-    async function eksekusiSimpan() {
+    async function saveSemuaPerubahan() {
+        const btn = document.getElementById('btnSimpan');
         btn.disabled = true;
-        
-        // Popup loading nggunakake 'target' supaya neng dhuwure modal
-        Swal.fire({ 
-            title: 'Menyimpan...', 
-            allowOutsideClick: false, 
-            didOpen: () => Swal.showLoading(),
-            target: document.getElementById('modalUpdate') 
-        });
+        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         const payload = {
             action: 'updateFullData', 
@@ -342,33 +314,16 @@
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
-            
+            btn.disabled = false;
             if(r.success) { 
-                btn.disabled = false;
-                // Tutup loading dhisik sakdurunge sukses
-                Swal.close(); 
-                
-                await Swal.fire({
-                    title: 'Sip!',
-                    text: 'Database wis diupdate.',
-                    icon: 'success',
-                    target: document.getElementById('modalUpdate')
-                });
-                
                 myModal.hide(); 
-                loadRiwayat(); 
+                Swal.fire('Sip!', 'Database wis diupdate.', 'success').then(() => loadRiwayat()); 
             }
         } catch(e) {
             btn.disabled = false;
-            Swal.fire({
-                title: 'Gagal',
-                text: 'Koneksi bermasalah.',
-                icon: 'error',
-                target: document.getElementById('modalUpdate')
-            });
+            Swal.fire('Gagal', 'Koneksi bermasalah.', 'error');
         }
     }
-}
 
     async function hapusData() {
         const confirm = await Swal.fire({
