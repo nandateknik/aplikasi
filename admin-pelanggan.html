@@ -15,7 +15,6 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 110px; }
         
-        /* Spesifik kanggo halaman iki */
         .search-container { 
             background: white; border-radius: 20px; padding: 5px 15px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-top: -30px; 
@@ -40,7 +39,12 @@
             box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999; border: none; 
         }
         .form-label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-        .modal-content { border-radius: 30px; border: none; }
+        
+        /* FIX MODAL AGAR TIDAK KETUTUP BOTTOM NAV */
+        .modal { z-index: 2000 !important; }
+        .modal-backdrop { z-index: 1999 !important; }
+        .modal-content { border-radius: 30px; border: none; margin-bottom: 80px; } /* Margin bwh biar tombol gak mentok */
+        .modal-body { padding-bottom: 40px !important; }
     </style>
 </head>
 <body>
@@ -62,8 +66,8 @@
 
 <div class="modal fade" id="modalCustomer" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0 shadow-sm">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
                 <h6 class="fw-bold mb-0" id="modalTitle">Data Pelanggan</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -124,7 +128,6 @@
         modalCust = new bootstrap.Modal(document.getElementById('modalCustomer'));
         loadAllPelanggan();
         
-        // Fix Leaflet render neng njero modal
         document.getElementById('modalCustomer').addEventListener('shown.bs.modal', function () {
             initMap();
         });
@@ -183,8 +186,7 @@
             updateAlamat(pos.lat, pos.lng);
         });
         
-        // Refresh map size ben ora abu-abu
-        setTimeout(() => map.invalidateSize(), 200);
+        setTimeout(() => map.invalidateSize(), 300);
     }
 
     function updateAlamat(lat, lng) {
@@ -251,7 +253,9 @@
             const result = await res.json();
             if(result.success) {
                 modalCust.hide();
-                Swal.fire('Sip!', 'Data wis kesimpen neng database.', 'success').then(() => loadAllPelanggan());
+                Swal.fire('Sip!', 'Data wis kesimpen.', 'success').then(() => loadAllPelanggan());
+            } else {
+                Swal.fire('Gagal', result.message || 'Coba maneh', 'error');
             }
         } catch(e) {
             Swal.fire('Error', 'Gagal kirim data neng server.', 'error');
@@ -261,7 +265,7 @@
     async function hapusPelanggan() {
         const email = document.getElementById('custEmail').value;
         const confirm = await Swal.fire({ 
-            title: 'Yakin dihapus?', text: "Data pelanggan iki bakal ilang selawase!", icon: 'warning', 
+            title: 'Yakin dihapus?', text: "Data iki bakal ilang permanen!", icon: 'warning', 
             showCancelButton: true, confirmButtonText: 'Ya, Hapus' 
         });
         
@@ -275,7 +279,7 @@
                 const r = await res.json();
                 if(r.success) { 
                     modalCust.hide(); 
-                    Swal.fire('Dihapus!', 'Pelanggan wis ilang seko list.', 'success').then(() => loadAllPelanggan()); 
+                    Swal.fire('Dihapus!', 'Pelanggan wis ilang.', 'success').then(() => loadAllPelanggan()); 
                 }
             } catch(e) { Swal.fire('Error', 'Gagal mbusak data.', 'error'); }
         }
