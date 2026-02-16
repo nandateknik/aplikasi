@@ -12,7 +12,17 @@
     <link rel="stylesheet" href="layout.css">
     
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 120px; }
+        :root {
+            --p-blue: #0052D4;
+            --p-grad: linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%);
+        }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #f4f7fe; 
+            /* PADDING BOTTOM IKI KUNCI NE BEN ORA KETUTUP NAV */
+            padding-bottom: 120px; 
+        }
         
         .header-section { 
             background: var(--p-grad); padding: 40px 20px 70px; 
@@ -42,18 +52,27 @@
         .bg-in { background: #ecfdf5; color: #10b981; }
         .bg-out { background: #fff1f2; color: #f43f5e; }
 
+        /* Floating Action Button (FAB) */
         .fab-add { 
-            position: fixed; bottom: 95px; right: 20px; width: 55px; height: 55px; 
-            border-radius: 18px; background: var(--p-grad); color: white; 
+            position: fixed; 
+            bottom: 100px; /* Luwih nduwur sithik seko nav */
+            right: 20px; 
+            width: 60px; height: 60px; 
+            border-radius: 20px; 
+            background: var(--p-grad); 
+            color: white; 
             display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); z-index: 999; border: none; 
+            box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3); 
+            z-index: 999; border: none; 
         }
 
-        /* Modal Fix */
-        .modal { z-index: 2000 !important; }
-        .modal-backdrop { z-index: 1999 !important; }
-        .modal-content { border-radius: 30px; border: none; }
-        .modal-body { padding-bottom: 40px !important; }
+        /* Modal Customization ben ora ketutup bottom nav */
+        .modal-content { border-radius: 30px; border: none; overflow: hidden; }
+        .modal-body { 
+            padding-bottom: 30px !important; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+        }
 
         .btn-pay-method { 
             border-radius: 12px; border: 1px solid #eef2f7; 
@@ -62,9 +81,17 @@
         .btn-pay-method.active { background: var(--p-blue); color: white; border-color: var(--p-blue); }
         
         .form-label-custom { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
+        
+        /* Spacer kanggo ngisor dewe neng jero modal */
+        .modal-footer-spacer { height: 20px; }
     </style>
 </head>
 <body>
+
+<div class="header-section">
+    <h5 class="fw-bold">Laporan Keuangan</h5>
+    <p class="small opacity-75">Nanda Teknik Management</p>
+</div>
 
 <div class="container">
     <div class="summary-card text-center">
@@ -107,7 +134,7 @@
 
 <div class="modal fade" id="modalTrx" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content">
             <div class="modal-header border-0 px-4 pt-4">
                 <h6 class="fw-bold mb-0" id="modalTitle">Catat Transaksi</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -153,10 +180,16 @@
                     </div>
                 </div>
                 
-                <div class="d-flex gap-2 mt-4 mb-3">
-                    <button id="btnHapus" class="btn btn-outline-danger px-4 rounded-4 py-3 d-none" onclick="hapusTrx()">HAPUS</button>
-                    <button class="btn btn-primary flex-grow-1 py-3 fw-bold rounded-4 shadow" onclick="simpanTrx()" style="background: var(--p-blue);">SIMPAN DATA</button>
+                <div class="d-flex gap-2 mt-4">
+                    <button id="btnHapus" class="btn btn-outline-danger px-4 rounded-4 py-3 d-none" onclick="hapusTrx()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn btn-primary flex-grow-1 py-3 fw-bold rounded-4 shadow" onclick="simpanTrx()" style="background: var(--p-blue);">
+                        SIMPAN DATA
+                    </button>
                 </div>
+                
+                <div class="modal-footer-spacer"></div>
             </div>
         </div>
     </div>
@@ -175,7 +208,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         myModal = new bootstrap.Modal(document.getElementById('modalTrx'));
         
-        // Setup Filter
         const blnSelect = document.getElementById('fBln');
         bulanIndo.forEach((b, i) => blnSelect.add(new Option(b, i)));
         
@@ -264,6 +296,7 @@
         } else {
             document.getElementById('modalTitle').innerText = "Catat Transaksi";
             document.getElementById('editOldKet').value = "";
+            document.getElementById('editOldNom').value = "";
             document.getElementById('trxJenis').value = "";
             document.getElementById('trxNominal').value = "";
             document.getElementById('trxKet').value = "";
