@@ -28,15 +28,29 @@
         .swal2-container { z-index: 3000 !important; }
 
         /* FIX: Agar tombol footer tidak ketutup Bottom Nav */
-        #modalUpdate .modal-body { padding-bottom: 150px !important; }
+        #modalUpdate .modal-body { 
+            padding-bottom: 160px !important; /* Tambah padding agar konten scrollable maksimal */
+        }
+        
         #modalUpdate .modal-footer { 
             position: fixed; 
-            bottom: 0; 
+            bottom: 80px; /* <--- Jarak dari bawah layar supaya di atas Bottom Nav */
+            left: 0;
+            right: 0;
             width: 100%; 
-            background: white; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px);
             z-index: 1055; 
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-            padding-bottom: 25px; /* Tambahan ruang agar tidak mepet nav */
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.08);
+            padding: 15px 20px !important;
+            border-top: 1px solid #eee !important;
+        }
+
+        /* Tombol styling agar lebih kompak di mobile */
+        .btn-action-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
         }
     </style>
 </head>
@@ -61,11 +75,12 @@
 
 <div class="modal fade" id="modalUpdate" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content">
+        <div class="modal-content border-0">
             <div class="modal-header border-0 shadow-sm sticky-top bg-white">
                 <h6 class="fw-bold mb-0" id="modalTitleID">Detail Job</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            
             <div class="modal-body p-4">
                 <div class="section-title">Informasi Pelanggan</div>
                 <div class="mb-3 small bg-white p-3 rounded-4 border">
@@ -112,10 +127,19 @@
                 <div class="section-title">Riwayat Log</div>
                 <div id="timelineList"></div>
             </div>
-            <div class="modal-footer border-0 p-3">
-                <button class="btn btn-outline-danger me-auto" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i></button>
-                <button class="btn btn-light border me-2" onclick="hapusData()"><i class="fas fa-trash text-danger"></i></button>
-                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Update Data</button>
+
+            <div class="modal-footer">
+                <div class="btn-action-group">
+                    <button class="btn btn-outline-danger" onclick="downloadPDF()" title="Download PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button class="btn btn-light border" onclick="hapusData()" title="Hapus">
+                        <i class="fas fa-trash text-danger"></i>
+                    </button>
+                    <button class="btn btn-primary flex-grow-1 fw-bold shadow-sm" id="btnSimpan" onclick="saveSemuaPerubahan()">
+                        UPDATE DATA
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -316,7 +340,6 @@
         const btn = document.getElementById('btnSimpan');
         btn.disabled = true;
 
-        // SweetAlert dipaksa ke target modal
         Swal.fire({ 
             title: 'Menyimpan...', 
             allowOutsideClick: false, 
