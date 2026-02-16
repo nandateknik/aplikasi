@@ -17,31 +17,34 @@
         body { 
             background-color: #f4f7fe; 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            padding-top: 75px; 
+            /* Jarak dhuwur dadi 0 mergo wis ono banner biru seko layout.js */
+            padding-top: 0 !important; 
             padding-bottom: 110px; 
         }
 
+        /* Toolbar dipres ben munggah */
         .toolbar { 
             background: white; 
-            padding: 12px; 
-            border-radius: 18px; 
+            padding: 10px 15px; 
+            border-radius: 15px; 
             margin-bottom: 15px; 
             display: flex; 
             gap: 8px; 
             flex-wrap: wrap;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 75px;
+            /* Iki sing nggarai munggah mas */
+            margin-top: -20px; 
+            position: relative;
             z-index: 900;
         }
         
-        .btn-tool { border-radius: 10px; font-weight: 600; padding: 8px 15px; font-size: 0.85rem; border: none; }
+        .btn-tool { border-radius: 10px; font-weight: 600; padding: 6px 12px; font-size: 0.8rem; border: none; }
 
         .editor-container { 
             background: #525659; 
             border-radius: 20px; 
             padding: 15px; 
-            min-height: 500px; 
+            min-height: 450px; 
             position: relative; 
             overflow: auto; 
             display: flex; 
@@ -59,12 +62,12 @@
             position: absolute;
             cursor: move;
             border: 2px dashed transparent;
-            width: 120px;
+            width: 100px;
             z-index: 100;
             touch-action: none;
         }
         .draggable-asset:hover { border-color: var(--p-blue); background: rgba(0, 82, 212, 0.1); }
-        .draggable-asset img { width: 100%; pointer-events: none; -webkit-user-drag: none; }
+        .draggable-asset img { width: 100%; pointer-events: none; }
         
         .btn-del-asset {
             position: absolute;
@@ -73,8 +76,8 @@
             background: #ff4757;
             color: white;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             font-size: 10px;
             display: none;
             align-items: center;
@@ -85,6 +88,7 @@
         }
         .draggable-asset:hover .btn-del-asset { display: flex; }
 
+        /* Custom scrollbar */
         .editor-container::-webkit-scrollbar { width: 6px; height: 6px; }
         .editor-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
@@ -109,7 +113,7 @@
                 
                 <div class="ms-auto">
                     <button class="btn btn-success btn-tool" onclick="exportPDF()">
-                        <i class="fas fa-save me-1"></i> Simpan PDF
+                        <i class="fas fa-save me-1"></i> Simpan
                     </button>
                 </div>
             </div>
@@ -120,12 +124,10 @@
                 </div>
             </div>
             
-            <div class="card mt-3 border-0 shadow-sm rounded-4 text-center">
-                <div class="card-body p-2">
-                    <small class="text-muted">
-                        <b>Cara Pakai:</b> Geser TTD/Stempel menyang posisi sing pas, atur ukuran seko pojok gambar.
-                    </small>
-                </div>
+            <div class="mt-3 text-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i> Geser & atur ukuran TTD/Stempel neng dhuwur PDF.
+                </small>
             </div>
         </div>
     </div>
@@ -144,12 +146,11 @@
     let pdfBytes = null;
     let scale = 1.5; 
 
-    // 1. Fungsi Load PDF
     async function loadPDF(event) {
         const file = event.target.files[0];
         if (!file) return;
         
-        Swal.fire({ title: 'Membuka dokumen...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Loading PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         const reader = new FileReader();
         reader.onload = async function() {
@@ -160,7 +161,7 @@
                 await renderPage(1);
                 Swal.close();
             } catch (err) {
-                Swal.fire('Error', 'File PDF ora iso diwaca mas.', 'error');
+                Swal.fire('Error', 'File gagal dibuka.', 'error');
             }
         };
         reader.readAsArrayBuffer(file);
@@ -171,41 +172,31 @@
         const viewport = page.getViewport({scale: scale});
         const canvas = document.getElementById('pdf-render');
         const context = canvas.getContext('2d');
-        
         canvas.height = viewport.height;
         canvas.width = viewport.width;
-
         await page.render({ canvasContext: context, viewport: viewport }).promise;
-        
         const wrapper = document.getElementById('pdf-canvas-wrapper');
         wrapper.style.width = canvas.width + 'px';
         wrapper.style.height = canvas.height + 'px';
-        
         document.querySelectorAll('.draggable-asset').forEach(a => a.remove());
     }
 
-    // 2. Tambah TTD / Stempel (Fix Link Raw)
     function addAsset(type) {
         if (!pdfDoc) return Swal.fire('Eitss!', 'Upload PDF-ne dhisik mas!', 'warning');
-
         const id = 'asset-' + Date.now();
         const wrapper = document.getElementById('pdf-canvas-wrapper');
         const div = document.createElement('div');
         div.className = 'draggable-asset';
         div.id = id;
         
-        // Link RAW GitHub sing bener ben gambar muncul
         const imgSrc = type === 'ttd' 
             ? 'https://raw.githubusercontent.com/nandateknik/aplikasi/master/ttd.png' 
             : 'https://raw.githubusercontent.com/nandateknik/aplikasi/master/stempel.png';
         
         div.innerHTML = `
-            <button class="btn-del-asset" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-            <img src="${imgSrc}" data-type="${type}" crossorigin="anonymous">
+            <button class="btn-del-asset" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            <img src="${imgSrc}" crossorigin="anonymous">
         `;
-        
         wrapper.appendChild(div);
         makeInteractable(id);
     }
@@ -243,29 +234,21 @@
             });
     }
 
-    // 3. Export PDF (Fix CORS & Koordinat)
     async function exportPDF() {
         if (!pdfBytes) return;
-        
-        Swal.fire({ title: 'Menyimpan PDF...', text: 'Nempelake gambar...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
             const { PDFDocument } = PDFLib;
             const loadedPdf = await PDFDocument.load(pdfBytes);
             const firstPage = loadedPdf.getPages()[0];
             const { width, height } = firstPage.getSize();
-
             const canvasEl = document.getElementById('pdf-render');
             const assets = document.querySelectorAll('.draggable-asset');
 
             for (let asset of assets) {
                 const imgEl = asset.querySelector('img');
-                
-                // Fetch nganggo mode CORS
                 const imgResp = await fetch(imgEl.src, { mode: 'cors' });
-                if (!imgResp.ok) throw new Error('Gambar gagal di-load seko GitHub');
                 const imgArrayBuffer = await imgResp.arrayBuffer();
-                
                 const image = await loadedPdf.embedPng(imgArrayBuffer);
 
                 const x = parseFloat(asset.getAttribute('data-x')) || 0;
@@ -273,7 +256,6 @@
                 const assetWidth = asset.offsetWidth;
                 const assetHeight = asset.offsetHeight;
 
-                // Konversi Koordinat ke Skala PDF
                 const pdfX = (x * width) / canvasEl.width;
                 const pdfY = height - ((y + assetHeight) * height) / canvasEl.height;
                 const pdfW = (assetWidth * width) / canvasEl.width;
@@ -287,13 +269,11 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "Signed_Document_NandaTeknik.pdf";
+            a.download = "Signed_NandaTeknik.pdf";
             a.click();
-            
-            Swal.fire('Sip!', 'File PDF wis didownload.', 'success');
+            Swal.fire('Berhasil!', 'PDF wis didownload.', 'success');
         } catch (err) {
-            console.error(err);
-            Swal.fire('Gagal', 'Ana kendala pas nyimpen PDF. Pastike internet lancar nggo narik gambar seko GitHub.', 'error');
+            Swal.fire('Gagal', 'Cek koneksi internet nggo narik gambar.', 'error');
         }
     }
 </script>
