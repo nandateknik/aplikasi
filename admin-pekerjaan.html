@@ -23,6 +23,21 @@
         .section-title { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px; display: flex; align-items: center; }
         .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 10px; }
         .update-box { background: #f8fafc; border-radius: 20px; padding: 15px; border: 1px solid #eef2f7; }
+
+        /* FIX: Agar SweetAlert muncul di atas Modal Fullscreen */
+        .swal2-container { z-index: 3000 !important; }
+
+        /* FIX: Agar tombol footer tidak ketutup Bottom Nav */
+        #modalUpdate .modal-body { padding-bottom: 150px !important; }
+        #modalUpdate .modal-footer { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: white; 
+            z-index: 1055; 
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            padding-bottom: 25px; /* Tambahan ruang agar tidak mepet nav */
+        }
     </style>
 </head>
 <body>
@@ -44,10 +59,10 @@
     <div class="d-flex justify-content-between align-items-center mt-3 px-2" id="paginationCtrl"></div>
 </div>
 
-<div class="modal fade" id="modalUpdate" tabindex="-1">
+<div class="modal fade" id="modalUpdate" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
-            <div class="modal-header border-0 shadow-sm">
+            <div class="modal-header border-0 shadow-sm sticky-top bg-white">
                 <h6 class="fw-bold mb-0" id="modalTitleID">Detail Job</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -69,7 +84,7 @@
                         </div>
                         <div class="p-2 border rounded-3 bg-white mb-2">
                             <div class="d-flex gap-2">
-                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Barang">
+                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Barang">
                                 <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
                                 <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Ok</button>
                             </div>
@@ -97,10 +112,10 @@
                 <div class="section-title">Riwayat Log</div>
                 <div id="timelineList"></div>
             </div>
-            <div class="modal-footer border-0 p-3 shadow-lg bg-light">
+            <div class="modal-footer border-0 p-3">
                 <button class="btn btn-outline-danger me-auto" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i></button>
-                <button class="btn btn-danger" onclick="hapusData()"><i class="fas fa-trash"></i></button>
-                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()" style="background: var(--p-blue);">Update Data</button>
+                <button class="btn btn-light border me-2" onclick="hapusData()"><i class="fas fa-trash text-danger"></i></button>
+                <button class="btn btn-primary px-4 fw-bold" id="btnSimpan" onclick="saveSemuaPerubahan()">Update Data</button>
             </div>
         </div>
     </div>
@@ -222,7 +237,7 @@
                 
                 const btnMaps = document.getElementById('btnMapsContainer');
                 if(fullDataDetail.lat && fullDataDetail.lang) {
-                    btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Petunjuk Jalan</a>`;
+                    btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
                 } else { btnMaps.innerHTML = ""; }
 
                 document.getElementById('statusSelect').value = fullDataDetail.status;
@@ -287,8 +302,7 @@
 
     async function loadDaftarHarga() {
         const el = document.getElementById('jasaSelect');
-        if(!el) return; // Pengaman supaya ora error null
-
+        if(!el) return;
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
             const r = await res.json();
@@ -301,7 +315,14 @@
     async function saveSemuaPerubahan() {
         const btn = document.getElementById('btnSimpan');
         btn.disabled = true;
-        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        // SweetAlert dipaksa ke target modal
+        Swal.fire({ 
+            title: 'Menyimpan...', 
+            allowOutsideClick: false, 
+            target: document.getElementById('modalUpdate'),
+            didOpen: () => Swal.showLoading() 
+        });
 
         const payload = {
             action: 'updateFullData', 
@@ -316,26 +337,33 @@
             const r = await res.json();
             btn.disabled = false;
             if(r.success) { 
-                myModal.hide(); 
-                Swal.fire('Sip!', 'Database wis diupdate.', 'success').then(() => loadRiwayat()); 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sip!',
+                    text: 'Database wis diupdate.',
+                    target: document.getElementById('modalUpdate')
+                }).then(() => {
+                    myModal.hide(); 
+                    loadRiwayat();
+                });
             }
         } catch(e) {
             btn.disabled = false;
-            Swal.fire('Gagal', 'Koneksi bermasalah.', 'error');
+            Swal.fire({ title: 'Gagal', text: 'Koneksi bermasalah.', icon: 'error', target: document.getElementById('modalUpdate') });
         }
     }
 
     async function hapusData() {
         const confirm = await Swal.fire({
             title: 'Hapus Data?',
-            text: "Data Work Order bakal ilang permanen!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus!'
+            confirmButtonText: 'Ya, Hapus!',
+            target: document.getElementById('modalUpdate')
         });
 
         if(confirm.isConfirmed) {
-            Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+            Swal.fire({title: 'Menghapus...', target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading()});
             const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) 
@@ -343,7 +371,8 @@
             const r = await res.json();
             if(r.success) {
                 myModal.hide();
-                Swal.fire('Terhapus', 'Data wis ilang.', 'success').then(() => loadRiwayat());
+                Swal.fire('Terhapus', 'Data wis ilang.', 'success');
+                loadRiwayat();
             }
         }
     }
@@ -355,35 +384,29 @@
         
         doc.setFontSize(22); doc.setTextColor(0, 82, 212); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK", 105, 20, {align: "center"});
-        
         doc.setFontSize(10); doc.setTextColor(80); doc.setFont("helvetica", "normal");
         doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 105, 26, {align: "center"});
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 105, 31, {align: "center"});
-        
+        doc.text("WA: 082331201148", 105, 31, {align: "center"});
         doc.line(14, 40, 196, 40);
-        doc.setFontSize(11); doc.setTextColor(0);
-        doc.text("NOTA SERVICE / INVOICE", 14, 50);
+
+        doc.setFontSize(11); doc.text("NOTA SERVICE / INVOICE", 14, 50);
         doc.setFontSize(10);
-        doc.text(`ID Transaksi : ${fullDataDetail.woId || currentId}`, 14, 57);
-        doc.text(`Nama         : ${fullDataDetail.nama}`, 14, 62);
-        doc.text(`Email        : ${fullDataDetail.email}`, 14, 67);
-        doc.text(`Alamat       : ${fullDataDetail.alamat || '-'}`, 14, 72);
+        doc.text(`ID : ${currentId}`, 14, 57);
+        doc.text(`Nama : ${fullDataDetail.nama}`, 14, 62);
+        doc.text(`Alamat : ${fullDataDetail.alamat || '-'}`, 14, 67);
 
         const rows = selectedItems.map(it => [it.nama, it.qty, `Rp${it.harga.toLocaleString()}`, `Rp${(it.harga*it.qty).toLocaleString()}`]);
         let totalVal = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
 
         doc.autoTable({
-            startY: 80,
-            head: [['Layanan / Material', 'Qty', 'Harga Satuan', 'Subtotal']],
+            startY: 75,
+            head: [['Layanan', 'Qty', 'Harga', 'Subtotal']],
             body: rows,
-            headStyles: { fillColor: [0, 82, 212], textColor: 255 },
-            styles: { fontSize: 9 }
+            headStyles: { fillColor: [0, 82, 212] }
         });
 
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL TAGIHAN: Rp${totalVal.toLocaleString()}`, 196, finalY, {align: "right"});
-        doc.save(`Nota-NandaTeknik-${fullDataDetail.nama}.pdf`);
+        doc.text(`TOTAL: Rp${totalVal.toLocaleString()}`, 196, doc.lastAutoTable.finalY + 10, {align: "right"});
+        doc.save(`Nota-${fullDataDetail.nama}.pdf`);
     }
 </script>
 </body>
