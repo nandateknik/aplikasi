@@ -12,21 +12,24 @@
         body { background: #f4f7fe; padding-bottom: 110px; }
         
         /* Layout Card Utama */
-        .admin-card-container { margin-top: -40px; position: relative; z-index: 10; }
+        .admin-card-container { margin-top: 20px; position: relative; z-index: 10; }
         .admin-card { background: white; border-radius: 25px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        /* Header Alignment */
+        .header-title { text-align: center; margin-bottom: 30px; }
+        .header-title h5 { font-size: 1.5rem; margin-bottom: 5px; }
+        .header-subtitle { font-size: 0.9rem; color: #64748b; font-weight: 500; letter-spacing: 1px; }
+
+        /* Table Style - Penyesuaian Lebar No */
+        .table th:first-child, .table td:first-child { width: 60px; min-width: 60px; text-align: center; }
 
         /* Filter Style */
         .filter-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 15px; margin-bottom: 20px; }
 
         /* Mobile Card Style */
         .quote-card {
-            background: white;
-            border-radius: 20px;
-            padding: 18px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            transition: 0.3s;
+            background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: 0.3s;
         }
         .quote-id { font-size: 0.7rem; font-weight: 700; color: #94a3b8; display: block; }
         .quote-perihal { font-size: 1rem; font-weight: 800; color: #1e293b; margin-top: 2px; }
@@ -35,7 +38,7 @@
             display: flex; justify-content: space-between; align-items: center;
             margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e2e8f0;
         }
-        .quote-price { font-size: 1.1rem; font-weight: 800; color: var(--p-blue); }
+        .quote-price { font-size: 1.1rem; font-weight: 800; color: #0d6efd; }
 
         /* Badge & Buttons */
         .badge-status { padding: 4px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
@@ -43,7 +46,6 @@
         .status-sent { background: #eff6ff; color: #2563eb; }
         .status-approved { background: #f0fdf4; color: #16a34a; }
 
-        .action-group { display: flex; gap: 8px; }
         .btn-circle {
             width: 38px; height: 38px; border-radius: 12px;
             display: flex; align-items: center; justify-content: center; border: none; transition: 0.2s;
@@ -52,7 +54,6 @@
         .btn-pdf-lite { background: #fee2e2; color: #dc2626; }
         .btn-del-lite { background: #fff1f2; color: #e11d48; }
 
-        /* Suggester */
         #search-results { position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
 
         /* Responsive Visibility */
@@ -65,17 +66,18 @@
 </head>
 <body>
 
-<script src="layout.js"></script>
-
 <div class="container admin-card-container">
     <div class="row justify-content-center">
         <div class="col-lg-11">
             <div class="card admin-card p-4">
+                
+                <div class="header-title">
+                    <h5 class="fw-bold m-0 text-primary">NANDA TEKNIK BANYUWANGI</h5>
+                    <div class="header-subtitle text-uppercase">Software, Network & Electrical Engineering</div>
+                </div>
+
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h5 class="fw-bold m-0 text-primary">Manajemen Penawaran</h5>
-                        <small class="text-muted">Filter, Buat, & Cetak Penawaran</small>
-                    </div>
+                    <h6 class="fw-bold m-0">Manajemen Penawaran</h6>
                     <button class="btn btn-primary rounded-pill px-3" onclick="showAddModal()">
                         <i class="fas fa-plus me-1"></i> Baru
                     </button>
@@ -103,7 +105,7 @@
                     <table class="table align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Perihal</th>
                                 <th>Email</th>
                                 <th>Total</th>
@@ -116,7 +118,6 @@
                 </div>
 
                 <div id="mobile-cards-container" class="mobile-cards"></div>
-
             </div>
         </div>
     </div>
@@ -144,7 +145,6 @@
                             <input type="text" id="form-perihal" class="form-control" placeholder="Perihal Pekerjaan" required>
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Daftar Item</label>
                         <div id="items-container"></div>
@@ -152,7 +152,6 @@
                             <i class="fas fa-plus-circle me-1"></i> Tambah Item
                         </button>
                     </div>
-
                     <div class="row align-items-center mt-4">
                         <div class="col-6">
                             <label class="form-label small fw-bold">Status</label>
@@ -186,6 +185,7 @@
 
     window.onload = () => { loadPenawaran(); fetchPelanggan(); };
 
+    // Function pendukung lainnya tetap sama ...
     async function fetchPelanggan() {
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
@@ -239,7 +239,7 @@
         
         tbody.innerHTML = data.map(row => `
             <tr>
-                <td class="small fw-bold">#${row.id}</td>
+                <td class="fw-bold">#${row.id}</td>
                 <td>${row.perihal || '-'}</td>
                 <td class="small">${row.email}</td>
                 <td class="fw-bold text-primary">Rp ${Number(row.total).toLocaleString('id-ID')}</td>
@@ -340,116 +340,90 @@
     }
 
     async function deletePenawaran(id) {
-        if(confirm('Hapus penawaran iki?')) {
+        if(confirm('Hapus penawaran ini?')) {
             await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({action:'deletePenawaran', id:id}) });
             loadPenawaran();
         }
     }
 
+    // --- FUNGSI GENERATE PDF YANG DIUBAH ---
     function generatePDF(data) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // --- KONFIGURASI WARNA & FONT ---
-    const primaryGrey = [50, 50, 50];    // Abu-abu peteng (teks utama)
-    const secondaryGrey = [120, 120, 120]; // Abu-abu enom (sub-teks)
-    const lightGrey = [245, 245, 245];   // Background aksen
-    
-    // --- 1. HEADER & LOGO ---
-    // Tambah Logo (Pojok Kiri)
-    const logoUrl = "logo-none-text.png";
-    doc.addImage(logoUrl, 'PNG', 14, 15, 25, 25);
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // 1. Header (Nanda Teknik)
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("Software, Network & Electrical Engineering", 105, 26, { align: "center" });
+        
+        doc.setLineWidth(0.5);
+        doc.line(20, 32, 190, 32);
 
-    // Nama Perusahaan (Kanan Logo)
-    doc.setFont("helvetica", "bold").setFontSize(20).setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.text("NANDA TEKNIK BANYUWANGI", 45, 22);
-    
-    // Alamat & Kontak (Detail Kecil)
-    doc.setFont("helvetica", "normal").setFontSize(8).setTextColor(secondaryGrey[0], secondaryGrey[1], secondaryGrey[2]);
-    doc.text("Sukowidi Indah Residence Banyuwangi, 68421", 45, 27);
-    doc.text("WA: 083331201148 | Email: nandateknik02@gmail.com", 45, 31);
-    doc.text("Website: www.nandateknik.com", 45, 35);
+        // 2. Info Penawaran
+        doc.setFontSize(12);
+        doc.text("PENAWARAN HARGA", 20, 42);
+        doc.setFontSize(10);
+        doc.text(`ID Transaksi : #${data.id}`, 20, 50);
+        doc.text(`Tanggal      : ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 20, 56);
+        doc.text(`Kepada       : ${data.email}`, 20, 62);
+        doc.text(`Perihal      : ${data.perihal || '-'}`, 20, 68);
 
-    // Garis Pemisah Modern
-    doc.setDrawColor(200, 200, 200).setLineWidth(0.5);
-    doc.line(14, 45, 196, 45);
+        // 3. Tabel Item
+        const tableBody = data.items_json.map((item, index) => [
+            index + 1,
+            item.nama,
+            item.qty,
+            `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
+            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+        ]);
 
-    // --- 2. INFO PENAWARAN ---
-    doc.setFontSize(14).setFont("helvetica", "bold").setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.text("PENAWARAN HARGA", 14, 55);
-    
-    doc.setFontSize(9).setFont("helvetica", "normal").setTextColor(secondaryGrey[0], secondaryGrey[1], secondaryGrey[2]);
-    doc.text(`Nomor  : #${data.id}`, 14, 62);
-    doc.text(`Tanggal : ${new Date(data.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 67);
-    doc.text(`Perihal  : ${data.perihal || '-'}`, 14, 72);
-    
-    // Kolom Tujuan (Kanan)
-    doc.setFont("helvetica", "bold").setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.text("Kepada Yth:", 130, 62);
-    doc.setFont("helvetica", "normal");
-    doc.text(data.email, 130, 67);
+        doc.autoTable({
+            startY: 75,
+            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Jumlah']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [52, 152, 219], textColor: 255 },
+            columnStyles: {
+                0: { cellWidth: 10 },
+                1: { cellWidth: 80 },
+                2: { cellWidth: 15, halign: 'center' },
+                3: { halign: 'right' },
+                4: { halign: 'right' }
+            }
+        });
 
-    // --- 3. TABEL ITEM (ABU-ABU STYLE) ---
-    const tableBody = data.items_json.map((it, i) => [
-        i + 1, 
-        it.nama, 
-        it.qty, 
-        `Rp ${it.harga.toLocaleString('id-ID')}`, 
-        `Rp ${(it.qty * it.harga).toLocaleString('id-ID')}`
-    ]);
+        const finalY = doc.lastAutoTable.finalY + 10;
 
-    doc.autoTable({
-        startY: 80,
-        head: [['No', 'Deskripsi Pekerjaan / Item', 'Qty', 'Harga Satuan', 'Total']],
-        body: tableBody,
-        theme: 'striped',
-        headStyles: { 
-            fillColor: [80, 80, 80], // Abu-abu tua
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            halign: 'center'
-        },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 10 },
-            2: { halign: 'center', cellWidth: 20 },
-            3: { halign: 'right', cellWidth: 40 },
-            4: { halign: 'right', cellWidth: 40 }
-        },
-        styles: { fontSize: 9, cellPadding: 4 },
-        alternateRowStyles: { fillColor: [250, 250, 250] }
-    });
+        // 4. Total Bayar
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL KESELURUHAN: Rp ${Number(data.total).toLocaleString('id-ID')}`, 190, finalY, { align: "right" });
 
-    // --- 4. TOTAL & PEMBAYARAN ---
-    const finalY = doc.lastAutoTable.finalY + 10;
-    
-    // Kotak Total
-    doc.setFillColor(lightGrey[0], lightGrey[1], lightGrey[2]);
-    doc.rect(130, finalY, 66, 12, 'F');
-    doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.text("GRAND TOTAL :", 135, finalY + 8);
-    doc.text(`Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, finalY + 8, { align: "right" });
+        // 5. Kotak Rekening dengan Garis Putus-Putus
+        const rekY = finalY + 15;
+        doc.setLineDash([2, 2], 0); // Set garis putus-putus
+        doc.rect(20, rekY, 80, 25); // Gambar kotak
+        doc.setLineDash([]); // Reset ke garis normal
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text("Pembayaran Transfer Ke:", 25, rekY + 7);
+        doc.setFont("helvetica", "normal");
+        doc.text("Bank BCA", 25, rekY + 13);
+        doc.text("No. Rek: 1801826011", 25, rekY + 18);
+        doc.text("A/N: Nanda Krisbianto", 25, rekY + 23);
 
-    // Informasi Bank (Kiri)
-    doc.setFontSize(9).setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.text("Pembayaran via Transfer:", 14, finalY + 8);
-    doc.setFont("helvetica", "bold");
-    doc.text("BCA - 1801826011", 14, finalY + 14);
-    doc.text("a/n Nanda Krisbianto", 14, finalY + 19);
+        // 6. Tanda Tangan
+        doc.text("Hormat Kami,", 150, rekY + 7);
+        doc.text("Banyuwangi, " + new Date().toLocaleDateString('id-ID'), 150, rekY + 12);
+        doc.text("( _________________ )", 150, rekY + 35);
 
-    // --- 5. FOOTER / TANDA TANGAN ---
-    const footerY = finalY + 40;
-    doc.setFont("helvetica", "normal").setFontSize(9);
-    doc.text("Banyuwangi, " + new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), 150, footerY);
-    doc.text("Hormat Kami,", 150, footerY + 5);
-    
-    doc.setFont("helvetica", "bold").setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.text("NANDA TEKNIK", 150, footerY + 25);
-    doc.setDrawColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
-    doc.line(150, footerY + 26, 185, footerY + 26); // Garis bawah nama
-
-    // Save PDF
-    doc.save(`Penawaran_${data.id}_${data.perihal || 'NandaTeknik'}.pdf`);
-}
+        // Save
+        doc.save(`Penawaran_${data.id}.pdf`);
+    }
 </script>
 </body>
 </html>
