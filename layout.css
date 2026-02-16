@@ -122,7 +122,24 @@ body {
 
 /* --- BOTTOM NAV DESIGN --- */
 .bottom-nav {
-    position: fixed;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    max-width: 600px !important;
+    background: white !important; /* Ganti dadi putih solid dhisik ben ketok */
+    height: 75px !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    align-items: center !important;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.15) !important;
+    z-index: 99999 !important; /* Z-index tak polne dhuwur dewe */
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
