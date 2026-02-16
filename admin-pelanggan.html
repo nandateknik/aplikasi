@@ -41,14 +41,13 @@
         .form-label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
         
         /* FIX MODAL AGAR TIDAK KETUTUP BOTTOM NAV */
-        .modal { z-index: 2000 !important; }
-        .modal-backdrop { z-index: 1999 !important; }
-        .modal-content { border-radius: 30px; border: none; margin-bottom: 80px; } /* Margin bwh biar tombol gak mentok */
+        .modal { z-index: 2050 !important; }
+        .modal-backdrop { z-index: 2040 !important; }
+        .modal-content { border-radius: 30px; border: none; margin-bottom: 80px; }
         .modal-body { padding-bottom: 40px !important; }
+
         /* Mekso SweetAlert dadi sing paling ngarep dewe */
-            .swal2-container {
-                z-index: 3000 !important;
-            }
+        .swal2-container { z-index: 3000 !important; }
     </style>
 </head>
 <body>
@@ -68,7 +67,7 @@
     <i class="fas fa-plus fa-lg"></i>
 </button>
 
-<div class="modal fade" id="modalCustomer" tabindex="-1">
+<div class="modal fade" id="modalCustomer" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
         <div class="modal-content shadow-lg">
             <div class="modal-header border-0 pb-0 px-4 pt-4">
@@ -147,7 +146,7 @@
             allData = result.data || [];
             renderList(allData);
         } catch(e) { 
-            Swal.fire('Error', 'Gagal koneksi server', 'error'); 
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal koneksi server' }); 
         }
     }
 
@@ -248,33 +247,53 @@
             alamat: document.getElementById('custAlamat').value
         };
 
-        if(!payload.email || !payload.nama) return Swal.fire('Oops', 'Nama & Email wajib diisi!', 'warning');
+        const modalEl = document.getElementById('modalCustomer');
 
-        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+        if(!payload.email || !payload.nama) {
+            return Swal.fire({ 
+                title: 'Oops', text: 'Nama & Email wajib diisi!', icon: 'warning', 
+                target: modalEl 
+            });
+        }
+
+        Swal.fire({ 
+            title: 'Menyimpan...', 
+            target: modalEl,
+            allowOutsideClick: false, 
+            didOpen: () => Swal.showLoading() 
+        });
         
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await res.json();
             if(result.success) {
-                modalCust.hide();
-                Swal.fire('Sip!', 'Data wis kesimpen.', 'success').then(() => loadAllPelanggan());
+                Swal.fire({ 
+                    icon: 'success', title: 'Sip!', text: 'Data wis kesimpen.', 
+                    target: modalEl 
+                }).then(() => {
+                    modalCust.hide();
+                    loadAllPelanggan();
+                });
             } else {
-                Swal.fire('Gagal', result.message || 'Coba maneh', 'error');
+                Swal.fire({ icon: 'error', title: 'Gagal', text: result.message || 'Coba maneh', target: modalEl });
             }
         } catch(e) {
-            Swal.fire('Error', 'Gagal kirim data neng server.', 'error');
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal kirim data neng server.', target: modalEl });
         }
     }
 
     async function hapusPelanggan() {
         const email = document.getElementById('custEmail').value;
+        const modalEl = document.getElementById('modalCustomer');
+
         const confirm = await Swal.fire({ 
             title: 'Yakin dihapus?', text: "Data iki bakal ilang permanen!", icon: 'warning', 
-            showCancelButton: true, confirmButtonText: 'Ya, Hapus' 
+            showCancelButton: true, confirmButtonText: 'Ya, Hapus', 
+            target: modalEl
         });
         
         if(confirm.isConfirmed) {
-            Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
+            Swal.fire({title: 'Menghapus...', target: modalEl, didOpen: () => Swal.showLoading()});
             try {
                 const res = await fetch(CONFIG.WEB_APP_URL, { 
                     method: 'POST', 
@@ -282,10 +301,12 @@
                 });
                 const r = await res.json();
                 if(r.success) { 
-                    modalCust.hide(); 
-                    Swal.fire('Dihapus!', 'Pelanggan wis ilang.', 'success').then(() => loadAllPelanggan()); 
+                    Swal.fire({ icon: 'success', title: 'Dihapus!', text: 'Pelanggan wis ilang.', target: modalEl }).then(() => {
+                        modalCust.hide(); 
+                        loadAllPelanggan();
+                    });
                 }
-            } catch(e) { Swal.fire('Error', 'Gagal mbusak data.', 'error'); }
+            } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal mbusak data.', target: modalEl }); }
         }
     }
 
