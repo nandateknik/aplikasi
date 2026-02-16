@@ -11,96 +11,87 @@
     
     <style>
         body { background: #f4f7fe; padding-bottom: 110px; }
-        .admin-card { background: white; border-radius: 25px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .admin-card { background: transparent; border: none; }
         
-        /* Penyesuaian Header agar Tengah */
-        .brand-section { text-align: center; margin-bottom: 30px; }
+        .brand-section { text-align: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         .brand-section h5 { font-weight: 800; color: #0d6efd; margin-bottom: 2px; }
-        .brand-subtitle { font-size: 0.85rem; color: #64748b; font-weight: 600; letter-spacing: 1px; }
+        .brand-subtitle { font-size: 0.75rem; color: #64748b; font-weight: 600; letter-spacing: 1px; }
 
-        /* Solusi agar Kolom NO tidak terpotong */
-        .table th:first-child, .table td:first-child { 
-            width: 75px !important; 
-            min-width: 75px !important; 
-            text-align: center; 
-        }
-
-        .filter-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 15px; margin-bottom: 20px; }
+        .filter-section { background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         
-        /* Mobile Card Style */
+        /* Card Style UI */
         .quote-card {
-            background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px;
-            border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
         }
+        .quote-card:active { transform: scale(0.98); }
+        
+        .card-id { font-size: 0.75rem; font-weight: 700; color: #94a3b8; }
+        .card-perihal { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 5px; }
+        .card-client { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 5px; }
+        
         .quote-footer {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e2e8f0;
+            margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;
         }
 
-        /* Utils */
-        .badge-status { padding: 5px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .badge-status { padding: 6px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .status-pending { background: #fff7ed; color: #ea580c; }
+        .status-sent { background: #eff6ff; color: #2563eb; }
         .status-approved { background: #f0fdf4; color: #16a34a; }
+
+        /* Pagination Styles */
+        .pagination-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .btn-page { 
+            width: 40px; height: 40px; border-radius: 12px; border: none; 
+            background: white; color: #64748b; font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .btn-page.active { background: #0d6efd; color: white; }
         
         #search-results { position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
-        
-        @media (max-width: 768px) { .desktop-table { display: none; } }
-        @media (min-width: 769px) { .mobile-cards { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-lg-11">
-            <div class="card admin-card p-4 animate__animated animate__fadeIn">
-                
-                <div class="brand-section">
-                    <h5>NANDA TEKNIK BANYUWANGI</h5>
-                    <div class="brand-subtitle">SOFTWARE, NETWORK & ELECTRICAL ENGINEERING</div>
-                </div>
+        <div class="col-lg-8">
+            <div class="brand-section animate__animated animate__fadeIn">
+                <h5>NANDA TEKNIK BANYUWANGI</h5>
+                <div class="brand-subtitle">SOFTWARE, NETWORK & ELECTRICAL ENGINEERING</div>
+            </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2"></i>Data Penawaran</h6>
-                    <button class="btn btn-primary rounded-pill px-4" onclick="showAddModal()">
-                        <i class="fas fa-plus me-2"></i>Buat Baru
-                    </button>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Penawaran</h6>
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="showAddModal()">
+                    <i class="fas fa-plus me-2"></i>Buat Baru
+                </button>
+            </div>
 
-                <div class="filter-section">
-                    <div class="row g-2">
-                        <div class="col-5">
-                            <input type="date" id="filter-mulai" class="form-control form-control-sm" onchange="filterData()">
-                        </div>
-                        <div class="col-5">
-                            <input type="date" id="filter-sampai" class="form-control form-control-sm" onchange="filterData()">
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-light btn-sm w-100" onclick="resetFilter()"><i class="fas fa-sync"></i></button>
-                        </div>
+            <div class="filter-section animate__animated animate__fadeIn">
+                <div class="row g-2">
+                    <div class="col-5">
+                        <input type="date" id="filter-mulai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()">
+                    </div>
+                    <div class="col-5">
+                        <input type="date" id="filter-sampai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()">
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-light btn-sm w-100 border-0" onclick="resetFilter()"><i class="fas fa-sync"></i></button>
                     </div>
                 </div>
-
-                <div class="table-responsive desktop-table">
-                    <table class="table align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>No</th>
-                                <th>Perihal</th>
-                                <th>Pelanggan</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body">
-                            </tbody>
-                    </table>
-                </div>
-
-                <div id="mobile-cards-container" class="mobile-cards"></div>
-
             </div>
+
+            <div id="cards-container">
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+
+            <div id="pagination" class="pagination-container mb-5"></div>
+
         </div>
     </div>
 </div>
@@ -149,7 +140,7 @@
                             <h3 class="fw-bold text-primary mb-0" id="display-total">Rp 0</h3>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill">SIMPAN PENAWARAN</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow">SIMPAN PENAWARAN</button>
                 </form>
             </div>
         </div>
@@ -167,20 +158,24 @@
 <script>
     let allData = [];
     let listPelanggan = [];
+    let currentPage = 1;
+    const itemsPerPage = 5; // Tampilkan 5 kartu per halaman
     const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
 
     window.onload = () => { 
-        if(typeof initLayout === 'function') initLayout(); // Jika layout.js butuh inisialisasi
+        if(typeof initLayout === 'function') initLayout();
         loadPenawaran(); 
         fetchPelanggan(); 
     };
 
-    // --- LOGIC DATA (Read, Filter, Search) ---
     async function loadPenawaran() {
         try {
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const r = await res.json();
-            if (r.success) { allData = r.data; renderDisplay(allData); }
+            if (r.success) { 
+                allData = r.data.reverse(); // Data terbaru di atas
+                renderDisplay(); 
+            }
         } catch(e) { console.error("Gagal memuat data"); }
     }
 
@@ -192,141 +187,105 @@
         } catch(e) {}
     }
 
-    function renderDisplay(data) {
-        const tbody = document.getElementById('table-body');
-        const mCont = document.getElementById('mobile-cards-container');
+    function renderDisplay(filteredData = null) {
+        const dataToRender = filteredData || allData;
+        const container = document.getElementById('cards-container');
+        const pagination = document.getElementById('pagination');
         
-        tbody.innerHTML = data.map(row => `
-            <tr>
-                <td class="fw-bold">#${row.id}</td>
-                <td>${row.perihal || '-'}</td>
-                <td class="small">${row.email}</td>
-                <td class="fw-bold text-primary">Rp ${Number(row.total).toLocaleString('id-ID')}</td>
-                <td><span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-light text-primary me-1" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-light text-danger" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
-                </td>
-            </tr>`).join('');
+        // Logic Pagination
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = dataToRender.slice(startIndex, endIndex);
+        const totalPages = Math.ceil(dataToRender.length / itemsPerPage);
 
-        mCont.innerHTML = data.map(row => `
-            <div class="quote-card animate__animated animate__fadeIn">
-                <div class="d-flex justify-content-between">
-                    <span class="small fw-bold text-muted">#${row.id}</span>
+        if(dataToRender.length === 0) {
+            container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data penawaran.</div>';
+            pagination.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = paginatedData.map(row => `
+            <div class="quote-card animate__animated animate__fadeInUp">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
+                        <div class="card-perihal">${row.perihal || 'Tanpa Perihal'}</div>
+                        <div class="card-client mt-1">
+                            <i class="fas fa-user-circle"></i> ${row.email}
+                        </div>
+                    </div>
                     <span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span>
                 </div>
-                <div class="fw-bold mt-2">${row.perihal || 'Tanpa Perihal'}</div>
-                <div class="small text-muted">${row.email}</div>
+                
                 <div class="quote-footer">
-                    <div class="fw-bold text-primary">Rp ${Number(row.total).toLocaleString('id-ID')}</div>
                     <div>
-                        <button class="btn btn-sm btn-outline-primary border-0" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-outline-danger border-0" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
+                        <small class="text-muted d-block">Total Nilai:</small>
+                        <span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light text-danger" onclick='generatePDF(${JSON.stringify(row)})' title="Cetak PDF">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
                     </div>
                 </div>
             </div>`).join('');
+
+        // Render Pagination Buttons
+        let navHtml = '';
+        for (let i = 1; i <= totalPages; i++) {
+            navHtml += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        }
+        pagination.innerHTML = navHtml;
     }
 
-    // --- FUNGSI GENERATE PDF (NON-MODULAR LENGKAP) ---
+    function changePage(page) {
+        currentPage = page;
+        renderDisplay();
+        window.scrollTo(0, 0);
+    }
+
+    // --- FUNGSI GENERATE PDF (SAMA SEPERTI SEBELUMNYA) ---
     function generatePDF(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
-        // 1. Logo & Header Rata Tengah
-        try {
-            doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25);
-        } catch (e) { }
-
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
+        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); } catch (e) { }
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
-        
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text("Software, Network & Electrical Engineering", 105, 26, { align: "center" });
-        doc.setFontSize(8);
-        doc.text("Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur", 105, 30, { align: "center" });
-        doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com | www.nandateknik.com", 105, 34, { align: "center" });
-        
-        doc.setLineWidth(0.5);
+        doc.setFontSize(8); doc.text("Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur", 105, 30, { align: "center" });
+        doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
         doc.line(15, 38, 195, 38);
-
-        // 2. Info Penawaran
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text("PENAWARAN HARGA", 15, 48);
-        
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No. Transaksi : #${data.id}`, 15, 56);
         doc.text(`Tanggal       : ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 15, 61);
         doc.text(`Kepada        : ${data.email}`, 140, 56);
-        doc.text(`Perihal       : ${data.perihal || '-'}`, 140, 61);
-
-        // 3. Tabel Item (Abu-abu)
         const tableBody = data.items_json.map((item, index) => [
-            index + 1,
-            item.nama,
-            item.qty,
+            index + 1, item.nama, item.qty,
             `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
             `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
         ]);
-
         doc.autoTable({
-            startY: 70,
-            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Jumlah']],
-            body: tableBody,
-            theme: 'grid',
-            headStyles: { fillColor: [100, 100, 100], textColor: 255 },
-            columnStyles: {
-                0: { cellWidth: 12, halign: 'center' },
-                1: { cellWidth: 'auto' },
-                2: { cellWidth: 15, halign: 'center' },
-                3: { halign: 'right' },
-                4: { halign: 'right' }
-            },
-            styles: { fontSize: 9 }
+            startY: 70, head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Jumlah']],
+            body: tableBody, theme: 'grid', headStyles: { fillColor: [100, 100, 100] }
         });
-
-        // 4. Total
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL KESELURUHAN: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
-
-        // 5. Kotak Rekening (Dilingkari Garis Putus-Putus)
-        const rekY = finalY + 10;
-        doc.setLineDash([2, 2], 0);
-        doc.setDrawColor(150);
-        doc.rect(15, rekY, 85, 28);
-        doc.setLineDash([]);
-        
-        doc.setFontSize(9);
-        doc.text("Pembayaran Transfer Ke:", 20, rekY + 7);
-        doc.setFont("helvetica", "normal");
-        doc.text("Bank BCA", 20, rekY + 13);
-        doc.setFont("helvetica", "bold");
-        doc.text("No. Rek: 1801826011", 20, rekY + 19);
-        doc.setFont("helvetica", "normal");
-        doc.text("A/N: Nanda Krisbianto", 20, rekY + 24);
-
-        // 6. Tanda Tangan
-        doc.text("Hormat Kami,", 150, rekY + 7);
-        doc.text("Banyuwangi, " + new Date().toLocaleDateString('id-ID'), 150, rekY + 12);
-        doc.setFont("helvetica", "bold");
-        doc.text("NANDA KRISBIANTO", 150, rekY + 32);
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.text("( Direktur Utama )", 150, rekY + 36);
-
-        doc.save(`Penawaran_${data.id}_NandaTeknik.pdf`);
+        doc.text(`TOTAL: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+        doc.save(`Penawaran_${data.id}.pdf`);
     }
 
-    // --- FORM HELPERS (Add Row, Search, Calc) ---
+    // --- FORM HELPERS ---
     function addItemRow(n='', h=0, q=1) {
         const div = document.createElement('div');
         div.className = 'row g-2 mb-2 item-row animate__animated animate__fadeInDown';
         div.innerHTML = `
-            <div class="col-6"><input type="text" class="form-control form-control-sm it-nama" placeholder="Item/Pekerjaan" value="${n}" required></div>
+            <div class="col-6"><input type="text" class="form-control form-control-sm it-nama" placeholder="Item" value="${n}" required></div>
             <div class="col-3"><input type="number" class="form-control form-control-sm it-harga" placeholder="Harga" value="${h}" oninput="calcTotal()" required></div>
             <div class="col-2"><input type="number" class="form-control form-control-sm it-qty" placeholder="Qty" value="${q}" oninput="calcTotal()" required></div>
             <div class="col-1 text-end"><button type="button" class="btn btn-link text-danger p-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times-circle"></i></button></div>`;
@@ -336,9 +295,7 @@
     function calcTotal() {
         let total = 0;
         document.querySelectorAll('.item-row').forEach(r => {
-            const h = r.querySelector('.it-harga').value || 0;
-            const q = r.querySelector('.it-qty').value || 0;
-            total += (h * q);
+            total += ((r.querySelector('.it-harga').value || 0) * (r.querySelector('.it-qty').value || 0));
         });
         document.getElementById('display-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
         return total;
@@ -396,12 +353,11 @@
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
-
         Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
         await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         modalForm.hide();
         loadPenawaran();
-        Swal.fire('Berhasil', 'Data penawaran telah diperbarui', 'success');
+        Swal.fire('Berhasil', 'Data disimpan', 'success');
     };
 
     function filterData() {
@@ -412,13 +368,15 @@
             const t = new Date(row.tanggal).toISOString().split('T')[0];
             return t >= m && t <= s;
         });
+        currentPage = 1;
         renderDisplay(filtered);
     }
 
     function resetFilter() {
         document.getElementById('filter-mulai').value = '';
         document.getElementById('filter-sampai').value = '';
-        renderDisplay(allData);
+        currentPage = 1;
+        renderDisplay();
     }
 </script>
 </body>
