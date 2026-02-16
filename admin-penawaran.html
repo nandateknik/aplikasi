@@ -3,42 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Penawaran | Nanda Teknik</title>
-    
+    <title>Sistem Penawaran | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="layout.css">
-    
     <style>
-        :root { --p-blue: #0052d4; }
-        body { 
-            background-color: #f4f7fe; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            padding-top: 0 !important; 
-            padding-bottom: 100px; 
-        }
-
-        .admin-card {
-            background: white; border-radius: 20px; border: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            margin-top: -55px; position: relative; z-index: 99;
-        }
-
-        .table thead th {
-            border: none; color: #6c757d; font-weight: 600;
-            text-transform: uppercase; font-size: 0.75rem; padding: 15px;
-        }
-
-        .badge-status {
-            padding: 5px 10px; border-radius: 8px; font-weight: 600; font-size: 0.7rem;
-        }
+        body { background: #f4f7fe; padding-bottom: 100px; }
+        .admin-card { background: white; border-radius: 20px; border: none; margin-top: -55px; position: relative; z-index: 99; }
+        .btn-action { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; margin: 2px; border: none; }
+        .badge-status { padding: 5px 12px; border-radius: 8px; font-weight: 600; font-size: 0.7rem; }
         .status-pending { background: #fff3cd; color: #856404; }
-        .status-sent { background: #d1ecf1; color: #0c5460; }
         .status-approved { background: #d4edda; color: #155724; }
-
-        .btn-action { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; margin: 2px; }
     </style>
 </head>
 <body>
@@ -46,24 +21,27 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-11">
-            
-            <div class="card admin-card p-4 shadow">
+            <div class="card admin-card p-4 shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h5 class="fw-bold m-0 text-primary"><i class="fas fa-file-invoice-dollar me-2"></i>Admin Penawaran</h5>
-                        <small class="text-muted">Data masuk dari Google Sheets</small>
+                        <h5 class="fw-bold m-0 text-primary">Manajemen Penawaran</h5>
+                        <small class="text-muted">Buat, Edit, dan Download PDF Penawaran</small>
                     </div>
-                    <button class="btn btn-primary btn-sm rounded-3 shadow-sm" onclick="loadPenawaran()">
-                        <i class="fas fa-sync-alt me-1"></i> Refresh
-                    </button>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill me-2" onclick="loadPenawaran()">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm rounded-pill" onclick="showAddModal()">
+                            <i class="fas fa-plus me-1"></i> Penawaran Baru
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table align-middle">
-                        <thead>
+                        <thead class="table-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Tanggal</th>
                                 <th>Email Pelanggan</th>
                                 <th>Total</th>
                                 <th>Status</th>
@@ -75,20 +53,48 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="modalItems" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4 border-0">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-bold">Detail Item Penawaran</h6>
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="modalTitle">Buat Penawaran</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div id="items-detail-content"></div>
+                <form id="formPenawaran">
+                    <input type="hidden" id="edit-id">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Email Pelanggan</label>
+                        <input type="email" id="form-email" class="form-control rounded-3" required placeholder="contoh@gmail.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Daftar Barang / Jasa</label>
+                        <div id="items-container">
+                            </div>
+                        <button type="button" class="btn btn-light btn-sm mt-2 w-100" onclick="addItemRow()">
+                            <i class="fas fa-plus-circle me-1"></i> Tambah Baris Barang
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select id="form-status" class="form-select rounded-3">
+                                <option value="Pending">Pending</option>
+                                <option value="Sent">Sent</option>
+                                <option value="Approved">Approved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <label class="form-label small fw-bold">Estimasi Total</label>
+                            <h3 class="text-primary fw-bold" id="display-total">Rp 0</h3>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mt-4 rounded-3 py-2 fw-bold">SIMPAN DATA</button>
+                </form>
             </div>
         </div>
     </div>
@@ -98,130 +104,160 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
 <script src="config.js"></script>
 <script src="layout.js"></script>
 
 <script>
+    let allData = [];
+    const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
+
     document.addEventListener('DOMContentLoaded', loadPenawaran);
 
     async function loadPenawaran() {
         const tbody = document.getElementById('table-body');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center p-5"><div class="spinner-border text-primary"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5"><div class="spinner-border text-primary"></div></td></tr>';
         
-        try {
-            const response = await fetch(`${SCRIPT_URL}?action=read&sheet=Penawaran`);
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                tbody.innerHTML = '';
-                result.data.forEach(row => {
-                    const totalFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(row.total);
-                    const itemsStr = JSON.stringify(row.items_json);
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td class="fw-bold">#${row.id}</td>
-                            <td class="small">${new Date(row.tanggal).toLocaleDateString('id-ID')}</td>
-                            <td>${row.email}</td>
-                            <td class="fw-bold text-success">${totalFormatted}</td>
-                            <td><span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-light btn-action" title="Lihat" onclick='viewItems(${itemsStr})'>
-                                    <i class="fas fa-eye text-dark"></i>
-                                </button>
-                                <button class="btn btn-primary btn-action" title="Download PDF" onclick='generatePDF(${JSON.stringify(row)})'>
-                                    <i class="fas fa-file-pdf"></i>
-                                </button>
-                                <button class="btn btn-outline-primary btn-action" title="Edit Status" onclick="updateStatus('${row.id}')">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-        } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal narik data mas Gus!</td></tr>';
+        const res = await fetch(`${SCRIPT_URL}?action=read&sheet=Penawaran`);
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+            allData = result.data;
+            tbody.innerHTML = '';
+            allData.forEach(row => {
+                const total = new Intl.NumberFormat('id-ID').format(row.total);
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">#${row.id}</td>
+                        <td>${row.email}</td>
+                        <td class="fw-bold text-success">Rp ${total}</td>
+                        <td><span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-light btn-action" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-primary btn-action" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn btn-danger btn-action" onclick="deletePenawaran('${row.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
     }
 
-    function viewItems(items) {
-        const content = document.getElementById('items-detail-content');
-        content.innerHTML = items.map(item => `
-            <div class="d-flex justify-content-between border-bottom py-2">
-                <div><b>${item.nama}</b><br><small>${item.qty} x Rp${new Intl.NumberFormat('id-ID').format(item.harga)}</small></div>
-                <div class="fw-bold">Rp${new Intl.NumberFormat('id-ID').format(item.qty * item.harga)}</div>
-            </div>
-        `).join('');
-        new bootstrap.Modal(document.getElementById('modalItems')).show();
+    function showAddModal() {
+        document.getElementById('formPenawaran').reset();
+        document.getElementById('edit-id').value = '';
+        document.getElementById('modalTitle').innerText = 'Buat Penawaran Baru';
+        document.getElementById('items-container').innerHTML = '';
+        addItemRow();
+        modalForm.show();
     }
 
-    // FUNGSI DOWNLOAD PDF JOSS
-    function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const items = typeof data.items_json === 'string' ? JSON.parse(data.items_json) : data.items_json;
-
-        // Header
-        doc.setFontSize(18);
-        doc.setTextColor(0, 82, 212);
-        doc.text("NANDA TEKNIK", 14, 20);
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("Email: support@nandateknik.com | Web: nandateknik.github.io", 14, 26);
-        doc.line(14, 30, 196, 30);
-
-        // Info Penawaran
-        doc.setTextColor(0);
-        doc.setFontSize(12);
-        doc.text(`PENAWARAN HARGA #${data.id}`, 14, 40);
-        doc.setFontSize(10);
-        doc.text(`Tanggal : ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 14, 46);
-        doc.text(`Kepada  : ${data.email}`, 14, 52);
-
-        // Tabel Barang
-        const tableBody = items.map((it, index) => [
-            index + 1,
-            it.nama,
-            it.qty,
-            `Rp ${new Intl.NumberFormat('id-ID').format(it.harga)}`,
-            `Rp ${new Intl.NumberFormat('id-ID').format(it.qty * it.harga)}`
-        ]);
-
-        doc.autoTable({
-            startY: 60,
-            head: [['No', 'Deskripsi Barang', 'Qty', 'Harga Satuan', 'Subtotal']],
-            body: tableBody,
-            headStyles: { fillColor: [0, 82, 212] },
-            foot: [[ '', '', '', 'TOTAL', `Rp ${new Intl.NumberFormat('id-ID').format(data.total)}` ]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0], fontStyle: 'bold' }
-        });
-
-        // Footer / TTD
-        const finalY = doc.lastAutoTable.finalY + 20;
-        doc.text("Hormat Kami,", 140, finalY);
-        doc.text("Nanda Teknik Admin", 140, finalY + 25);
-
-        doc.save(`Penawaran_${data.id}_${data.email}.pdf`);
+    function addItemRow(nama = '', harga = 0, qty = 1) {
+        const div = document.createElement('div');
+        div.className = 'row g-2 mb-2 item-row';
+        div.innerHTML = `
+            <div class="col-6"><input type="text" placeholder="Nama Barang" class="form-control form-control-sm it-nama" value="${nama}" required></div>
+            <div class="col-3"><input type="number" placeholder="Harga" class="form-control form-control-sm it-harga" value="${harga}" oninput="calcTotal()" required></div>
+            <div class="col-2"><input type="number" placeholder="Qty" class="form-control form-control-sm it-qty" value="${qty}" oninput="calcTotal()" required></div>
+            <div class="col-1"><button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times"></i></button></div>
+        `;
+        document.getElementById('items-container').appendChild(div);
     }
 
-    async function updateStatus(id) {
-        const { value: status } = await Swal.fire({
-            title: 'Update Status',
-            input: 'select',
-            inputOptions: { 'Pending': 'Pending', 'Sent': 'Sent', 'Approved': 'Approved' },
-            showCancelButton: true
+    function calcTotal() {
+        let total = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const h = row.querySelector('.it-harga').value || 0;
+            const q = row.querySelector('.it-qty').value || 0;
+            total += (h * q);
+        });
+        document.getElementById('display-total').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
+        return total;
+    }
+
+    document.getElementById('formPenawaran').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-id').value;
+        const items = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            items.push({
+                nama: row.querySelector('.it-nama').value,
+                harga: parseInt(row.querySelector('.it-harga').value),
+                qty: parseInt(row.querySelector('.it-qty').value)
+            });
         });
 
-        if (status) {
-            Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading() });
-            await fetch(`${SCRIPT_URL}?action=update&sheet=Penawaran&id=${id}&status=${status}`);
-            Swal.fire('Sip!', 'Status wis berubah.', 'success');
+        const payload = {
+            action: id ? 'updatePenawaran' : 'createPenawaran',
+            id: id,
+            email: document.getElementById('form-email').value,
+            items: items,
+            total: calcTotal(),
+            status: document.getElementById('form-status').value
+        };
+
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if (result.success) {
+            Swal.fire('Berhasil!', 'Data penawaran tersimpan.', 'success');
+            modalForm.hide();
+            loadPenawaran();
+        }
+    };
+
+    function editPenawaran(id) {
+        const data = allData.find(r => r.id === id);
+        if (!data) return;
+        
+        document.getElementById('edit-id').value = data.id;
+        document.getElementById('form-email').value = data.email;
+        document.getElementById('form-status').value = data.status;
+        document.getElementById('modalTitle').innerText = 'Edit Penawaran #' + id;
+        
+        const container = document.getElementById('items-container');
+        container.innerHTML = '';
+        data.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
+        calcTotal();
+        modalForm.show();
+    }
+
+    async function deletePenawaran(id) {
+        const confirm = await Swal.fire({ title: 'Hapus?', text: "Data iki bakal ilang permanen!", icon: 'warning', showCancelButton: true });
+        if (confirm.isConfirmed) {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePenawaran', id: id }) });
             loadPenawaran();
         }
     }
-</script>
 
+    function generatePDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const items = Array.isArray(data.items_json) ? data.items_json : JSON.parse(data.items_json);
+
+        doc.setFontSize(18).setTextColor(0, 82, 212).text("NANDA TEKNIK", 14, 20);
+        doc.setFontSize(10).setTextColor(100).text("Spesialis Service & Maintenance AC", 14, 26);
+        doc.line(14, 30, 196, 30);
+
+        doc.setTextColor(0).setFontSize(12).text(`PENAWARAN HARGA #${data.id}`, 14, 40);
+        doc.setFontSize(10).text(`Kepada: ${data.email}`, 14, 48);
+        doc.text(`Tanggal: ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 14, 54);
+
+        const tableBody = items.map((it, i) => [i + 1, it.nama, it.qty, `Rp ${new Intl.NumberFormat('id-ID').format(it.harga)}`, `Rp ${new Intl.NumberFormat('id-ID').format(it.qty * it.harga)}`]);
+
+        doc.autoTable({
+            startY: 65,
+            head: [['No', 'Deskripsi', 'Qty', 'Harga Satuan', 'Subtotal']],
+            body: tableBody,
+            headStyles: { fillColor: [0, 82, 212] },
+            foot: [['', '', '', 'TOTAL', `Rp ${new Intl.NumberFormat('id-ID').format(data.total)}`]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0], fontStyle: 'bold' }
+        });
+
+        doc.text("Hormat Kami,", 145, doc.lastAutoTable.finalY + 20);
+        doc.text("Nanda Teknik Admin", 145, doc.lastAutoTable.finalY + 45);
+        doc.save(`Penawaran_${data.id}.pdf`);
+    }
+</script>
 </body>
 </html>
