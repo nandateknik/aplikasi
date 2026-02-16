@@ -1,8 +1,7 @@
-// CONFIGURASI NANDA TEKNIK
-// Nganggo pengecekan supaya ora error pas dipanggil bolak-balik
+// CONFIGURASI NANDA TEKNIK - V4.9 CLEAN
 if (typeof CONFIG === 'undefined') {
     var CONFIG = {
-        // URL Google Apps Script
+        // GANTI URL NGISOR IKI NGANGGO URL ANYAR SING MBOK COPY SOKO "NEW DEPLOYMENT"
         WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbw0z5YznKUin3ElHIyp4S_kzjU_piLmZlTZA3T8ieTS8KQJ-dah7RMQ0k8vjKDj5Kzk/exec',
         
         // Koordinat Kantor (Pusat)
