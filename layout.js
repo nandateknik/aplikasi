@@ -1,26 +1,46 @@
 document.addEventListener("DOMContentLoaded", function() {
     // 1. TEMPLATE HEADER
+    // 1. TEMPLATE HEADER (VERSI CUWAMIK)
+    const jam = new Date().getHours();
+    let salam = "Sugeng Enjang";
+    if (jam >= 11 && jam < 15) salam = "Sugeng Siang";
+    if (jam >= 15 && jam < 19) salam = "Sugeng Sonten";
+    if (jam >= 19 || jam < 4) salam = "Sugeng Dalu";
+
     const headerTemplate = `
-    <header class="premium-header">
-        <div class="bubble-wrap">
-            <div class="bubble" style="width:60px; height:60px; left:10%; animation-duration:8s;"></div>
-            <div class="bubble" style="width:80px; height:80px; left:70%; animation-duration:10s; animation-delay:4s;"></div>
+    <header class="new-header">
+        <div class="header-wave">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                <path fill="#ffffff" fill-opacity="0.1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+            </svg>
         </div>
-        <div class="user-profile container">
-            <div class="d-flex align-items-center">
-                <div class="bg-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
-                    <i class="fas fa-user-tie text-primary fs-4"></i>
+        <div class="container header-content">
+            <div class="d-flex justify-content-between align-items-center pt-3">
+                <div class="user-info-box">
+                    <div class="avatar-wrapper">
+                        <img src="https://ui-avatars.com/api/?name=Nanda+Teknik&background=fff&color=0052d4" alt="avatar">
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="ms-3">
+                        <span class="greeting">${salam}, Mas</span>
+                        <h5 class="user-name">Nanda Krisbianto</h5>
+                    </div>
                 </div>
-                <div>
-                    <small class="opacity-75 d-block" style="font-size: 0.65rem;">Administrator</small>
-                    <span class="fw-bold">Nanda Krisbianto</span>
+                <button class="btn-logout-new" onclick="confirmLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+            <div class="brand-card shadow-sm">
+                <div class="row align-items-center">
+                    <div class="col-7">
+                        <h4 class="m-0 fw-bold text-primary">Nanda Teknik</h4>
+                        <p class="m-0 text-muted" style="font-size: 0.7rem;">Spesialis Pendingin & Teknik</p>
+                    </div>
+                    <div class="col-5 text-end">
+                        <span class="badge bg-soft-primary text-primary rounded-pill">Admin Pro</span>
+                    </div>
                 </div>
             </div>
-            <button class="logout-btn" onclick="confirmLogout()"><i class="fas fa-power-off"></i></button>
-        </div>
-        <div class="text-center mt-4 position-relative" style="z-index:2;">
-            <h4 class="fw-bold mb-0">Nanda Teknik</h4>
-            <p class="small opacity-75">Banyuwangi Service Hub</p>
         </div>
     </header>`;
 
