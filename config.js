@@ -3,7 +3,7 @@
 if (typeof CONFIG === 'undefined') {
     var CONFIG = {
         // URL Google Apps Script
-        WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbw0z5YznKUin3ElHIyp4S_kzjU_piLmZlTZA3T8ieTS8KQJ-dah7RMQ0k8vjKDj5Kzk/exec,
+        WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbw0z5YznKUin3ElHIyp4S_kzjU_piLmZlTZA3T8ieTS8KQJ-dah7RMQ0k8vjKDj5Kzk/exec',
         
         // Koordinat Kantor (Pusat)
         KANTOR_COORDS: { 
