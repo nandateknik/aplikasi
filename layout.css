@@ -4,18 +4,25 @@
     --glass: rgba(255, 255, 255, 0.2);
 }
 
-/* --- NEW MODERN HEADER DESIGN (CUWAMIK) --- */
+/* --- RESET & BODY --- */
+body { 
+    padding-bottom: 110px !important; 
+    background: #f4f7fe; 
+}
+
+/* --- HEADER CLEAN & MODERN (FIX) --- */
 .new-header {
-    background: var(--p-grad);
-    padding: 20px 20px 80px; 
-    border-bottom-left-radius: 45px;
-    border-bottom-right-radius: 45px;
-    color: white;
+    background: var(--p-grad) !important;
+    min-height: 180px;
     position: relative;
+    border-bottom-left-radius: 35px;
+    border-bottom-right-radius: 35px;
+    padding: 25px 20px 60px !important;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 82, 212, 0.2);
 }
 
+/* Background Ornament */
 .new-header::before {
     content: "";
     position: absolute;
@@ -28,52 +35,92 @@
     z-index: 1;
 }
 
-.new-header::after {
-    content: "";
+.header-wave {
     position: absolute;
-    bottom: 20px;
-    left: -30px;
-    width: 120px;
-    height: 120px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 30px;
-    transform: rotate(35deg);
+    top: 0; left: 0; width: 100%;
     z-index: 1;
+    opacity: 0.4;
 }
 
-.header-content { position: relative; z-index: 2; }
+.header-content {
+    position: relative;
+    z-index: 10 !important;
+}
 
-.user-info { display: flex; align-items: center; gap: 12px; }
+/* Profile Section */
+.user-info-box {
+    display: flex;
+    align-items: center;
+}
 
-.avatar-box {
-    width: 45px; height: 45px;
+.avatar-wrapper {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
     background: white;
     border-radius: 15px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    padding: 2px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.btn-logout {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    width: 40px; height: 40px;
+.avatar-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 13px;
+}
+
+.greeting {
+    font-size: 0.75rem !important;
+    color: rgba(255,255,255,0.9) !important;
+    margin: 0 !important;
+}
+
+.user-name {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: white !important;
+    margin: 0 !important;
+}
+
+.btn-logout-new {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
-    backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
 }
 
-.brand-box { text-align: center; margin-top: 20px; }
-.brand-box h4 { font-weight: 800; font-size: 1.5rem; margin-bottom: 2px; }
-.brand-box p { 
-    font-size: 0.75rem; 
-    background: rgba(0, 0, 0, 0.15); 
-    display: inline-block; 
-    padding: 2px 15px; 
-    border-radius: 20px; 
+/* Brand Card (Floating) */
+.brand-card {
+    background: white !important;
+    border-radius: 20px;
+    padding: 15px 20px !important;
+    margin-top: 25px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.8);
 }
 
-/* --- BOTTOM NAV DESIGN (STAY ACTIVE) --- */
+.brand-title {
+    color: var(--p-blue) !important;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    margin: 0 !important;
+    letter-spacing: -0.5px;
+}
+
+.brand-sub {
+    font-size: 0.75rem !important;
+    color: #64748b !important;
+    margin: 0 !important;
+}
+
+/* --- BOTTOM NAV DESIGN --- */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -81,60 +128,3 @@
     transform: translateX(-50%);
     width: 100%;
     max-width: 600px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(15px);
-    height: 80px;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    align-items: center;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
-    border-top: 1px solid rgba(255,255,255,0.3);
-    z-index: 9999;
-    border-top-left-radius: 30px;
-    border-top-right-radius: 30px;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: #94a3b8;
-    font-size: 0.65rem;
-    font-weight: 700;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: 0.3s;
-}
-
-.nav-link i { font-size: 1.4rem; margin-bottom: 3px; }
-.nav-link.active { color: var(--p-blue); }
-
-.nav-center {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.btn-plus-main {
-    background: var(--p-grad);
-    width: 58px; height: 58px;
-    border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
-    color: white !important;
-    transform: translateY(-28px);
-    box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3);
-    border: 5px solid #f4f7fe;
-}
-
-/* Dropdown Menu More */
-.dropup .dropdown-toggle::after { display: none; }
-.dropdown-menu {
-    border-radius: 20px;
-    border: none;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
-    padding: 10px;
-    margin-bottom: 20px !important;
-}
-
-/* Fix Body Padding */
-body { padding-bottom: 100px; }
