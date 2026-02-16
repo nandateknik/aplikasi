@@ -6,56 +6,106 @@
     <title>Sistem Penawaran | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="layout.css">
     <style>
-        body { background: #f4f7fe; padding-bottom: 100px; }
-        /* Card ditaruh agak atas sedikit menutupi header wave sedikit */
-        .admin-card { 
-            background: white; 
-            border-radius: 25px; 
-            border: none; 
-            margin-top: -30px; /* Efek melayang di atas header */
-            position: relative; 
-            z-index: 10; 
+        body { background: #f4f7fe; padding-bottom: 110px; }
+        
+        /* Layout Card Utama */
+        .admin-card-container { margin-top: -40px; position: relative; z-index: 10; }
+        .admin-card { background: white; border-radius: 25px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        /* Filter Style */
+        .filter-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 15px; margin-bottom: 20px; }
+
+        /* Mobile Card Style */
+        .quote-card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: 0.3s;
         }
-        .btn-action { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; margin: 2px; border: none; font-size: 0.8rem; }
-        .badge-status { padding: 5px 12px; border-radius: 8px; font-weight: 600; font-size: 0.7rem; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-sent { background: #d1ecf1; color: #0c5460; }
-        .status-approved { background: #d4edda; color: #155724; }
+        .quote-id { font-size: 0.7rem; font-weight: 700; color: #94a3b8; display: block; }
+        .quote-perihal { font-size: 1rem; font-weight: 800; color: #1e293b; margin-top: 2px; }
+        .quote-client { font-size: 0.8rem; color: #64748b; margin-bottom: 10px; }
+        .quote-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e2e8f0;
+        }
+        .quote-price { font-size: 1.1rem; font-weight: 800; color: var(--p-blue); }
+
+        /* Badge & Buttons */
+        .badge-status { padding: 4px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+        .status-pending { background: #fff7ed; color: #ea580c; }
+        .status-sent { background: #eff6ff; color: #2563eb; }
+        .status-approved { background: #f0fdf4; color: #16a34a; }
+
+        .action-group { display: flex; gap: 8px; }
+        .btn-circle {
+            width: 38px; height: 38px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; border: none; transition: 0.2s;
+        }
+        .btn-edit-lite { background: #f1f5f9; color: #475569; }
+        .btn-pdf-lite { background: #fee2e2; color: #dc2626; }
+        .btn-del-lite { background: #fff1f2; color: #e11d48; }
+
+        /* Suggester */
         #search-results { position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
+
+        /* Responsive Visibility */
+        .desktop-table { display: none; }
+        @media (min-width: 768px) {
+            .desktop-table { display: block; }
+            .mobile-cards { display: none; }
+        }
     </style>
 </head>
 <body>
 
 <script src="layout.js"></script>
 
-<div class="container position-relative">
+<div class="container admin-card-container">
     <div class="row justify-content-center">
         <div class="col-lg-11">
-            <div class="card admin-card p-4 shadow-sm mb-5">
+            <div class="card admin-card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h5 class="fw-bold m-0 text-primary">Manajemen Penawaran</h5>
-                        <small class="text-muted">Nanda Teknik Pro - V4.9</small>
+                        <small class="text-muted">Filter, Buat, & Cetak Penawaran</small>
                     </div>
-                    <div>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill me-2" onclick="loadPenawaran()">
-                            <i class="fas fa-sync"></i>
-                        </button>
-                        <button class="btn btn-primary btn-sm rounded-pill" onclick="showAddModal()">
-                            <i class="fas fa-plus me-1"></i> Baru
-                        </button>
+                    <button class="btn btn-primary rounded-pill px-3" onclick="showAddModal()">
+                        <i class="fas fa-plus me-1"></i> Baru
+                    </button>
+                </div>
+
+                <div class="filter-section animate__animated animate__fadeIn">
+                    <div class="row g-2">
+                        <div class="col-5">
+                            <label class="small fw-bold text-muted mb-1">Mulai</label>
+                            <input type="date" id="filter-mulai" class="form-control form-control-sm" onchange="filterData()">
+                        </div>
+                        <div class="col-5">
+                            <label class="small fw-bold text-muted mb-1">Sampai</label>
+                            <input type="date" id="filter-sampai" class="form-control form-control-sm" onchange="filterData()">
+                        </div>
+                        <div class="col-2 d-flex align-items-end">
+                            <button class="btn btn-light btn-sm w-100 text-danger" onclick="resetFilter()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive desktop-table">
                     <table class="table align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
                                 <th>Perihal</th>
-                                <th>Pelanggan</th>
+                                <th>Email</th>
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th class="text-center">Aksi</th>
@@ -64,6 +114,9 @@
                         <tbody id="table-body"></tbody>
                     </table>
                 </div>
+
+                <div id="mobile-cards-container" class="mobile-cards"></div>
+
             </div>
         </div>
     </div>
@@ -71,44 +124,38 @@
 
 <div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 bg-light rounded-top-4">
-                <h5 class="modal-title fw-bold" id="modalTitle">Buat Penawaran</h5>
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title fw-bold" id="modalTitle">Form Penawaran</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="formPenawaran">
                     <input type="hidden" id="edit-id">
-                    
                     <div class="row g-3">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-secondary">Cari Pelanggan</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="fas fa-user"></i></span>
-                                <input type="text" id="search-pelanggan" class="form-control" placeholder="Nama/Email..." oninput="searchPelanggan(this.value)">
-                            </div>
+                        <div class="col-md-6 mb-3 position-relative">
+                            <label class="form-label small fw-bold">Pelanggan</label>
+                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Cari Nama/Email..." oninput="searchPelanggan(this.value)">
                             <div id="search-results" class="list-group shadow-sm"></div>
                             <input type="hidden" id="form-email" required>
-                            <div id="selected-email-display" class="mt-1 small text-primary fw-bold"></div>
                         </div>
-
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-secondary">Perihal / Project</label>
-                            <input type="text" id="form-perihal" class="form-control" placeholder="Contoh: Service AC Ruang Meeting" required>
+                            <label class="form-label small fw-bold">Perihal</label>
+                            <input type="text" id="form-perihal" class="form-control" placeholder="Perihal Pekerjaan" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">Item Penawaran</label>
+                        <label class="form-label small fw-bold">Daftar Item</label>
                         <div id="items-container"></div>
                         <button type="button" class="btn btn-light btn-sm mt-2 w-100 border" onclick="addItemRow()">
-                            <i class="fas fa-plus-circle me-1"></i> Tambah Baris Item
+                            <i class="fas fa-plus-circle me-1"></i> Tambah Item
                         </button>
                     </div>
 
                     <div class="row align-items-center mt-4">
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-secondary">Status</label>
+                            <label class="form-label small fw-bold">Status</label>
                             <select id="form-status" class="form-select">
                                 <option value="Pending">Pending</option>
                                 <option value="Sent">Sent</option>
@@ -116,11 +163,10 @@
                             </select>
                         </div>
                         <div class="col-6 text-end">
-                            <label class="form-label small fw-bold text-secondary">Total Estimasi</label>
                             <h3 class="text-primary fw-bold mb-0" id="display-total">Rp 0</h3>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mt-4 rounded-3 py-2 fw-bold" id="btnSimpan">SIMPAN PENAWARAN</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-4 py-2 fw-bold" id="btnSimpan">SIMPAN DATA</button>
                 </form>
             </div>
         </div>
@@ -138,105 +184,117 @@
     let listPelanggan = [];
     const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
 
-    window.onload = () => {
-        loadPenawaran();
-        fetchPelanggan();
-    };
+    window.onload = () => { loadPenawaran(); fetchPelanggan(); };
 
     async function fetchPelanggan() {
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'getAllPelanggan' }) 
-            });
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
             const r = await res.json();
             if(r.success) listPelanggan = r.data;
-        } catch(e) { console.error("Gagal load pelanggan"); }
+        } catch(e) {}
     }
 
     function searchPelanggan(query) {
-        const resultsBox = document.getElementById('search-results');
-        if (query.length < 2) { resultsBox.style.display = 'none'; return; }
-        
-        const filtered = listPelanggan.filter(p => 
-            p[0].toLowerCase().includes(query.toLowerCase()) || 
-            p[1].toLowerCase().includes(query.toLowerCase())
-        );
-
-        if (filtered.length > 0) {
-            resultsBox.innerHTML = filtered.map(p => `
-                <button type="button" class="list-group-item list-group-item-action" onclick="selectPelanggan('${p[0]}', '${p[1]}')">
-                    <div class="fw-bold">${p[0]}</div>
-                    <small class="text-muted">${p[1]}</small>
-                </button>
-            `).join('');
-            resultsBox.style.display = 'block';
-        } else {
-            resultsBox.style.display = 'none';
-        }
+        const resBox = document.getElementById('search-results');
+        if (query.length < 2) { resBox.style.display = 'none'; return; }
+        const filtered = listPelanggan.filter(p => p[0].toLowerCase().includes(query.toLowerCase()) || p[1].toLowerCase().includes(query.toLowerCase()));
+        resBox.innerHTML = filtered.map(p => `<button type="button" class="list-group-item list-group-item-action" onclick="selectPelanggan('${p[0]}', '${p[1]}')"><b>${p[0]}</b><br><small>${p[1]}</small></button>`).join('');
+        resBox.style.display = filtered.length ? 'block' : 'none';
     }
 
-    function selectPelanggan(nama, email) {
-        document.getElementById('form-email').value = email;
-        document.getElementById('search-pelanggan').value = nama;
-        document.getElementById('selected-email-display').innerText = "Kirim ke: " + email;
+    function selectPelanggan(n, e) {
+        document.getElementById('form-email').value = e;
+        document.getElementById('search-pelanggan').value = n;
         document.getElementById('search-results').style.display = 'none';
     }
 
     async function loadPenawaran() {
-        const tbody = document.getElementById('table-body');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center p-5"><div class="spinner-border text-primary"></div></td></tr>';
-        
         try {
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
-            const result = await res.json();
-            if (result.success) {
-                allData = result.data;
-                tbody.innerHTML = allData.map(row => `
-                    <tr>
-                        <td class="small fw-bold text-muted">#${row.id}</td>
-                        <td class="fw-bold">${row.perihal || '-'}</td>
-                        <td class="small">${row.email}</td>
-                        <td class="fw-bold text-primary">Rp ${Number(row.total).toLocaleString('id-ID')}</td>
-                        <td><span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-light btn-action text-primary" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-light btn-action text-danger" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
-                            <button class="btn btn-light btn-action text-secondary" onclick="deletePenawaran('${row.id}')"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-        } catch(e) { tbody.innerHTML = '<tr><td colspan="6" class="text-center">Gagal load data.</td></tr>'; }
+            const r = await res.json();
+            if (r.success) { allData = r.data; renderDisplay(allData); }
+        } catch(e) { console.error("Load failed"); }
+    }
+
+    function filterData() {
+        const m = document.getElementById('filter-mulai').value;
+        const s = document.getElementById('filter-sampai').value;
+        if (!m || !s) return;
+        const filtered = allData.filter(row => {
+            const t = new Date(row.tanggal).toISOString().split('T')[0];
+            return t >= m && t <= s;
+        });
+        renderDisplay(filtered);
+    }
+
+    function resetFilter() {
+        document.getElementById('filter-mulai').value = '';
+        document.getElementById('filter-sampai').value = '';
+        renderDisplay(allData);
+    }
+
+    function renderDisplay(data) {
+        const tbody = document.getElementById('table-body');
+        const mCont = document.getElementById('mobile-cards-container');
+        
+        tbody.innerHTML = data.map(row => `
+            <tr>
+                <td class="small fw-bold">#${row.id}</td>
+                <td>${row.perihal || '-'}</td>
+                <td class="small">${row.email}</td>
+                <td class="fw-bold text-primary">Rp ${Number(row.total).toLocaleString('id-ID')}</td>
+                <td><span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-light btn-sm text-primary" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-light btn-sm text-danger" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
+                </td>
+            </tr>`).join('');
+
+        mCont.innerHTML = data.map(row => `
+            <div class="quote-card animate__animated animate__fadeIn">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="quote-id">#${row.id} | ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
+                        <div class="quote-perihal">${row.perihal || 'Tanpa Perihal'}</div>
+                        <div class="quote-client"><i class="far fa-user me-1"></i> ${row.email}</div>
+                    </div>
+                    <span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span>
+                </div>
+                <div class="quote-footer">
+                    <div class="quote-price">Rp ${Number(row.total).toLocaleString('id-ID')}</div>
+                    <div class="action-group">
+                        <button class="btn-circle btn-edit-lite" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-circle btn-pdf-lite" onclick='generatePDF(${JSON.stringify(row)})'><i class="fas fa-file-pdf"></i></button>
+                        <button class="btn-circle btn-del-lite" onclick="deletePenawaran('${row.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>`).join('');
     }
 
     function showAddModal() {
         document.getElementById('formPenawaran').reset();
         document.getElementById('edit-id').value = '';
-        document.getElementById('selected-email-display').innerText = '';
         document.getElementById('items-container').innerHTML = '';
-        document.getElementById('display-total').innerText = 'Rp 0';
         addItemRow();
         modalForm.show();
     }
 
-    function addItemRow(nama = '', harga = 0, qty = 1) {
+    function addItemRow(n='', h=0, q=1) {
         const div = document.createElement('div');
-        div.className = 'row g-2 mb-2 item-row align-items-center';
+        div.className = 'row g-2 mb-2 item-row';
         div.innerHTML = `
-            <div class="col-5"><input type="text" placeholder="Nama Item" class="form-control it-nama" value="${nama}" required></div>
-            <div class="col-3"><input type="number" placeholder="Harga" class="form-control it-harga" value="${harga}" oninput="calcTotal()" required></div>
-            <div class="col-2"><input type="number" placeholder="Qty" class="form-control it-qty" value="${qty}" oninput="calcTotal()" required></div>
-            <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-trash-alt"></i></button></div>
-        `;
+            <div class="col-6"><input type="text" class="form-control it-nama" placeholder="Item" value="${n}" required></div>
+            <div class="col-3"><input type="number" class="form-control it-harga" placeholder="Harga" value="${h}" oninput="calcTotal()" required></div>
+            <div class="col-2"><input type="number" class="form-control it-qty" placeholder="Qty" value="${q}" oninput="calcTotal()" required></div>
+            <div class="col-1"><button type="button" class="btn text-danger p-1" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times"></i></button></div>`;
         document.getElementById('items-container').appendChild(div);
     }
 
     function calcTotal() {
         let total = 0;
-        document.querySelectorAll('.item-row').forEach(row => {
-            const h = row.querySelector('.it-harga').value || 0;
-            const q = row.querySelector('.it-qty').value || 0;
+        document.querySelectorAll('.item-row').forEach(r => {
+            const h = r.querySelector('.it-harga').value || 0;
+            const q = r.querySelector('.it-qty').value || 0;
             total += (h * q);
         });
         document.getElementById('display-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
@@ -245,120 +303,68 @@
 
     document.getElementById('formPenawaran').onsubmit = async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('btnSimpan');
-        btn.disabled = true;
-        
         const id = document.getElementById('edit-id').value;
-        const items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
-            nama: row.querySelector('.it-nama').value,
-            harga: parseInt(row.querySelector('.it-harga').value),
-            qty: parseInt(row.querySelector('.it-qty').value)
-        }));
-
         const payload = {
             action: id ? 'updatePenawaran' : 'createPenawaran',
             id: id,
             email: document.getElementById('form-email').value,
             perihal: document.getElementById('form-perihal').value,
-            items: items,
+            items: Array.from(document.querySelectorAll('.item-row')).map(r => ({
+                nama: r.querySelector('.it-nama').value,
+                harga: parseInt(r.querySelector('.it-harga').value),
+                qty: parseInt(r.querySelector('.it-qty').value)
+            })),
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
 
-        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-        
-        try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const result = await res.json();
-            if (result.success) {
-                Swal.fire('Berhasil!', 'Data Penawaran wis tersimpan.', 'success');
-                modalForm.hide();
-                loadPenawaran();
-            }
-        } catch(e) { Swal.fire('Error', 'Gagal kirim data', 'error'); }
-        btn.disabled = false;
+        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+        await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        modalForm.hide();
+        loadPenawaran();
+        Swal.fire('Berhasil', 'Data disimpan', 'success');
     };
 
     function editPenawaran(id) {
-        const data = allData.find(r => r.id === id);
-        if (!data) return;
-        document.getElementById('edit-id').value = data.id;
-        document.getElementById('form-email').value = data.email;
-        document.getElementById('search-pelanggan').value = data.email;
-        document.getElementById('form-perihal').value = data.perihal || '';
-        document.getElementById('form-status').value = data.status;
+        const d = allData.find(r => r.id === id);
+        if(!d) return;
+        document.getElementById('edit-id').value = d.id;
+        document.getElementById('form-email').value = d.email;
+        document.getElementById('search-pelanggan').value = d.email;
+        document.getElementById('form-perihal').value = d.perihal || '';
+        document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
-        if(data.items_json) {
-            data.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
-        }
+        d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
         calcTotal();
         modalForm.show();
     }
 
     async function deletePenawaran(id) {
-        const confirm = await Swal.fire({ 
-            title: 'Hapus Penawaran?', 
-            text: "Data sing wis dihapus gak iso dibalekne!",
-            icon: 'warning', 
-            showCancelButton: true,
-            confirmButtonColor: '#d33'
-        });
-        if (confirm.isConfirmed) {
-            Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() });
-            await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deletePenawaran', id: id }) });
+        if(confirm('Hapus penawaran iki?')) {
+            await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({action:'deletePenawaran', id:id}) });
             loadPenawaran();
-            Swal.fire('Terhapus!', 'Penawaran wis dibusak.', 'success');
         }
     }
 
     function generatePDF(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const items = data.items_json;
-
-        // Header PDF
         doc.setFontSize(18).setTextColor(0, 82, 212).text("NANDA TEKNIK", 105, 20, {align:"center"});
-        doc.setFontSize(9).setTextColor(100).text("Spesialis Service AC & Maintenance Teknik - Banyuwangi", 105, 26, {align:"center"});
-        doc.text("Telp/WA: 082331201148", 105, 30, {align:"center"});
-        doc.line(14, 35, 196, 35);
+        doc.setFontSize(9).setTextColor(100).text("Banyuwangi | WA: 082331201148", 105, 26, {align:"center"});
+        doc.line(14, 30, 196, 30);
+        doc.setTextColor(0).setFontSize(11).text(`PENAWARAN HARGA #${data.id}`, 14, 40);
+        doc.text(`Perihal : ${data.perihal || '-'}`, 14, 46);
+        doc.text(`Tujuan : ${data.email}`, 14, 52);
 
-        // Body PDF
-        doc.setTextColor(0).setFontSize(12).setFont(undefined, 'bold').text("PENAWARAN HARGA", 14, 45);
-        doc.setFont(undefined, 'normal').setFontSize(10);
-        doc.text(`Nomor    : #${data.id}`, 14, 52);
-        doc.text(`Tanggal  : ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 14, 57);
-        doc.text(`Perihal  : ${data.perihal || '-'}`, 14, 62);
-        
-        doc.text(`Kepada Yth:`, 140, 52);
-        doc.setFont(undefined, 'bold').text(`${data.email}`, 140, 57);
-
-        const tableBody = items.map((it, i) => [
-            i + 1, 
-            it.nama, 
-            it.qty, 
-            `Rp ${it.harga.toLocaleString()}`, 
-            `Rp ${(it.qty * it.harga).toLocaleString()}`
-        ]);
-
+        const body = data.items_json.map((it, i) => [i+1, it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]);
         doc.autoTable({
-            startY: 70,
-            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Subtotal']],
-            body: tableBody,
-            headStyles: { fillColor: [0, 82, 212] },
-            theme: 'striped',
+            startY: 60,
+            head: [['No', 'Item', 'Qty', 'Harga', 'Total']],
+            body: body,
             foot: [['', '', '', 'GRAND TOTAL', `Rp ${Number(data.total).toLocaleString()}`]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 82, 212], fontStyle: 'bold' }
+            headStyles: { fillColor: [0, 82, 212] }
         });
-
-        const finalY = doc.lastAutoTable.finalY + 15;
-        doc.setFontSize(10).setFont(undefined, 'normal').text("Catatan:", 14, finalY);
-        doc.setFontSize(9).text("- Penawaran berlaku selama 14 hari.", 14, finalY + 5);
-        doc.text("- Harga sudah termasuk biaya transport (Area Banyuwangi).", 14, finalY + 10);
-
-        doc.setFontSize(10).text("Hormat Kami,", 150, finalY + 15);
-        doc.setFont(undefined, 'bold').text("Nanda Teknik", 150, finalY + 35);
-        
-        doc.save(`Penawaran_${data.perihal || data.id}.pdf`);
+        doc.save(`Penawaran_${data.id}.pdf`);
     }
 </script>
 </body>
