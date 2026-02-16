@@ -39,6 +39,35 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </div>
 </header>`;
+
+     // 2. TEMPLATE BOTTOM NAV
+    const navTemplate = `
+    <nav class="bottom-nav">
+        <a href="admin-pekerjaan.html" class="nav-link" id="nav-job">
+            <i class="fas fa-clipboard-list"></i><span>Job</span>
+        </a>
+        <a href="admin-pelanggan.html" class="nav-link" id="nav-client">
+            <i class="fas fa-users"></i><span>Client</span>
+        </a>
+        <div class="nav-center">
+            <a href="admin-buat-wo.html" class="btn-plus-main">
+                <i class="fas fa-plus fs-4"></i>
+            </a>
+        </div>
+        <a href="admin-labarugi.html" class="nav-link" id="nav-kas">
+            <i class="fas fa-chart-pie"></i><span>Kas</span>
+        </a>
+        <div class="dropup">
+            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-th-large"></i><span>More</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+                <li><a class="dropdown-item py-2 small" href="admin-harga.html"><i class="fas fa-tag me-2 text-primary"></i> Master Harga</a></li>
+                <li><a class="dropdown-item py-2 small" href="admin-penawaran.html"><i class="fas fa-file-contract me-2 text-primary"></i> Penawaran</a></li>
+                <li><a class="dropdown-item py-2 small" href="admin-esign.html"><i class="fas fa-signature me-2 text-primary"></i> E-Signature</a></li>
+            </ul>
+        </div>
+    </nav>`;
     
     // SUNTIKNE NENG BODY
     document.body.insertAdjacentHTML('afterbegin', headerTemplate); // Header neng dhuwur
