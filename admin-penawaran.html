@@ -347,25 +347,109 @@
     }
 
     function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(18).setTextColor(0, 82, 212).text("NANDA TEKNIK", 105, 20, {align:"center"});
-        doc.setFontSize(9).setTextColor(100).text("Banyuwangi | WA: 082331201148", 105, 26, {align:"center"});
-        doc.line(14, 30, 196, 30);
-        doc.setTextColor(0).setFontSize(11).text(`PENAWARAN HARGA #${data.id}`, 14, 40);
-        doc.text(`Perihal : ${data.perihal || '-'}`, 14, 46);
-        doc.text(`Tujuan : ${data.email}`, 14, 52);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // --- KONFIGURASI WARNA & FONT ---
+    const primaryGrey = [50, 50, 50];    // Abu-abu peteng (teks utama)
+    const secondaryGrey = [120, 120, 120]; // Abu-abu enom (sub-teks)
+    const lightGrey = [245, 245, 245];   // Background aksen
+    
+    // --- 1. HEADER & LOGO ---
+    // Tambah Logo (Pojok Kiri)
+    const logoUrl = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEibPJghnahmN4PIRxUwH-E258dbaAzh_v6aqXGfqbqSf_lWWkHagGrvxDRvXA47m4gzisrCWUOEt3l9PJEkRAGq_3np3_OIP67gOAFlsDKkmApqLWBN9em7wKr8FdWHQ3OPfI_emOv8VrNs_sSG0pNvOzPQGPX6_LKWYv0Rk0Jyb23M9Oa_kmVepHnRZNne/s320-rw/engineering%20(1).png";
+    doc.addImage(logoUrl, 'PNG', 14, 15, 25, 25);
 
-        const body = data.items_json.map((it, i) => [i+1, it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]);
-        doc.autoTable({
-            startY: 60,
-            head: [['No', 'Item', 'Qty', 'Harga', 'Total']],
-            body: body,
-            foot: [['', '', '', 'GRAND TOTAL', `Rp ${Number(data.total).toLocaleString()}`]],
-            headStyles: { fillColor: [0, 82, 212] }
-        });
-        doc.save(`Penawaran_${data.id}.pdf`);
-    }
+    // Nama Perusahaan (Kanan Logo)
+    doc.setFont("helvetica", "bold").setFontSize(20).setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.text("NANDA TEKNIK BANYUWANGI", 45, 22);
+    
+    // Alamat & Kontak (Detail Kecil)
+    doc.setFont("helvetica", "normal").setFontSize(8).setTextColor(secondaryGrey[0], secondaryGrey[1], secondaryGrey[2]);
+    doc.text("Sukowidi Indah Residence Banyuwangi, 68421", 45, 27);
+    doc.text("WA: 083331201148 | Email: nandateknik02@gmail.com", 45, 31);
+    doc.text("Website: www.nandateknik.com", 45, 35);
+
+    // Garis Pemisah Modern
+    doc.setDrawColor(200, 200, 200).setLineWidth(0.5);
+    doc.line(14, 45, 196, 45);
+
+    // --- 2. INFO PENAWARAN ---
+    doc.setFontSize(14).setFont("helvetica", "bold").setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.text("PENAWARAN HARGA", 14, 55);
+    
+    doc.setFontSize(9).setFont("helvetica", "normal").setTextColor(secondaryGrey[0], secondaryGrey[1], secondaryGrey[2]);
+    doc.text(`Nomor  : #${data.id}`, 14, 62);
+    doc.text(`Tanggal : ${new Date(data.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 67);
+    doc.text(`Perihal  : ${data.perihal || '-'}`, 14, 72);
+    
+    // Kolom Tujuan (Kanan)
+    doc.setFont("helvetica", "bold").setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.text("Kepada Yth:", 130, 62);
+    doc.setFont("helvetica", "normal");
+    doc.text(data.email, 130, 67);
+
+    // --- 3. TABEL ITEM (ABU-ABU STYLE) ---
+    const tableBody = data.items_json.map((it, i) => [
+        i + 1, 
+        it.nama, 
+        it.qty, 
+        `Rp ${it.harga.toLocaleString('id-ID')}`, 
+        `Rp ${(it.qty * it.harga).toLocaleString('id-ID')}`
+    ]);
+
+    doc.autoTable({
+        startY: 80,
+        head: [['No', 'Deskripsi Pekerjaan / Item', 'Qty', 'Harga Satuan', 'Total']],
+        body: tableBody,
+        theme: 'striped',
+        headStyles: { 
+            fillColor: [80, 80, 80], // Abu-abu tua
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'center'
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            2: { halign: 'center', cellWidth: 20 },
+            3: { halign: 'right', cellWidth: 40 },
+            4: { halign: 'right', cellWidth: 40 }
+        },
+        styles: { fontSize: 9, cellPadding: 4 },
+        alternateRowStyles: { fillColor: [250, 250, 250] }
+    });
+
+    // --- 4. TOTAL & PEMBAYARAN ---
+    const finalY = doc.lastAutoTable.finalY + 10;
+    
+    // Kotak Total
+    doc.setFillColor(lightGrey[0], lightGrey[1], lightGrey[2]);
+    doc.rect(130, finalY, 66, 12, 'F');
+    doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.text("GRAND TOTAL :", 135, finalY + 8);
+    doc.text(`Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, finalY + 8, { align: "right" });
+
+    // Informasi Bank (Kiri)
+    doc.setFontSize(9).setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.text("Pembayaran via Transfer:", 14, finalY + 8);
+    doc.setFont("helvetica", "bold");
+    doc.text("BCA - 1801826011", 14, finalY + 14);
+    doc.text("a/n Nanda Krisbianto", 14, finalY + 19);
+
+    // --- 5. FOOTER / TANDA TANGAN ---
+    const footerY = finalY + 40;
+    doc.setFont("helvetica", "normal").setFontSize(9);
+    doc.text("Banyuwangi, " + new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), 150, footerY);
+    doc.text("Hormat Kami,", 150, footerY + 5);
+    
+    doc.setFont("helvetica", "bold").setTextColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.text("NANDA TEKNIK", 150, footerY + 25);
+    doc.setDrawColor(primaryGrey[0], primaryGrey[1], primaryGrey[2]);
+    doc.line(150, footerY + 26, 185, footerY + 26); // Garis bawah nama
+
+    // Save PDF
+    doc.save(`Penawaran_${data.id}_${data.perihal || 'NandaTeknik'}.pdf`);
+}
 </script>
 </body>
 </html>
