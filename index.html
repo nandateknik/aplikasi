@@ -23,7 +23,7 @@
         
         /* Cards & Components */
         .card-custom { border-radius: 12px; border: 1px solid #dadce0; display: none; margin-bottom: 25px; background: #fff; overflow: hidden; max-width: 800px; margin-left: auto; margin-right: auto; }
-        .customer-mini-profile { max-width: 600px; margin: 15px auto; display: none; background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0; padding: 15px; }
+        .customer-mini-profile { max-width: 600px; margin: 15px auto; display: none; background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0; padding: 20px; }
         .antrian-item { border-left: 5px solid var(--google-blue); margin-bottom: 12px; background: #fff; border-radius: 8px; border: 1px solid #eee; transition: 0.2s; cursor: pointer; }
         .antrian-item:hover { background: #f8f9fa; transform: translateX(5px); }
         
@@ -60,20 +60,29 @@
             <input type="text" id="searchInput" placeholder="Cari ID WO, ID Nota, atau Email..." onkeypress="if(event.key==='Enter') cariData()">
             <button class="btn btn-link text-muted p-0 ms-2" onclick="cariData()"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="text-center mt-3">
-            <button class="btn btn-light btn-sm border rounded-pill px-3 me-2" onclick="cariData()">Cari Data</button>
+        <div class="text-center mt-3 d-flex justify-content-center flex-wrap gap-2">
+            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="cariData()">Cari Data</button>
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="resetForm()">Reset & Back</button>
+            <a href="daftar-pelanggan.html" class="btn btn-outline-success btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1"></i> Daftar</a>
+            <a href="edit-pelanggan.html" class="btn btn-outline-warning btn-sm rounded-pill px-3"><i class="fas fa-user-edit me-1"></i> Edit Profil</a>
         </div>
     </div>
 
-    <div id="customerProfile" class="customer-mini-profile no-print">
-        <div class="d-flex align-items-center">
-            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
-                <i class="fas fa-user"></i>
+    <div id="customerProfile" class="customer-mini-profile no-print shadow-sm">
+        <div class="d-flex align-items-start">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; flex-shrink: 0;">
+                <i class="fas fa-user fa-lg"></i>
             </div>
-            <div>
-                <h6 class="mb-0 fw-bold" id="profNama">Nama Pelanggan</h6>
-                <small class="text-muted" id="profEmail">email@gmail.com</small> | <small class="text-muted" id="profWA">0823xxx</small>
+            <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold text-dark" id="profNama">Nama Pelanggan</h6>
+                <div class="mb-2">
+                    <small class="text-muted" id="profEmail">email@gmail.com</small> 
+                    <span class="mx-1 text-muted">|</span> 
+                    <small class="text-muted" id="profWA">0823xxx</small>
+                </div>
+                <div class="p-2 bg-white border rounded small text-secondary">
+                    <i class="fas fa-map-marker-alt text-danger me-1"></i> <span id="profAlamat">Alamat lengkap pelanggan...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -100,7 +109,7 @@
                     </div>
                     <span id="woStatus" class="badge rounded-pill px-3 py-2">Status</span>
                 </div>
-                <p id="woAlamat" class="small text-muted mb-4"><i class="fas fa-map-marker-alt me-1"></i> Alamat...</p>
+                <p id="woAlamatDisplay" class="small text-muted mb-4"><i class="fas fa-map-marker-alt me-1"></i> Alamat...</p>
                 <h6 class="fw-bold border-bottom pb-2">Log Progress Pengerjaan:</h6>
                 <div id="woHistory" class="mt-3"></div>
             </div>
@@ -154,7 +163,6 @@
             const result = await res.json();
             if(result.success) {
                 const container = document.getElementById('antrianList');
-                // Filter: Bukan Selesai, Bukan Dibatalkan/Cancel
                 const antrian = result.data.filter(i => {
                     const st = (i.status || "").toLowerCase();
                     return st !== 'selesai' && st !== 'dibatalkan' && st !== 'cancel' && st !== '';
@@ -197,8 +205,9 @@
                 if(result.customer) {
                     document.getElementById('customerProfile').style.display = 'block';
                     document.getElementById('profNama').innerText = result.customer.nama || 'Pelanggan';
-                    document.getElementById('profEmail').innerText = result.customer.email || result.customer.emai || '-';
+                    document.getElementById('profEmail').innerText = result.customer.email || '-';
                     document.getElementById('profWA').innerText = result.customer.wa || '-';
+                    document.getElementById('profAlamat').innerText = result.customer.alamat || 'Alamat tidak tersedia';
                 }
                 if(result.type === 'LIST') renderList(result.data);
                 else if(result.type === 'WO') showWO(result.data);
@@ -206,7 +215,10 @@
             } else {
                 alert("Data tidak ditemukan. Cek kembali ID atau Email Anda.");
             }
-        } catch(e) { alert("Terjadi kesalahan koneksi."); }
+        } catch(e) { 
+            document.getElementById('loader').style.display = 'none';
+            alert("Terjadi kesalahan koneksi."); 
+        }
     }
 
     function renderList(data) {
@@ -226,7 +238,7 @@
         document.getElementById('cardWO').style.display = 'block';
         document.getElementById('woIdDisplay').innerText = data.woId || data.id;
         document.getElementById('woJudul').innerText = data.judul || 'Pekerjaan';
-        document.getElementById('woAlamat').innerText = data.alamat || 'Alamat tidak tersedia';
+        document.getElementById('woAlamatDisplay').innerText = data.alamat || 'Alamat tidak tersedia';
         document.getElementById('woStatus').innerText = data.status;
         document.getElementById('woStatus').className = `badge rounded-pill px-3 py-2 ${data.status.toLowerCase()==='selesai'?'bg-success':'badge-process'}`;
         
@@ -289,7 +301,10 @@
     }
 
     function resetTampilan() {
-        ['cardWO', 'cardNota', 'customerProfile'].forEach(id => document.getElementById(id).style.display = 'none');
+        ['cardWO', 'cardNota', 'customerProfile'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
     }
 
     function viewDetail(id) {
