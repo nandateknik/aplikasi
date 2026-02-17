@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nanda Teknik - Portal Layanan</title>
+    <title>Portal Nanda Teknik - Tracking & News</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,12 +14,7 @@
         body { background: var(--bg-light); font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 100px; }
         
         /* Hero Search Section */
-        .hero-search {
-            padding: 60px 20px 40px;
-            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-            border-bottom: 1px solid #e2e8f0;
-            text-align: center;
-        }
+        .hero-search { padding: 50px 20px 30px; background: white; border-bottom: 1px solid #e2e8f0; text-align: center; }
         .google-box { max-width: 600px; margin: 0 auto; position: relative; }
         .google-box input {
             width: 100%; padding: 18px 25px 18px 55px; border-radius: 50px;
@@ -29,104 +24,138 @@
         .google-box input:focus { outline: none; border-color: var(--p-blue); box-shadow: 0 8px 25px rgba(13, 110, 253, 0.15); }
         .search-icon { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
-        /* Queue Box (Antrean) */
-        .queue-container { background: white; border-radius: 20px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 30px; }
-        .queue-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9; }
-        .queue-item:last-child { border-bottom: none; }
-        .dot-pulse { width: 10px; height: 10px; background: #fbbf24; border-radius: 50%; margin-right: 15px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        /* Customer Info Strip */
+        #customerInfo { display: none; max-width: 600px; margin: 15px auto; padding: 12px 20px; background: #eef2ff; border-radius: 15px; border: 1px solid #dbeafe; text-align: left; }
 
-        /* Result Cards */
-        .result-card {
-            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
-            border-left: 6px solid var(--p-blue); box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            transition: 0.3s; cursor: pointer;
-        }
-        .result-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        /* Card Custom Styles */
+        .card-display { display: none; background: white; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: 20px; overflow: hidden; }
+        
+        /* Timeline style for WO */
+        .status-step { border-left: 2px solid #e9ecef; padding-left: 25px; position: relative; padding-bottom: 15px; font-size: 0.85rem; }
+        .status-step::before { content: ""; position: absolute; left: -9px; top: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--p-blue); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--p-blue); }
+        .status-step:last-child { border-left-color: transparent; }
+
+        /* History Items */
+        .history-item { cursor: pointer; transition: 0.3s; border-radius: 15px; border: 1px solid #f1f5f9; background: #fff; padding: 15px; margin-bottom: 10px; }
+        .history-item:hover { transform: translateY(-2px); border-color: var(--p-blue); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
 
         /* Blog Section */
-        .blog-card {
-            background: white; border-radius: 18px; padding: 12px; height: 100%;
-            border: 1px solid rgba(0,0,0,0.05); transition: 0.3s; text-decoration: none; display: block;
-        }
+        .blog-card { background: white; border-radius: 18px; padding: 10px; height: 100%; border: 1px solid rgba(0,0,0,0.05); text-decoration: none; display: block; transition: 0.3s; }
         .blog-card:hover { transform: translateY(-5px); border-color: var(--p-blue); }
-        .blog-title {
-            font-size: 0.95rem; font-weight: 700; color: var(--p-dark);
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; margin: 10px 0; line-height: 1.4;
-        }
+        .blog-title { font-size: 0.9rem; font-weight: 700; color: var(--p-dark); margin: 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* Pagination */
-        .page-btn { border: 1px solid #e2e8f0; background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .page-btn:disabled { opacity: 0.5; }
+        /* Loader */
+        .loader-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
 
-        /* Floating Button */
-        .fab-button { position: fixed; bottom: 30px; right: 20px; z-index: 1050; }
-        .btn-order {
-            background: var(--p-blue); color: white; padding: 15px 25px; border-radius: 50px;
-            font-weight: 700; box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
-            text-decoration: none; display: flex; align-items: center; gap: 10px;
-        }
-
-        .section-label { font-size: 0.9rem; font-weight: 800; color: var(--p-dark); text-transform: uppercase; letter-spacing: 1px; }
-        .status-badge { font-size: 0.7rem; padding: 4px 12px; border-radius: 10px; font-weight: 700; }
+        @media print { .no-print { display: none !important; } .card-display { display: block !important; box-shadow: none !important; } }
     </style>
 </head>
 <body>
 
-<div class="hero-search">
+<div class="loader-overlay" id="loader">
+    <div class="spinner-border text-primary"></div>
+    <span class="mt-2 fw-bold">Sinkronisasi Data...</span>
+</div>
+
+<div class="hero-search no-print">
     <div class="container">
         <div class="animate__animated animate__fadeIn">
             <h2 class="fw-bold text-dark mb-1">Nanda Teknik</h2>
-            <p class="text-muted small mb-4">Tracking Layanan & Update Berita Terkini</p>
+            <p class="text-muted small mb-4">Solusi Kebutuhan Software, Network & Electrical</p>
         </div>
+        
         <div class="google-box animate__animated animate__zoomIn">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="mainSearch" placeholder="Cek No. Invoice, Nama, atau Email..." oninput="handleSearch(this.value)">
+            <input type="text" id="searchInput" placeholder="Masukkan Email / ID WO / ID Nota..." onkeypress="if(event.key === 'Enter') cariData()">
+        </div>
+
+        <div id="customerInfo" class="animate__animated animate__fadeIn">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-primary" id="custNama">Nama Pelanggan</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                        <i class="fab fa-whatsapp me-1"></i> <span id="custTelp"></span> | 
+                        <i class="fas fa-map-marker-alt me-1"></i> <span id="custAlamat"></span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-light rounded-circle" onclick="location.reload()"><i class="fas fa-times"></i></button>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-9">
-            
-            <div id="searchResultsArea" style="display:none;">
+        <div class="col-md-9 col-lg-8">
+
+            <div id="cardHistory" class="card-display p-4">
+                <h6 class="fw-bold mb-3"><i class="fas fa-history text-primary me-2"></i>Riwayat Layanan</h6>
+                <div id="historyList"></div>
+                <div id="paginationControls"></div>
+            </div>
+
+            <div id="cardWO" class="card-display p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="section-label">Hasil Pencarian</span>
-                    <button class="btn btn-sm btn-link text-decoration-none" onclick="resetSearch()">Tutup</button>
+                    <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fas fa-tools me-2"></i>WORK ORDER</span>
+                    <span id="woStatus" class="badge bg-warning text-dark px-3 py-2 rounded-pill">Status</span>
                 </div>
-                <div id="resultsList"></div>
-                <div id="paginationBox" class="d-flex justify-content-center gap-2 mt-3 mb-5"></div>
+                <h3 id="woIdDisplay" class="fw-bold mb-1">WO-ID</h3>
+                <p id="woJudul" class="text-muted mb-4 font-monospace">Judul Pekerjaan</p>
+                <hr>
+                <h6 class="fw-bold mb-3">Progress Update:</h6>
+                <div id="woHistory"></div>
             </div>
 
-            <div id="queueView">
-                <div class="section-label mb-3"><i class="fas fa-clock text-warning me-2"></i>Antrean Teknisi (On-Progress)</div>
-                <div class="queue-container shadow-sm" id="queueList">
-                    <p class="text-muted small p-2">Memuat data antrean...</p>
+            <div id="cardNota" class="card-display p-4 p-md-5">
+                <div class="d-flex justify-content-between border-bottom pb-3 mb-4">
+                    <div>
+                        <h4 class="fw-bold text-primary mb-0">NANDA TEKNIK</h4>
+                        <small class="text-muted">Sukowidi Indah Residence D5, Banyuwangi</small>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="fw-bold mb-0">INVOICE</h5>
+                        <span id="notaIdDisplay" class="text-muted small">#INV-XXXX</span>
+                    </div>
+                </div>
+                <div class="row mb-4 small">
+                    <div class="col-6">
+                        <span class="text-muted">Ditujukan:</span><br>
+                        <strong id="notaEmailDisplay">--</strong>
+                    </div>
+                    <div class="col-6 text-end">
+                        <span class="text-muted">Tanggal:</span><br>
+                        <strong id="notaDate">--</strong>
+                    </div>
+                </div>
+                <table class="table table-sm border-top small">
+                    <thead class="bg-light">
+                        <tr><th>Deskripsi</th><th class="text-center">Qty</th><th class="text-end">Harga</th><th class="text-end">Total</th></tr>
+                    </thead>
+                    <tbody id="notaItems"></tbody>
+                    <tfoot>
+                        <tr><td colspan="3" class="text-end fw-bold">Total Akhir</td><td class="text-end fw-bold text-primary" id="notaTotal">Rp 0</td></tr>
+                    </tfoot>
+                </table>
+                <div class="mt-4 no-print text-center">
+                    <button class="btn btn-success rounded-pill px-4" onclick="downloadPDF()"><i class="fas fa-download me-2"></i>Download Nota PDF</button>
                 </div>
             </div>
 
-            <div class="mt-5" id="blogView">
+            <div id="noData" class="text-center py-5">
+                <i class="fas fa-search-dollar fa-3x mb-3 opacity-25"></i>
+                <p class="text-muted">Hasil pencarian akan muncul di sini.</p>
+            </div>
+
+            <div id="blogView" class="mt-5 no-print">
                 <div class="d-flex align-items-center mb-4">
-                    <span class="section-label">Artikel & Tips Terbaru</span>
+                    <h6 class="fw-bold m-0 text-uppercase" style="letter-spacing:1px">Artikel Terbaru</h6>
                     <hr class="flex-grow-1 ms-3 opacity-25">
                 </div>
                 <div id="blog-container" class="row g-3"></div>
-                <div class="text-center mt-4">
-                    <a href="https://www.nandateknik.com" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-4">Lihat Semua Artikel</a>
-                </div>
             </div>
 
         </div>
     </div>
-</div>
-
-<div class="fab-button animate__animated animate__bounceInUp">
-    <a href="buat-booking.html" class="btn-order">
-        <i class="fas fa-plus-circle fa-lg"></i>
-        <span>BUAT PEKERJAAN BARU</span>
-    </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -134,47 +163,133 @@
 <script src="config.js"></script>
 
 <script>
-    let dbBooking = [], dbNota = [], dbPelanggan = [];
+    let globalHistoryData = [];
     let currentPage = 1;
-    const itemsPerPage = 3;
+    const rowsPerPage = 5;
 
-    window.onload = async () => {
-        await fetchAllData();
-        await fetchBlog();
-        renderQueue();
-    };
+    window.onload = () => { fetchBlog(); };
 
-    async function fetchAllData() {
+    async function cariData() {
+        const kw = document.getElementById('searchInput').value.trim();
+        if(kw.length < 3) return;
+
+        showLoader(true);
+        resetTampilan();
+
         try {
-            const [resB, resN, resP] = await Promise.all([
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`),
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`),
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`)
-            ]);
-            dbBooking = (await resB.json()).data || [];
-            dbNota = (await resN.json()).data || [];
-            dbPelanggan = (await resP.json()).data || [];
-        } catch (e) { console.error("Database error"); }
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getDetailAll', keyword: kw })
+            });
+            const result = await res.json();
+            showLoader(false);
+
+            if(result.success) {
+                document.getElementById('noData').style.display = 'none';
+                document.getElementById('blogView').style.display = 'none';
+                
+                // Tampilkan Detail Pelanggan (jika ada data pelanggan)
+                if(result.customer) showCustomer(result.customer);
+
+                if(result.type === 'LIST') {
+                    globalHistoryData = result.data;
+                    renderHistory();
+                } else if(result.type === 'WO') {
+                    showWO(result.data);
+                } else if(result.type === 'Nota') {
+                    showNota(result.data);
+                }
+            } else {
+                document.getElementById('noData').style.display = 'block';
+                Swal.fire('Info', 'Data tidak ditemukan', 'info');
+            }
+        } catch(e) {
+            showLoader(false);
+            Swal.fire('Error', 'Gagal menyambung ke database', 'error');
+        }
     }
 
-    function renderQueue() {
-        const jobs = dbBooking.filter(j => j.status !== "Selesai" && j.status !== "Dibatalkan");
-        const container = document.getElementById('queueList');
-        if (jobs.length === 0) {
-            container.innerHTML = '<p class="text-muted small p-2">Tidak ada antrean saat ini.</p>';
-            return;
-        }
-        container.innerHTML = jobs.map(j => `
-            <div class="queue-item">
-                <div class="dot-pulse"></div>
-                <div class="flex-grow-1">
-                    <div class="fw-bold small text-dark">${j.judul}</div>
-                    <div class="text-muted" style="font-size: 11px;">#${j.id} | ${j.nama || 'User'} | <span class="text-primary">${j.status}</span></div>
-                </div>
-                <div class="text-end text-muted" style="font-size: 10px;">${j.tanggal || j.tgl || ''}</div>
-            </div>
-        `).join('');
+    function showCustomer(c) {
+        document.getElementById('customerInfo').style.display = 'block';
+        document.getElementById('custNama').innerText = c.nama || 'Pelanggan Nanda Teknik';
+        document.getElementById('custTelp').innerText = c.whatsapp || '-';
+        document.getElementById('custAlamat').innerText = c.alamat || '-';
     }
+
+    function renderHistory() {
+        const container = document.getElementById('cardHistory');
+        const list = document.getElementById('historyList');
+        container.style.display = 'block';
+        list.innerHTML = '';
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const pageItems = globalHistoryData.slice(start, start + rowsPerPage);
+
+        pageItems.forEach(item => {
+            const icon = item.type === 'WO' ? 'fa-tools text-primary' : 'fa-file-invoice-dollar text-success';
+            list.innerHTML += `
+                <div class="history-item d-flex justify-content-between align-items-center" onclick="quickView('${item.id}')">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-2 rounded-3 me-3 text-center" style="width:40px"><i class="fas ${icon}"></i></div>
+                        <div>
+                            <div class="fw-bold small">${item.id}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">${item.judul}</div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-light text-dark border" style="font-size:0.65rem">${item.status}</span>
+                        <div class="text-muted" style="font-size:0.6rem mt-1">${item.tgl}</div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function showWO(data) {
+        document.getElementById('cardWO').style.display = 'block';
+        document.getElementById('woIdDisplay').innerText = data.woId;
+        document.getElementById('woJudul').innerText = data.judul || 'Pekerjaan Teknik';
+        document.getElementById('woStatus').innerText = data.status;
+        
+        let html = '';
+        data.history.forEach(h => {
+            html += `<div class="status-step">
+                <div class="fw-bold text-dark">${h.status}</div>
+                <div class="text-muted" style="font-size:0.7rem">${h.tgl}</div>
+                <div class="mt-1">${h.detail || '-'}</div>
+            </div>`;
+        });
+        document.getElementById('woHistory').innerHTML = html;
+    }
+
+    function showNota(data) {
+        document.getElementById('cardNota').style.display = 'block';
+        document.getElementById('notaIdDisplay').innerText = "#" + data.notaId;
+        document.getElementById('notaEmailDisplay').innerText = data.email;
+        document.getElementById('notaDate').innerText = data.tanggal;
+        document.getElementById('notaTotal').innerText = "Rp " + data.total.toLocaleString('id-ID');
+        
+        let html = '';
+        data.items.forEach(it => {
+            html += `<tr>
+                <td>${it.nama}</td>
+                <td class="text-center">${it.qty}</td>
+                <td class="text-end">${it.harga.toLocaleString('id-ID')}</td>
+                <td class="text-end fw-bold">${(it.qty * it.harga).toLocaleString('id-ID')}</td>
+            </tr>`;
+        });
+        document.getElementById('notaItems').innerHTML = html;
+    }
+
+    function quickView(id) {
+        document.getElementById('searchInput').value = id;
+        cariData();
+    }
+
+    function resetTampilan() {
+        ['cardWO', 'cardNota', 'cardHistory', 'customerInfo'].forEach(id => document.getElementById(id).style.display = 'none');
+    }
+
+    function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
 
     async function fetchBlog() {
         const container = document.getElementById('blog-container');
@@ -192,117 +307,21 @@
                         <div class="col-md-4">
                             <a href="${post.link}" target="_blank" class="blog-card animate__animated animate__fadeIn">
                                 <img src="${thumb}" class="w-100 rounded-3" style="height:140px; object-fit:cover;">
-                                <div class="blog-date mt-2" style="font-size:0.7rem; color:#94a3b8;">${new Date(post.pubDate).toLocaleDateString('id-ID')}</div>
                                 <div class="blog-title">${post.title}</div>
-                                <div class="text-primary small fw-bold">Selengkapnya <i class="fas fa-arrow-right ms-1"></i></div>
+                                <div class="text-primary small fw-bold">Baca Tips <i class="fas fa-arrow-right ms-1"></i></div>
                             </a>
                         </div>`;
                 }).join('');
             }
-        } catch (e) { container.innerHTML = '<p class="text-center small text-muted">Gagal memuat feed.</p>'; }
+        } catch (e) { console.error("Blog fail"); }
     }
 
-    function handleSearch(query) {
-        if (query.length < 3) {
-            document.getElementById('searchResultsArea').style.display = 'none';
-            document.getElementById('queueView').style.display = 'block';
-            document.getElementById('blogView').style.display = 'block';
-            return;
-        }
-
-        document.getElementById('searchResultsArea').style.display = 'block';
-        document.getElementById('queueView').style.display = 'none';
-        document.getElementById('blogView').style.display = 'none';
-
-        const filtered = dbNota.filter(item => 
-            item.id.toString().toLowerCase().includes(query.toLowerCase()) ||
-            item.email.toLowerCase().includes(query.toLowerCase()) ||
-            (item.perihal && item.perihal.toLowerCase().includes(query.toLowerCase()))
-        );
-
-        renderResults(filtered);
-    }
-
-    function renderResults(data) {
-        const container = document.getElementById('resultsList');
-        const start = (currentPage - 1) * itemsPerPage;
-        const pagedData = data.slice(start, start + itemsPerPage);
-
-        if (data.length === 0) {
-            container.innerHTML = '<div class="text-center py-5">Data tidak ditemukan.</div>';
-            document.getElementById('paginationBox').innerHTML = '';
-            return;
-        }
-
-        container.innerHTML = pagedData.map(row => `
-            <div class="result-card animate__animated animate__fadeInUp" onclick="viewDetail('${row.id}')">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <span class="text-primary fw-bold small">#INV-${row.id}</span>
-                        <h6 class="fw-bold mt-1 mb-1">${row.perihal || 'Layanan Teknik'}</h6>
-                        <div class="text-muted small">${row.email}</div>
-                    </div>
-                    <span class="status-badge bg-light text-primary border">${row.status}</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <span class="fw-bold fs-5 text-dark">Rp ${Number(row.total).toLocaleString('id-ID')}</span>
-                    <button class="btn btn-primary btn-sm rounded-pill px-3">Detail</button>
-                </div>
-            </div>
-        `).join('');
-
-        renderPagination(data.length, (newData) => renderResults(data));
-    }
-
-    function renderPagination(totalItems, callback) {
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const box = document.getElementById('paginationBox');
-        if (totalPages <= 1) { box.innerHTML = ''; return; }
-
-        box.innerHTML = `
-            <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">Prev</button>
-            <span class="small align-self-center">Hal ${currentPage} / ${totalPages}</span>
-            <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(1)">Next</button>
-        `;
-    }
-
-    function changePage(step) {
-        currentPage += step;
-        const query = document.getElementById('mainSearch').value;
-        handleSearch(query);
-    }
-
-    function resetSearch() {
-        document.getElementById('mainSearch').value = '';
-        handleSearch('');
-    }
-
-    function viewDetail(id) {
-        const item = dbNota.find(d => d.id == id);
-        if(!item) return;
-        Swal.fire({
-            title: 'Detail Invoice',
-            html: `
-                <div id="printArea" class="text-start p-3 bg-white border">
-                    <h5 class="fw-bold text-primary">NANDA TEKNIK</h5>
-                    <hr>
-                    <p class="small">
-                        ID: <b>#${item.id}</b><br>
-                        Perihal: <b>${item.perihal}</b><br>
-                        Total: <b>Rp ${Number(item.total).toLocaleString('id-ID')}</b><br>
-                        Status: <b class="text-success">${item.status}</b>
-                    </p>
-                </div>
-                <button class="btn btn-success mt-3 w-100 rounded-pill" onclick="downloadPDF('${item.id}')">Download PDF</button>
-            `,
-            showConfirmButton: false, showCloseButton: true
-        });
-    }
-
-    function downloadPDF(id) {
-        const element = document.getElementById('printArea');
-        html2pdf().from(element).set({ margin: 10, filename: `Invoice-${id}.pdf` }).save();
+    function downloadPDF() {
+        const element = document.getElementById('cardNota');
+        const opt = { margin: 10, filename: 'Invoice-NandaTeknik.pdf', html2canvas: { scale: 3 }, jsPDF: { unit: 'mm', format: 'a4' } };
+        html2pdf().set(opt).from(element).save();
     }
 </script>
+
 </body>
 </html>
