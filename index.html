@@ -10,226 +10,325 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     
     <style>
-        :root { --p-blue: #0d6efd; --p-dark: #1e293b; }
-        body { background: #f4f7fe; font-family: 'Inter', sans-serif; padding: 20px 0 100px; }
+        :root { --google-gray: #f8f9fa; --p-blue: #1a73e8; --p-dark: #202124; }
+        body { background: white; font-family: 'Roboto', arial, sans-serif; padding: 20px 0 100px; color: var(--p-dark); }
         
-        .search-container { max-width: 700px; margin: 0 auto 30px; text-align: center; }
+        /* Google Search Bar Style */
+        .search-container { max-width: 600px; margin: 0 auto 30px; text-align: center; }
         .google-box { position: relative; margin-top: 20px; }
         .google-box input {
-            width: 100%; padding: 18px 25px 18px 55px; border-radius: 15px;
-            border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-size: 1.1rem;
+            width: 100%; padding: 14px 25px 14px 52px; border-radius: 24px;
+            border: 1px solid #dfe1e5; font-size: 1rem; transition: 0.2s;
         }
-        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .google-box input:hover, .google-box input:focus { 
+            box-shadow: 0 1px 6px rgba(32,33,36,0.28); border-color: rgba(223,225,229,0); outline: none; 
+        }
+        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #9aa0a6; }
 
-        /* Profile Card - Fixed Design */
+        /* Knowledge Panel Profile */
         .profile-card {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: white; border-radius: 20px; padding: 25px; margin-bottom: 30px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: block !important;
+            border: 1px solid #dadce0; border-radius: 12px; padding: 20px; margin-bottom: 25px;
+            background: #fff; position: relative;
+        }
+        .btn-edit-inline { 
+            position: absolute; top: 15px; right: 15px; 
+            color: var(--p-blue); text-decoration: none; font-size: 0.8rem; font-weight: 500;
         }
 
-        /* RSS Blog Section */
-        #newsSection { margin-top: 20px; }
-        .news-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--p-blue); }
-        .news-card a { text-decoration: none; color: var(--p-dark); font-weight: 700; font-size: 0.9rem; }
-
-        .result-card {
-            background: white; border-radius: 15px; padding: 18px; margin-bottom: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        /* News Cards with Thumbnails */
+        .news-item { 
+            display: flex; gap: 15px; margin-bottom: 20px; text-decoration: none; color: inherit;
+            padding: 10px; border-radius: 8px; transition: 0.2s;
         }
-        .section-title { font-weight: 800; color: var(--p-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .status-badge { font-size: 0.65rem; padding: 4px 10px; border-radius: 8px; font-weight: 700; text-transform: uppercase; }
-        .badge-work { background: #e0f2fe; color: #0369a1; }
-        .badge-note { background: #f0fdf4; color: #15803d; }
+        .news-item:hover { background: var(--google-gray); }
+        .news-thumb { 
+            width: 100px; height: 100px; border-radius: 8px; object-fit: cover; 
+            background: #eee; flex-shrink: 0;
+        }
+        .news-text h6 { color: var(--p-blue); margin-bottom: 5px; font-weight: 500; line-height: 1.3; }
 
-        .fab-menu { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .btn-fab { padding: 12px 20px; border-radius: 50px; text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .btn-new { background: var(--p-blue); color: white; }
-        .btn-edit { background: #1e293b; color: white; }
+        /* Search Results Style */
+        .result-card { padding: 15px 0; border-bottom: 1px solid #eceff1; cursor: pointer; transition: 0.2s; }
+        .result-card:hover { opacity: 0.7; }
+        .section-title { font-size: 1.2rem; font-weight: 400; margin: 25px 0 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        
+        .status-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+        .bg-blue { background: #e8f0fe; color: #1967d2; }
+        .bg-green { background: #e6f4ea; color: #137333; }
+
+        /* Timeline for WO Detail */
+        .status-step { border-left: 2px solid #e9ecef; padding-left: 25px; position: relative; padding-bottom: 20px; }
+        .status-step::before { 
+            content: ""; position: absolute; left: -9px; top: 0; width: 16px; height: 16px; 
+            border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 2px #1a73e8; 
+        }
+
+        .fab-menu { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .btn-booking { background: var(--p-blue); color: white; padding: 12px 24px; border-radius: 24px; text-decoration: none; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="search-container animate__animated animate__fadeIn">
-        <h3 class="fw-bold text-dark">Nanda Teknik</h3>
-        <p class="text-muted small">Cek progres servis & download invoice anda</p>
+        <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" height="30" alt="Google" class="mb-2" style="filter: hue-rotate(150deg);">
+        <h4 class="fw-bold">Nanda Teknik</h4>
         <div class="google-box">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="searchInput" placeholder="Ketik Email / Nama Anda..." oninput="handleUniversalSearch()">
+            <input type="text" id="searchInput" placeholder="Cari Email atau Nama Anda..." oninput="handleUniversalSearch()">
         </div>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-9">
+        <div class="col-lg-8">
             <div id="profileArea"></div>
 
             <div id="newsSection">
-                <div class="section-title"><i class="fas fa-rss text-warning"></i> Berita & Tips Terbaru</div>
-                <div id="rssContent"><p class="text-muted small">Memuat berita...</p></div>
+                <div class="section-title">Berita Utama</div>
+                <div id="rssContent"><p class="text-muted small">Memuat berita terbaru...</p></div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div id="workTitle" style="display:none" class="section-title"><i class="fas fa-tools text-primary"></i> Riwayat Servis</div>
-                    <div id="workArea"></div>
-                </div>
-                <div class="col-md-6">
-                    <div id="noteTitle" style="display:none" class="section-title"><i class="fas fa-file-invoice-dollar text-success"></i> Nota & Penawaran</div>
-                    <div id="noteArea"></div>
+            <div id="resultsArea" style="display:none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="section-title">Aktivitas Servis</div>
+                        <div id="workArea"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="section-title">Tagihan & Nota</div>
+                        <div id="noteArea"></div>
+                    </div>
                 </div>
             </div>
 
-            <div id="emptyState" style="display:none" class="text-center py-5 text-muted">
-                <i class="fas fa-search fa-3x mb-3 opacity-25"></i>
-                <p>Data tidak ditemukan. Pastikan Email sudah benar.</p>
+            <div id="emptyState" style="display:none;" class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3 opacity-25"></i>
+                <p class="text-muted">Data tidak ditemukan. Masukkan Email yang terdaftar.</p>
             </div>
         </div>
     </div>
 </div>
 
 <div class="fab-menu">
-    <a href="edit-pelanggan.html" class="btn-fab btn-edit"><i class="fas fa-user-cog"></i> Profil</a>
-    <a href="buat-booking.html" class="btn-fab btn-new"><i class="fas fa-plus-circle"></i> Booking</a>
+    <a href="buat-booking.html" class="btn-booking"><i class="fas fa-plus me-1"></i> Booking Baru</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="config.js"></script>
 
 <script>
-    let dbPelanggan = [];
-    let dbBooking = [];
-    let dbNota = [];
+    let dbPelanggan = [], dbBooking = [], dbNota = [];
 
     window.onload = async () => {
+        loadRSS();
         await loadAllDatabase();
-        loadRSS(); // Panggil fungsi berita
     };
 
     async function loadAllDatabase() {
         try {
-            // Kita panggil action read yang sudah kita buat di GAS tadi
             const [resP, resB, resN] = await Promise.all([
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`),
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`),
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`)
             ]);
-            
             const [p, b, n] = await Promise.all([resP.json(), resB.json(), resN.json()]);
             dbPelanggan = p.data || [];
             dbBooking = b.data || [];
             dbNota = n.data || [];
-        } catch(e) { console.error("Gagal Sinkron"); }
+        } catch(e) { console.error("Database Sync Error"); }
     }
 
-    // FUNGSI RSS BLOGSPOT
     function loadRSS() {
         const rssUrl = "https://www.nandateknik.com/feeds/posts/default?alt=rss";
-        const yqlUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-
-        fetch(yqlUrl)
+        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`)
             .then(res => res.json())
             .then(data => {
                 let html = '';
-                data.items.slice(0, 3).forEach(item => {
-                    html += `<div class="news-card animate__animated animate__fadeIn">
-                                <a href="${item.link}" target="_blank">${item.title}</a>
-                                <div class="text-muted" style="font-size:0.7rem">${new Date(item.pubDate).toLocaleDateString()}</div>
-                             </div>`;
+                data.items.slice(0, 4).forEach(item => {
+                    const thumb = item.thumbnail || 'https://via.placeholder.com/300x200?text=Nanda+Teknik';
+                    html += `
+                        <a href="${item.link}" target="_blank" class="news-item animate__animated animate__fadeIn">
+                            <img src="${thumb}" class="news-thumb">
+                            <div class="news-text">
+                                <h6>${item.title}</h6>
+                                <p class="small text-muted mb-0">${item.description.replace(/<[^>]*>/g, '').substring(0, 80)}...</p>
+                                <span style="font-size:0.7rem;" class="text-muted">${new Date(item.pubDate).toLocaleDateString('id-ID')}</span>
+                            </div>
+                        </a>`;
                 });
                 document.getElementById('rssContent').innerHTML = html;
             })
-            .catch(e => { document.getElementById('rssContent').innerHTML = "Gagal memuat berita."; });
+            .catch(() => { document.getElementById('rssContent').innerHTML = "Gagal memuat berita."; });
     }
 
     function handleUniversalSearch() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const profileArea = document.getElementById('profileArea');
-        const workArea = document.getElementById('workArea');
-        const noteArea = document.getElementById('noteArea');
+        const resultsArea = document.getElementById('resultsArea');
         const newsSection = document.getElementById('newsSection');
         const emptyState = document.getElementById('emptyState');
 
         if (query.length < 3) {
-            profileArea.innerHTML = workArea.innerHTML = noteArea.innerHTML = '';
+            profileArea.innerHTML = '';
+            resultsArea.style.display = 'none';
             newsSection.style.display = 'block';
             emptyState.style.display = 'none';
-            document.getElementById('workTitle').style.display = document.getElementById('noteTitle').style.display = 'none';
             return;
         }
 
-        // Sembunyikan Berita saat mencari
         newsSection.style.display = 'none';
-
-        // PENCARIAN (Gunakan nama properti, bukan index array)
-        const user = dbPelanggan.find(u => 
-            (u.email && u.email.toLowerCase().includes(query)) || 
-            (u.nama && u.nama.toLowerCase().includes(query))
-        );
         
-        const works = dbBooking.filter(w => 
-            (w.email && w.email.toLowerCase().includes(query)) || 
-            (w.id && w.id.toLowerCase().includes(query))
-        );
-        
-        const notes = dbNota.filter(n => 
-            (n.email && n.email.toLowerCase().includes(query)) || 
-            (n.id && n.id.toLowerCase().includes(query))
-        );
+        const user = dbPelanggan.find(u => (u.email?.toLowerCase().includes(query)) || (u.nama?.toLowerCase().includes(query)));
+        const works = dbBooking.filter(w => (w.email?.toLowerCase().includes(query)) || (w.id?.toLowerCase().includes(query)));
+        const notes = dbNota.filter(n => (n.email?.toLowerCase().includes(query)) || (n.id?.toLowerCase().includes(query)));
 
         if (!user && works.length === 0 && notes.length === 0) {
             profileArea.innerHTML = '';
+            resultsArea.style.display = 'none';
             emptyState.style.display = 'block';
             return;
         }
 
         emptyState.style.display = 'none';
+        resultsArea.style.display = 'block';
 
-        // RENDER PROFIL (BAWAH SEARCH)
         if(user) {
             profileArea.innerHTML = `
-                <div class="profile-card animate__animated animate__zoomIn">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h5 class="fw-bold mb-1">${user.nama}</h5>
-                            <p class="small mb-2 opacity-75">${user.email} | ${user.wa}</p>
-                            <div class="p-2 rounded" style="background: rgba(255,255,255,0.1); font-size: 0.75rem;">
-                                <i class="fas fa-map-marker-alt"></i> ${user.alamat || 'Alamat belum diset'}
-                            </div>
-                        </div>
-                    </div>
+                <div class="profile-card animate__animated animate__fadeIn">
+                    <a href="edit-pelanggan.html" class="btn-edit-inline"><i class="fas fa-user-edit"></i> Edit Profil</a>
+                    <h5 class="fw-bold mb-1">${user.nama}</h5>
+                    <div class="text-muted small mb-2">${user.email} • ${user.wa}</div>
+                    <div class="small mt-2"><i class="fas fa-map-marker-alt text-danger me-1"></i> ${user.alamat || 'Alamat tidak tersedia'}</div>
                 </div>`;
         } else { profileArea.innerHTML = ''; }
 
-        // RENDER WORK (Booking)
-        if(works.length > 0) {
-            document.getElementById('workTitle').style.display = 'flex';
-            workArea.innerHTML = works.map(w => `
-                <div class="result-card animate__animated animate__fadeInUp">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="small fw-bold text-primary">#${w.id}</div>
-                        <span class="status-badge badge-work">${w.status}</span>
-                    </div>
-                    <h6 class="fw-bold my-1 small">${w.judul || 'Servis Teknik'}</h6>
-                    <div class="text-muted small" style="font-size:0.7rem;">${w.tanggal || w.tgl}</div>
-                </div>
-            `).join('');
-        } else { workArea.innerHTML = ''; document.getElementById('workTitle').style.display = 'none'; }
+        document.getElementById('workArea').innerHTML = works.map(w => `
+            <div class="result-card" onclick="showDetailWork('${w.id}')">
+                <div class="text-muted" style="font-size:0.75rem;">${w.tanggal || w.tgl || ''}</div>
+                <div style="color:var(--p-blue); font-weight:500;">${w.judul || 'Layanan Teknik'}</div>
+                <span class="status-badge bg-blue">${w.status}</span>
+            </div>
+        `).join('') || '<p class="text-muted small">Tidak ada riwayat servis.</p>';
 
-        // RENDER NOTA (Penawaran)
-        if(notes.length > 0) {
-            document.getElementById('noteTitle').style.display = 'flex';
-            noteArea.innerHTML = notes.map(n => `
-                <div class="result-card animate__animated animate__fadeInUp">
-                    <div class="d-flex justify-content-between">
-                        <div class="small fw-bold text-success">#${n.id}</div>
-                        <span class="status-badge badge-note">${n.status}</span>
+        document.getElementById('noteArea').innerHTML = notes.map(n => `
+            <div class="result-card" onclick="showDetailNote('${n.id}')">
+                <div class="text-muted" style="font-size:0.75rem;">Invoice #${n.id}</div>
+                <div class="fw-bold">Rp ${Number(n.total).toLocaleString('id-ID')}</div>
+                <span class="status-badge bg-green">${n.status}</span>
+            </div>
+        `).join('') || '<p class="text-muted small">Tidak ada riwayat nota.</p>';
+    }
+
+    // DETAIL POPUP WORK ORDER (TIMELINE STYLE)
+    function showDetailWork(id) {
+        const w = dbBooking.find(item => item.id === id);
+        Swal.fire({
+            title: `<small>Work Order #${id}</small>`,
+            html: `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <small class="text-muted d-block">Alamat Pengerjaan:</small>
+                        <strong>${w.alamat || 'Alamat sesuai profil'}</strong>
                     </div>
-                    <div class="fw-bold my-1">Rp ${Number(n.total).toLocaleString('id-ID')}</div>
-                    <div class="text-muted small" style="font-size:0.7rem;">Invoice: ${n.id}</div>
+                    <h6 class="fw-bold mb-3">Progress Update:</h6>
+                    <div class="status-step">
+                        <div class="small fw-bold">${w.status}</div>
+                        <div class="text-muted small">${w.tanggal || w.tgl || ''}</div>
+                        <div class="small text-secondary mt-1">${w.judul} - ${w.deskripsi || 'Sedang dikerjakan tim teknisi.'}</div>
+                    </div>
+                </div>`,
+            showCloseButton: true,
+            confirmButtonText: 'Tutup'
+        });
+    }
+
+    // DETAIL POPUP NOTA (INVOICE STYLE + PDF)
+    function showDetailNote(id) {
+        const n = dbNota.find(item => item.id === id);
+        const printId = `print-nota-${id}`;
+
+        Swal.fire({
+            width: '750px',
+            html: `
+                <div id="${printId}" style="padding: 25px; text-align: left; background: white; color: #333; font-family: 'Segoe UI', sans-serif;">
+                    <div style="border-bottom: 3px solid #1a73e8; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="font-weight: bold; color: #1a73e8; margin: 0;">NANDA TEKNIK BANYUWANGI</h4>
+                            <p style="font-size: 0.75rem; color: #666; margin: 0;">Sukowidi Indah Residence D5, Banyuwangi. 68421</p>
+                            <p style="font-size: 0.75rem; color: #666; margin: 0;">WA: 082331201148 | www.nandateknik.com</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h5 style="font-weight: bold; margin: 0;">INVOICE</h5>
+                            <span style="color: #666;">#${n.id}</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem;">
+                        <div>
+                            <small style="color: #888;">Ditujukan Kepada:</small><br>
+                            <strong>${n.email}</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <small style="color: #888;">Tanggal Terbit:</small><br>
+                            <strong>${n.tanggal || n.tgl || ''}</strong>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-top: 1px solid #dee2e6; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 12px;">Deskripsi Layanan</th>
+                                <th style="padding: 12px; text-align: right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">${n.perihal || 'Servis & Maintenance'}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">Rp ${Number(n.total).toLocaleString('id-ID')}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td style="padding: 12px; text-align: right; font-weight: bold;">TOTAL AKHIR</td>
+                                <td style="padding: 12px; text-align: right; font-weight: bold; color: #1a73e8; font-size: 1.1rem;">Rp ${Number(n.total).toLocaleString('id-ID')}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div style="border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; font-size: 0.75rem;">
+                        <div style="background: #f1f3f4; padding: 15px; border-radius: 8px; width: 60%;">
+                            <strong style="display: block; margin-bottom: 5px; color: #1a73e8;">Pembayaran Transfer:</strong>
+                            <strong style="font-size: 1rem;">Bank BCA - 180 182 6011</strong><br>
+                            <span>a.n Nanda Krisbianto</span>
+                        </div>
+                        <div style="text-align: center; align-self: flex-end; width: 30%;">
+                            <p style="margin-bottom: 50px;">Hormat Kami,</p>
+                            <strong style="border-top: 1px solid #333; padding-top: 5px;">Nanda Teknik</strong>
+                        </div>
+                    </div>
                 </div>
-            `).join('');
-        } else { noteArea.innerHTML = ''; document.getElementById('noteTitle').style.display = 'none'; }
+                <div class="mt-4">
+                    <button class="btn btn-success rounded-pill px-4 shadow-sm" onclick="downloadPDF('${printId}', '${n.id}')">
+                        <i class="fas fa-file-pdf me-2"></i> Download Invoice (PDF)
+                    </button>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true
+        });
+    }
+
+    function downloadPDF(elementId, notaId) {
+        const element = document.getElementById(elementId);
+        const opt = {
+            margin: [10, 10],
+            filename: `Invoice_NandaTeknik_${notaId}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 </body>
