@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nanda Teknik - Cek Riwayat & Layanan</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="layout.css">
+    
+    <style>
+        :root { --p-blue: #0d6efd; --p-dark: #1e293b; }
+        body { background: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 100px; }
+        
+        /* Search Section ala Google */
+        .hero-search {
+            padding: 60px 20px 30px;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .google-box {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .google-box input {
+            width: 100%;
+            padding: 18px 25px 18px 55px;
+            border-radius: 50px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .google-box input:focus {
+            outline: none;
+            box-shadow: 0 8px 25px rgba(13, 110, 253, 0.15);
+            border-color: var(--p-blue);
+        }
+        .search-icon {
+            position: absolute;
+            left: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1.2rem;
+        }
+
+        /* Result Cards */
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border-left: 6px solid var(--p-blue);
+        }
+
+        /* Blog Section */
+        .blog-card {
+            background: white;
+            border-radius: 18px;
+            padding: 12px;
+            height: 100%;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: 0.3s;
+            text-decoration: none;
+            display: block;
+        }
+        .blog-card:hover { transform: translateY(-5px); border-color: var(--p-blue); }
+        .blog-title {
+            font-size: 0.9rem; font-weight: 700; color: var(--p-dark);
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; margin: 8px 0;
+        }
+
+        /* Floating Button */
+        .fab-button {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            z-index: 1050;
+        }
+        .btn-order {
+            background: var(--p-blue);
+            color: white;
+            padding: 15px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
+            text-decoration: none;
+            display: flex; align-items: center; gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-order:hover { transform: scale(1.05); color: white; background: #0052d4; }
+
+        .status-badge {
+            font-size: 0.7rem; padding: 4px 12px; border-radius: 10px; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero-search text-center">
+    <div class="container">
+        <div class="animate__animated animate__fadeIn">
+            <h2 class="fw-bold text-dark mb-1">Nanda Teknik</h2>
+            <p class="text-muted small mb-4">Solusi Kebutuhan Software, Network & Electrical</p>
+        </div>
+        
+        <div class="google-box animate__animated animate__zoomIn">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="mainSearch" placeholder="Cek No. Invoice, Email, atau Layanan..." oninput="handleSearch(this.value)">
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div id="searchResults">
+                <div class="text-center py-5 text-muted" id="initialState">
+                    <i class="fas fa-search-dollar fa-3x mb-3 opacity-25"></i>
+                    <p>Masukkan data Anda untuk melacak riwayat pekerjaan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <div class="d-flex align-items-center mb-4">
+            <h6 class="fw-bold m-0"><i class="fas fa-newspaper text-primary me-2"></i>Artikel Terbaru</h6>
+            <hr class="flex-grow-1 ms-3 opacity-25">
+        </div>
+        
+        <div id="blog-container" class="row g-3">
+            <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4 mb-5">
+            <a href="https://www.nandateknik.com" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-4">
+                Lihat Semua Artikel <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="fab-button animate__animated animate__bounceInUp">
+    <a href="buat-booking.html" class="btn-order">
+        <i class="fas fa-plus-circle fa-lg"></i>
+        <span>BUAT PEKERJAAN BARU</span>
+    </a>
+</div>
+
+<script src="config.js"></script>
+<script src="layout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    let dbData = [];
+
+    window.onload = async () => {
+        if(typeof initLayout === 'function') initLayout();
+        await fetchDatabase();
+        await fetchBlog();
+    };
+
+    // 1. Ambil Data dari Google Sheets via API
+    async function fetchDatabase() {
+        try {
+            const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
+            const r = await res.json();
+            if (r.success) dbData = r.data;
+        } catch (e) {
+            console.error("Gagal sinkron data invoice.");
+        }
+    }
+
+    // 2. Fungsi Pencarian Live
+    function handleSearch(query) {
+        const container = document.getElementById('searchResults');
+        
+        if (query.length < 3) {
+            container.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-search-dollar fa-3x mb-3 opacity-25"></i>
+                    <p>Masukkan minimal 3 karakter...</p>
+                </div>`;
+            return;
+        }
+
+        const filtered = dbData.filter(item => 
+            item.id.toString().toLowerCase().includes(query.toLowerCase()) ||
+            item.email.toLowerCase().includes(query.toLowerCase()) ||
+            (item.perihal && item.perihal.toLowerCase().includes(query.toLowerCase()))
+        );
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center py-5"><p class="text-muted">Data tidak ditemukan, Cah.</p></div>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(row => `
+            <div class="result-card animate__animated animate__fadeInUp">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-primary fw-bold small">#INV-${row.id}</span>
+                        <h6 class="fw-bold mt-1 mb-1">${row.perihal || 'Layanan Teknik'}</h6>
+                        <div class="text-muted small"><i class="far fa-user me-1"></i> ${row.email}</div>
+                    </div>
+                    <span class="status-badge bg-light text-primary border">${row.status}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="fw-bold fs-5 text-dark">Rp ${Number(row.total).toLocaleString('id-ID')}</span>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="viewDetail('${row.id}')">Lihat Nota</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 3. Ambil Artikel dari Blogspot (Blogger)
+    async function fetchBlog() {
+        const container = document.getElementById('blog-container');
+        const FEED_URL = encodeURIComponent(`https://www.nandateknik.com/feeds/posts/default?alt=rss`);
+        
+        try {
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${FEED_URL}`);
+            const data = await res.json();
+
+            if (data.status === 'ok') {
+                const items = data.items.slice(0, 3); // Ambil 3 saja
+                container.innerHTML = items.map(post => {
+                    // Cari gambar di konten
+                    const temp = document.createElement('div');
+                    temp.innerHTML = post.description;
+                    const img = temp.querySelector('img');
+                    const thumb = img ? img.src : 'https://via.placeholder.com/400x250?text=Nanda+Teknik';
+
+                    return `
+                        <div class="col-md-4">
+                            <a href="${post.link}" target="_blank" class="blog-card animate__animated animate__fadeIn">
+                                <img src="${thumb}" class="w-100 rounded-3" style="height:140px; object-fit:cover;">
+                                <div class="blog-date mt-2" style="font-size:0.7rem; color:#94a3b8;">${new Date(post.pubDate).toLocaleDateString('id-ID')}</div>
+                                <div class="blog-title">${post.title}</div>
+                                <div class="text-primary small fw-bold">Selengkapnya <i class="fas fa-arrow-right ms-1" style="font-size:0.7rem;"></i></div>
+                            </a>
+                        </div>`;
+                }).join('');
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="text-center small text-muted">Gagal memuat feed blog.</p>';
+        }
+    }
+
+    function viewDetail(id) {
+        const item = dbData.find(d => d.id == id);
+        if(item) {
+            Swal.fire({
+                title: 'Ringkasan Transaksi',
+                html: `
+                    <div class="text-start small">
+                        <p>ID: <b>#${item.id}</b><br>
+                        Perihal: <b>${item.perihal}</b><br>
+                        Total: <b>Rp ${Number(item.total).toLocaleString('id-ID')}</b><br>
+                        Status: <b class="text-primary">${item.status}</b></p>
+                    </div>`,
+                icon: 'info',
+                confirmButtonText: 'Oke Mantap'
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
