@@ -21,25 +21,24 @@
         }
         .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
-        /* Card Style */
+        /* Profile Card */
+        .profile-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white; border-radius: 20px; padding: 25px; margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Result Card */
         .result-card {
-            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
-            border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-            transition: 0.3s;
+            background: white; border-radius: 15px; padding: 18px; margin-bottom: 12px;
+            border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: 0.3s;
         }
-        .status-badge { font-size: 0.7rem; padding: 5px 12px; border-radius: 10px; font-weight: 700; text-transform: uppercase; }
-        .status-pending { background: #fff7ed; color: #ea580c; }
-        .status-approved { background: #f0fdf4; color: #16a34a; }
+        .section-title { font-weight: 800; color: var(--p-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        .status-badge { font-size: 0.65rem; padding: 4px 10px; border-radius: 8px; font-weight: 700; text-transform: uppercase; }
+        .badge-work { background: #e0f2fe; color: #0369a1; } /* Blue for Works */
+        .badge-note { background: #f0fdf4; color: #15803d; } /* Green for Notes */
 
-        /* Pagination */
-        .pagination-container { display: flex; justify-content: center; gap: 8px; margin-top: 25px; }
-        .page-btn { 
-            border: none; background: white; width: 40px; height: 40px; 
-            border-radius: 10px; font-weight: 600; color: #64748b; 
-        }
-        .page-btn.active { background: var(--p-blue); color: white; }
-
-        /* Floating Menu */
         .fab-menu { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         .btn-fab { 
             padding: 12px 20px; border-radius: 50px; border: none; font-weight: 700;
@@ -55,175 +54,150 @@
 <div class="container">
     <div class="search-container animate__animated animate__fadeIn">
         <h3 class="fw-bold text-dark">Nanda Teknik</h3>
-        <p class="text-muted small">Cari riwayat invoice atau nota Anda dengan mudah</p>
-        
+        <p class="text-muted small">Masukkan Email atau No. Invoice untuk melihat riwayat lengkap</p>
         <div class="google-box">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="searchInput" placeholder="No. Invoice / Email / Nama Pekerjaan..." oninput="resetPaginationSearch()">
+            <input type="text" id="searchInput" placeholder="Cari Email / Invoice..." oninput="handleUniversalSearch()">
         </div>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div id="displayArea">
-                </div>
-            <div id="paginationArea" class="pagination-container"></div>
-        </div>
-    </div>
+        <div class="col-lg-9">
+            <div id="profileArea"></div>
 
-    <div class="row justify-content-center mt-5">
-        <div class="col-lg-8">
-            <h6 class="fw-bold mb-3"><i class="fas fa-rss text-warning me-2"></i>Update Terbaru</h6>
-            <div id="blogArea" class="row g-3"></div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="workTitle" style="display:none" class="section-title"><i class="fas fa-tools text-primary"></i> Pekerjaan</div>
+                    <div id="workArea"></div>
+                </div>
+                <div class="col-md-6">
+                    <div id="noteTitle" style="display:none" class="section-title"><i class="fas fa-file-invoice-dollar text-success"></i> Nota & Invoice</div>
+                    <div id="noteArea"></div>
+                </div>
+            </div>
+
+            <div id="emptyState" class="text-center py-5 text-muted">
+                <i class="fas fa-search fa-3x mb-3 opacity-25"></i>
+                <p>Hasil pencarian akan muncul di sini...</p>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="fab-menu">
-    <a href="edit-pelanggan.html" class="btn-fab btn-edit animate__animated animate__fadeInUp">
-        <i class="fas fa-user-cog"></i> Ubah Data Saya (OTP)
-    </a>
-    <a href="buat-booking.html" class="btn-fab btn-new animate__animated animate__fadeInUp">
-        <i class="fas fa-plus-circle"></i> Buat Pekerjaan Baru
-    </a>
+    <a href="edit-pelanggan.html" class="btn-fab btn-edit"><i class="fas fa-user-cog"></i> Ubah Profil</a>
+    <a href="buat-booking.html" class="btn-fab btn-new"><i class="fas fa-plus-circle"></i> Booking Baru</a>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="config.js"></script>
 
 <script>
-    let allData = [];
-    let currentPage = 1;
-    const itemsPerPage = 5;
+    let dbPelanggan = [];
+    let dbBooking = [];
+    let dbNota = [];
 
     window.onload = async () => {
-        await loadInitialData();
-        await loadBlog();
+        // Load semua data di awal agar pencarian instan
+        await loadAllDatabase();
     };
 
-    async function loadInitialData() {
+    async function loadAllDatabase() {
         try {
-            const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
-            const r = await res.json();
-            if (r.success) {
-                allData = r.data.reverse();
-                renderCards();
-            }
-        } catch(e) { console.error("Data error"); }
+            // Kita ambil data dari 3 sheet berbeda
+            const [resP, resB, resN] = await Promise.all([
+                fetch(`${CONFIG.WEB_APP_URL}?action=getAllPelanggan`),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`), // Asumsi action read di GAS support sheet param
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`)
+            ]);
+            
+            const [p, b, n] = await Promise.all([resP.json(), resB.json(), resN.json()]);
+            
+            if(p.success) dbPelanggan = p.data;
+            // Catatan: Pastikan Backend GAS mengembalikan data dalam format array yang bersih
+            dbBooking = b.data || [];
+            dbNota = n.data || [];
+        } catch(e) { console.error("Database Sync Error"); }
     }
 
-    function resetPaginationSearch() {
-        currentPage = 1;
-        renderCards();
-    }
-
-    function renderCards() {
+    function handleUniversalSearch() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const area = document.getElementById('displayArea');
-        const pagArea = document.getElementById('paginationArea');
+        const profileArea = document.getElementById('profileArea');
+        const workArea = document.getElementById('workArea');
+        const noteArea = document.getElementById('noteArea');
+        const emptyState = document.getElementById('emptyState');
 
-        // Filtering
-        const filtered = allData.filter(item => 
-            item.id.toString().includes(query) || 
-            item.email.toLowerCase().includes(query) ||
-            (item.perihal && item.perihal.toLowerCase().includes(query))
-        );
-
-        // Pagination Logic
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const paginated = filtered.slice(start, end);
-        const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
-        if (filtered.length === 0) {
-            area.innerHTML = `<div class="text-center p-5 text-muted">Data tidak ditemukan.</div>`;
-            pagArea.innerHTML = '';
+        if (query.length < 3) {
+            profileArea.innerHTML = workArea.innerHTML = noteArea.innerHTML = '';
+            emptyState.style.display = 'block';
+            document.getElementById('workTitle').style.display = document.getElementById('noteTitle').style.display = 'none';
             return;
         }
 
-        area.innerHTML = paginated.map(row => `
-            <div class="result-card animate__animated animate__fadeInUp">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <span class="text-muted small">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
-                        <h6 class="fw-bold mt-1 mb-0 text-dark">${row.perihal || 'Pekerjaan Teknik'}</h6>
-                        <div class="small text-muted">${row.email}</div>
-                    </div>
-                    <span class="status-badge status-${row.status.toLowerCase()}">${row.status}</span>
-                </div>
-                <hr class="my-3 opacity-25">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</div>
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-light border" onclick='viewDetail(${JSON.stringify(row)})'><i class="fas fa-eye me-1"></i> Detail</button>
-                        <button class="btn btn-sm btn-primary" onclick='downloadNota(${JSON.stringify(row)})'><i class="fas fa-download me-1"></i> PDF</button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        // 1. Cari Profil Pelanggan (Berdasarkan Email atau Nama)
+        const user = dbPelanggan.find(u => u[1].toLowerCase().includes(query) || u[0].toLowerCase().includes(query));
+        
+        // 2. Cari Pekerjaan (Booking)
+        const works = dbBooking.filter(w => w[1].toLowerCase().includes(query) || w[0].toLowerCase().includes(query));
+        
+        // 3. Cari Nota (Penawaran)
+        const notes = dbNota.filter(n => n.email.toLowerCase().includes(query) || n.id.toLowerCase().includes(query));
 
-        // Render Page Buttons
-        let btnHtml = '';
-        for(let i=1; i<=totalPages; i++) {
-            btnHtml += `<button class="page-btn ${i===currentPage?'active':''}" onclick="changePage(${i})">${i}</button>`;
+        if (!user && works.length === 0 && notes.length === 0) {
+            emptyState.innerHTML = "Data tidak ditemukan...";
+            return;
         }
-        pagArea.innerHTML = btnHtml;
-    }
 
-    function changePage(p) { currentPage = p; renderCards(); window.scrollTo(0,0); }
+        emptyState.style.display = 'none';
 
-    // Fitur Detail Modal
-    function viewDetail(data) {
-        let itemHtml = data.items_json.map(it => `
-            <div class="d-flex justify-content-between small border-bottom py-2">
-                <span>${it.nama} (x${it.qty})</span>
-                <span class="fw-bold">Rp ${Number(it.harga * it.qty).toLocaleString('id-ID')}</span>
-            </div>
-        `).join('');
-
-        Swal.fire({
-            title: 'Detail Nota #' + data.id,
-            html: `<div class="text-start">${itemHtml} <div class="text-end mt-2 fw-bold text-primary">Total: Rp ${Number(data.total).toLocaleString('id-ID')}</div></div>`,
-            confirmButtonText: 'Tutup'
-        });
-    }
-
-    // Fitur Download PDF (Sama dengan script penawaran kamu sebelumnya)
-    function downloadNota(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(16); doc.text("NOTA PENAWARAN - NANDA TEKNIK", 105, 20, {align:'center'});
-        doc.setFontSize(10); doc.text(`No: #${data.id} | Kepada: ${data.email} | Perihal: ${data.perihal}`, 15, 35);
-        
-        const body = data.items_json.map((it, i) => [i+1, it.nama, it.qty, Number(it.harga).toLocaleString('id-ID'), Number(it.harga*it.qty).toLocaleString('id-ID')]);
-        doc.autoTable({ startY: 45, head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Subtotal']], body: body });
-        
-        doc.text(`Total Keseluruhan: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, doc.lastAutoTable.finalY + 10, {align:'right'});
-        doc.save(`Nota_${data.id}.pdf`);
-    }
-
-    // Load Blog Cuplikan
-    async function loadBlog() {
-        const area = document.getElementById('blogArea');
-        try {
-            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent('https://www.nandateknik.com/feeds/posts/default?alt=rss')}`);
-            const d = await res.json();
-            if(d.status === 'ok') {
-                area.innerHTML = d.items.slice(0, 2).map(post => `
-                    <div class="col-md-6">
-                        <a href="${post.link}" target="_blank" class="text-decoration-none">
-                            <div class="bg-white p-3 rounded-4 shadow-sm h-100 border">
-                                <div class="fw-bold text-dark small text-truncate">${post.title}</div>
-                                <div class="text-primary smaller fw-bold mt-2" style="font-size: 0.7rem;">BACA ARTIKEL <i class="fas fa-arrow-right"></i></div>
+        // Render Profil
+        if(user) {
+            profileArea.innerHTML = `
+                <div class="profile-card animate__animated animate__fadeIn">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:60px; height:60px;">
+                                <i class="fas fa-user fa-2x"></i>
                             </div>
-                        </a>
+                        </div>
+                        <div class="col">
+                            <h5 class="fw-bold mb-0">${user[0]}</h5>
+                            <p class="small mb-0 opacity-75">${user[1]} | ${user[3]}</p>
+                            <p class="small mb-0 mt-1"><i class="fas fa-map-marker-alt"></i> ${user[7] || 'Alamat belum diatur'}</p>
+                        </div>
                     </div>
-                `).join('');
-            }
-        } catch(e) { area.innerHTML = ''; }
+                </div>`;
+        } else { profileArea.innerHTML = ''; }
+
+        // Render Pekerjaan
+        if(works.length > 0) {
+            document.getElementById('workTitle').style.display = 'flex';
+            workArea.innerHTML = works.map(w => `
+                <div class="result-card animate__animated animate__fadeInUp">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="small fw-bold text-primary mb-1">#${w[0]}</div>
+                        <span class="status-badge badge-work">${w[4]}</span>
+                    </div>
+                    <h6 class="fw-bold mb-1 small">${w[2]}</h6>
+                    <div class="text-muted" style="font-size:0.75rem;"><i class="far fa-calendar-alt"></i> ${w[3]}</div>
+                </div>
+            `).join('');
+        } else { workArea.innerHTML = ''; document.getElementById('workTitle').style.display = 'none'; }
+
+        // Render Nota
+        if(notes.length > 0) {
+            document.getElementById('noteTitle').style.display = 'flex';
+            noteArea.innerHTML = notes.map(n => `
+                <div class="result-card animate__animated animate__fadeInUp">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="small fw-bold text-success mb-1">#${n.id}</div>
+                        <span class="status-badge badge-note">${n.status}</span>
+                    </div>
+                    <h6 class="fw-bold mb-1 small">${n.perihal || 'Invoice Layanan'}</h6>
+                    <div class="fw-bold text-dark">Rp ${Number(n.total).toLocaleString('id-ID')}</div>
+                </div>
+            `).join('');
+        } else { noteArea.innerHTML = ''; document.getElementById('noteTitle').style.display = 'none'; }
     }
 </script>
 </body>
