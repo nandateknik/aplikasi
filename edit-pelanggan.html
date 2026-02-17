@@ -3,88 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Data Pelanggan CRM</title>
+    <title>Edit Pelanggan Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --primary-color: #f6c23e; --secondary-color: #4e73df; --bg-color: #f4f7f6; }
-        body { background-color: var(--bg-color); font-family: 'Segoe UI', sans-serif; color: #333; }
+        :root { --primary-color: #f6c23e; --secondary-color: #4e73df; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
         .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
         .header-section { background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%); color: white; padding: 30px 20px; text-align: center; }
-        .form-label { font-weight: 600; font-size: 0.85rem; color: #555; }
-        .form-control { border-radius: 10px; padding: 12px; border: 1px solid #ddd; font-size: 0.9rem; }
-        #map { height: 280px; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn-primary { border-radius: 10px; padding: 12px; font-weight: 600; background: var(--secondary-color); border: none; }
+        .form-label { font-weight: 600; font-size: 0.85rem; }
+        #map { height: 250px; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .btn-verify { border-radius: 0 10px 10px 0; background: #333; color: white; border: none; }
-        .admin-badge { background: #e74a3b; color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 5px; margin-left: 5px; }
         .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="spinner-overlay" id="loader">
     <div class="spinner-border text-warning" role="status"></div>
-    <span class="mt-2 fw-bold">Menghubungkan Database...</span>
+    <span class="mt-2 fw-bold">Memproses...</span>
 </div>
 
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-6">
             <div class="card main-card">
                 <div class="header-section">
                     <h4 class="mb-1">Update Data Pelanggan</h4>
-                    <p class="small mb-0 opacity-75">Pastikan data Anda selalu yang terbaru</p>
+                    <p class="small mb-0 opacity-75">Cari email untuk mengubah data</p>
                 </div>
                 
                 <div class="card-body p-4">
-                    <div id="adminPanel" class="form-check form-switch mb-4" style="display: none;">
-                        <input class="form-check-input" type="checkbox" id="isAdmin">
-                        <label class="form-check-label small fw-bold" for="isAdmin">
-                            Mode Admin <span class="admin-badge">Bypass OTP</span>
-                        </label>
-                    </div>
-
-                    <div class="mb-4" id="emailSection">
-                        <label class="form-label">Masukkan Email Terdaftar</label>
+                    <div class="mb-4">
+                        <label class="form-label">Email Terdaftar</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                            <input type="email" id="email" class="form-control border-start-0" placeholder="user@mail.com">
+                            <span class="input-group-text bg-light"><i class="fas fa-at"></i></span>
+                            <input type="email" id="email" class="form-control" placeholder="user@mail.com">
                             <button class="btn btn-verify px-3" onclick="checkRegisteredEmail()">Cari</button>
                         </div>
                     </div>
 
                     <div id="fullForm" style="display:none;" class="fade-in">
                         <div id="otpSection" class="card bg-warning bg-opacity-10 border-0 p-3 mb-4">
-                            <label class="form-label text-dark"><i class="fas fa-shield-alt me-1"></i> Verifikasi OTP</label>
-                            <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="------">
-                            <button class="btn btn-sm btn-link text-dark text-decoration-none p-0 fw-bold" id="resendBtn" disabled onclick="sendEditOTP()">Kirim Ulang OTP</button>
+                            <label class="form-label text-dark fw-bold">Verifikasi OTP</label>
+                            <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="Kode OTP">
+                            <button class="btn btn-sm btn-link text-dark text-decoration-none p-0 fw-bold" id="resendBtn" disabled onclick="sendEditOTP()">Kirim Ulang</button>
                         </div>
 
-                        <hr class="my-4">
-                        
                         <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
+                            <label class="form-label">Nama Pelanggan</label>
                             <input type="text" id="nama" class="form-control">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nomor WhatsApp</label>
-                            <input type="number" id="whatsapp" class="form-control">
+                            <label class="form-label">Nomor WhatsApp (wa)</label>
+                            <input type="number" id="wa" class="form-control" placeholder="628xxxx">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Update Lokasi</label>
+                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi (Lat, Lang)</label>
                             <div id="map"></div>
-                            <textarea id="alamat" class="form-control mt-2" rows="3"></textarea>
-                            <input type="hidden" id="lat">
-                            <input type="hidden" id="lang">
+                            <textarea id="alamat" class="form-control mt-2" rows="3" placeholder="Alamat lengkap"></textarea>
+                            <div class="row mt-2">
+                                <div class="col"><input type="text" id="lat" class="form-control form-control-sm" readonly></div>
+                                <div class="col"><input type="text" id="lang" class="form-control form-control-sm" readonly></div>
+                            </div>
                         </div>
 
-                        <button class="btn btn-primary w-100 shadow" onclick="updateData()">
-                            <i class="fas fa-save me-2"></i> Simpan Perubahan
+                        <button class="btn btn-primary w-100 shadow py-2" onclick="updateData()">
+                            <i class="fas fa-save me-2"></i> Update Data Sekarang
                         </button>
                     </div>
                 </div>
@@ -101,19 +89,12 @@
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzFO1zm_iwqiYsUs-bnfcNPTIRGPJg8lY5fC0Pg0Phe5jx65eRl3s_b2ua4PHu-pgM4/exec';
     let map, marker, serverOTP;
 
-    window.onload = function() {
-        if(localStorage.getItem('role') === 'admin') {
-            document.getElementById('adminPanel').style.display = 'block';
-        }
-    };
-
     async function checkRegisteredEmail() {
         const email = document.getElementById('email').value;
-        if(!email) return Swal.fire('Oops!', 'Masukkan email dulu bro', 'warning');
+        if(!email) return Swal.fire('Error', 'Email tidak boleh kosong', 'warning');
 
         showLoader(true);
         try {
-            // Kita gunakan action 'verifyEmail' yang sudah ada di Backendmu
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'verifyEmail', email: email })
@@ -122,39 +103,30 @@
             showLoader(false);
 
             if(result.exists) {
-                // Email ketemu! Isi data lama ke form
-                fillFormData(result.data); // Asumsi result.data berisi {nama, wa, alamat, lat, lang}
+                // Sesuai field sheet: nama|email|tanggal|wa|lat|lang|is_active|alamat
+                const d = result.data;
+                document.getElementById('nama').value = d.nama || '';
+                document.getElementById('wa').value = d.wa || '';
+                document.getElementById('lat').value = d.lat || '';
+                document.getElementById('lang').value = d.lang || '';
+                document.getElementById('alamat').value = d.alamat || '';
                 
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
-                initMap(result.data.lat, result.data.lang);
-
-                if (!document.getElementById('isAdmin').checked) {
-                    sendEditOTP();
-                } else {
-                    document.getElementById('otpSection').style.display = 'none';
-                }
+                
+                initMap(d.lat, d.lang);
+                sendEditOTP();
             } else {
-                Swal.fire('Tidak Ditemukan', 'Email ini belum terdaftar di sistem kami.', 'error');
+                Swal.fire('Data Tidak Ada', 'Email belum terdaftar.', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal cek email', 'error');
+            Swal.fire('Error', 'Gagal cek database', 'error');
         }
-    }
-
-    function fillFormData(data) {
-        document.getElementById('nama').value = data.nama || '';
-        document.getElementById('whatsapp').value = data.wa || '';
-        document.getElementById('alamat').value = data.alamat || '';
-        document.getElementById('lat').value = data.lat || -6.2000;
-        document.getElementById('lang').value = data.lang || 106.8166;
     }
 
     async function sendEditOTP() {
         const email = document.getElementById('email').value;
-        document.getElementById('otpSection').style.display = 'block';
-        
         try {
             const res = await fetch(WEB_APP_URL, {
                 method: 'POST',
@@ -164,38 +136,27 @@
             if(result.success) {
                 serverOTP = result.otp;
                 startResendTimer();
-                Swal.fire('OTP Terkirim', 'Cek email Anda untuk kode verifikasi edit data.', 'success');
+                Swal.fire('OTP Dikirim', 'Cek email Anda untuk verifikasi.', 'info');
             }
-        } catch (e) {
-            Swal.fire('Gagal', 'Gagal mengirim OTP', 'error');
-        }
+        } catch (e) { console.error(e); }
     }
 
     function initMap(lat, lng) {
         lat = parseFloat(lat) || -6.2000;
         lng = parseFloat(lng) || 106.8166;
-        
-        if (map) {
-            map.setView([lat, lng], 16);
-            marker.setLatLng([lat, lng]);
-            return;
-        };
+        if (map) return;
 
         map = L.map('map').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        L.Control.geocoder({ defaultMarkGeocode: false }).on('markgeocode', function(e) {
-            let center = e.geocode.center;
-            map.setView(center, 16);
-            marker.setLatLng(center);
-            updateLocationFields(center.lat, center.lng);
-        }).addTo(map);
-
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-        marker.on('dragend', (e) => updateLocationFields(e.target.getLatLng().lat, e.target.getLatLng().lng));
+        
+        marker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            updateLocationInfo(pos.lat, pos.lng);
+        });
     }
 
-    function updateLocationFields(lat, lng) {
+    function updateLocationInfo(lat, lng) {
         document.getElementById('lat').value = lat;
         document.getElementById('lang').value = lng;
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
@@ -205,16 +166,15 @@
     }
 
     async function updateData() {
-        const isAdmin = document.getElementById('isAdmin').checked;
-        if (!isAdmin && document.getElementById('otpInput').value != serverOTP) {
-            return Swal.fire('OTP Salah', 'Verifikasi gagal!', 'error');
+        if (document.getElementById('otpInput').value != serverOTP) {
+            return Swal.fire('Verifikasi Gagal', 'Kode OTP salah!', 'error');
         }
 
         const data = {
-            action: 'updatePelanggan', // Pastikan di .gs ada case 'updatePelanggan'
+            action: 'updatePelanggan',
             email: document.getElementById('email').value,
             nama: document.getElementById('nama').value,
-            whatsapp: document.getElementById('whatsapp').value,
+            wa: document.getElementById('wa').value, // Sesuai field sheet
             lat: document.getElementById('lat').value,
             lang: document.getElementById('lang').value,
             alamat: document.getElementById('alamat').value
@@ -227,11 +187,11 @@
             showLoader(false);
 
             if(result.success) {
-                Swal.fire('Berhasil!', 'Data pelanggan telah diperbarui.', 'success').then(() => location.reload());
+                Swal.fire('Berhasil!', 'Data pelanggan diperbarui.', 'success').then(() => location.reload());
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal update data', 'error');
+            Swal.fire('Error', 'Gagal update database', 'error');
         }
     }
 
@@ -242,7 +202,7 @@
         let timer = setInterval(() => {
             if(timeLeft <= 0) {
                 clearInterval(timer);
-                btn.innerText = "Kirim Ulang OTP";
+                btn.innerText = "Kirim Ulang";
                 btn.disabled = false;
             } else {
                 btn.innerText = `Kirim Ulang (${timeLeft}s)`;
