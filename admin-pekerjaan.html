@@ -26,29 +26,14 @@
 
         .swal2-container { z-index: 3000 !important; }
 
-        #modalUpdate .modal-body { 
-            padding-bottom: 160px !important; 
-        }
-        
+        #modalUpdate .modal-body { padding-bottom: 160px !important; }
         #modalUpdate .modal-footer { 
-            position: fixed; 
-            bottom: 80px; 
-            left: 0;
-            right: 0;
-            width: 100%; 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(10px);
-            z-index: 1055; 
-            box-shadow: 0 -10px 25px rgba(0,0,0,0.08);
-            padding: 15px 20px !important;
-            border-top: 1px solid #eee !important;
+            position: fixed; bottom: 80px; left: 0; right: 0; width: 100%; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            z-index: 1055; box-shadow: 0 -10px 25px rgba(0,0,0,0.08);
+            padding: 15px 20px !important; border-top: 1px solid #eee !important;
         }
-
-        .btn-action-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
+        .btn-action-group { display: flex; gap: 10px; width: 100%; }
     </style>
 </head>
 <body>
@@ -103,7 +88,6 @@
                         </div>
                     </div>
                     <div id="itemList"></div>
-                    
                     <div class="d-flex justify-content-between mt-3 pt-2 border-top">
                         <span class="fw-bold">TOTAL</span>
                         <span class="fw-bold text-primary" id="txtTotal">Rp 0</span>
@@ -174,9 +158,7 @@
                 allData = result.data; 
                 applyFilter(); 
             }
-        } catch(e) {
-            Swal.fire('Error', 'Gagal memuat data backend', 'error');
-        }
+        } catch(e) { Swal.fire('Error', 'Gagal memuat data backend', 'error'); }
     }
 
     function applyFilter() {
@@ -253,16 +235,14 @@
                 
                 const btnMaps = document.getElementById('btnMapsContainer');
                 if(fullDataDetail.lat && fullDataDetail.lang) {
+                    // FIX: Template string template
                     btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
                 } else { btnMaps.innerHTML = ""; }
 
                 document.getElementById('statusSelect').value = fullDataDetail.status;
                 document.getElementById('catatanProgres').value = ""; 
-                
-                // --- FIX: Isi selectedItems & Render ---
                 selectedItems = fullDataDetail.notaItems || [];
                 renderItems();
-                
                 renderTimeline(fullDataDetail.history || []);
                 myModal.show();
             }
@@ -291,20 +271,18 @@
     function renderItems() {
         let total = 0;
         const container = document.getElementById('itemList');
-        
         if(selectedItems.length === 0) {
             container.innerHTML = '<div class="text-center text-muted small py-2">Belum ada item nota.</div>';
             document.getElementById('txtTotal').innerText = "Rp 0";
             return;
         }
-
         container.innerHTML = selectedItems.map((it, idx) => {
-            const harga = Number(it.harga) || 0;
-            const qty = Number(it.qty) || 0;
-            const sub = harga * qty;
+            const h = Number(it.harga);
+            const q = Number(it.qty);
+            const sub = h * q;
             total += sub;
             return `<div class="d-flex justify-content-between p-2 bg-white rounded border mb-2 small">
-                <div><b>${it.nama}</b><br><span class="text-muted">Rp ${harga.toLocaleString('id-ID')} x ${qty}</span></div>
+                <div><b>${it.nama}</b><br><span class="text-muted">Rp ${h.toLocaleString('id-ID')} x ${q}</span></div>
                 <div class="text-end">
                     <span class="fw-bold d-block text-primary">Rp ${sub.toLocaleString('id-ID')}</span>
                     <i class="fas fa-trash text-danger" style="cursor:pointer" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
@@ -331,7 +309,6 @@
 
     async function loadDaftarHarga() {
         const el = document.getElementById('jasaSelect');
-        if(!el) return;
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
             const r = await res.json();
@@ -344,15 +321,9 @@
     async function saveSemuaPerubahan() {
         const btn = document.getElementById('btnSimpan');
         btn.disabled = true;
-        Swal.fire({ 
-            title: 'Menyimpan...', 
-            allowOutsideClick: false, 
-            target: document.getElementById('modalUpdate'),
-            didOpen: () => Swal.showLoading() 
-        });
+        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading() });
         const payload = {
-            action: 'updateFullData', 
-            id: currentId,
+            action: 'updateFullData', id: currentId,
             status: document.getElementById('statusSelect').value,
             keterangan: document.getElementById('catatanProgres').value || "Update data oleh Admin",
             items: selectedItems
@@ -362,14 +333,8 @@
             const r = await res.json();
             btn.disabled = false;
             if(r.success) { 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Sip!',
-                    text: 'Database wis diupdate.',
-                    target: document.getElementById('modalUpdate')
-                }).then(() => {
-                    myModal.hide(); 
-                    loadRiwayat();
+                Swal.fire({ icon: 'success', title: 'Sip!', text: 'Database wis diupdate.', target: document.getElementById('modalUpdate') }).then(() => {
+                    myModal.hide(); loadRiwayat();
                 });
             }
         } catch(e) {
@@ -379,120 +344,63 @@
     }
 
     async function hapusData() {
-        const confirm = await Swal.fire({
-            title: 'Hapus Data?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus!',
-            target: document.getElementById('modalUpdate')
-        });
+        const confirm = await Swal.fire({ title: 'Hapus Data?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus!', target: document.getElementById('modalUpdate') });
         if(confirm.isConfirmed) {
             Swal.fire({title: 'Menghapus...', target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading()});
-            const res = await fetch(CONFIG.WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) 
-            });
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) });
             const r = await res.json();
-            if(r.success) {
-                myModal.hide();
-                Swal.fire('Terhapus', 'Data wis ilang.', 'success');
-                loadRiwayat();
-            }
+            if(r.success) { myModal.hide(); Swal.fire('Terhapus', 'Data wis ilang.', 'success'); loadRiwayat(); }
         }
     }
 
     function downloadPDF() {
         if(!fullDataDetail || selectedItems.length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Item Kosong',
-                text: 'Tambahkan item jasa/barang dhisik, Bro!',
-                target: document.getElementById('modalUpdate')
-            });
+            Swal.fire({ icon: 'warning', title: 'Item Kosong', text: 'Isi item nota dhisik Bro!', target: document.getElementById('modalUpdate') });
             return;
         }
-
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
-        const primaryColor = [13, 110, 253]; 
-        const themeColor = [22, 163, 74];    
-        const isLunas = document.getElementById('statusSelect').value === 'Lunas';
-        const finalColor = isLunas ? themeColor : primaryColor;
+        const color = document.getElementById('statusSelect').value === 'Lunas' ? [22, 163, 74] : [13, 110, 253];
 
-        doc.setFillColor(...finalColor);
-        doc.rect(0, 0, 210, 15, 'F');
-        doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
+        // Header
+        doc.setFillColor(...color); doc.rect(0, 0, 210, 15, 'F');
+        doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...color);
         doc.text("NANDA TEKNIK BANYUWANGI", 15, 30);
-        
-        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
         doc.text("SOFTWARE, NETWORK & ELECTRICAL ENGINEERING", 15, 36);
-        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 15, 41);
-        doc.text("WA: 082331201148", 15, 46);
+        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421 | WA: 082331201148", 15, 41);
+        doc.line(15, 48, 195, 48);
 
-        doc.setLineDashPattern([1, 1], 0);
-        doc.setDrawColor(200, 200, 200);
-        doc.line(15, 52, 195, 52);
-        doc.setLineDashPattern([], 0);
+        // Client Info
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
+        doc.text(document.getElementById('statusSelect').value === 'Lunas' ? "NOTA LUNAS" : "NOTA TAGIHAN", 15, 58);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi: #${currentId}`, 15, 65);
+        doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 15, 70);
+        doc.text(`Kepada: ${fullDataDetail.nama}`, 120, 65);
+        doc.text(`Alamat: ${fullDataDetail.alamat || '-'}`, 120, 70, {maxWidth: 75});
 
-        doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 41, 59);
-        doc.text(isLunas ? "NOTA PEMBAYARAN (LUNAS)" : "NOTA SERVICE / TAGIHAN", 15, 62);
-
-        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(0);
-        doc.text(`No. Transaksi : #${currentId}`, 15, 72);
-        doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 77);
-        
-        doc.setFont("helvetica", "bold"); doc.text("KEPADA YTH:", 125, 72);
-        doc.setFont("helvetica", "normal");
-        doc.text(`${fullDataDetail.nama}`, 125, 77);
-        doc.text(`${fullDataDetail.alamat || '-'}`, 125, 82, { maxWidth: 70 });
-
-        const tableBody = selectedItems.map((it, index) => [
-            { content: index + 1, styles: { halign: 'center' } },
-            it.nama,
-            { content: it.qty.toString(), styles: { halign: 'center' } },
-            `Rp ${Number(it.harga).toLocaleString('id-ID')}`,
-            { content: `Rp ${(Number(it.harga) * Number(it.qty)).toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold' } }
-        ]);
-
+        // Table
+        const rows = selectedItems.map((it, i) => [i+1, it.nama, it.qty, `Rp ${Number(it.harga).toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]);
         doc.autoTable({
-            startY: 90,
-            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'SUBTOTAL']],
-            body: tableBody,
-            theme: 'grid',
-            headStyles: { fillColor: finalColor, halign: 'center' },
-            styles: { fontSize: 9 }
+            startY: 80, head: [['NO', 'ITEM', 'QTY', 'HARGA', 'SUBTOTAL']], body: rows,
+            headStyles: { fillColor: color }, theme: 'grid'
         });
 
+        // Total & Payment
         const finalY = doc.lastAutoTable.finalY + 10;
-        let totalVal = selectedItems.reduce((acc, it) => acc + (Number(it.harga) * Number(it.qty)), 0);
-        
-        doc.setLineDashPattern([1, 1], 0);
-        doc.setDrawColor(...finalColor);
-        doc.rect(15, finalY - 5, 80, 25);
-        
-        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
-        doc.text("INFO PEMBAYARAN:", 20, finalY);
-        doc.setFont("helvetica", "normal"); doc.setTextColor(0);
-        doc.text("Bank BCA", 20, finalY + 5);
+        let total = selectedItems.reduce((a, b) => a + (b.harga * b.qty), 0);
         doc.setFont("helvetica", "bold");
-        doc.text("No. Rek: 1801407331", 20, finalY + 10);
-        doc.text("A/N: NANDA TEKNIK", 20, finalY + 15);
-        doc.setLineDashPattern([], 0);
+        doc.text(`TOTAL PEMBAYARAN: Rp ${total.toLocaleString('id-ID')}`, 195, finalY, {align: 'right'});
+        
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text("Pembayaran Transfer:", 15, finalY + 5);
+        doc.text("BCA - 1801407331 (NANDA TEKNIK)", 15, finalY + 10);
 
-        doc.setFillColor(245, 245, 245);
-        doc.rect(130, finalY - 5, 65, 12, 'F');
-        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
-        doc.text("TOTAL:", 135, finalY + 3);
-        doc.text(`Rp ${totalVal.toLocaleString('id-ID')}`, 190, finalY + 3, { align: "right" });
+        doc.text("Hormat Kami,", 160, finalY + 20);
+        doc.text("NANDA TEKNIK", 160, finalY + 40);
 
-        const footerY = finalY + 40;
-        doc.setFontSize(9); doc.setTextColor(0); doc.setFont("helvetica", "normal");
-        doc.text("Penerima,", 30, footerY);
-        doc.text("Hormat Kami,", 150, footerY);
-        doc.text(`( ${fullDataDetail.nama.substring(0, 20)} )`, 20, footerY + 25);
-        doc.text("NANDA TEKNIK", 150, footerY + 25);
-
-        doc.save(`Nota_${currentId}_${fullDataDetail.nama}.pdf`);
+        doc.save(`Nota_${fullDataDetail.nama}_${currentId}.pdf`);
     }
 </script>
 </body>
