@@ -13,6 +13,7 @@
         :root { --p-blue: #0d6efd; --p-dark: #1e293b; }
         body { background: #f4f7fe; font-family: 'Inter', sans-serif; padding: 20px 0 100px; }
         
+        /* Container Search */
         .search-container { max-width: 700px; margin: 0 auto 30px; text-align: center; }
         .google-box { position: relative; margin-top: 20px; }
         .google-box input {
@@ -36,9 +37,14 @@
         .section-title { font-weight: 800; color: var(--p-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
         
         .status-badge { font-size: 0.65rem; padding: 4px 10px; border-radius: 8px; font-weight: 700; text-transform: uppercase; }
-        .badge-work { background: #e0f2fe; color: #0369a1; } /* Blue for Works */
-        .badge-note { background: #f0fdf4; color: #15803d; } /* Green for Notes */
+        .badge-work { background: #e0f2fe; color: #0369a1; }
+        .badge-note { background: #f0fdf4; color: #15803d; }
 
+        /* Blog Section */
+        .blog-section { margin-top: 40px; border-top: 2px dashed #cbd5e1; padding-top: 30px; }
+        .blog-frame { border-radius: 20px; overflow: hidden; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+        /* FAB */
         .fab-menu { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         .btn-fab { 
             padding: 12px 20px; border-radius: 50px; border: none; font-weight: 700;
@@ -54,10 +60,10 @@
 <div class="container">
     <div class="search-container animate__animated animate__fadeIn">
         <h3 class="fw-bold text-dark">Nanda Teknik</h3>
-        <p class="text-muted small">Masukkan Email atau No. Invoice untuk melihat riwayat lengkap</p>
+        <p class="text-muted small">Cek riwayat servis, nota, dan berita terbaru kami</p>
         <div class="google-box">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="searchInput" placeholder="Cari Email / Invoice..." oninput="handleUniversalSearch()">
+            <input type="text" id="searchInput" placeholder="Cari Email atau No. Invoice..." oninput="handleUniversalSearch()">
         </div>
     </div>
 
@@ -67,26 +73,33 @@
 
             <div class="row">
                 <div class="col-md-6">
-                    <div id="workTitle" style="display:none" class="section-title"><i class="fas fa-tools text-primary"></i> Pekerjaan</div>
+                    <div id="workTitle" style="display:none" class="section-title"><i class="fas fa-tools text-primary"></i> Riwayat Servis</div>
                     <div id="workArea"></div>
                 </div>
                 <div class="col-md-6">
-                    <div id="noteTitle" style="display:none" class="section-title"><i class="fas fa-file-invoice-dollar text-success"></i> Nota & Invoice</div>
+                    <div id="noteTitle" style="display:none" class="section-title"><i class="fas fa-file-invoice-dollar text-success"></i> Nota & Penawaran</div>
                     <div id="noteArea"></div>
                 </div>
             </div>
 
             <div id="emptyState" class="text-center py-5 text-muted">
-                <i class="fas fa-search fa-3x mb-3 opacity-25"></i>
-                <p>Hasil pencarian akan muncul di sini...</p>
+                <i class="fas fa-fingerprint fa-3x mb-3 opacity-25"></i>
+                <p>Silakan ketik Email atau No. Invoice Anda</p>
+            </div>
+
+            <div class="blog-section animate__animated animate__fadeIn">
+                <div class="section-title"><i class="fas fa-newspaper text-danger"></i> Berita & Tips Nanda Teknik</div>
+                <div class="blog-frame">
+                    <iframe src="https://www.nandateknik.com" style="width:100%; height:500px; border:none;" title="Berita Nanda Teknik"></iframe>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="fab-menu">
-    <a href="edit-pelanggan.html" class="btn-fab btn-edit"><i class="fas fa-user-cog"></i> Ubah Profil</a>
-    <a href="buat-booking.html" class="btn-fab btn-new"><i class="fas fa-plus-circle"></i> Booking Baru</a>
+    <a href="edit-pelanggan.html" class="btn-fab btn-edit"><i class="fas fa-user-cog"></i> Update Profil</a>
+    <a href="buat-booking.html" class="btn-fab btn-new"><i class="fas fa-plus-circle"></i> Buat Booking</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -98,26 +111,26 @@
     let dbNota = [];
 
     window.onload = async () => {
-        // Load semua data di awal agar pencarian instan
         await loadAllDatabase();
     };
 
     async function loadAllDatabase() {
         try {
-            // Kita ambil data dari 3 sheet berbeda
+            // Kita pakai action 'read' untuk semua agar formatnya konsisten (Objek)
             const [resP, resB, resN] = await Promise.all([
-                fetch(`${CONFIG.WEB_APP_URL}?action=getAllPelanggan`),
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`), // Asumsi action read di GAS support sheet param
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`),
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`)
             ]);
             
             const [p, b, n] = await Promise.all([resP.json(), resB.json(), resN.json()]);
             
-            if(p.success) dbPelanggan = p.data;
-            // Catatan: Pastikan Backend GAS mengembalikan data dalam format array yang bersih
+            dbPelanggan = p.data || [];
             dbBooking = b.data || [];
             dbNota = n.data || [];
-        } catch(e) { console.error("Database Sync Error"); }
+        } catch(e) { 
+            console.error("Gagal sinkron database"); 
+        }
     }
 
     function handleUniversalSearch() {
@@ -130,21 +143,30 @@
         if (query.length < 3) {
             profileArea.innerHTML = workArea.innerHTML = noteArea.innerHTML = '';
             emptyState.style.display = 'block';
-            document.getElementById('workTitle').style.display = document.getElementById('noteTitle').style.display = 'none';
+            document.getElementById('workTitle').style.display = 'none';
+            document.getElementById('noteTitle').style.display = 'none';
             return;
         }
 
-        // 1. Cari Profil Pelanggan (Berdasarkan Email atau Nama)
-        const user = dbPelanggan.find(u => u[1].toLowerCase().includes(query) || u[0].toLowerCase().includes(query));
+        // Filter Data (Gunakan nama properti objek, bukan index array)
+        const user = dbPelanggan.find(u => 
+            (u.email && u.email.toLowerCase().includes(query)) || 
+            (u.nama && u.nama.toLowerCase().includes(query))
+        );
         
-        // 2. Cari Pekerjaan (Booking)
-        const works = dbBooking.filter(w => w[1].toLowerCase().includes(query) || w[0].toLowerCase().includes(query));
+        const works = dbBooking.filter(w => 
+            (w.email && w.email.toLowerCase().includes(query)) || 
+            (w.id && w.id.toLowerCase().includes(query))
+        );
         
-        // 3. Cari Nota (Penawaran)
-        const notes = dbNota.filter(n => n.email.toLowerCase().includes(query) || n.id.toLowerCase().includes(query));
+        const notes = dbNota.filter(n => 
+            (n.email && n.email.toLowerCase().includes(query)) || 
+            (n.id && n.id.toLowerCase().includes(query))
+        );
 
         if (!user && works.length === 0 && notes.length === 0) {
-            emptyState.innerHTML = "Data tidak ditemukan...";
+            emptyState.innerHTML = "Data tidak ditemukan, pastikan Email benar.";
+            emptyState.style.display = 'block';
             return;
         }
 
@@ -153,33 +175,31 @@
         // Render Profil
         if(user) {
             profileArea.innerHTML = `
-                <div class="profile-card animate__animated animate__fadeIn">
+                <div class="profile-card animate__animated animate__zoomIn">
                     <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="bg-white text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:60px; height:60px;">
-                                <i class="fas fa-user fa-2x"></i>
-                            </div>
-                        </div>
                         <div class="col">
-                            <h5 class="fw-bold mb-0">${user[0]}</h5>
-                            <p class="small mb-0 opacity-75">${user[1]} | ${user[3]}</p>
-                            <p class="small mb-0 mt-1"><i class="fas fa-map-marker-alt"></i> ${user[7] || 'Alamat belum diatur'}</p>
+                            <h5 class="fw-bold mb-1">${user.nama}</h5>
+                            <p class="small mb-1 opacity-75">${user.email} | ${user.wa || user.whatsapp || ''}</p>
+                            <p class="small mb-0 mt-1"><i class="fas fa-map-marker-alt"></i> ${user.alamat || 'Alamat belum disetel'}</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="badge bg-info text-dark">Verified Customer</div>
                         </div>
                     </div>
                 </div>`;
         } else { profileArea.innerHTML = ''; }
 
-        // Render Pekerjaan
+        // Render Riwayat Servis
         if(works.length > 0) {
             document.getElementById('workTitle').style.display = 'flex';
             workArea.innerHTML = works.map(w => `
                 <div class="result-card animate__animated animate__fadeInUp">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="small fw-bold text-primary mb-1">#${w[0]}</div>
-                        <span class="status-badge badge-work">${w[4]}</span>
+                    <div class="d-flex justify-content-between">
+                        <span class="small fw-bold text-primary">#${w.id}</span>
+                        <span class="status-badge badge-work">${w.status}</span>
                     </div>
-                    <h6 class="fw-bold mb-1 small">${w[2]}</h6>
-                    <div class="text-muted" style="font-size:0.75rem;"><i class="far fa-calendar-alt"></i> ${w[3]}</div>
+                    <h6 class="fw-bold mb-1 mt-1 small">${w.judul || w.pekerjaan}</h6>
+                    <div class="text-muted" style="font-size:0.7rem;"><i class="far fa-calendar-alt"></i> ${w.tanggal || w.tgl}</div>
                 </div>
             `).join('');
         } else { workArea.innerHTML = ''; document.getElementById('workTitle').style.display = 'none'; }
@@ -189,11 +209,11 @@
             document.getElementById('noteTitle').style.display = 'flex';
             noteArea.innerHTML = notes.map(n => `
                 <div class="result-card animate__animated animate__fadeInUp">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="small fw-bold text-success mb-1">#${n.id}</div>
+                    <div class="d-flex justify-content-between">
+                        <span class="small fw-bold text-success">#${n.id}</span>
                         <span class="status-badge badge-note">${n.status}</span>
                     </div>
-                    <h6 class="fw-bold mb-1 small">${n.perihal || 'Invoice Layanan'}</h6>
+                    <h6 class="fw-bold mb-1 mt-1 small">Tagihan Layanan</h6>
                     <div class="fw-bold text-dark">Rp ${Number(n.total).toLocaleString('id-ID')}</div>
                 </div>
             `).join('');
