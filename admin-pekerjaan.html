@@ -222,17 +222,12 @@
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ 
-                    action: 'getDetailAdmin', 
-                    id: id 
-                }) 
+                body: JSON.stringify({ action: 'getDetailAdmin', id: id }) 
             });
             const r = await res.json();
             Swal.close();
-            
             if(r.success) {
                 fullDataDetail = r.data; 
-                
                 document.getElementById('modalTitleID').innerText = "Detail: " + id;
                 document.getElementById('detNama').innerText = fullDataDetail.nama;
                 document.getElementById('detEmail').innerText = fullDataDetail.email;
@@ -241,25 +236,16 @@
                 const btnMaps = document.getElementById('btnMapsContainer');
                 if(fullDataDetail.lat && fullDataDetail.lang) {
                     btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
-                } else { 
-                    btnMaps.innerHTML = ""; 
-                }
+                } else { btnMaps.innerHTML = ""; }
 
                 document.getElementById('statusSelect').value = fullDataDetail.status;
                 document.getElementById('catatanProgres').value = ""; 
-                
                 selectedItems = fullDataDetail.notaItems || [];
-                
                 renderItems();
                 renderTimeline(fullDataDetail.history || []);
                 myModal.show();
-            } else {
-                Swal.fire('Waduh', r.message, 'error');
             }
-        } catch(e) { 
-            console.error(e);
-            Swal.fire('Error', 'Gagal nyambung ning server', 'error'); 
-        }
+        } catch(e) { Swal.fire('Error', 'Gagal nyambung ning server', 'error'); }
     }
 
     function tambahItem(isManual) {
@@ -336,8 +322,7 @@
         btn.disabled = true;
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading() });
         const payload = {
-            action: 'updateFullData', 
-            id: currentId,
+            action: 'updateFullData', id: currentId,
             status: document.getElementById('statusSelect').value,
             keterangan: document.getElementById('catatanProgres').value || "Update data oleh Admin",
             items: selectedItems
@@ -351,10 +336,7 @@
                     myModal.hide(); loadRiwayat();
                 });
             }
-        } catch(e) {
-            btn.disabled = false;
-            Swal.fire({ title: 'Gagal', text: 'Koneksi bermasalah.', icon: 'error', target: document.getElementById('modalUpdate') });
-        }
+        } catch(e) { btn.disabled = false; Swal.fire({ title: 'Gagal', text: 'Koneksi bermasalah.', icon: 'error', target: document.getElementById('modalUpdate') }); }
     }
 
     async function hapusData() {
@@ -364,15 +346,12 @@
             try {
                 const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) });
                 const r = await res.json();
-                if(r.success) { 
-                    myModal.hide(); 
-                    Swal.fire('Terhapus', 'Data wis ilang soko database.', 'success'); 
-                    loadRiwayat(); 
-                }
+                if(r.success) { myModal.hide(); Swal.fire('Terhapus', 'Data wis ilang soko database.', 'success'); loadRiwayat(); }
             } catch(e) { Swal.fire('Error', 'Gagal mbusak data', 'error'); }
         }
     }
 
+    // --- BAGIAN NOTA SING TAK SAMAKNE KARO PENAWARAN ---
     function downloadPDF() {
         if(!fullDataDetail || selectedItems.length === 0) {
             Swal.fire({ icon: 'warning', title: 'Item Kosong', text: 'Isi item nota dhisik Bro!', target: document.getElementById('modalUpdate') });
@@ -381,40 +360,73 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const status = document.getElementById('statusSelect').value;
-        const color = status === 'Lunas' ? [22, 163, 74] : [13, 110, 253];
-
-        doc.setFillColor(...color); doc.rect(0, 0, 210, 15, 'F');
-        doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...color);
-        doc.text("NANDA TEKNIK BANYUWANGI", 15, 30);
+        
+        // Desain Header Tengah (Persis Penawaran)
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(13, 110, 253);
+        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
+        
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
-        doc.text("SOFTWARE, NETWORK & ELECTRICAL ENGINEERING", 15, 36);
-        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421 | WA: 082331201148", 15, 41);
-        doc.line(15, 48, 195, 48);
+        doc.text("SOFTWARE, NETWORK & ELECTRICAL ENGINEERING", 105, 26, { align: "center" });
+        
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 105, 30, { align: "center" });
+        doc.text("WA: 082331201148 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
+        
+        // Garis Pembatas
+        doc.setDrawColor(200); doc.line(15, 38, 195, 38);
 
+        // Judul Nota & Status
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
-        doc.text(status === 'Lunas' ? "NOTA LUNAS" : "NOTA TAGIHAN", 15, 58);
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Transaksi: #${currentId}`, 15, 65);
-        doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 15, 70);
-        doc.text(`Kepada: ${fullDataDetail.nama}`, 120, 65);
-        doc.text(`Alamat: ${fullDataDetail.alamat || '-'}`, 120, 70, {maxWidth: 75});
+        const judulNota = status === 'Lunas' ? "NOTA LUNAS (INVOICE)" : "NOTA TAGIHAN (BILLING)";
+        doc.text(judulNota, 15, 48);
 
-        const rows = selectedItems.map((it, i) => [i+1, it.nama, it.qty, `Rp ${Number(it.harga).toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]);
+        // Info Transaksi & Pelanggan
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi : #${currentId}`, 15, 56);
+        doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID')}`, 15, 61);
+        
+        doc.text(`Kepada : ${fullDataDetail.nama}`, 140, 56);
+        doc.text(`Alamat : ${fullDataDetail.alamat || '-'}`, 140, 61, {maxWidth: 55});
+
+        // Tabel Item (Desain Grid koyo Penawaran)
+        const tableBody = selectedItems.map((it, i) => [
+            i + 1, 
+            it.nama, 
+            it.qty, 
+            `Rp ${Number(it.harga).toLocaleString('id-ID')}`, 
+            `Rp ${(it.harga * it.qty).toLocaleString('id-ID')}`
+        ]);
+
         doc.autoTable({
-            startY: 80, head: [['NO', 'ITEM', 'QTY', 'HARGA', 'SUBTOTAL']], body: rows,
-            headStyles: { fillColor: color }, theme: 'grid'
+            startY: 70,
+            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga', 'Jumlah']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [13, 110, 253], textColor: 255, halign: 'center' },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                2: { halign: 'center', cellWidth: 15 },
+                3: { halign: 'right', cellWidth: 35 },
+                4: { halign: 'right', cellWidth: 35 }
+            }
         });
 
+        // Total & Tanda Tangan
         const finalY = doc.lastAutoTable.finalY + 10;
         let total = selectedItems.reduce((a, b) => a + (b.harga * b.qty), 0);
+        
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL PEMBAYARAN: Rp ${total.toLocaleString('id-ID')}`, 195, finalY, {align: 'right'});
+        doc.setFontSize(11);
+        doc.text(`TOTAL PEMBAYARAN: Rp ${total.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
         
         doc.setFontSize(8); doc.setFont("helvetica", "normal");
         doc.text("Pembayaran Transfer:", 15, finalY + 5);
-        doc.text("BCA - 1801407331 (NANDA TEKNIK)", 15, finalY + 10);
-        doc.text("Hormat Kami,", 160, finalY + 20);
-        doc.text("NANDA TEKNIK", 160, finalY + 40);
+        doc.setFont("helvetica", "bold");
+        doc.text("BCA - 1801407331 (A/N NANDA TEKNIK)", 15, finalY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text("Hormat Kami,", 165, finalY + 20, { align: "center" });
+        doc.text("NANDA TEKNIK", 165, finalY + 40, { align: "center" });
 
         doc.save(`Nota_${fullDataDetail.nama}_${currentId}.pdf`);
     }
