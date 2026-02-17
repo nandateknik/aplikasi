@@ -1,5 +1,5 @@
 var CONFIG = {
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbw0z5YznKUin3ElHIyp4S_kzjU_piLmZlTZA3T8ieTS8KQJ-dah7RMQ0k8vjKDj5Kzk/exec",
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxMuGdXKvv-LlmMn58Wu3x2cGAJWHcUcwQUuVpdUQ8YYgVk-TirH87n6VO7Xmzw3rxl/exec",
     KANTOR_COORDS: {
         lat: -8.1910395,
         lng: 114.3697974
