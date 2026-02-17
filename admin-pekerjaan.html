@@ -352,7 +352,7 @@
     }
 
     // --- BAGIAN NOTA SING TAK SAMAKNE KARO PENAWARAN ---
-    function downloadPDF() {
+   function downloadPDF() {
         if(!fullDataDetail || selectedItems.length === 0) {
             Swal.fire({ icon: 'warning', title: 'Item Kosong', text: 'Isi item nota dhisik Bro!', target: document.getElementById('modalUpdate') });
             return;
@@ -361,7 +361,12 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         const status = document.getElementById('statusSelect').value;
         
-        // Desain Header Tengah (Persis Penawaran)
+        // 1. Tambah Logo (Posisine podo karo Penawaran)
+        try { 
+            doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); 
+        } catch (e) { console.error("Logo ra ketemu, skip."); }
+
+        // 2. Header Tengah (Desain Formal)
         doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(13, 110, 253);
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
         
@@ -372,15 +377,18 @@
         doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 105, 30, { align: "center" });
         doc.text("WA: 082331201148 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
         
-        // Garis Pembatas
-        doc.setDrawColor(200); doc.line(15, 38, 195, 38);
+        // 3. Garis Pembatas Putus-putus (Dashed Line)
+        doc.setDrawColor(150);
+        doc.setLineDashPattern([1, 1], 0); // Iki sing nggarap dadi putus-putus
+        doc.line(15, 38, 195, 38);
+        doc.setLineDashPattern([], 0); // Balekne dadi garis normal nggo tabel
 
-        // Judul Nota & Status
+        // 4. Judul Nota
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
         const judulNota = status === 'Lunas' ? "NOTA LUNAS (INVOICE)" : "NOTA TAGIHAN (BILLING)";
         doc.text(judulNota, 15, 48);
 
-        // Info Transaksi & Pelanggan
+        // 5. Info Transaksi & Pelanggan
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No. Transaksi : #${currentId}`, 15, 56);
         doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID')}`, 15, 61);
@@ -388,7 +396,7 @@
         doc.text(`Kepada : ${fullDataDetail.nama}`, 140, 56);
         doc.text(`Alamat : ${fullDataDetail.alamat || '-'}`, 140, 61, {maxWidth: 55});
 
-        // Tabel Item (Desain Grid koyo Penawaran)
+        // 6. Tabel Item (Header Abu-abu koyo Penawaran)
         const tableBody = selectedItems.map((it, i) => [
             i + 1, 
             it.nama, 
@@ -402,7 +410,7 @@
             head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga', 'Jumlah']],
             body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: [13, 110, 253], textColor: 255, halign: 'center' },
+            headStyles: { fillColor: [100, 100, 100], textColor: 255, halign: 'center' }, // Abu-abu
             columnStyles: {
                 0: { halign: 'center', cellWidth: 10 },
                 2: { halign: 'center', cellWidth: 15 },
@@ -411,7 +419,7 @@
             }
         });
 
-        // Total & Tanda Tangan
+        // 7. Total & Tanda Tangan
         const finalY = doc.lastAutoTable.finalY + 10;
         let total = selectedItems.reduce((a, b) => a + (b.harga * b.qty), 0);
         
@@ -422,7 +430,8 @@
         doc.setFontSize(8); doc.setFont("helvetica", "normal");
         doc.text("Pembayaran Transfer:", 15, finalY + 5);
         doc.setFont("helvetica", "bold");
-        doc.text("BCA - 1801407331 (A/N NANDA TEKNIK)", 15, finalY + 10);
+        // No Rekening Updated
+        doc.text("BCA - 1801826011 (A/N NANDA KRISBIANTO)", 15, finalY + 10);
         
         doc.setFont("helvetica", "normal");
         doc.text("Hormat Kami,", 165, finalY + 20, { align: "center" });
