@@ -400,36 +400,106 @@
         }
     }
 
-    function downloadPDF() {
-        if(!fullDataDetail) return;
+  function downloadPDF() {
+        if(!fullDataDetail || selectedItems.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Item Kosong',
+                text: 'Tambahkan item jasa/barang dhisik, Bro!',
+                target: document.getElementById('modalUpdate')
+            });
+            return;
+        }
+
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const primaryColor = [13, 110, 253]; 
+        const themeColor = [22, 163, 74];    
+        const isLunas = document.getElementById('statusSelect').value === 'Lunas';
+        const finalColor = isLunas ? themeColor : primaryColor;
+
+        // HEADER
+        doc.setFillColor(...finalColor);
+        doc.rect(0, 0, 210, 15, 'F');
+        doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
+        doc.text("NANDA TEKNIK BANYUWANGI", 15, 30);
         
-        doc.setFontSize(22); doc.setTextColor(0, 82, 212); doc.setFont("helvetica", "bold");
-        doc.text("NANDA TEKNIK", 105, 20, {align: "center"});
-        doc.setFontSize(10); doc.setTextColor(80); doc.setFont("helvetica", "normal");
-        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 105, 26, {align: "center"});
-        doc.text("WA: 082331201148", 105, 31, {align: "center"});
-        doc.line(14, 40, 196, 40);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+        doc.text("SOFTWARE, NETWORK & ELECTRICAL ENGINEERING", 15, 36);
+        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 15, 41);
+        doc.text("WA: 082331201148", 15, 46);
 
-        doc.setFontSize(11); doc.text("NOTA SERVICE / INVOICE", 14, 50);
-        doc.setFontSize(10);
-        doc.text(`ID : ${currentId}`, 14, 57);
-        doc.text(`Nama : ${fullDataDetail.nama}`, 14, 62);
-        doc.text(`Alamat : ${fullDataDetail.alamat || '-'}`, 14, 67);
+        // GARIS PUTUS-PUTUS (DASHED LINE)
+        doc.setLineDashPattern([1, 1], 0); // Iki bumbu rahasia kotak putus-putus
+        doc.setDrawColor(200, 200, 200);
+        doc.line(15, 52, 195, 52);
+        doc.setLineDashPattern([], 0); // Balekno dadi garis lurus meneh
 
-        const rows = selectedItems.map(it => [it.nama, it.qty, `Rp${it.harga.toLocaleString()}`, `Rp${(it.harga*it.qty).toLocaleString()}`]);
-        let totalVal = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
+        // INFO NOTA & PELANGGAN
+        doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 41, 59);
+        doc.text(isLunas ? "NOTA PEMBAYARAN (LUNAS)" : "NOTA SERVICE / TAGIHAN", 15, 62);
+
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi : #${currentId}`, 15, 72);
+        doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 77);
+        
+        doc.setFont("helvetica", "bold"); doc.text("KEPADA YTH:", 125, 72);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${fullDataDetail.nama}`, 125, 77);
+        doc.text(`${fullDataDetail.alamat || '-'}`, 125, 82, { maxWidth: 70 });
+
+        // TABEL
+        const tableBody = selectedItems.map((it, index) => [
+            { content: index + 1, styles: { halign: 'center' } },
+            it.nama,
+            { content: it.qty, styles: { halign: 'center' } },
+            `Rp ${Number(it.harga).toLocaleString('id-ID')}`,
+            { content: `Rp ${Number(it.harga * it.qty).toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold' } }
+        ]);
 
         doc.autoTable({
-            startY: 75,
-            head: [['Layanan', 'Qty', 'Harga', 'Subtotal']],
-            body: rows,
-            headStyles: { fillColor: [0, 82, 212] }
+            startY: 90,
+            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'SUBTOTAL']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: finalColor, halign: 'center' },
+            styles: { fontSize: 9 }
         });
 
-        doc.text(`TOTAL: Rp${totalVal.toLocaleString()}`, 196, doc.lastAutoTable.finalY + 10, {align: "right"});
-        doc.save(`Nota-${fullDataDetail.nama}.pdf`);
+        // TOTAL & REKENING (KOTAK PUTUS-PUTUS)
+        const finalY = doc.lastAutoTable.finalY + 10;
+        let totalVal = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
+        
+        // Desain Kotak Rekening
+        doc.setLineDashPattern([1, 1], 0);
+        doc.setDrawColor(...finalColor);
+        doc.rect(15, finalY - 5, 80, 25); // Kotak Rekening
+        
+        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
+        doc.text("INFO PEMBAYARAN:", 20, finalY);
+        doc.setFont("helvetica", "normal"); doc.setTextColor(0);
+        doc.text("Bank BCA", 20, finalY + 5);
+        doc.setFont("helvetica", "bold");
+        doc.text("No. Rek: 1801407331", 20, finalY + 10); // Ganti nomere nek salah bro
+        doc.text("A/N: NANDA TEKNIK", 20, finalY + 15);
+        doc.setLineDashPattern([], 0);
+
+        // Total Belanja
+        doc.setFillColor(245, 245, 245);
+        doc.rect(130, finalY - 5, 65, 12, 'F');
+        doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
+        doc.text("TOTAL:", 135, finalY + 3);
+        doc.text(`Rp ${totalVal.toLocaleString('id-ID')}`, 190, finalY + 3, { align: "right" });
+
+        // FOOTER TANDA TANGAN
+        const footerY = finalY + 40;
+        doc.setFontSize(9); doc.setTextColor(0); doc.setFont("helvetica", "normal");
+        doc.text("Penerima,", 30, footerY);
+        doc.text("Hormat Kami,", 150, footerY);
+        doc.text(`( ${fullDataDetail.nama.substring(0, 15)} )`, 20, footerY + 25);
+        doc.text("NANDA TEKNIK", 150, footerY + 25);
+
+        doc.save(`Nota_${currentId}_${fullDataDetail.nama}.pdf`);
     }
 </script>
 </body>
