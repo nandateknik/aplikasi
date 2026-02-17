@@ -216,7 +216,6 @@
 
     function switchTab(t) { currentTab = t; currentPage = 1; applyFilter(); }
 
-    // --- BAGIAN SING TAK DANDANI TEMENAN (ADMIN MODE) ---
     async function viewDetail(id) {
         currentId = id;
         Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
@@ -224,7 +223,7 @@
             const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
-                    action: 'getDetailAdmin', // Manggil fungsi anyar khusus admin
+                    action: 'getDetailAdmin', 
                     id: id 
                 }) 
             });
@@ -232,14 +231,13 @@
             Swal.close();
             
             if(r.success) {
-                fullDataDetail = r.data; // Isine: id, nama, email, alamat, lat, lang, status, history, notaItems
+                fullDataDetail = r.data; 
                 
                 document.getElementById('modalTitleID').innerText = "Detail: " + id;
                 document.getElementById('detNama').innerText = fullDataDetail.nama;
                 document.getElementById('detEmail').innerText = fullDataDetail.email;
                 document.getElementById('detAlamat').innerText = fullDataDetail.alamat || '-';
                 
-                // Fix Link Maps
                 const btnMaps = document.getElementById('btnMapsContainer');
                 if(fullDataDetail.lat && fullDataDetail.lang) {
                     btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
@@ -250,7 +248,6 @@
                 document.getElementById('statusSelect').value = fullDataDetail.status;
                 document.getElementById('catatanProgres').value = ""; 
                 
-                // Sinkronisasi item nota
                 selectedItems = fullDataDetail.notaItems || [];
                 
                 renderItems();
@@ -383,7 +380,8 @@
         }
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
-        const color = document.getElementById('statusSelect').value === 'Lunas' ? [22, 163, 74] : [13, 110, 253];
+        const status = document.getElementById('statusSelect').value;
+        const color = status === 'Lunas' ? [22, 163, 74] : [13, 110, 253];
 
         doc.setFillColor(...color); doc.rect(0, 0, 210, 15, 'F');
         doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...color);
@@ -394,7 +392,7 @@
         doc.line(15, 48, 195, 48);
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
-        doc.text(document.getElementById('statusSelect').value === 'Lunas' ? "NOTA LUNAS" : "NOTA TAGIHAN", 15, 58);
+        doc.text(status === 'Lunas' ? "NOTA LUNAS" : "NOTA TAGIHAN", 15, 58);
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No. Transaksi: #${currentId}`, 15, 65);
         doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 15, 70);
