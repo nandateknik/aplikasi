@@ -166,7 +166,6 @@
     async function loadRiwayat() {
         const container = document.getElementById('listPekerjaan');
         container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2 small text-muted">Loading Data...</p></div>';
-        
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
@@ -190,7 +189,6 @@
         filteredData = allData.filter(d => {
             const isDone = (d.status === 'Lunas' || d.status === 'Selesai');
             const matchStatus = (currentTab === 'Ongoing' ? !isDone : isDone);
-            
             if (fDate) {
                 const part = d.tgl.split(',')[0].split('/'); 
                 const dFormatted = `${part[2]}-${part[1].padStart(2,'0')}-${part[0].padStart(2,'0')}`;
@@ -204,13 +202,11 @@
     function renderList() {
         const paginated = filteredData.slice((currentPage-1)*pageSize, currentPage*pageSize);
         const container = document.getElementById('listPekerjaan');
-        
         if (paginated.length === 0) {
             container.innerHTML = '<div class="text-center text-muted p-5">Ora ono data, Cah.</div>';
             document.getElementById('paginationCtrl').innerHTML = '';
             return;
         }
-
         container.innerHTML = paginated.map(item => `
             <div class="wo-card border" onclick="viewDetail('${item.id}')">
                 <div class="d-flex justify-content-between mb-2">
@@ -243,7 +239,6 @@
     async function viewDetail(id) {
         currentId = id;
         Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-        
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
@@ -251,7 +246,6 @@
             });
             const r = await res.json();
             Swal.close();
-
             if(r.success) {
                 fullDataDetail = r.data;
                 document.getElementById('modalTitleID').innerText = "Detail: " + id;
@@ -260,6 +254,7 @@
                 document.getElementById('detAlamat').innerText = fullDataDetail.alamat || '-';
                 
                 const btnMaps = document.getElementById('btnMapsContainer');
+                // FIX: Perbaikan Link Google Maps
                 if(fullDataDetail.lat && fullDataDetail.lang) {
                     btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
                 } else { btnMaps.innerHTML = ""; }
@@ -267,7 +262,6 @@
                 document.getElementById('statusSelect').value = fullDataDetail.status;
                 document.getElementById('catatanProgres').value = ""; 
                 selectedItems = fullDataDetail.notaItems || [];
-                
                 renderItems();
                 renderTimeline(fullDataDetail.history || []);
                 myModal.show();
@@ -288,7 +282,6 @@
             n = s.options[s.selectedIndex].text; 
             h = parseInt(s.value);
         }
-        
         const idx = selectedItems.findIndex(i => i.nama === n);
         if(idx > -1) selectedItems[idx].qty++; else selectedItems.push({nama: n, harga: h, qty: 1});
         renderItems();
@@ -339,14 +332,12 @@
     async function saveSemuaPerubahan() {
         const btn = document.getElementById('btnSimpan');
         btn.disabled = true;
-
         Swal.fire({ 
             title: 'Menyimpan...', 
             allowOutsideClick: false, 
             target: document.getElementById('modalUpdate'),
             didOpen: () => Swal.showLoading() 
         });
-
         const payload = {
             action: 'updateFullData', 
             id: currentId,
@@ -354,7 +345,6 @@
             keterangan: document.getElementById('catatanProgres').value || "Update data oleh Admin",
             items: selectedItems
         };
-
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
@@ -384,7 +374,6 @@
             confirmButtonText: 'Ya, Hapus!',
             target: document.getElementById('modalUpdate')
         });
-
         if(confirm.isConfirmed) {
             Swal.fire({title: 'Menghapus...', target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading()});
             const res = await fetch(CONFIG.WEB_APP_URL, { 
@@ -400,7 +389,7 @@
         }
     }
 
-  function downloadPDF() {
+    function downloadPDF() {
         if(!fullDataDetail || selectedItems.length === 0) {
             Swal.fire({
                 icon: 'warning',
@@ -429,13 +418,13 @@
         doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 15, 41);
         doc.text("WA: 082331201148", 15, 46);
 
-        // GARIS PUTUS-PUTUS (DASHED LINE)
-        doc.setLineDashPattern([1, 1], 0); // Iki bumbu rahasia kotak putus-putus
+        // GARIS PUTUS-PUTUS
+        doc.setLineDashPattern([1, 1], 0);
         doc.setDrawColor(200, 200, 200);
         doc.line(15, 52, 195, 52);
-        doc.setLineDashPattern([], 0); // Balekno dadi garis lurus meneh
+        doc.setLineDashPattern([], 0);
 
-        // INFO NOTA & PELANGGAN
+        // INFO NOTA
         doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 41, 59);
         doc.text(isLunas ? "NOTA PEMBAYARAN (LUNAS)" : "NOTA SERVICE / TAGIHAN", 15, 62);
 
@@ -466,32 +455,30 @@
             styles: { fontSize: 9 }
         });
 
-        // TOTAL & REKENING (KOTAK PUTUS-PUTUS)
+        // TOTAL & REKENING
         const finalY = doc.lastAutoTable.finalY + 10;
         let totalVal = selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0);
         
-        // Desain Kotak Rekening
         doc.setLineDashPattern([1, 1], 0);
         doc.setDrawColor(...finalColor);
-        doc.rect(15, finalY - 5, 80, 25); // Kotak Rekening
+        doc.rect(15, finalY - 5, 80, 25);
         
         doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
         doc.text("INFO PEMBAYARAN:", 20, finalY);
         doc.setFont("helvetica", "normal"); doc.setTextColor(0);
         doc.text("Bank BCA", 20, finalY + 5);
         doc.setFont("helvetica", "bold");
-        doc.text("No. Rek: 1801407331", 20, finalY + 10); // Ganti nomere nek salah bro
+        doc.text("No. Rek: 1801407331", 20, finalY + 10);
         doc.text("A/N: NANDA TEKNIK", 20, finalY + 15);
         doc.setLineDashPattern([], 0);
 
-        // Total Belanja
         doc.setFillColor(245, 245, 245);
         doc.rect(130, finalY - 5, 65, 12, 'F');
         doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...finalColor);
         doc.text("TOTAL:", 135, finalY + 3);
         doc.text(`Rp ${totalVal.toLocaleString('id-ID')}`, 190, finalY + 3, { align: "right" });
 
-        // FOOTER TANDA TANGAN
+        // FOOTER
         const footerY = finalY + 40;
         doc.setFontSize(9); doc.setTextColor(0); doc.setFont("helvetica", "normal");
         doc.text("Penerima,", 30, footerY);
