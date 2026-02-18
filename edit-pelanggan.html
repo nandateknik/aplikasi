@@ -12,11 +12,12 @@
     <style>
         :root { --primary: #f6c23e; }
         body { background-color: #f8f9fc; font-family: 'Segoe UI', sans-serif; }
-        .main-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .header-section { background: #f6c23e; color: #333; padding: 20px; border-radius: 15px 15px 0 0; text-align: center; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden;}
+        .header-section { background: #f6c23e; color: #333; padding: 20px; text-align: center; }
         #map { height: 350px; width: 100%; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; z-index: 1; }
         .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
         .form-control:read-only { background-color: #f1f3f5; }
+        .fw-bold-label { font-size: 0.85rem; font-weight: 700; color: #444; }
     </style>
 </head>
 <body>
@@ -35,7 +36,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-4">
-                        <label class="form-label fw-bold small">Email Terdaftar</label>
+                        <label class="form-label fw-bold-label">Email Terdaftar</label>
                         <div class="input-group">
                             <input type="email" id="email" class="form-control" placeholder="nanda@mail.com">
                             <button class="btn btn-dark" onclick="checkRegisteredEmail()">Cari & Kirim OTP</button>
@@ -43,25 +44,25 @@
                     </div>
 
                     <div id="fullForm" style="display:none;">
-                        <div class="card bg-light border-0 p-3 mb-3 text-center">
+                        <div class="card bg-light border-0 p-3 mb-3 text-center shadow-sm">
                             <label class="form-label fw-bold mb-1">Masukkan Kode OTP</label>
                             <input type="text" id="otpInput" class="form-control text-center fw-bold fs-4" maxlength="6" placeholder="000000">
                             <button class="btn btn-link btn-sm text-decoration-none mt-1" id="resendBtn" disabled onclick="checkRegisteredEmail()">Kirim Ulang</button>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Nama Lengkap</label>
+                            <label class="form-label fw-bold-label">Nama Lengkap</label>
                             <input type="text" id="nama" class="form-control">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">WhatsApp</label>
+                            <label class="form-label fw-bold-label">WhatsApp</label>
                             <input type="number" id="wa" class="form-control">
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan</label>
+                            <label class="form-label fw-bold-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan</label>
                             <div id="map"></div>
-                            <textarea id="alamat" class="form-control mt-2" rows="2"></textarea>
+                            <textarea id="alamat" class="form-control mt-2" rows="2" placeholder="Alamat lengkap..."></textarea>
                             
                             <div class="row mt-2 g-2">
                                 <div class="col-6">
@@ -78,7 +79,7 @@
                         <input type="hidden" id="tanggal">
                         <input type="hidden" id="is_active">
 
-                        <button class="btn btn-warning w-100 fw-bold py-2 mt-3" onclick="updateData()">
+                        <button class="btn btn-warning w-100 fw-bold py-2 mt-3 shadow" onclick="updateData()">
                             UPDATE DATA SEKARANG
                         </button>
                     </div>
@@ -113,14 +114,16 @@
                 serverOTP = result.otp;
                 const d = result.data;
                 
-                // MENGISI FIELD (Fix ID & Value)
+                // MENGISI FIELD TEXT
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
-                document.getElementById('lat').value = d.lat || '';
-                document.getElementById('lang').value = d.lang || '';
                 document.getElementById('alamat').value = d.alamat || '';
                 document.getElementById('tanggal').value = d.tanggal || '';
-                document.getElementById('is_active').value = d.is_active || 'Active'; // Default Active jika kosong
+                document.getElementById('is_active').value = d.is_active || 'Active';
+                
+                // --- PAKSA ISI LAT LANG DARI DATA DATABASE ---
+                document.getElementById('lat').value = d.lat || '';
+                document.getElementById('lang').value = d.lang || '';
                 
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
@@ -131,17 +134,18 @@
                 }, 500);
 
                 startTimer();
-                Swal.fire('OTP Terkirim', 'Silahkan cek email Anda.', 'success');
+                Swal.fire('Data Ketemu!', 'Silahkan cek kode OTP di email Anda.', 'success');
             } else {
-                Swal.fire('Tidak Ditemukan', 'Email belum terdaftar.', 'error');
+                Swal.fire('Gagal', 'Email tidak terdaftar di sistem kami.', 'error');
             }
         } catch(e) {
             toggleLoader(false);
-            Swal.fire('Error', 'Gagal hubungi database.', 'error');
+            Swal.fire('Error', 'Gagal hubungi database. Cek koneksi!', 'error');
         }
     }
 
     function initMap(latVal, lngVal) {
+        // Gunakan data dari database, default ke Banyuwangi jika kosong
         const lat = parseFloat(latVal) || -8.2192;
         const lng = parseFloat(lngVal) || 114.3691;
         
@@ -152,10 +156,17 @@
 
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
 
-        // Fitur Cari
-        L.Control.geocoder({
+        // Update Lat Lang saat marker digeser
+        marker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            fillCoords(pos.lat, pos.lng);
+            reverseCheck(pos.lat, pos.lng);
+        });
+
+        // Fitur Cari Alamat
+        const searchControl = L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Cari Alamat..."
+            placeholder: "Cari lokasi baru..."
         }).on('markgeocode', function(e) {
             const center = e.geocode.center;
             map.setView(center, 17);
@@ -163,12 +174,8 @@
             fillCoords(center.lat, center.lng, e.geocode.name);
         }).addTo(map);
 
-        marker.on('dragend', function(e) {
-            const pos = e.target.getLatLng();
-            reverseCheck(pos.lat, pos.lng);
-        });
-
-        map.invalidateSize();
+        // Pastikan ukuran map pas
+        setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
     function fillCoords(lat, lng, addr) {
@@ -178,8 +185,6 @@
     }
 
     function reverseCheck(lat, lng) {
-        document.getElementById('lat').value = lat;
-        document.getElementById('lang').value = lng;
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(r => r.json()).then(res => {
                 document.getElementById('alamat').value = res.display_name;
@@ -188,9 +193,8 @@
 
     async function updateData() {
         const otp = document.getElementById('otpInput').value;
-        if (otp != serverOTP) return Swal.fire('OTP Salah', 'Kode yang Anda masukkan salah.', 'error');
+        if (otp != serverOTP) return Swal.fire('OTP Salah', 'Kode OTP tidak cocok.', 'error');
 
-        // Pastikan is_active tidak hilang
         let status = document.getElementById('is_active').value;
         if(!status || status == "") status = "Active";
 
@@ -212,11 +216,11 @@
             const result = await res.json();
             toggleLoader(false);
             if(result.success) {
-                Swal.fire('Berhasil', 'Data pelanggan diperbarui!', 'success').then(() => location.reload());
+                Swal.fire('Suksess!', 'Data pelanggan berhasil di-update.', 'success').then(() => location.reload());
             }
         } catch(e) {
             toggleLoader(false);
-            Swal.fire('Gagal', 'Gagal simpan data.', 'error');
+            Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data.', 'error');
         }
     }
 
