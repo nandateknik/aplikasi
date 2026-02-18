@@ -14,10 +14,11 @@
         body { background-color: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; background: white; }
         .header-section { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; padding: 30px 20px; text-align: center; }
-        #map { height: 300px; border-radius: 15px; margin-top: 10px; border: 2px solid #eee; z-index: 1; }
+        #map { height: 350px; border-radius: 15px; margin-top: 10px; border: 2px solid #eee; z-index: 1; }
         .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
         .otp-input { letter-spacing: 5px; font-size: 24px; text-align: center; font-weight: bold; border: 2px solid #4e73df; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
+        .readonly-label { background-color: #e9ecef; opacity: 1; font-family: monospace; font-size: 0.85rem; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -25,12 +26,12 @@
 
 <div class="spinner-overlay" id="loader">
     <div class="spinner-border text-primary" role="status"></div>
-    <span class="mt-2 fw-bold">Sik, lagi diproses...</span>
+    <span class="mt-2 fw-bold">Sedang diproses...</span>
 </div>
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-7 col-lg-6">
             <div class="card main-card">
                 <div class="header-section">
                     <h4 class="mb-1 fw-bold"><i class="fas fa-user-plus me-2"></i>Registrasi Pelanggan</h4>
@@ -64,18 +65,28 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan (Geser Pin)</label>
+                            <label class="form-label fw-bold small text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan (Cari Alamat/Geser Pin)</label>
                             <div id="map"></div>
+                            
+                            <div class="row g-2 mt-3">
+                                <div class="col-6">
+                                    <label class="small text-muted">Latitude</label>
+                                    <input type="text" id="lat" class="form-control readonly-label" readonly placeholder="Lat">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small text-muted">Longitude</label>
+                                    <input type="text" id="lang" class="form-control readonly-label" readonly placeholder="Lng">
+                                </div>
+                            </div>
+
                             <textarea id="alamat" class="form-control mt-3" rows="3" placeholder="Detail alamat lengkap..."></textarea>
-                            <input type="hidden" id="lat">
-                            <input type="hidden" id="lang">
                         </div>
 
                         <div id="otpSection" class="card bg-light border-0 p-3 mb-4 shadow-sm" style="display:none;">
                             <label class="form-label fw-bold small text-center w-100 text-primary">Verifikasi Kode OTP</label>
                             <input type="text" id="otpInput" class="form-control otp-input mb-2" maxlength="6" placeholder="000000">
-                            <p class="small text-muted text-center mb-1">Kode wis dikirim menyang email sampeyan.</p>
-                            <button class="btn btn-sm btn-link text-decoration-none" id="resendBtn" disabled onclick="handleInitialCheck(true)">Kirim Ulang</button>
+                            <p class="small text-muted text-center mb-1">Kode OTP dikirim ke email Anda.</p>
+                            <button class="btn btn-sm btn-link text-decoration-none" id="resendBtn" disabled onclick="requestOTP()">Kirim Ulang OTP</button>
                         </div>
 
                         <button class="btn btn-primary w-100 py-3 shadow fw-bold" onclick="processRegistration()">
@@ -93,7 +104,7 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwW_RvmkXfHp9LnewZ0yYr27AJgGkIznPOyuoya5p-7QhXycS-jVpnW4e6Rt9CuosU_/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3Q5Iz4nQUxG2GqelDhL5n2fVZNQpABV1u_PBRG4Nqhmt2342DWzC1Schl0lcnpk3K/exec'; 
     let map, marker, serverOTP;
 
     window.onload = function() {
@@ -102,51 +113,38 @@
         }
     };
 
-    // --- 1. CEK EMAIL & KIRIM OTP ---
-    // Nang backendmu, fungsi 'checkEmailAndSendOTP' digunake kanggo ngecek email sing wis ono.
-    // Dadi flow iki tak sesuaike:
-    async function handleInitialCheck(isResend = false) {
+    async function handleInitialCheck() {
         const email = document.getElementById('email').value.trim();
         const isAdminMode = document.getElementById('isAdmin').checked;
         
-        if(!email || !email.includes('@')) return Swal.fire('Error', 'Email ora valid cah!', 'warning');
+        if(!email || !email.includes('@')) return Swal.fire('Error', 'Format email salah!', 'warning');
         
         showLoader(true);
         try {
-            // Nembak 'checkEmailAndSendOTP' soko Backendmu
-            const res = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'checkEmailAndSendOTP', email: email })
-            });
+            // Cek apakah pelanggan sudah ada menggunakan action 'read' dari backend
+            const res = await fetch(`${WEB_APP_URL}?action=read&sheet=Pelanggan`);
             const result = await res.json();
             showLoader(false);
 
-            if(result.success) {
-                // Email wis ono nang sheet Pelanggan
+            const isExist = result.data.some(p => p.Email.toLowerCase() === email.toLowerCase());
+
+            if(isExist) {
                 Swal.fire({
                     title: 'Email Terdaftar!',
-                    text: 'Email iki wis dadi pelanggan. Lanjut nang profil?',
+                    text: 'Anda sudah menjadi pelanggan Nanda Teknik.',
                     icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Lanjut'
-                }).then((res) => {
-                    if(res.isConfirmed) window.location.href = 'pekerjaan.html';
+                    confirmButtonText: 'Oke'
                 });
             } else {
-                // Email durung ono -> Buka form registrasi
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 initMap();
 
                 if (!isAdminMode) {
-                    // Mergo email anyar, kowe butuh OTP manual utawa bypass admin
-                    // Nang backendmu, OTP dikirim nek email ketemu. 
-                    // Kanggo registrasi anyar, biasane kowe iso nambah fitur kirim OTP umum.
-                    // Kanggo sementara iki tak gawe bypass utawa kowe kudu nambah action 'sendOTPGeneric' nang backend.
                     document.getElementById('otpSection').style.display = 'block';
-                    // Kita nggunakake action 'checkEmailAndSendOTP' sing mau, tapi biasane butuh email terdaftar.
-                    // Ben registrasi lancar, bagean OTP iki tak sesuaike karo admin bypass dhisik.
-                    if(!isResend) Swal.fire('Pelanggan Anyar', 'Silakan isi data lengkap.', 'success');
+                    requestOTP();
+                } else {
+                    Swal.fire('Mode Admin', 'Registrasi tanpa OTP aktif.', 'info');
                 }
             }
         } catch(e) {
@@ -156,21 +154,35 @@
         }
     }
 
-    // --- 2. FUNGSI MAPS ---
     function initMap() {
-        if (map) {
-            setTimeout(() => { map.invalidateSize(); }, 200);
-            return;
-        }
+        if (map) return;
+        
+        // Default Center Surabaya
         map = L.map('map').setView([-7.2504, 112.7688], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         marker = L.marker([-7.2504, 112.7688], {draggable: true}).addTo(map);
+
+        // FITUR SEARCH (GEOCODER)
+        const geocoder = L.Control.geocoder({
+            defaultMarkGeocode: false,
+            placeholder: "Cari kota, kecamatan, atau jalan..."
+        })
+        .on('markgeocode', function(e) {
+            const bbox = e.geocode.bbox;
+            const center = e.geocode.center;
+            map.fitBounds(bbox);
+            marker.setLatLng(center);
+            updateLocationInfo(center.lat, center.lng);
+        })
+        .addTo(map);
+
         marker.on('dragend', function(e) {
             const pos = e.target.getLatLng();
             updateLocationInfo(pos.lat, pos.lng);
         });
 
+        // Deteksi Lokasi Otomatis
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 const lat = pos.coords.latitude;
@@ -183,25 +195,69 @@
     }
 
     function updateLocationInfo(lat, lng) {
-        document.getElementById('lat').value = lat;
-        document.getElementById('lang').value = lng;
+        // Tampilkan di input read-only
+        document.getElementById('lat').value = lat.toFixed(7);
+        document.getElementById('lang').value = lng.toFixed(7);
+        
+        // Reverse Geocoding (Cari Nama Alamat)
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(res => res.json()).then(data => {
                 document.getElementById('alamat').value = data.display_name || "";
             });
     }
 
-    // --- 3. PROSES SIMPAN (CREATE) ---
+    async function requestOTP() {
+        const email = document.getElementById('email').value.trim();
+        showLoader(true);
+        try {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'kirimOTPRegistrasi', email: email })
+            });
+            const result = await res.json();
+            showLoader(false);
+            
+            if(result.success) {
+                serverOTP = result.otp;
+                startTimer(60);
+                Swal.fire('Berhasil', 'Kode OTP baru telah dikirim ke email.', 'success');
+            }
+        } catch (e) {
+            showLoader(false);
+            Swal.fire('Gagal', 'Koneksi ke server OTP bermasalah.', 'error');
+        }
+    }
+
+    function startTimer(seconds) {
+        const btn = document.getElementById('resendBtn');
+        btn.disabled = true;
+        let timeLeft = seconds;
+        const timer = setInterval(() => {
+            if(timeLeft <= 0) {
+                clearInterval(timer);
+                btn.innerText = "Kirim Ulang OTP";
+                btn.disabled = false;
+            } else {
+                btn.innerText = `Kirim Ulang (${timeLeft}s)`;
+                timeLeft--;
+            }
+        }, 1000);
+    }
+
     async function processRegistration() {
         const isAdminMode = document.getElementById('isAdmin').checked;
+        const otpInput = document.getElementById('otpInput').value;
         const lat = document.getElementById('lat').value;
         
-        // Data sing dikirim kudu podo karo variabel 'data' nang backend 'createPelanggan'
+        if (!isAdminMode && otpInput != serverOTP) {
+            return Swal.fire('OTP Salah', 'Kode verifikasi tidak cocok!', 'error');
+        }
+
         const data = {
             action: 'createPelanggan',
             nama: document.getElementById('nama').value,
             email: document.getElementById('email').value,
-            wa: document.getElementById('wa').value, // Sesuai data.wa nang backend
+            wa: document.getElementById('wa').value,
             lat: lat,
             lang: document.getElementById('lang').value,
             alamat: document.getElementById('alamat').value,
@@ -210,7 +266,7 @@
         };
 
         if(!data.nama || !data.wa || !lat) {
-            return Swal.fire('Peringatan', 'Nama, WA, lan Lokasi kudu lengkap!', 'warning');
+            return Swal.fire('Data Tidak Lengkap', 'Nama, WA, dan Lokasi wajib diisi!', 'warning');
         }
 
         showLoader(true);
@@ -223,14 +279,14 @@
             showLoader(false);
 
             if(result.success) {
-                Swal.fire('Berhasil!', 'Pelanggan anyar wis disimpan.', 'success')
+                Swal.fire('Berhasil!', 'Pelanggan baru telah terdaftar di sistem.', 'success')
                 .then(() => location.reload());
             } else {
-                Swal.fire('Gagal', 'Gagal nyimpen data.', 'error');
+                Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data.', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Koneksi bermasalah!', 'error');
+            Swal.fire('Error', 'Gagal menghubungi server database.', 'error');
         }
     }
 
