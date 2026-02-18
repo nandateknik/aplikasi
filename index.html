@@ -16,40 +16,33 @@
         .nav-tabs-custom .nav-link { border: none; color: #5f6368; font-weight: 600; padding: 10px 20px; cursor: pointer; }
         .nav-tabs-custom .nav-link.active { color: var(--google-blue); border-bottom: 3px solid var(--google-blue); background: none; }
 
+        /* STATUS POSITION FIX */
         .status-badge-wrapper { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .status-pill { font-size: 12px; padding: 6px 16px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
 
-        /* ANTRIAN RESPONSIVE - LAPTOP GRID, HP LIST */
+        /* ANTRIAN RESPONSIVE */
         .antrian-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        @media (max-width: 576px) {
-            .antrian-grid { grid-template-columns: 1fr; } /* Dadi siji kolom nek nang HP */
-        }
-        
-        .antrian-card { background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 15px; border-top: 4px solid var(--google-blue); cursor: pointer; position: relative; z-index: 1; }
-        .antrian-card:hover { border-color: var(--google-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .antrian-card .id-wo { font-weight: bold; color: var(--google-blue); font-size: 14px; }
-        .antrian-card .status-txt { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; background: #fff3cd; color: #856404; display: inline-block; margin-top: 5px; }
+        @media (max-width: 576px) { .antrian-grid { grid-template-columns: 1fr; } }
+        .antrian-card { background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 15px; border-top: 4px solid var(--google-blue); cursor: pointer; }
 
-        /* NOTA STYLE */
-        #notaPrint { width: 100%; max-width: 790px; margin: 0 auto; padding: 30px; background: #fff; color: #000; }
+        /* NOTA PDF CLEAN */
+        #notaPrint { width: 790px; margin: 0 auto; padding: 40px; background: #fff; color: #000; }
         .nota-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+        .nota-logo { width: 70px; margin-bottom: 10px; }
         .table-nota { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .table-nota th { background-color: #f2f2f2 !important; border: 1px solid #000 !important; padding: 10px; text-align: center; }
         .table-nota td { border: 1px solid #000 !important; padding: 10px; }
-        
-        .rekening-area { margin-top: 30px; padding: 15px; border: 2px dashed #000; border-radius: 10px; }
+        .rekening-box { margin-top: 30px; padding: 15px; border: 2px dashed #000; border-radius: 10px; }
 
         .card-custom { border-radius: 12px; border: 1px solid #dadce0; display: none; background: #fff; margin-bottom: 20px; overflow: hidden; }
+        .news-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; height: 100%; }
+        .news-thumb { width: 100%; height: 150px; object-fit: cover; }
         .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        
-        /* Fix for clicking issues */
-        .list-item-card { cursor: pointer; position: relative; z-index: 10; transition: 0.2s; }
-        .list-item-card:hover { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
 
-<div class="loader" id="mainLoader"><div class="spinner-border text-primary"></div><div class="mt-2 fw-bold">Sedang Sinkronisasi...</div></div>
+<div class="loader" id="mainLoader"><div class="spinner-border text-primary"></div><div class="mt-2 fw-bold">Sinkronisasi Data...</div></div>
 
 <div class="container py-4">
     <div class="text-center mb-4 no-print" onclick="location.reload()" style="cursor:pointer">
@@ -64,7 +57,7 @@
     </div>
 
     <div id="sectionAntrian" class="no-print mx-auto" style="max-width: 900px;">
-        <h6 class="fw-bold text-muted mb-3"><i class="fas fa-tools me-2"></i> ANTRIAN TUNGGU HARI INI</h6>
+        <h6 class="fw-bold text-muted mb-3">ANTRIAN TUNGGU HARI INI</h6>
         <div id="antrianList" class="antrian-grid"></div>
     </div>
 
@@ -81,12 +74,12 @@
         </div>
 
         <ul class="nav nav-tabs nav-tabs-custom no-print mb-3">
-            <li class="nav-item"><button class="nav-link active" id="btnTabPekerjaan" onclick="switchTab('pekerjaan')">Pekerjaan</button></li>
-            <li class="nav-item"><button class="nav-link" id="btnTabNota" onclick="switchTab('nota')">Nota / Invoice</button></li>
+            <li class="nav-item"><button class="nav-link active" onclick="switchTab('pekerjaan')">Pekerjaan</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="switchTab('nota')">Nota / Invoice</button></li>
         </ul>
 
         <div class="tab-content">
-            <div id="tabPekerjaanContent">
+            <div id="tabPekerjaan">
                 <div id="listPekerjaan"></div>
                 <div id="detailWO" class="card-custom p-4">
                     <button class="btn btn-link btn-sm p-0 mb-3 no-print" onclick="backToTab()"><i class="fas fa-arrow-left"></i> Kembali</button>
@@ -98,40 +91,42 @@
                 </div>
             </div>
 
-            <div id="tabNotaContent" style="display:none;">
+            <div id="tabNota" style="display:none;">
                 <div id="listNota"></div>
                 <div id="detailNota" class="card-custom">
                     <div class="p-3 no-print"><button class="btn btn-link btn-sm p-0 mb-2" onclick="backToTab()"><i class="fas fa-arrow-left"></i> Kembali</button></div>
                     <div id="notaPrint">
                         <div class="nota-header">
+                            <img src="logo-none-text.png" class="nota-logo" alt="Logo">
                             <h4 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h4>
                             <p class="small mb-0">IT Support & Electrical Engineering | WA: 0823-3113-1466</p>
                         </div>
-                        <div class="row mt-4 mb-3">
-                            <div class="col-7"><b>No Invoice:</b> <span id="nNota"></span><br><b>Tanggal:</b> <span id="nTanggal"></span></div>
-                            <div class="col-5 text-end"><b>Kepada Yth:</b><br><span id="nCustomer"></span></div>
+                        <div class="row mb-3">
+                            <div class="col-7"><b>No:</b> <span id="nNota"></span><br><b>Tgl:</b> <span id="nTanggal"></span></div>
+                            <div class="col-5 text-end"><b>Yth:</b><br><span id="nCustomer"></span></div>
                         </div>
                         <table class="table-nota">
                             <thead><tr><th>No</th><th>Deskripsi</th><th class="text-center">Qty</th><th class="text-end">Harga</th><th class="text-end">Total</th></tr></thead>
                             <tbody id="nItems"></tbody>
                             <tfoot><tr><th colspan="4" class="text-end">TOTAL TAGIHAN</th><th class="text-end" id="nTotal"></th></tr></tfoot>
                         </table>
-                        <div class="rekening-area row">
+                        <div class="rekening-box row">
                             <div class="col-7">
-                                <h6 class="fw-bold mb-2">Informasi Pembayaran:</h6>
-                                <p class="mb-1" style="font-size:14px">Bank BCA: <b>1801826011</b></p>
-                                <p class="mb-0" style="font-size:14px">A/N: <b>Nanda Krisbianto</b></p>
+                                <h6 class="fw-bold mb-1">Pembayaran via BCA:</h6>
+                                <p class="mb-0"><b>1801826011</b> - Nanda Krisbianto</p>
                             </div>
-                            <div class="col-5 text-center">
-                                <p class="mb-4">Hormat Kami,</p>
-                                <p class="mt-3 fw-bold">NANDA TEKNIK</p>
-                            </div>
+                            <div class="col-5 text-center">Hormat Kami,<br><br><b>Nanda Teknik</b></div>
                         </div>
                     </div>
-                    <div class="p-3 no-print"><button class="btn btn-dark w-100" onclick="downloadNota()"><i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF</button></div>
+                    <div class="p-3 no-print"><button class="btn btn-dark w-100" onclick="downloadNota()">DOWNLOAD PDF</button></div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="sectionBlog" class="mt-5 border-top pt-5 no-print">
+        <h5 class="fw-bold text-center mb-4">Berita & Informasi</h5>
+        <div class="row g-4" id="blogFeed"></div>
     </div>
 </div>
 
@@ -139,126 +134,90 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxZ2XW9lVS4jj9NogR2l_W_ffQTJYR6TmJloV6xJMSEvqDEuRRv18-OAl0fxz5fjlFv/exec';
     let globalRes = null;
 
-    window.onload = () => { loadAntrian(); };
+    window.onload = () => { loadAntrian(); loadBlog(); };
 
     async function loadAntrian() {
-        try {
-            const r = await fetch(API_URL + '?action=read&sheet=Booking');
-            const res = await r.json();
-            if(res.success) {
-                const act = res.data.filter(i => !['selesai','dibatalkan'].includes((i.status||'').toLowerCase()));
-                document.getElementById('antrianList').innerHTML = act.map(i => `
-                    <div class="antrian-card shadow-sm" onclick="viewDirect('${i.id}')">
-                        <div class="id-wo">${i.id}</div>
-                        <div class="small text-truncate">${i.judul}</div>
-                        <div class="status-txt">${i.status}</div>
-                    </div>`).join('') || '<p class="text-muted">Tidak ada antrian aktif.</p>';
-            }
-        } catch(e) { console.error(e); }
+        const r = await fetch(API_URL + '?action=read&sheet=Booking');
+        const res = await r.json();
+        if(res.success) {
+            const act = res.data.filter(i => !['selesai','dibatalkan'].includes((i.status||'').toLowerCase()));
+            document.getElementById('antrianList').innerHTML = act.map(i => `
+                <div class="antrian-card shadow-sm" onclick="viewDirect('${i.id}')">
+                    <div class="id-wo fw-bold text-primary">${i.id}</div>
+                    <div class="small text-truncate">${i.judul}</div>
+                    <div class="badge bg-warning text-dark mt-2">${i.status}</div>
+                </div>`).join('');
+        }
     }
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
         if(!kw) return;
         document.getElementById('mainLoader').style.display = 'flex';
-        try {
-            const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
-            globalRes = await r.json();
-            document.getElementById('mainLoader').style.display = 'none';
-            if(globalRes.success) {
-                document.getElementById('sectionAntrian').style.display = 'none';
-                document.getElementById('resultArea').style.display = 'block';
-                document.getElementById('txtNama').innerText = globalRes.customer.nama;
-                document.getElementById('txtEmailWA').innerText = `${globalRes.customer.email} | ${globalRes.customer.wa}`;
-                document.getElementById('txtAlamat').innerText = globalRes.customer.alamat || "Alamat belum diatur";
-                renderUI();
-            } else { alert("Data tidak ditemukan!"); }
-        } catch(e) { document.getElementById('mainLoader').style.display = 'none'; }
+        const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
+        globalRes = await r.json();
+        document.getElementById('mainLoader').style.display = 'none';
+        if(globalRes.success) {
+            document.getElementById('sectionAntrian').style.display = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+            document.getElementById('txtNama').innerText = globalRes.customer.nama;
+            document.getElementById('txtEmailWA').innerText = `${globalRes.customer.email} | ${globalRes.customer.wa}`;
+            document.getElementById('txtAlamat').innerText = globalRes.customer.alamat || "Alamat belum diisi";
+            renderUI();
+        }
     }
 
     function renderUI() {
-        // Render Pekerjaan
         const wos = globalRes.type === 'LIST' ? globalRes.data.filter(x => x.type === 'WO') : (globalRes.type === 'WO' ? [globalRes.data] : []);
-        document.getElementById('listPekerjaan').innerHTML = wos.map(w => `
-            <div class="card p-3 mb-2 shadow-sm list-item-card" onclick="showDetailWO('${w.id || w.woId}')">
-                <b>${w.id || w.woId}</b><br><small>${w.judul || w.pekerjaan}</small>
-            </div>`).join('') || '<p class="p-3">Tidak ada riwayat pekerjaan.</p>';
-
-        // Render Nota
+        document.getElementById('listPekerjaan').innerHTML = wos.map(w => `<div class="card p-3 mb-2" style="cursor:pointer" onclick="showDetailWO('${w.id || w.woId}')"><b>${w.id || w.woId}</b><br><small>${w.judul || w.pekerjaan}</small></div>`).join('');
         const nts = globalRes.type === 'LIST' ? globalRes.data.filter(x => x.type === 'Nota') : (globalRes.type === 'Nota' ? [globalRes.data] : []);
-        document.getElementById('listNota').innerHTML = nts.map(n => `
-            <div class="card p-3 mb-2 shadow-sm border-start border-primary border-4 list-item-card" onclick="showDetailNota('${n.id || n.notaId}')">
-                <b>${n.id || n.notaId}</b><br><small>Total: Rp ${(n.total||0).toLocaleString()}</small>
-            </div>`).join('') || '<p class="p-3">Tidak ada riwayat nota.</p>';
-
+        document.getElementById('listNota').innerHTML = nts.map(n => `<div class="card p-3 mb-2 border-start border-primary border-4" style="cursor:pointer" onclick="showDetailNota('${n.id || n.notaId}')"><b>${n.id || n.notaId}</b><br><small>Total: Rp ${(n.total||0).toLocaleString()}</small></div>`).join('');
         if(globalRes.type === 'WO') showDetailWO(globalRes.data.woId || globalRes.data.id);
-        if(globalRes.type === 'Nota') {
-            switchTab('nota');
-            showDetailNota(globalRes.data.notaId || globalRes.data.id);
-        }
+        if(globalRes.type === 'Nota') { switchTab('nota'); showDetailNota(globalRes.data.notaId || globalRes.data.id); }
     }
 
     function showDetailWO(id) {
         const wo = globalRes.type === 'LIST' ? globalRes.data.find(x => (x.id || x.woId) === id) : globalRes.data;
-        if(!wo) return;
         document.getElementById('listPekerjaan').style.display = 'none';
         document.getElementById('detailWO').style.display = 'block';
         document.getElementById('woID').innerText = wo.woId || wo.id;
         document.getElementById('woJudul').innerText = wo.pekerjaan || wo.judul;
         document.getElementById('woStatus').innerText = wo.status;
         document.getElementById('woStatus').className = `status-pill ${wo.status.toLowerCase()==='selesai'?'bg-success text-white':'bg-warning text-dark'}`;
-        document.getElementById('woLog').innerHTML = (wo.history || []).map(h => `<div class="border-start border-primary ps-3 mb-3"><div class="fw-bold small">${h.status}</div><small class="text-muted" style="font-size:10px">${h.tgl}</small><div class="small">${h.detail || ''}</div></div>`).join('');
+        document.getElementById('woLog').innerHTML = (wo.history || []).map(h => `<div class="border-start border-primary ps-3 mb-3"><b>${h.status}</b><br><small>${h.tgl}</small><br><small>${h.detail||''}</small></div>`).join('');
     }
 
     function showDetailNota(id) {
         const n = globalRes.type === 'LIST' ? globalRes.data.find(x => (x.id || x.notaId) === id) : globalRes.data;
-        if(!n) return;
         document.getElementById('listNota').style.display = 'none';
         document.getElementById('detailNota').style.display = 'block';
         document.getElementById('nNota').innerText = n.notaId || n.id;
         document.getElementById('nTanggal').innerText = n.tanggal || n.tgl;
         document.getElementById('nCustomer').innerText = globalRes.customer.nama;
         document.getElementById('nTotal').innerText = "Rp " + (n.total||0).toLocaleString();
-        document.getElementById('nItems').innerHTML = (n.items || []).map((it, idx) => `<tr><td class="text-center">${idx+1}</td><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${it.harga.toLocaleString()}</td><td class="text-end">${(it.qty * it.harga).toLocaleString()}</td></tr>`).join('');
+        const items = typeof n.items === 'string' ? JSON.parse(n.items) : (n.items || []);
+        document.getElementById('nItems').innerHTML = items.map((it, idx) => `<tr><td class="text-center">${idx+1}</td><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${it.harga.toLocaleString()}</td><td class="text-end">${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('');
     }
 
-    function switchTab(type) {
-        if(type === 'pekerjaan') {
-            document.getElementById('tabPekerjaanContent').style.display = 'block';
-            document.getElementById('tabNotaContent').style.display = 'none';
-            document.getElementById('btnTabPekerjaan').classList.add('active');
-            document.getElementById('btnTabNota').classList.remove('active');
-        } else {
-            document.getElementById('tabPekerjaanContent').style.display = 'none';
-            document.getElementById('tabNotaContent').style.display = 'block';
-            document.getElementById('btnTabNota').classList.add('active');
-            document.getElementById('btnTabPekerjaan').classList.remove('active');
-        }
+    function switchTab(t) {
+        document.getElementById('tabPekerjaan').style.display = t === 'pekerjaan' ? 'block' : 'none';
+        document.getElementById('tabNota').style.display = t === 'nota' ? 'block' : 'none';
     }
 
     function downloadNota() {
-        const element = document.getElementById('notaPrint');
-        const opt = {
-            margin: 10,
-            filename: 'Invoice-Nanda-Teknik.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
+        const opt = { margin: 10, filename: 'Invoice.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(document.getElementById('notaPrint')).save();
     }
 
-    function backToTab() { 
-        document.getElementById('listPekerjaan').style.display='block'; 
-        document.getElementById('detailWO').style.display='none'; 
-        document.getElementById('listNota').style.display='block'; 
-        document.getElementById('detailNota').style.display='none'; 
+    function loadBlog() {
+        fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.nandateknik.com/feeds/posts/default?alt=rss')
+        .then(r => r.json()).then(res => {
+            document.getElementById('blogFeed').innerHTML = res.items.slice(0,3).map(i => `<div class="col-md-4"><div class="news-card"><img src="${i.thumbnail}" class="news-thumb"><div class="p-3"><h6>${i.title}</h6><a href="${i.link}" target="_blank" class="btn btn-sm btn-outline-primary">Baca</a></div></div></div>`).join('');
+        });
     }
 
-    function viewDirect(id) { 
-        document.getElementById('searchInput').value = id; 
-        cariData(); 
-    }
+    function backToTab() { document.getElementById('listPekerjaan').style.display='block'; document.getElementById('detailWO').style.display='none'; document.getElementById('listNota').style.display='block'; document.getElementById('detailNota').style.display='none'; }
+    function viewDirect(id) { document.getElementById('searchInput').value = id; cariData(); }
 </script>
 </body>
 </html>
