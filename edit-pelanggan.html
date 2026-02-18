@@ -48,9 +48,9 @@
 
                     <div id="fullForm" style="display:none;" class="fade-in">
                         <div id="otpSection" class="card bg-warning bg-opacity-10 border-0 p-3 mb-4">
-                            <label class="form-label text-dark fw-bold">Verifikasi OTP</label>
+                            <label class="form-label text-dark fw-bold">Verifikasi OTP (Cek Email)</label>
                             <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="Kode OTP">
-                            <button class="btn btn-sm btn-link text-dark text-decoration-none p-0 fw-bold" id="resendBtn" disabled onclick="sendEditOTP()">Kirim Ulang</button>
+                            <button class="btn btn-sm btn-link text-dark text-decoration-none p-0 fw-bold" id="resendBtn" disabled onclick="checkRegisteredEmail()">Kirim Ulang</button>
                         </div>
 
                         <div class="mb-3">
@@ -86,7 +86,8 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzFO1zm_iwqiYsUs-bnfcNPTIRGPJg8lY5fC0Pg0Phe5jx65eRl3s_b2ua4PHu-pgM4/exec';
+    // URL WEB APP MAS NANDA
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwW_RvmkXfHp9LnewZ0yYr27AJgGkIznPOyuoya5p-7QhXycS-jVpnW4e6Rt9CuosU_/exec';
     let map, marker, serverOTP;
 
     async function checkRegisteredEmail() {
@@ -95,15 +96,19 @@
 
         showLoader(true);
         try {
+            // DISESUAIKAN: Menggunakan action 'checkEmailAndSendOTP' agar OTP terkirim otomatis oleh Backend V4.9
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'verifyEmail', email: email })
+                body: JSON.stringify({ action: 'checkEmailAndSendOTP', email: email })
             });
             const result = await response.json();
             showLoader(false);
 
-            if(result.exists) {
-                // Sesuai field sheet: nama|email|tanggal|wa|lat|lang|is_active|alamat
+            if(result.success) {
+                // Simpan OTP yang dikirim server ke variabel lokal untuk divalidasi nanti
+                serverOTP = result.otp;
+                
+                // Ambil data pelanggan dari server
                 const d = result.data;
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
@@ -111,40 +116,29 @@
                 document.getElementById('lang').value = d.lang || '';
                 document.getElementById('alamat').value = d.alamat || '';
                 
+                // Tampilkan form & lock email
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 
+                // Inisialisasi Map
                 initMap(d.lat, d.lang);
-                sendEditOTP();
+                startResendTimer();
+                
+                Swal.fire('Email Ditemukan', 'Kode OTP telah dikirim ke email Anda. Silakan cek Inbox/Spam.', 'success');
             } else {
-                Swal.fire('Data Tidak Ada', 'Email belum terdaftar.', 'error');
+                Swal.fire('Gagal', result.message || 'Email tidak terdaftar.', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal cek database', 'error');
+            Swal.fire('Error', 'Gagal menghubungi server.', 'error');
         }
-    }
-
-    async function sendEditOTP() {
-        const email = document.getElementById('email').value;
-        try {
-            const res = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'sendOTP', email: email })
-            });
-            const result = await res.json();
-            if(result.success) {
-                serverOTP = result.otp;
-                startResendTimer();
-                Swal.fire('OTP Dikirim', 'Cek email Anda untuk verifikasi.', 'info');
-            }
-        } catch (e) { console.error(e); }
     }
 
     function initMap(lat, lng) {
         lat = parseFloat(lat) || -6.2000;
         lng = parseFloat(lng) || 106.8166;
-        if (map) return;
+        
+        if (map) map.remove();
 
         map = L.map('map').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -166,43 +160,53 @@
     }
 
     async function updateData() {
-        if (document.getElementById('otpInput').value != serverOTP) {
-            return Swal.fire('Verifikasi Gagal', 'Kode OTP salah!', 'error');
+        const userOTP = document.getElementById('otpInput').value;
+        
+        // Validasi OTP
+        if (!userOTP || userOTP != serverOTP) {
+            return Swal.fire('Verifikasi Gagal', 'Kode OTP salah atau belum diisi!', 'error');
         }
 
         const data = {
-            action: 'updatePelanggan',
+            action: 'updatePelanggan', // Sesuai Backend V4.9
             email: document.getElementById('email').value,
             nama: document.getElementById('nama').value,
-            wa: document.getElementById('wa').value, // Sesuai field sheet
+            wa: document.getElementById('wa').value,
             lat: document.getElementById('lat').value,
             lang: document.getElementById('lang').value,
+            is_active: 'Active',
             alamat: document.getElementById('alamat').value
         };
 
         showLoader(true);
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
+            const res = await fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(data) 
+            });
             const result = await res.json();
             showLoader(false);
 
             if(result.success) {
-                Swal.fire('Berhasil!', 'Data pelanggan diperbarui.', 'success').then(() => location.reload());
+                Swal.fire('Berhasil!', 'Data pelanggan telah diperbarui.', 'success')
+                    .then(() => location.reload());
+            } else {
+                Swal.fire('Gagal', result.message, 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal update database', 'error');
+            Swal.fire('Error', 'Gagal update database.', 'error');
         }
     }
 
     function startResendTimer() {
-        let timeLeft = 30;
+        let timeLeft = 60;
         const btn = document.getElementById('resendBtn');
         btn.disabled = true;
         let timer = setInterval(() => {
             if(timeLeft <= 0) {
                 clearInterval(timer);
-                btn.innerText = "Kirim Ulang";
+                btn.innerText = "Kirim Ulang OTP";
                 btn.disabled = false;
             } else {
                 btn.innerText = `Kirim Ulang (${timeLeft}s)`;
