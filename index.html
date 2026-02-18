@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --google-blue: #4285f4; --google-red: #ea4335; --google-yellow: #fbbc05; --google-green: #34a853; --gray-nota: #717171; }
-        body { background: #ffffff; font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #202124; padding-bottom: 20px; }
+        body { background: #ffffff; font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: #202124; padding-bottom: 50px; }
         
         /* Search Box */
         .search-box { 
@@ -17,45 +17,54 @@
             max-width: 600px; margin: 0 auto; display: flex; align-items: center;
             background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        .search-box:focus-within { box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
         .search-box input { border: none; outline: none; width: 100%; margin-left: 10px; font-size: 16px; }
 
-        /* Cards */
+        /* Cards & Components */
         .card-custom { border-radius: 12px; border: 1px solid #dadce0; display: none; margin-bottom: 25px; background: #fff; overflow: hidden; max-width: 800px; margin-left: auto; margin-right: auto; }
         .customer-mini-profile { max-width: 600px; margin: 15px auto; display: none; background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0; padding: 20px; }
         .antrian-item { border-left: 5px solid var(--google-blue); margin-bottom: 12px; background: #fff; border-radius: 8px; border: 1px solid #eee; transition: 0.2s; cursor: pointer; }
         .antrian-item:hover { background: #f8f9fa; transform: translateX(5px); }
+        
+        /* List Result Style (Cari via Email) */
+        .list-result-item { border: 1px solid #eee; border-radius: 10px; padding: 12px 15px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid var(--google-blue); background: #fff; display: flex; justify-content: space-between; align-items: center; }
 
-        /* NOTA STYLE - FIX CENTER & NO CUT */
+        /* Timeline */
+        .timeline-item { border-left: 2px solid var(--google-blue); padding-left: 15px; position: relative; padding-bottom: 15px; }
+        .timeline-item::before { content: ''; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--google-blue); }
+
+        /* STYLE NOTA PDF - FIX CENTERED & NO CUT */
         #notaPrint { 
             background: #fff; 
-            padding: 40px !important; 
-            width: 790px; /* Fix width biar pas A4 */
+            padding: 30px !important; 
+            width: 750px; /* Pas untuk A4 */
             margin: 0 auto;
+            color: #000;
         }
-        .header-center { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
-        .nota-header-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
-        
-        .table-nota thead th { background-color: var(--gray-nota) !important; color: white !important; border: 1px solid #333 !important; text-align: center; }
-        .table-nota td { border: 1px solid #333 !important; }
-        .rekening-box { border: 2px dashed var(--google-blue); border-radius: 10px; background: #f0f7ff; max-width: 400px; padding: 15px; margin-top: 20px; }
+        .nota-header-center { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+        .nota-logo { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; }
+        .table-nota thead th { background-color: var(--gray-nota) !important; color: white !important; border: 1px solid #000 !important; text-align: center; font-size: 13px; }
+        .table-nota td { border: 1px solid #000 !important; font-size: 13px; }
+        .rekening-box { border: 2px dashed var(--google-blue); border-radius: 10px; background: #f0f7ff; max-width: 380px; padding: 12px; margin-top: 20px; }
 
         /* News/Blog */
-        .news-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; height: 100%; background: #fff; transition: 0.3s; }
+        .news-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; height: 100%; background: #fff; }
         .news-thumb { width: 100%; height: 160px; object-fit: cover; }
+        .news-link { color: #1a0dab; font-weight: bold; text-decoration: none; font-size: 14px; }
 
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         
-        @media print { .no-print { display: none !important; } .card-custom { display: block !important; border: none; } #notaPrint { padding: 0 !important; } }
+        @media print { .no-print { display: none !important; } .card-custom { display: block !important; border: none; } #notaPrint { padding: 0 !important; width: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-grow text-primary"></div>
-    <span class="mt-2 fw-medium text-muted">Sinkronisasi Data...</span>
+    <span class="mt-2 fw-medium">Sinkronisasi Data...</span>
 </div>
 
-<div class="container pb-5">
+<div class="container">
     <div class="text-center mt-5 mb-4 no-print" onclick="location.reload()" style="cursor:pointer">
         <h1 class="fw-bold" style="letter-spacing: -1.5px;">
             <span style="color: #4285f4">N</span><span style="color: #ea4335">a</span><span style="color: #fbbc05">n</span><span style="color: #4285f4">d</span><span style="color: #34a853">a</span>
@@ -70,8 +79,9 @@
             <button class="btn btn-link text-muted p-0 ms-2" onclick="cariData()"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="text-center mt-3 d-flex justify-content-center flex-wrap gap-2">
-            <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="cariData()">Cari Data</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-4" onclick="resetForm()">Reset & Back</button>
+            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="cariData()">Cari Data</button>
+            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="resetForm()">Reset & Back</button>
+            <a href="daftar-pelanggan.html" class="btn btn-outline-success btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1"></i> Daftar</a>
         </div>
     </div>
 
@@ -82,7 +92,7 @@
             </div>
             <div>
                 <h6 class="mb-0 fw-bold" id="profNama">Nama Pelanggan</h6>
-                <small class="text-muted" id="profEmail">email@gmail.com</small>
+                <small class="text-muted" id="profEmail">email@gmail.com</small> | <small id="profWA" class="text-muted"></small>
             </div>
         </div>
     </div>
@@ -90,84 +100,110 @@
     <div class="mt-4 mx-auto" style="max-width: 850px;">
         
         <div id="sectionAntrian" class="no-print">
-            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-tasks me-2"></i>ANTRIAN PEKERJAAN</h6>
-            <div id="antrianList"></div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-muted"><i class="fas fa-tasks me-2"></i>ANTRIAN PEKERJAAN AKTIF</h6>
+                <span class="badge bg-primary rounded-pill" id="countAntrian">0</span>
+            </div>
+            <div id="antrianList"><div class="text-center p-3"><div class="spinner-border spinner-border-sm text-muted"></div></div></div>
         </div>
 
         <div id="cardNota" class="card-custom">
             <div class="p-4">
                 <button class="btn btn-link btn-sm text-decoration-none mb-3 p-0 no-print" onclick="resetForm()"><i class="fas fa-arrow-left me-1"></i> Kembali</button>
-                
                 <div id="notaPrint">
-                    <div class="header-center">
-                        <img src="logo-none-text.png" class="nota-header-logo" alt="Logo">
-                        <h3 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h3>
-                        <p class="small mb-0 fw-bold">Software, Network & Electrical Engineering</p>
-                        <p class="small mb-0" style="font-size: 12px;">Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur</p>
-                        <p class="small mb-0" style="font-size: 12px;">WA: 0823-3113-1466 | Email: nandateknik02@gmail.com</p>
+                    <div class="nota-header-center">
+                        <img src="logo-none-text.png" class="nota-logo" alt="Logo">
+                        <h4 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h4>
+                        <p class="small mb-0 fw-bold" style="font-size: 11px;">Software, Network & Electrical Engineering</p>
+                        <p class="small mb-0" style="font-size: 10px;">Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur</p>
+                        <p class="small mb-0" style="font-size: 10px;">WA: 0823-3113-1466 | Email: nandateknik02@gmail.com</p>
                     </div>
-
-                    <div class="row mb-4">
-                        <div class="col-6">
-                            <h5 class="fw-bold text-uppercase">Penawaran Harga</h5>
-                            <table class="small">
-                                <tr><td class="pe-2">No. Transaksi</td><td>: <span id="notaIdDisplay" class="fw-bold"></span></td></tr>
-                                <tr><td>Tanggal</td><td>: <span id="notaDateDisplay"></span></td></tr>
-                            </table>
-                        </div>
-                        <div class="col-6 text-end">
-                            <div class="small mt-4">
-                                <span class="text-muted">Kepada Yth:</span><br>
-                                <b id="notaUserEmail"></b>
+                    <div class="row mb-3">
+                        <div class="col-7">
+                            <h6 class="fw-bold text-uppercase mb-1">Penawaran Harga</h6>
+                            <div style="font-size: 12px;">
+                                <b>ID Nota:</b> <span id="notaIdDisplay"></span><br>
+                                <b>Tanggal:</b> <span id="notaDateDisplay"></span>
                             </div>
                         </div>
+                        <div class="col-5 text-end" style="font-size: 12px;">
+                            <span class="text-muted">Kepada Yth:</span><br>
+                            <b id="notaUserEmail"></b>
+                        </div>
                     </div>
-
-                    <table class="table table-nota">
+                    <table class="table table-nota table-bordered">
                         <thead>
                             <tr>
-                                <th style="width: 50px;">No</th>
+                                <th style="width: 40px;">No</th>
                                 <th>Deskripsi Pekerjaan</th>
-                                <th style="width: 70px;">Qty</th>
-                                <th style="width: 130px;">Harga</th>
-                                <th style="width: 150px;">Jumlah</th>
+                                <th style="width: 50px;">Qty</th>
+                                <th style="width: 110px;">Harga</th>
+                                <th style="width: 120px;">Jumlah</th>
                             </tr>
                         </thead>
                         <tbody id="notaItems"></tbody>
                         <tfoot class="fw-bold">
                             <tr>
                                 <td colspan="4" class="text-end">TOTAL :</td>
-                                <td class="text-end" id="notaTotal" style="background: #eee;">Rp 0</td>
+                                <td class="text-end" id="notaTotal" style="background:#eee">Rp 0</td>
                             </tr>
                         </tfoot>
                     </table>
-
-                    <div class="rekening-box mt-4">
-                        <div class="small fw-bold text-primary mb-1">METODE PEMBAYARAN:</div>
-                        <div class="fw-bold text-dark" style="font-size: 16px;">BCA - 1801826011</div>
-                        <div class="text-uppercase" style="font-size: 11px;">A/N NANDA KRISBIANTO</div>
+                    <div class="rekening-box">
+                        <div class="small fw-bold text-primary mb-1">PEMBAYARAN TRANSFER:</div>
+                        <div class="fw-bold" style="font-size: 15px;">BCA - 1801826011</div>
+                        <div class="text-uppercase" style="font-size: 10px;">A/N NANDA KRISBIANTO</div>
                     </div>
                 </div>
-
-                <button class="btn btn-dark w-100 mt-4 no-print" onclick="downloadPDF()">
-                    <i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF SEKARANG
-                </button>
+                <button class="btn btn-dark btn-sm w-100 mt-3 no-print" onclick="downloadPDF()"><i class="fas fa-file-pdf me-2"></i> DOWNLOAD NOTA (PDF)</button>
             </div>
         </div>
 
         <div id="cardWO" class="card-custom">
-            <div class="p-4" id="woHistory"></div>
+            <div class="p-4">
+                <button class="btn btn-link btn-sm text-decoration-none mb-3 p-0 no-print" onclick="resetForm()"><i class="fas fa-arrow-left me-1"></i> Kembali</button>
+                <div id="woHeaderDetail">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div><h2 id="woIdDisplay" class="fw-bold mb-0">WO-XXXX</h2><h5 id="woJudul" class="text-primary fw-bold">Judul</h5></div>
+                        <span id="woStatus" class="badge bg-warning text-dark rounded-pill px-3 py-2">Status</span>
+                    </div>
+                    <p id="woAlamatDisplay" class="small text-muted mb-4 border-bottom pb-2">Alamat...</p>
+                </div>
+                <div id="woHistory"></div>
+            </div>
         </div>
+
     </div>
 
     <div id="sectionBlog" class="mt-5 border-top pt-5 no-print">
-        <h5 class="fw-bold text-center mb-4">Informasi Terbaru</h5>
+        <h5 class="fw-bold text-center mb-4"><i class="fas fa-rss text-danger me-2"></i>Informasi & Tips Terbaru</h5>
         <div class="row g-4" id="blogFeed"></div>
     </div>
 </div>
 
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZ2XW9lVS4jj9NogR2l_W_ffQTJYR6TmJloV6xJMSEvqDEuRRv18-OAl0fxz5fjlFv/exec';
+
+    window.onload = () => { loadAntrianAktif(); loadBlogFeed(); };
+
+    async function loadAntrianAktif() {
+        try {
+            const res = await fetch(WEB_APP_URL + '?action=read&sheet=Booking');
+            const result = await res.json();
+            const container = document.getElementById('antrianList');
+            if(result.success) {
+                const antrian = result.data.filter(i => {
+                    const st = (i.status || "").toLowerCase();
+                    return st !== 'selesai' && st !== 'dibatalkan' && st !== '';
+                });
+                document.getElementById('countAntrian').innerText = antrian.length;
+                container.innerHTML = antrian.length ? '' : '<p class="text-center small text-muted">Antrian kosong.</p>';
+                antrian.forEach(item => {
+                    container.innerHTML += `<div class="antrian-item p-3 d-flex justify-content-between align-items-center shadow-sm" onclick="viewDetail('${item.id}')"><div><div class="fw-bold">${item.id}</div><div class="small text-muted">${item.judul || 'Pekerjaan'}</div></div><span class="badge bg-warning text-dark rounded-pill">${item.status}</span></div>`;
+                });
+            }
+        } catch(e) { console.error(e); }
+    }
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
@@ -184,10 +220,39 @@
                     document.getElementById('customerProfile').style.display = 'block';
                     document.getElementById('profNama').innerText = result.customer.nama;
                     document.getElementById('profEmail').innerText = result.customer.email;
+                    document.getElementById('profWA').innerText = result.customer.wa || '';
                 }
-                if(result.type === 'Nota') showNota(result.data);
-            } else { alert("Data gak ketemu!"); }
+                if(result.type === 'LIST') renderList(result.data);
+                else if(result.type === 'WO') showWO(result.data);
+                else if(result.type === 'Nota') showNota(result.data);
+            } else { alert("Data tidak ditemukan!"); }
         } catch(e) { document.getElementById('loader').style.display = 'none'; }
+    }
+
+    function renderList(data) {
+        document.getElementById('cardWO').style.display = 'block';
+        document.getElementById('woHeaderDetail').style.display = 'none';
+        const list = document.getElementById('woHistory');
+        list.innerHTML = '<h6 class="fw-bold text-muted mb-3">Pilih Pekerjaan:</h6>';
+        data.forEach(item => {
+            list.innerHTML += `<div class="list-result-item shadow-sm" onclick="viewDetail('${item.id}')"><div><div class="fw-bold">${item.judul}</div><small>${item.id}</small></div><span class="badge bg-light text-dark border">${item.status}</span></div>`;
+        });
+    }
+
+    function showWO(data) {
+        document.getElementById('cardWO').style.display = 'block';
+        document.getElementById('woHeaderDetail').style.display = 'block';
+        document.getElementById('woIdDisplay').innerText = data.id;
+        document.getElementById('woJudul').innerText = data.judul;
+        document.getElementById('woStatus').innerText = data.status;
+        document.getElementById('woAlamatDisplay').innerText = data.alamat;
+        let html = '';
+        if(data.history) {
+            data.history.forEach(h => {
+                html += `<div class="timeline-item"><div class="fw-bold small">${h.status}</div><small class="text-muted" style="font-size:10px">${h.tgl}</small><div class="small text-secondary">${h.detail || '-'}</div></div>`;
+            });
+        }
+        document.getElementById('woHistory').innerHTML = html || '<p class="small text-muted">Belum ada log.</p>';
     }
 
     function showNota(data) {
@@ -203,40 +268,32 @@
         document.getElementById('notaItems').innerHTML = html;
     }
 
-    // FIX DOWNLOAD PDF GAK KEPOTONG
-    function downloadPDF() {
-        const element = document.getElementById('notaPrint');
-        const opt = {
-            margin:       [10, 10, 10, 10],
-            filename:     'Nota_Nanda_Teknik.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true, 
-                letterRendering: true,
-                scrollX: 0,
-                scrollY: 0
-            },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // Biar pas ditarik ke PDF posisi stabil
-        html2pdf().set(opt).from(element).save();
-    }
-
-    function resetTampilan() { document.getElementById('cardNota').style.display = 'none'; document.getElementById('customerProfile').style.display = 'none'; }
-    function resetForm() { location.reload(); }
-    
-    // Load Blog & Antrian on Start
-    window.onload = () => {
+    function loadBlogFeed() {
         fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.nandateknik.com/feeds/posts/default?alt=rss')
         .then(res => res.json()).then(data => {
             const feed = document.getElementById('blogFeed');
+            feed.innerHTML = '';
             data.items.slice(0, 3).forEach(item => {
-                feed.innerHTML += `<div class="col-md-4"><div class="news-card"><img src="${item.thumbnail || 'https://via.placeholder.com/400x250'}" class="news-thumb"><div class="p-3"><a href="${item.link}" target="_blank" class="news-link fw-bold">${item.title}</a></div></div></div>`;
+                feed.innerHTML += `<div class="col-md-4"><div class="news-card"><img src="${item.thumbnail || 'https://via.placeholder.com/400x250'}" class="news-thumb"><div class="p-3"><a href="${item.link}" target="_blank" class="news-link">${item.title}</a></div></div></div>`;
             });
         });
-    };
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('notaPrint');
+        const opt = { 
+            margin: 10, 
+            filename: 'Nota_Nanda_Teknik.pdf', 
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    function viewDetail(id) { document.getElementById('searchInput').value = id; cariData(); }
+    function resetTampilan() { ['cardWO', 'cardNota', 'customerProfile'].forEach(id => document.getElementById(id).style.display = 'none'); }
+    function resetForm() { document.getElementById('searchInput').value = ''; resetTampilan(); document.getElementById('sectionAntrian').style.display = 'block'; document.getElementById('sectionBlog').style.display = 'block'; loadAntrianAktif(); }
 </script>
 </body>
 </html>
