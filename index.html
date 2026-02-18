@@ -16,23 +16,30 @@
         .nav-tabs-custom .nav-link { border: none; color: #5f6368; font-weight: 600; padding: 10px 20px; cursor: pointer; }
         .nav-tabs-custom .nav-link.active { color: var(--google-blue); border-bottom: 3px solid var(--google-blue); background: none; }
 
-        /* STATUS POSITION FIX */
+        /* STATUS POSITION */
         .status-badge-wrapper { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .status-pill { font-size: 12px; padding: 6px 16px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
 
-        /* ANTRIAN RESPONSIVE */
+        /* ANTRIAN HP FRIENDLY */
         .antrian-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
         @media (max-width: 576px) { .antrian-grid { grid-template-columns: 1fr; } }
         .antrian-card { background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 15px; border-top: 4px solid var(--google-blue); cursor: pointer; }
 
-        /* NOTA PDF CLEAN */
+        /* NOTA PDF */
         #notaPrint { width: 790px; margin: 0 auto; padding: 40px; background: #fff; color: #000; }
         .nota-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
-        .nota-logo { width: 70px; margin-bottom: 10px; }
         .table-nota { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .table-nota th { background-color: #f2f2f2 !important; border: 1px solid #000 !important; padding: 10px; text-align: center; }
         .table-nota td { border: 1px solid #000 !important; padding: 10px; }
-        .rekening-box { margin-top: 30px; padding: 15px; border: 2px dashed #000; border-radius: 10px; }
+        
+        /* BOX REKENING PUTUS-PUTUS TANPA TTD */
+        .rekening-putus { 
+            margin-top: 30px; 
+            padding: 15px; 
+            border: 2px dashed #000; 
+            border-radius: 10px;
+            text-align: center;
+        }
 
         .card-custom { border-radius: 12px; border: 1px solid #dadce0; display: none; background: #fff; margin-bottom: 20px; overflow: hidden; }
         .news-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; height: 100%; }
@@ -57,7 +64,7 @@
     </div>
 
     <div id="sectionAntrian" class="no-print mx-auto" style="max-width: 900px;">
-        <h6 class="fw-bold text-muted mb-3">ANTRIAN TUNGGU HARI INI</h6>
+        <h6 class="fw-bold text-muted mb-3">ANTRIAN HARI INI</h6>
         <div id="antrianList" class="antrian-grid"></div>
     </div>
 
@@ -97,25 +104,22 @@
                     <div class="p-3 no-print"><button class="btn btn-link btn-sm p-0 mb-2" onclick="backToTab()"><i class="fas fa-arrow-left"></i> Kembali</button></div>
                     <div id="notaPrint">
                         <div class="nota-header">
-                            <img src="logo-none-text.png" class="nota-logo" alt="Logo">
                             <h4 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h4>
                             <p class="small mb-0">IT Support & Electrical Engineering | WA: 0823-3113-1466</p>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-7"><b>No:</b> <span id="nNota"></span><br><b>Tgl:</b> <span id="nTanggal"></span></div>
-                            <div class="col-5 text-end"><b>Yth:</b><br><span id="nCustomer"></span></div>
+                            <div class="col-7"><b>No Nota:</b> <span id="nNota"></span><br><b>Tanggal:</b> <span id="nTanggal"></span></div>
+                            <div class="col-5 text-end"><b>Kepada Yth:</b><br><span id="nCustomer"></span></div>
                         </div>
                         <table class="table-nota">
-                            <thead><tr><th>No</th><th>Deskripsi</th><th class="text-center">Qty</th><th class="text-end">Harga</th><th class="text-end">Total</th></tr></thead>
+                            <thead><tr><th>No</th><th>Deskripsi Layanan</th><th class="text-center">Qty</th><th class="text-end">Harga</th><th class="text-end">Total</th></tr></thead>
                             <tbody id="nItems"></tbody>
                             <tfoot><tr><th colspan="4" class="text-end">TOTAL TAGIHAN</th><th class="text-end" id="nTotal"></th></tr></tfoot>
                         </table>
-                        <div class="rekening-box row">
-                            <div class="col-7">
-                                <h6 class="fw-bold mb-1">Pembayaran via BCA:</h6>
-                                <p class="mb-0"><b>1801826011</b> - Nanda Krisbianto</p>
-                            </div>
-                            <div class="col-5 text-center">Hormat Kami,<br><br><b>Nanda Teknik</b></div>
+                        <div class="rekening-putus">
+                            <h6 class="fw-bold mb-2">PEMBAYARAN TRANSFER MELALUI REKENING:</h6>
+                            <h5 class="mb-1 fw-bold">BANK BCA: 1801826011</h5>
+                            <h6 class="mb-0">A/N NANDA KRISBIANTO</h6>
                         </div>
                     </div>
                     <div class="p-3 no-print"><button class="btn btn-dark w-100" onclick="downloadNota()">DOWNLOAD PDF</button></div>
@@ -162,7 +166,7 @@
             document.getElementById('resultArea').style.display = 'block';
             document.getElementById('txtNama').innerText = globalRes.customer.nama;
             document.getElementById('txtEmailWA').innerText = `${globalRes.customer.email} | ${globalRes.customer.wa}`;
-            document.getElementById('txtAlamat').innerText = globalRes.customer.alamat || "Alamat belum diisi";
+            document.getElementById('txtAlamat').innerText = globalRes.customer.alamat || "Alamat tidak tersedia";
             renderUI();
         }
     }
@@ -184,7 +188,9 @@
         document.getElementById('woJudul').innerText = wo.pekerjaan || wo.judul;
         document.getElementById('woStatus').innerText = wo.status;
         document.getElementById('woStatus').className = `status-pill ${wo.status.toLowerCase()==='selesai'?'bg-success text-white':'bg-warning text-dark'}`;
-        document.getElementById('woLog').innerHTML = (wo.history || []).map(h => `<div class="border-start border-primary ps-3 mb-3"><b>${h.status}</b><br><small>${h.tgl}</small><br><small>${h.detail||''}</small></div>`).join('');
+        // Ambil history/proses_json
+        const logs = typeof wo.history === 'string' ? JSON.parse(wo.history) : (wo.history || []);
+        document.getElementById('woLog').innerHTML = logs.map(h => `<div class="border-start border-primary ps-3 mb-3"><b>${h.status}</b><br><small>${h.tgl}</small><br><small>${h.detail||''}</small></div>`).join('');
     }
 
     function showDetailNota(id) {
@@ -195,6 +201,7 @@
         document.getElementById('nTanggal').innerText = n.tanggal || n.tgl;
         document.getElementById('nCustomer').innerText = globalRes.customer.nama;
         document.getElementById('nTotal').innerText = "Rp " + (n.total||0).toLocaleString();
+        // Ambil items_json
         const items = typeof n.items === 'string' ? JSON.parse(n.items) : (n.items || []);
         document.getElementById('nItems').innerHTML = items.map((it, idx) => `<tr><td class="text-center">${idx+1}</td><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${it.harga.toLocaleString()}</td><td class="text-end">${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('');
     }
@@ -205,7 +212,7 @@
     }
 
     function downloadNota() {
-        const opt = { margin: 10, filename: 'Invoice.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        const opt = { margin: 10, filename: 'Invoice-Nanda.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
         html2pdf().set(opt).from(document.getElementById('notaPrint')).save();
     }
 
