@@ -86,7 +86,6 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // URL WEB APP MAS NANDA
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwW_RvmkXfHp9LnewZ0yYr27AJgGkIznPOyuoya5p-7QhXycS-jVpnW4e6Rt9CuosU_/exec';
     let map, marker, serverOTP;
 
@@ -96,7 +95,7 @@
 
         showLoader(true);
         try {
-            // DISESUAIKAN: Menggunakan action 'checkEmailAndSendOTP' agar OTP terkirim otomatis oleh Backend V4.9
+            // DISESUAIKAN: Pakai action 'checkEmailAndSendOTP' agar sinkron dengan Backend V4.9
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'checkEmailAndSendOTP', email: email })
@@ -105,10 +104,10 @@
             showLoader(false);
 
             if(result.success) {
-                // Simpan OTP yang dikirim server ke variabel lokal untuk divalidasi nanti
+                // Simpan OTP dari server
                 serverOTP = result.otp;
                 
-                // Ambil data pelanggan dari server
+                // Isi data profil
                 const d = result.data;
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
@@ -116,21 +115,20 @@
                 document.getElementById('lang').value = d.lang || '';
                 document.getElementById('alamat').value = d.alamat || '';
                 
-                // Tampilkan form & lock email
+                // Tampilkan form
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 
-                // Inisialisasi Map
                 initMap(d.lat, d.lang);
                 startResendTimer();
                 
-                Swal.fire('Email Ditemukan', 'Kode OTP telah dikirim ke email Anda. Silakan cek Inbox/Spam.', 'success');
+                Swal.fire('Email Ditemukan', 'Kode OTP sudah dikirim ke email Anda.', 'success');
             } else {
-                Swal.fire('Gagal', result.message || 'Email tidak terdaftar.', 'error');
+                Swal.fire('Data Tidak Ada', 'Email belum terdaftar.', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+            Swal.fire('Error', 'Gagal cek database', 'error');
         }
     }
 
@@ -138,7 +136,7 @@
         lat = parseFloat(lat) || -6.2000;
         lng = parseFloat(lng) || 106.8166;
         
-        if (map) map.remove();
+        if (map) map.remove(); // Hapus map lama kalau ada
 
         map = L.map('map').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -161,14 +159,12 @@
 
     async function updateData() {
         const userOTP = document.getElementById('otpInput').value;
-        
-        // Validasi OTP
-        if (!userOTP || userOTP != serverOTP) {
-            return Swal.fire('Verifikasi Gagal', 'Kode OTP salah atau belum diisi!', 'error');
+        if (userOTP != serverOTP) {
+            return Swal.fire('Verifikasi Gagal', 'Kode OTP salah!', 'error');
         }
 
         const data = {
-            action: 'updatePelanggan', // Sesuai Backend V4.9
+            action: 'updatePelanggan',
             email: document.getElementById('email').value,
             nama: document.getElementById('nama').value,
             wa: document.getElementById('wa').value,
@@ -180,22 +176,16 @@
 
         showLoader(true);
         try {
-            const res = await fetch(WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify(data) 
-            });
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
             const result = await res.json();
             showLoader(false);
 
             if(result.success) {
-                Swal.fire('Berhasil!', 'Data pelanggan telah diperbarui.', 'success')
-                    .then(() => location.reload());
-            } else {
-                Swal.fire('Gagal', result.message, 'error');
+                Swal.fire('Berhasil!', 'Data pelanggan diperbarui.', 'success').then(() => location.reload());
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal update database.', 'error');
+            Swal.fire('Error', 'Gagal update database', 'error');
         }
     }
 
@@ -206,7 +196,7 @@
         let timer = setInterval(() => {
             if(timeLeft <= 0) {
                 clearInterval(timer);
-                btn.innerText = "Kirim Ulang OTP";
+                btn.innerText = "Kirim Ulang";
                 btn.disabled = false;
             } else {
                 btn.innerText = `Kirim Ulang (${timeLeft}s)`;
