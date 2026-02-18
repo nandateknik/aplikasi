@@ -19,15 +19,14 @@
         .status-badge-wrapper { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .status-pill { font-size: 12px; padding: 6px 16px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
 
-        /* LIST PEKERJAAN HARI INI - MODEL CARD ANTRIAN */
+        /* ANTRIAN TUNGGU - DESIGN TETEP */
         .antrian-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
         .antrian-card { background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 15px; border-top: 4px solid var(--google-blue); transition: 0.3s; cursor: pointer; }
-        .antrian-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .antrian-card .id-wo { font-weight: bold; color: var(--google-blue); font-size: 14px; }
         .antrian-card .status-txt { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; background: #fff3cd; color: #856404; display: inline-block; margin-top: 5px; }
 
-        /* NOTA PDF STYLE */
-        #notaPrint { width: 794px; margin: 0 auto; padding: 40px; background: #fff; color: #000; position: relative; }
+        /* NOTA STYLE UNTUK PDF */
+        #notaPrint { width: 790px; margin: 0 auto; padding: 40px; background: #fff; color: #000; }
         .nota-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
         .table-nota { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .table-nota th { background-color: #f2f2f2 !important; border: 1px solid #000 !important; padding: 10px; text-align: center; }
@@ -35,10 +34,8 @@
         
         /* AREA REKENING GARIS PUTUS-PUTUS */
         .rekening-area { 
-            margin-top: 30px; 
-            padding: 15px; 
-            border: 2px dashed #444; /* Garis putus-putus sesuai njalukanmu */
-            border-radius: 10px;
+            margin-top: 30px; padding: 15px; 
+            border: 2px dashed #000; border-radius: 10px;
         }
 
         .card-custom { border-radius: 12px; border: 1px solid #dadce0; display: none; background: #fff; margin-bottom: 20px; overflow: hidden; }
@@ -63,23 +60,21 @@
             <i class="fas fa-search text-muted"></i>
             <input type="text" id="searchInput" placeholder="Cari Email, ID WO, atau ID Nota..." onkeypress="if(event.key==='Enter') cariData()">
         </div>
-        <div class="text-center mt-3 d-flex justify-content-center gap-2">
-            <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="cariData()">Cari Data</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="resetPage()">Reset</button>
-        </div>
     </div>
 
     <div id="sectionAntrian" class="no-print mx-auto" style="max-width: 900px;">
-        <h6 class="fw-bold text-muted mb-3"><i class="fas fa-list-ol me-2"></i>ANTRIAN TUNGGU HARI INI</h6>
+        <h6 class="fw-bold text-muted mb-3">ANTRIAN TUNGGU HARI INI</h6>
         <div id="antrianList" class="antrian-grid"></div>
     </div>
 
     <div id="resultArea" style="display:none;" class="mx-auto" style="max-width: 850px;">
         <div id="custProfile" class="card p-3 mb-4 shadow-sm no-print" style="border-radius: 12px;">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px; height:45px"><i class="fas fa-user"></i></div>
-                    <div><h6 class="mb-0 fw-bold" id="txtNama"></h6><small class="text-muted" id="txtEmailWA"></small></div>
+            <div class="d-flex align-items-center">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px; height:45px"><i class="fas fa-user"></i></div>
+                <div>
+                    <h6 class="mb-0 fw-bold" id="txtNama"></h6>
+                    <small class="text-muted d-block" id="txtEmailWA"></small>
+                    <small class="fw-bold text-dark mt-1 d-block" id="txtAlamat"></small>
                 </div>
             </div>
         </div>
@@ -106,14 +101,14 @@
                 <div id="listNota"></div>
                 <div id="detailNota" class="card-custom">
                     <div class="p-3 no-print"><button class="btn btn-link btn-sm p-0 mb-2" onclick="backToTab()"><i class="fas fa-arrow-left"></i> Kembali</button></div>
+                    
                     <div id="notaPrint">
                         <div class="nota-header">
-                            <img src="logo-none-text.png" style="width:60px" alt="Logo">
                             <h4 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h4>
-                            <p class="small mb-0">IT Support & Electrical Engineering</p>
+                            <p class="small mb-0">IT Support & Electrical Engineering | WA: 0823-3113-1466</p>
                         </div>
                         <div class="row mt-4 mb-3">
-                            <div class="col-7"><b>No. Invoice:</b> <span id="nNota"></span><br><b>Tanggal:</b> <span id="nTanggal"></span></div>
+                            <div class="col-7"><b>No:</b> <span id="nNota"></span><br><b>Tgl:</b> <span id="nTanggal"></span></div>
                             <div class="col-5 text-end"><b>Kepada Yth:</b><br><span id="nCustomer"></span></div>
                         </div>
                         <table class="table-nota">
@@ -121,7 +116,6 @@
                             <tbody id="nItems"></tbody>
                             <tfoot><tr><th colspan="4" class="text-end">TOTAL</th><th class="text-end" id="nTotal"></th></tr></tfoot>
                         </table>
-
                         <div class="rekening-area row">
                             <div class="col-7">
                                 <h6 class="fw-bold mb-2">Informasi Pembayaran:</h6>
@@ -139,18 +133,13 @@
             </div>
         </div>
     </div>
-
-    <div id="sectionBlog" class="mt-5 border-top pt-5 no-print">
-        <h5 class="fw-bold text-center mb-4">Berita & Informasi</h5>
-        <div class="row g-4" id="blogFeed"></div>
-    </div>
 </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxZ2XW9lVS4jj9NogR2l_W_ffQTJYR6TmJloV6xJMSEvqDEuRRv18-OAl0fxz5fjlFv/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzFO1zm_iwqiYsUs-bnfcNPTIRGPJg8lY5fC0Pg0Phe5jx65eRl3s_b2ua4PHu-pgM4/exec';
     let globalRes = null;
 
-    window.onload = () => { loadAntrian(); loadBlog(); };
+    window.onload = () => { loadAntrian(); };
 
     async function loadAntrian() {
         const r = await fetch(API_URL + '?action=read&sheet=Booking');
@@ -160,9 +149,9 @@
             document.getElementById('antrianList').innerHTML = act.map(i => `
                 <div class="antrian-card shadow-sm" onclick="viewDirect('${i.id}')">
                     <div class="id-wo">${i.id}</div>
-                    <div class="small text-truncate" style="max-width:150px">${i.judul}</div>
+                    <div class="small text-truncate">${i.judul}</div>
                     <div class="status-txt">${i.status}</div>
-                </div>`).join('') || '<p class="text-muted">Antrian Kosong.</p>';
+                </div>`).join('');
         }
     }
 
@@ -179,6 +168,7 @@
                 document.getElementById('resultArea').style.display = 'block';
                 document.getElementById('txtNama').innerText = globalRes.customer.nama;
                 document.getElementById('txtEmailWA').innerText = `${globalRes.customer.email} | ${globalRes.customer.wa}`;
+                document.getElementById('txtAlamat').innerText = globalRes.customer.alamat || "Alamat belum diatur";
                 renderUI();
             } else { alert("Data tidak ditemukan!"); }
         } catch(e) { document.getElementById('mainLoader').style.display = 'none'; }
@@ -186,19 +176,9 @@
 
     function renderUI() {
         const wos = globalRes.type === 'LIST' ? globalRes.data.filter(x => x.type === 'WO') : (globalRes.type === 'WO' ? [globalRes.data] : []);
-        document.getElementById('listPekerjaan').innerHTML = wos.map(w => `
-            <div class="card p-3 mb-2 shadow-sm" style="cursor:pointer" onclick="viewDirect('${w.id || w.woId}')">
-                <div class="d-flex justify-content-between"><b>${w.id || w.woId}</b> <span class="badge bg-info text-dark">${w.status}</span></div>
-                <small>${w.judul || w.pekerjaan}</small>
-            </div>`).join('') || '<p class="p-3">Tidak ada riwayat.</p>';
-
-        const notas = globalRes.type === 'LIST' ? globalRes.data.filter(x => x.type === 'Nota') : (globalRes.type === 'Nota' ? [globalRes.data] : []);
-        document.getElementById('listNota').innerHTML = notas.map(n => `
-            <div class="card p-3 mb-2 shadow-sm border-start border-primary border-4" style="cursor:pointer" onclick="viewDirect('${n.id || n.notaId}')">
-                <div class="d-flex justify-content-between"><b>${n.id || n.notaId}</b> <b>${n.total ? 'Rp '+n.total.toLocaleString() : ''}</b></div>
-                <small class="text-muted">${n.tgl || n.tanggal}</small>
-            </div>`).join('') || '<p class="p-3">Tidak ada riwayat.</p>';
-
+        document.getElementById('listPekerjaan').innerHTML = wos.map(w => `<div class="card p-3 mb-2 shadow-sm" style="cursor:pointer" onclick="viewDirect('${w.id || w.woId}')"><b>${w.id || w.woId}</b><br><small>${w.judul || w.pekerjaan}</small></div>`).join('');
+        const nts = globalRes.type === 'LIST' ? globalRes.data.filter(x => x.type === 'Nota') : (globalRes.type === 'Nota' ? [globalRes.data] : []);
+        document.getElementById('listNota').innerHTML = nts.map(n => `<div class="card p-3 mb-2 shadow-sm border-start border-primary border-4" style="cursor:pointer" onclick="viewDirect('${n.id || n.notaId}')"><b>${n.id || n.notaId}</b><br><small>Total: Rp ${(n.total||0).toLocaleString()}</small></div>`).join('');
         if(globalRes.type === 'WO') showDetailWO(globalRes.data);
         if(globalRes.type === 'Nota') showDetailNota(globalRes.data);
     }
@@ -210,8 +190,7 @@
         document.getElementById('woJudul').innerText = wo.pekerjaan || wo.judul;
         document.getElementById('woStatus').innerText = wo.status;
         document.getElementById('woStatus').className = `status-pill ${wo.status.toLowerCase()==='selesai'?'bg-success text-white':'bg-warning text-dark'}`;
-        const logs = wo.history || [];
-        document.getElementById('woLog').innerHTML = logs.map(h => `<div class="border-start border-primary ps-3 mb-3"><div class="fw-bold small">${h.status}</div><small class="text-muted" style="font-size:10px">${h.tgl}</small><div class="small">${h.detail || ''}</div></div>`).join('');
+        document.getElementById('woLog').innerHTML = (wo.history || []).map(h => `<div class="border-start border-primary ps-3 mb-3"><div class="fw-bold small">${h.status}</div><small class="text-muted" style="font-size:10px">${h.tgl}</small><div class="small">${h.detail || ''}</div></div>`).join('');
     }
 
     function showDetailNota(n) {
@@ -221,36 +200,23 @@
         document.getElementById('nTanggal').innerText = n.tanggal || n.tgl;
         document.getElementById('nCustomer').innerText = globalRes.customer.nama;
         document.getElementById('nTotal').innerText = "Rp " + (n.total||0).toLocaleString();
-        const items = n.items || [];
-        document.getElementById('nItems').innerHTML = items.map((it, idx) => `<tr><td class="text-center">${idx+1}</td><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${it.harga.toLocaleString()}</td><td class="text-end">${(it.qty * it.harga).toLocaleString()}</td></tr>`).join('');
-    }
-
-    function loadBlog() {
-        fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.nandateknik.com/feeds/posts/default?alt=rss')
-        .then(r => r.json()).then(res => {
-            document.getElementById('blogFeed').innerHTML = res.items.slice(0,3).map(i => `
-                <div class="col-md-4"><div class="news-card"><img src="${i.thumbnail || 'https://via.placeholder.com/400x200'}" class="news-thumb">
-                <div class="p-3"><a href="${i.link}" target="_blank" class="text-decoration-none fw-bold d-block mb-1">${i.title}</a><small class="text-muted">${new Date(i.pubDate).toLocaleDateString()}</small></div></div></div>`).join('');
-        });
+        document.getElementById('nItems').innerHTML = (n.items || []).map((it, idx) => `<tr><td class="text-center">${idx+1}</td><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${it.harga.toLocaleString()}</td><td class="text-end">${(it.qty * it.harga).toLocaleString()}</td></tr>`).join('');
     }
 
     function downloadNota() {
         const element = document.getElementById('notaPrint');
         const opt = {
-            margin:       [10, 10],
-            filename:     'Invoice-Nanda-Teknik.pdf',
-            image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            margin: 10,
+            filename: 'Invoice-Nanda-Teknik.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        // Fix blank pdf dengan menekan delay render sithik
-        html2pdf().from(element).set(opt).save();
+        html2pdf().set(opt).from(element).save();
     }
 
     function backToTab() { document.getElementById('listPekerjaan').style.display='block'; document.getElementById('detailWO').style.display='none'; document.getElementById('listNota').style.display='block'; document.getElementById('detailNota').style.display='none'; }
     function viewDirect(id) { document.getElementById('searchInput').value = id; cariData(); }
-    function resetPage() { location.reload(); }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
