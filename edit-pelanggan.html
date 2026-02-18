@@ -11,11 +11,12 @@
     
     <style>
         :root { --primary: #f6c23e; }
-        body { background-color: #f8f9fc; font-family: sans-serif; }
+        body { background-color: #f8f9fc; font-family: 'Segoe UI', sans-serif; }
         .main-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .header-section { background: #f6c23e; color: #333; padding: 20px; border-radius: 15px 15px 0 0; text-align: center; }
-        #map { height: 350px; width: 100%; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; }
+        #map { height: 350px; width: 100%; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; z-index: 1; }
         .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
+        .form-control:read-only { background-color: #f1f3f5; }
     </style>
 </head>
 <body>
@@ -30,43 +31,46 @@
         <div class="col-md-6">
             <div class="card main-card">
                 <div class="header-section">
-                    <h5 class="mb-0">Update Data Pelanggan</h5>
+                    <h5 class="mb-0 fw-bold">UPDATE DATA PELANGGAN</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-4">
-                        <label class="form-label fw-bold small">Email Pelanggan</label>
+                        <label class="form-label fw-bold small">Email Terdaftar</label>
                         <div class="input-group">
-                            <input type="email" id="email" class="form-control" placeholder="Contoh: nanda@mail.com">
-                            <button class="btn btn-dark" onclick="checkRegisteredEmail()">Cari Data</button>
+                            <input type="email" id="email" class="form-control" placeholder="nanda@mail.com">
+                            <button class="btn btn-dark" onclick="checkRegisteredEmail()">Cari & Kirim OTP</button>
                         </div>
                     </div>
 
                     <div id="fullForm" style="display:none;">
-                        <div class="alert alert-warning py-2 small">OTP dikirim ke email, masukkan di bawah:</div>
-                        <input type="text" id="otpInput" class="form-control text-center fw-bold mb-4" placeholder="KODE OTP">
+                        <div class="card bg-light border-0 p-3 mb-3 text-center">
+                            <label class="form-label fw-bold mb-1">Masukkan Kode OTP</label>
+                            <input type="text" id="otpInput" class="form-control text-center fw-bold fs-4" maxlength="6" placeholder="000000">
+                            <button class="btn btn-link btn-sm text-decoration-none mt-1" id="resendBtn" disabled onclick="checkRegisteredEmail()">Kirim Ulang</button>
+                        </div>
 
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Nama Lengkap</label>
                             <input type="text" id="nama" class="form-control">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">No. WhatsApp</label>
+                            <label class="form-label small fw-bold">WhatsApp</label>
                             <input type="number" id="wa" class="form-control">
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-primary"><i class="fas fa-map-marked-alt"></i> Lokasi Pemasangan</label>
+                            <label class="form-label small fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan</label>
                             <div id="map"></div>
-                            <textarea id="alamat" class="form-control mt-2" rows="2" placeholder="Alamat lengkap..."></textarea>
+                            <textarea id="alamat" class="form-control mt-2" rows="2"></textarea>
                             
                             <div class="row mt-2 g-2">
                                 <div class="col-6">
-                                    <label class="x-small text-muted" style="font-size:10px">Latitude</label>
-                                    <input type="text" id="lat" class="form-control form-control-sm bg-light" readonly>
+                                    <label style="font-size:11px" class="fw-bold">Latitude</label>
+                                    <input type="text" id="lat" class="form-control form-control-sm" readonly>
                                 </div>
                                 <div class="col-6">
-                                    <label class="x-small text-muted" style="font-size:10px">Longitude</label>
-                                    <input type="text" id="lang" class="form-control form-control-sm bg-light" readonly>
+                                    <label style="font-size:11px" class="fw-bold">Longitude</label>
+                                    <input type="text" id="lang" class="form-control form-control-sm" readonly>
                                 </div>
                             </div>
                         </div>
@@ -75,7 +79,7 @@
                         <input type="hidden" id="is_active">
 
                         <button class="btn btn-warning w-100 fw-bold py-2 mt-3" onclick="updateData()">
-                            SIMPAN PERUBAHAN
+                            UPDATE DATA SEKARANG
                         </button>
                     </div>
                 </div>
@@ -94,7 +98,7 @@
 
     async function checkRegisteredEmail() {
         const email = document.getElementById('email').value;
-        if(!email) return Swal.fire('Oopps', 'Email diisi dulu Cox!', 'warning');
+        if(!email) return Swal.fire('Error', 'Email jangan dikosongi!', 'warning');
 
         toggleLoader(true);
         try {
@@ -109,37 +113,35 @@
                 serverOTP = result.otp;
                 const d = result.data;
                 
-                // MENGISI FIELD TEXT
+                // MENGISI FIELD (Fix ID & Value)
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
-                document.getElementById('alamat').value = d.alamat || '';
-                document.getElementById('tanggal').value = d.tanggal || '';
-                document.getElementById('is_active').value = d.is_active || '';
-
-                // FIX: MENGISI FIELD LAT LANG DARI DATABASE
                 document.getElementById('lat').value = d.lat || '';
                 document.getElementById('lang').value = d.lang || '';
+                document.getElementById('alamat').value = d.alamat || '';
+                document.getElementById('tanggal').value = d.tanggal || '';
+                document.getElementById('is_active').value = d.is_active || 'Active'; // Default Active jika kosong
                 
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 
-                // JALANKAN MAP DENGAN KOORDINAT LAMA
+                // Inisialisasi Map
                 setTimeout(() => {
                     initMap(d.lat, d.lang);
-                }, 400);
+                }, 500);
 
-                Swal.fire('Sip!', 'Data ketemu & OTP dikirim ke email.', 'success');
+                startTimer();
+                Swal.fire('OTP Terkirim', 'Silahkan cek email Anda.', 'success');
             } else {
-                Swal.fire('Kosong', 'Email ini belum terdaftar di Nanda Teknik.', 'error');
+                Swal.fire('Tidak Ditemukan', 'Email belum terdaftar.', 'error');
             }
         } catch(e) {
             toggleLoader(false);
-            Swal.fire('Error', 'Gagal konek server!', 'error');
+            Swal.fire('Error', 'Gagal hubungi database.', 'error');
         }
     }
 
     function initMap(latVal, lngVal) {
-        // Gunakan koordinat dari DB, kalau kosong pakai default Banyuwangi
         const lat = parseFloat(latVal) || -8.2192;
         const lng = parseFloat(lngVal) || 114.3691;
         
@@ -148,36 +150,34 @@
         map = L.map('map').setView([lat, lng], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Marker otomatis muncul di koordinat database
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
 
-        // Cari alamat manual di peta
+        // Fitur Cari
         L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Cari lokasi baru..."
+            placeholder: "Cari Alamat..."
         }).on('markgeocode', function(e) {
-            const loc = e.geocode.center;
-            map.setView(loc, 17);
-            marker.setLatLng(loc);
-            updateCoords(loc.lat, loc.lng, e.geocode.name);
+            const center = e.geocode.center;
+            map.setView(center, 17);
+            marker.setLatLng(center);
+            fillCoords(center.lat, center.lng, e.geocode.name);
         }).addTo(map);
 
-        // Kalau marker digeser manual
         marker.on('dragend', function(e) {
             const pos = e.target.getLatLng();
-            reverseSearch(pos.lat, pos.lng);
+            reverseCheck(pos.lat, pos.lng);
         });
 
         map.invalidateSize();
     }
 
-    function updateCoords(lat, lng, address) {
+    function fillCoords(lat, lng, addr) {
         document.getElementById('lat').value = lat;
         document.getElementById('lang').value = lng;
-        if(address) document.getElementById('alamat').value = address;
+        if(addr) document.getElementById('alamat').value = addr;
     }
 
-    function reverseSearch(lat, lng) {
+    function reverseCheck(lat, lng) {
         document.getElementById('lat').value = lat;
         document.getElementById('lang').value = lng;
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
@@ -187,10 +187,14 @@
     }
 
     async function updateData() {
-        const inputOTP = document.getElementById('otpInput').value;
-        if (inputOTP != serverOTP) return Swal.fire('OTP Salah', 'Cek maneh kode OTP-ne!', 'error');
+        const otp = document.getElementById('otpInput').value;
+        if (otp != serverOTP) return Swal.fire('OTP Salah', 'Kode yang Anda masukkan salah.', 'error');
 
-        const dataUpdate = {
+        // Pastikan is_active tidak hilang
+        let status = document.getElementById('is_active').value;
+        if(!status || status == "") status = "Active";
+
+        const payload = {
             action: 'updatePelanggan',
             email: document.getElementById('email').value,
             nama: document.getElementById('nama').value,
@@ -198,22 +202,38 @@
             wa: document.getElementById('wa').value,
             lat: document.getElementById('lat').value,
             lang: document.getElementById('lang').value,
-            is_active: document.getElementById('is_active').value,
+            is_active: status,
             alamat: document.getElementById('alamat').value
         };
 
         toggleLoader(true);
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(dataUpdate) });
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await res.json();
             toggleLoader(false);
             if(result.success) {
-                Swal.fire('Sukses', 'Data pelanggan berhasil diperbarui!', 'success').then(() => location.reload());
+                Swal.fire('Berhasil', 'Data pelanggan diperbarui!', 'success').then(() => location.reload());
             }
         } catch(e) {
             toggleLoader(false);
-            Swal.fire('Gagal', 'Update database bermasalah.', 'error');
+            Swal.fire('Gagal', 'Gagal simpan data.', 'error');
         }
+    }
+
+    function startTimer() {
+        let sec = 60;
+        const btn = document.getElementById('resendBtn');
+        btn.disabled = true;
+        let t = setInterval(() => {
+            if(sec <= 0) {
+                clearInterval(t);
+                btn.innerText = "Kirim Ulang OTP";
+                btn.disabled = false;
+            } else {
+                btn.innerText = `Tunggu (${sec}s)`;
+                sec--;
+            }
+        }, 1000);
     }
 
     function toggleLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
