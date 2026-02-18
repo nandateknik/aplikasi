@@ -15,7 +15,7 @@
         .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
         .header-section { background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%); color: white; padding: 30px 20px; text-align: center; }
         .form-label { font-weight: 600; font-size: 0.85rem; }
-        #map { height: 250px; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #map { height: 300px; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1; }
         .btn-verify { border-radius: 0 10px 10px 0; background: #333; color: white; border: none; }
         .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
     </style>
@@ -48,7 +48,7 @@
 
                     <div id="fullForm" style="display:none;" class="fade-in">
                         <div id="otpSection" class="card bg-warning bg-opacity-10 border-0 p-3 mb-4">
-                            <label class="form-label text-dark fw-bold">Verifikasi OTP (Cek Email)</label>
+                            <label class="form-label text-dark fw-bold">Verifikasi OTP</label>
                             <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="Kode OTP">
                             <button class="btn btn-sm btn-link text-dark text-decoration-none p-0 fw-bold" id="resendBtn" disabled onclick="checkRegisteredEmail()">Kirim Ulang</button>
                         </div>
@@ -62,12 +62,12 @@
                             <input type="number" id="wa" class="form-control" placeholder="628xxxx">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi (Lat, Lang)</label>
+                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi (Gunakan Fitur Cari di Map)</label>
                             <div id="map"></div>
                             <textarea id="alamat" class="form-control mt-2" rows="3" placeholder="Alamat lengkap"></textarea>
                             <div class="row mt-2">
-                                <div class="col"><input type="text" id="lat" class="form-control form-control-sm" readonly></div>
-                                <div class="col"><input type="text" id="lang" class="form-control form-control-sm" readonly></div>
+                                <div class="col"><input type="text" id="lat" class="form-control form-control-sm" readonly placeholder="Lat"></div>
+                                <div class="col"><input type="text" id="lang" class="form-control form-control-sm" readonly placeholder="Lang"></div>
                             </div>
                         </div>
 
@@ -86,7 +86,7 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwW_RvmkXfHp9LnewZ0yYr27AJgGkIznPOyuoya5p-7QhXycS-jVpnW4e6Rt9CuosU_/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzFO1zm_iwqiYsUs-bnfcNPTIRGPJg8lY5fC0Pg0Phe5jx65eRl3s_b2ua4PHu-pgM4/exec';
     let map, marker, serverOTP;
 
     async function checkRegisteredEmail() {
@@ -95,7 +95,6 @@
 
         showLoader(true);
         try {
-            // DISESUAIKAN: Pakai action 'checkEmailAndSendOTP' agar sinkron dengan Backend V4.9
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'checkEmailAndSendOTP', email: email })
@@ -104,51 +103,74 @@
             showLoader(false);
 
             if(result.success) {
-                // Simpan OTP dari server
                 serverOTP = result.otp;
-                
-                // Isi data profil
                 const d = result.data;
+                
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
                 document.getElementById('lat').value = d.lat || '';
                 document.getElementById('lang').value = d.lang || '';
                 document.getElementById('alamat').value = d.alamat || '';
                 
-                // Tampilkan form
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 
-                initMap(d.lat, d.lang);
-                startResendTimer();
+                // Kasih delay sedikit biar elemen div map muncul dulu baru di-init
+                setTimeout(() => {
+                    initMap(d.lat, d.lang);
+                }, 500);
                 
-                Swal.fire('Email Ditemukan', 'Kode OTP sudah dikirim ke email Anda.', 'success');
+                startResendTimer();
+                Swal.fire('Sukses', 'Data ditemukan & OTP terkirim!', 'success');
             } else {
-                Swal.fire('Data Tidak Ada', 'Email belum terdaftar.', 'error');
+                Swal.fire('Gagal', 'Email tidak terdaftar.', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal cek database', 'error');
+            Swal.fire('Error', 'Gagal cek database.', 'error');
         }
     }
 
-    function initMap(lat, lng) {
-        lat = parseFloat(lat) || -6.2000;
-        lng = parseFloat(lng) || 106.8166;
+    function initMap(latVal, lngVal) {
+        // Konversi ke angka, kalau kosong default Jakarta
+        const lat = parseFloat(latVal) || -6.2000;
+        const lng = parseFloat(lngVal) || 106.8166;
         
-        if (map) map.remove(); // Hapus map lama kalau ada
+        if (map) map.remove();
 
         map = L.map('map').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        // TAMBAHKAN FITUR PENCARIAN ALAMAT
+        const geocoder = L.Control.geocoder({
+            defaultMarkGeocode: false,
+            placeholder: "Cari alamat/lokasi...",
+        }).on('markgeocode', function(e) {
+            const center = e.geocode.center;
+            map.setView(center, 16);
+            marker.setLatLng(center);
+            updateLocationFields(center.lat, center.lng, e.geocode.name);
+        }).addTo(map);
+
+        // Pasang Marker di koordinat lawas
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
         
         marker.on('dragend', function(e) {
             const pos = e.target.getLatLng();
-            updateLocationInfo(pos.lat, pos.lng);
+            reverseGeocode(pos.lat, pos.lng);
         });
+
+        // Paksa refresh ukuran map agar tidak abu-abu
+        setTimeout(() => { map.invalidateSize(); }, 200);
     }
 
-    function updateLocationInfo(lat, lng) {
+    function updateLocationFields(lat, lng, alamat) {
+        document.getElementById('lat').value = lat;
+        document.getElementById('lang').value = lng;
+        document.getElementById('alamat').value = alamat;
+    }
+
+    function reverseGeocode(lat, lng) {
         document.getElementById('lat').value = lat;
         document.getElementById('lang').value = lng;
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
@@ -159,9 +181,7 @@
 
     async function updateData() {
         const userOTP = document.getElementById('otpInput').value;
-        if (userOTP != serverOTP) {
-            return Swal.fire('Verifikasi Gagal', 'Kode OTP salah!', 'error');
-        }
+        if (userOTP != serverOTP) return Swal.fire('Error', 'OTP Salah!', 'error');
 
         const data = {
             action: 'updatePelanggan',
@@ -179,13 +199,12 @@
             const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
             const result = await res.json();
             showLoader(false);
-
             if(result.success) {
-                Swal.fire('Berhasil!', 'Data pelanggan diperbarui.', 'success').then(() => location.reload());
+                Swal.fire('Berhasil', 'Data diperbarui!', 'success').then(() => location.reload());
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal update database', 'error');
+            Swal.fire('Error', 'Gagal update.', 'error');
         }
     }
 
