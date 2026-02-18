@@ -15,7 +15,8 @@
         .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
         .header-section { background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%); color: white; padding: 30px 20px; text-align: center; }
         .form-label { font-weight: 600; font-size: 0.85rem; }
-        #map { height: 300px; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1; }
+        /* Map harus punya tinggi pasti */
+        #map { height: 300px; width: 100%; border-radius: 15px; margin-top: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1; }
         .btn-verify { border-radius: 0 10px 10px 0; background: #333; color: white; border: none; }
         .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
     </style>
@@ -46,7 +47,7 @@
                         </div>
                     </div>
 
-                    <div id="fullForm" style="display:none;" class="fade-in">
+                    <div id="fullForm" style="display:none;">
                         <div id="otpSection" class="card bg-warning bg-opacity-10 border-0 p-3 mb-4">
                             <label class="form-label text-dark fw-bold">Verifikasi OTP</label>
                             <input type="text" id="otpInput" class="form-control text-center fw-bold mb-2" maxlength="6" placeholder="Kode OTP">
@@ -62,14 +63,23 @@
                             <input type="number" id="wa" class="form-control" placeholder="628xxxx">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi (Gunakan Fitur Cari di Map)</label>
+                            <label class="form-label text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi (Geser Marker / Cari Alamat)</label>
                             <div id="map"></div>
                             <textarea id="alamat" class="form-control mt-2" rows="3" placeholder="Alamat lengkap"></textarea>
                             <div class="row mt-2">
-                                <div class="col"><input type="text" id="lat" class="form-control form-control-sm" readonly placeholder="Lat"></div>
-                                <div class="col"><input type="text" id="lang" class="form-control form-control-sm" readonly placeholder="Lang"></div>
+                                <div class="col">
+                                    <label class="small text-muted">Latitude</label>
+                                    <input type="text" id="lat" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="col">
+                                    <label class="small text-muted">Longitude</label>
+                                    <input type="text" id="lang" class="form-control form-control-sm" readonly>
+                                </div>
                             </div>
                         </div>
+
+                        <input type="hidden" id="tanggal">
+                        <input type="hidden" id="is_active">
 
                         <button class="btn btn-primary w-100 shadow py-2" onclick="updateData()">
                             <i class="fas fa-save me-2"></i> Update Data Sekarang
@@ -106,33 +116,36 @@
                 serverOTP = result.otp;
                 const d = result.data;
                 
+                // Isi input text
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
                 document.getElementById('lat').value = d.lat || '';
                 document.getElementById('lang').value = d.lang || '';
                 document.getElementById('alamat').value = d.alamat || '';
+                document.getElementById('tanggal').value = d.tanggal || '';
+                document.getElementById('is_active').value = d.is_active || 'Active';
                 
+                // Tampilkan Form
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 
-                // Kasih delay sedikit biar elemen div map muncul dulu baru di-init
+                // Init Peta dengan delay agar div Map sudah berukuran sempurna
                 setTimeout(() => {
                     initMap(d.lat, d.lang);
-                }, 500);
+                }, 300);
                 
                 startResendTimer();
-                Swal.fire('Sukses', 'Data ditemukan & OTP terkirim!', 'success');
+                Swal.fire('Data Ditemukan', 'Cek OTP di email Anda.', 'success');
             } else {
-                Swal.fire('Gagal', 'Email tidak terdaftar.', 'error');
+                Swal.fire('Error', 'Email tidak terdaftar!', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal cek database.', 'error');
+            Swal.fire('Error', 'Gagal koneksi ke database.', 'error');
         }
     }
 
     function initMap(latVal, lngVal) {
-        // Konversi ke angka, kalau kosong default Jakarta
         const lat = parseFloat(latVal) || -6.2000;
         const lng = parseFloat(lngVal) || 106.8166;
         
@@ -141,10 +154,10 @@
         map = L.map('map').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         
-        // TAMBAHKAN FITUR PENCARIAN ALAMAT
+        // Tambahkan Fitur Pencarian Alamat
         const geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Cari alamat/lokasi...",
+            placeholder: "Cari lokasi..."
         }).on('markgeocode', function(e) {
             const center = e.geocode.center;
             map.setView(center, 16);
@@ -152,7 +165,7 @@
             updateLocationFields(center.lat, center.lng, e.geocode.name);
         }).addTo(map);
 
-        // Pasang Marker di koordinat lawas
+        // Pasang Marker di lokasi database
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
         
         marker.on('dragend', function(e) {
@@ -160,8 +173,8 @@
             reverseGeocode(pos.lat, pos.lng);
         });
 
-        // Paksa refresh ukuran map agar tidak abu-abu
-        setTimeout(() => { map.invalidateSize(); }, 200);
+        // Paksa render ulang ukuran map
+        map.invalidateSize();
     }
 
     function updateLocationFields(lat, lng, alamat) {
@@ -175,22 +188,23 @@
         document.getElementById('lang').value = lng;
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(res => res.json()).then(data => {
-                document.getElementById('alamat').value = data.display_name;
-            });
+                document.getElementById('alamat').value = data.display_name || 'Alamat tidak ditemukan';
+            }).catch(err => console.log("Gagal ambil alamat"));
     }
 
     async function updateData() {
         const userOTP = document.getElementById('otpInput').value;
-        if (userOTP != serverOTP) return Swal.fire('Error', 'OTP Salah!', 'error');
+        if (!userOTP || userOTP != serverOTP) return Swal.fire('OTP Salah', 'Periksa kembali kode di email Anda.', 'error');
 
         const data = {
             action: 'updatePelanggan',
             email: document.getElementById('email').value,
             nama: document.getElementById('nama').value,
+            tanggal: document.getElementById('tanggal').value,
             wa: document.getElementById('wa').value,
             lat: document.getElementById('lat').value,
             lang: document.getElementById('lang').value,
-            is_active: 'Active',
+            is_active: document.getElementById('is_active').value,
             alamat: document.getElementById('alamat').value
         };
 
@@ -200,11 +214,11 @@
             const result = await res.json();
             showLoader(false);
             if(result.success) {
-                Swal.fire('Berhasil', 'Data diperbarui!', 'success').then(() => location.reload());
+                Swal.fire('Berhasil', 'Data pelanggan sudah diupdate!', 'success').then(() => location.reload());
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Gagal update.', 'error');
+            Swal.fire('Error', 'Gagal update ke server.', 'error');
         }
     }
 
