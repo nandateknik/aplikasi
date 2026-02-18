@@ -151,50 +151,54 @@
     };
 
     async function handleInitialCheck() {
-        const email = document.getElementById('email').value.trim();
-        const isAdminMode = document.getElementById('isAdmin').checked;
-        
-        if(!email || !email.includes('@')) return Swal.fire('Error', 'Format email salah!', 'warning');
-        
-        showLoader(true);
-        try {
-            const res = await fetch(`${WEB_APP_URL}?action=read&sheet=Pelanggan`);
-            const result = await res.json();
-            showLoader(false);
+    const emailInput = document.getElementById('email').value.trim().toLowerCase();
+    const isAdminMode = document.getElementById('isAdmin').checked;
+    
+    if(!emailInput || !emailInput.includes('@')) return Swal.fire('Error', 'Format email salah!', 'warning');
+    
+    showLoader(true);
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=read&sheet=Pelanggan`);
+        const result = await res.json();
+        showLoader(false);
 
-            const isExist = result.data.some(p => p.Email.toLowerCase() === email.toLowerCase());
+        // PENGAMAN: Cek kabeh kemungkinan jeneng kolom (Email, email, EMAIL)
+        const isExist = result.data.some(p => {
+            // Goleki value email mboh iku key-ne huruf gede opo cilik
+            const emailValue = p.Email || p.email || p.EMAIL; 
+            return emailValue && emailValue.toString().toLowerCase() === emailInput;
+        });
 
-            if(isExist) {
-                Swal.fire({
-                    title: 'Email Terdaftar!',
-                    text: 'Anda sudah menjadi pelanggan Nanda Teknik.',
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Lanjut Booking',
-                    cancelButtonText: 'Tutup'
-                }).then((res) => {
-                    if(res.isConfirmed) window.location.href = 'booking.html';
-                });
+        if(isExist) {
+            Swal.fire({
+                title: 'Email Terdaftar!',
+                text: 'Anda sudah menjadi pelanggan Nanda Teknik.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Lanjut Booking',
+                cancelButtonText: 'Tutup'
+            }).then((res) => {
+                if(res.isConfirmed) window.location.href = 'booking.html';
+            });
+        } else {
+            document.getElementById('fullForm').style.display = 'block';
+            document.getElementById('emailSection').style.opacity = '0.6';
+            document.getElementById('email').readOnly = true;
+            initMap();
+
+            if (!isAdminMode) {
+                document.getElementById('otpSection').style.display = 'block';
+                requestOTP();
             } else {
-                document.getElementById('fullForm').style.display = 'block';
-                document.getElementById('emailSection').style.opacity = '0.6';
-                document.getElementById('email').readOnly = true;
-                initMap();
-
-                if (!isAdminMode) {
-                    document.getElementById('otpSection').style.display = 'block';
-                    requestOTP();
-                } else {
-                    Swal.fire('Mode Admin', 'Bypass OTP Aktif.', 'info');
-                }
+                Swal.fire('Mode Admin', 'Bypass OTP Aktif.', 'info');
             }
-        } catch(e) {
-            showLoader(false);
-            console.error(e);
-            Swal.fire('Error', 'Gagal cek database pelanggan.', 'error');
         }
+    } catch(e) {
+        showLoader(false);
+        console.error("Detail Eror:", e);
+        Swal.fire('Error', 'Gagal sinkronisasi database. Pastikan Sheet "Pelanggan" sudah ada.', 'error');
     }
-
+}
     function initMap() {
         if (map) return;
         
