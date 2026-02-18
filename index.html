@@ -151,7 +151,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3Q5Iz4nQUxG2GqelDhL5n2fVZNQpABV1u_PBRG4Nqhmt2342DWzC1Schl0lcnpk3K/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzFO1zm_iwqiYsUs-bnfcNPTIRGPJg8lY5fC0Pg0Phe5jx65eRl3s_b2ua4PHu-pgM4/exec';
 
     window.onload = () => {
         loadAntrianAktif();
@@ -302,3 +302,37 @@
                                 <div class="mt-2"><small class="text-muted"><i class="far fa-calendar-alt me-1"></i>${new Date(item.pubDate).toLocaleDateString('id-ID')}</small></div>
                             </div>
                         </div>
+                    </div>`;
+            });
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('searchInput').value = '';
+        resetTampilan();
+        document.getElementById('sectionAntrian').style.display = 'block';
+        loadAntrianAktif();
+    }
+
+    function resetTampilan() {
+        ['cardWO', 'cardNota', 'customerProfile'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
+    }
+
+    function viewDetail(id) {
+        document.getElementById('searchInput').value = id;
+        cariData();
+    }
+
+    function downloadPDF() {
+        const element = document.getElementById('notaPrint');
+        const opt = { margin: 10, filename: 'Nota_NandaTeknik.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+
+<script src="layout-pelanggan.js"></script>
+</body>
+</html>
