@@ -90,3 +90,4 @@ function confirmLogout() {
     }).then(r => { if(r.isConfirmed) window.location.href='login.html' });
 }
 CONFIG.checkAuth(); 
+
