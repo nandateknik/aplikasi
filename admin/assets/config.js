@@ -11,12 +11,7 @@ var CONFIG = {
     // Fungsi cek login
     checkAuth: function() {
         if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
+            window.location.replace('login.html'); // Menggunakan replace agar tidak bisa di-back
         }
-    },
-    // Fungsi logout
-    logout: function() {
-        localStorage.removeItem('isLoggedIn');
-        window.location.href = 'login.html';
     }
 };
