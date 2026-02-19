@@ -66,7 +66,7 @@
         <div class="d-flex gap-2 mt-3 flex-wrap">
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="cariData()">Cari Data</button>
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="location.reload()">Reset</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="alert('Fitur Daftar/Edit')"><i class="fas fa-user-circle"></i> Profil</button>
+            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="alert('Fitur Daftar')"><i class="fas fa-user-circle"></i> Daftar</button>
         </div>
     </div>
 
@@ -126,7 +126,6 @@
 
     window.onload = () => { loadAntrian(); fetchBlog(); };
 
-    // AMBIL ANTRIAN (Sesuai Request)
     async function loadAntrian() {
         try {
             const r = await fetch(API + '?action=read&sheet=Booking', { method: 'GET', redirect: 'follow' });
@@ -232,7 +231,6 @@
         document.getElementById('detailNota').style.display = 'block';
         document.getElementById('nIDPreview').innerText = n.notaId || n.id;
         
-        // Tabel Preview Nota (Sesuai Request Lawas)
         const items = n.items || [];
         let html = '<table class="table table-sm border small"><thead><tr class="table-light"><th>Item</th><th class="text-center">Qty</th><th class="text-end">Total</th></tr></thead><tbody>';
         items.forEach(it => {
@@ -243,7 +241,13 @@
         document.getElementById('notaTotalArea').innerText = "Total: Rp " + (n.total||0).toLocaleString();
 
         document.getElementById('btnDownloadPDF').onclick = () => { 
-            generatePDF({ id: n.notaId || n.id, tanggal: n.tanggal || n.tgl, email: cache.customer.email, items_json: n.items || [], total: n.total }); 
+            generatePDF({ 
+                id: n.notaId || n.id, 
+                tanggal: n.tanggal || n.tgl, 
+                nama: cache.customer.nama, // Wis ganti dadi Nama Pelanggan
+                items_json: n.items || [], 
+                total: n.total 
+            }); 
         };
     }
 
@@ -256,7 +260,7 @@
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text("Software, Network & Electrical Engineering", 105, 26, { align: "center" });
-        doc.setFontSize(8); doc.text("Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur", 105, 30, { align: "center" });
+        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D5, Banyuwangi - Jawa Timur. 68421", 105, 30, { align: "center" });
         doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
         doc.line(15, 38, 195, 38);
 
@@ -265,7 +269,7 @@
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No. Transaksi : #${data.id}`, 15, 56);
         doc.text(`Tanggal       : ${data.tanggal}`, 15, 61);
-        doc.text(`Kepada        : ${data.email}`, 140, 56);
+        doc.text(`Kepada        : ${data.nama}`, 140, 56); // Bagian sing dijaluk
 
         const tableBody = data.items_json.map((item, index) => [index + 1, item.nama, item.qty, `Rp ${Number(item.harga).toLocaleString('id-ID')}`, `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`]);
 
@@ -274,19 +278,18 @@
             head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Jumlah']],
             body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: [150, 150, 150] } // Header ABU-ABU
+            headStyles: { fillColor: [150, 150, 150] } 
         });
 
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        // Textbox Garis Putus-putus
         const boxY = finalY + 15;
         doc.setLineDash([2, 2], 0);
         doc.rect(15, boxY, 180, 15);
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("pembayaran bisa dilakukan melalu rekenin bca atas nama nanda krisbianto 1801826011", 105, boxY + 9, { align: "center" });
+        doc.text("pembayaran bisa dilakukan melalu rekenin bca atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
         
         doc.save(`Nota_${data.id}.pdf`);
     }
