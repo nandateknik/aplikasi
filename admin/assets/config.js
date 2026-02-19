@@ -7,5 +7,16 @@ var CONFIG = {
     BENSIN: {
         FREE_KM: 5,
         PER_KM_COST: 10000
+    },
+    // Fungsi cek login
+    checkAuth: function() {
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    },
+    // Fungsi logout
+    logout: function() {
+        localStorage.removeItem('isLoggedIn');
+        window.location.href = 'login.html';
     }
 };
