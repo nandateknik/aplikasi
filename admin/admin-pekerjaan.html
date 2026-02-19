@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nanda Teknik - Pro Admin</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="layout.css">
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 110px; }
+        .action-bar { margin-top: -35px; padding: 0 20px; position: relative; z-index: 5; }
+        .wo-card { 
+            background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px; 
+            border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; cursor: pointer; 
+        }
+        .wo-card:active { transform: scale(0.97); }
+        .badge-status { font-size: 0.65rem; padding: 5px 12px; border-radius: 10px; }
+        .section-title { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px; display: flex; align-items: center; }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 10px; }
+        .update-box { background: #f8fafc; border-radius: 20px; padding: 15px; border: 1px solid #eef2f7; }
+
+        .swal2-container { z-index: 3000 !important; }
+
+        #modalUpdate .modal-body { padding-bottom: 160px !important; }
+        #modalUpdate .modal-footer { 
+            position: fixed; bottom: 80px; left: 0; right: 0; width: 100%; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            z-index: 1055; box-shadow: 0 -10px 25px rgba(0,0,0,0.08);
+            padding: 15px 20px !important; border-top: 1px solid #eee !important;
+        }
+        .btn-action-group { display: flex; gap: 10px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="action-bar">
+    <div class="bg-white p-2 rounded-4 shadow-sm mb-3 text-center border">
+        <small class="text-muted d-block mb-1 fw-bold">Cari Berdasarkan Tanggal:</small>
+        <input type="date" id="searchDate" class="form-control border-0 text-center" onchange="applyFilter()">
+    </div>
+    
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary rounded-pill flex-fill py-2 shadow" id="tabOng" onclick="switchTab('Ongoing')">Aktif</button>
+        <button class="btn btn-light rounded-pill flex-fill py-2 shadow-sm" id="tabSel" onclick="switchTab('Selesai')">Riwayat</button>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div id="listPekerjaan"></div>
+    <div class="d-flex justify-content-between align-items-center mt-3 px-2" id="paginationCtrl"></div>
+</div>
+
+<div class="modal fade" id="modalUpdate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0 shadow-sm sticky-top bg-white">
+                <h6 class="fw-bold mb-0" id="modalTitleID">Detail Job</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <div class="section-title">Informasi Pelanggan</div>
+                <div class="mb-3 small bg-white p-3 rounded-4 border">
+                    <p class="mb-1"><strong>Nama:</strong> <span id="detNama">-</span></p>
+                    <p class="mb-1"><strong>Email:</strong> <span id="detEmail">-</span></p>
+                    <p class="mb-0 text-muted"><strong>Alamat:</strong> <span id="detAlamat">-</span></p>
+                    <div id="btnMapsContainer" class="mt-2"></div>
+                </div>
+
+                <div class="section-title">Update Nota & Biaya</div>
+                <div class="update-box mb-4">
+                    <div id="inputNotaContainer">
+                        <div class="row g-2 mb-2">
+                            <div class="col-8"><select id="jasaSelect" class="form-select border-0 shadow-sm"></select></div>
+                            <div class="col-4"><button class="btn btn-primary w-100" onclick="tambahItem(false)">Add</button></div>
+                        </div>
+                        <div class="p-2 border rounded-3 bg-white mb-2">
+                            <div class="d-flex gap-2">
+                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Barang">
+                                <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
+                                <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Ok</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="itemList"></div>
+                    <div class="d-flex justify-content-between mt-3 pt-2 border-top">
+                        <span class="fw-bold">TOTAL</span>
+                        <span class="fw-bold text-primary" id="txtTotal">Rp 0</span>
+                    </div>
+                </div>
+
+                <div class="section-title">Status Progres</div>
+                <div class="update-box mb-4">
+                    <select id="statusSelect" class="form-select border-0 shadow-sm mb-3">
+                        <option value="Pending">🕒 Pending</option>
+                        <option value="Proses">⚙️ Sedang Dikerjakan</option>
+                        <option value="Menunggu Part">📦 Menunggu Part</option>
+                        <option value="Selesai">✅ Selesai (Belum Bayar)</option>
+                        <option value="Lunas">💰 Lunas & Selesai</option>
+                    </select>
+                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="2" placeholder="Tulis progres..."></textarea>
+                </div>
+
+                <div class="section-title">Riwayat Log</div>
+                <div id="timelineList"></div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="btn-action-group">
+                    <button class="btn btn-outline-danger" onclick="downloadPDF()" title="Download PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button class="btn btn-light border" onclick="hapusData()" title="Hapus">
+                        <i class="fas fa-trash text-danger"></i>
+                    </button>
+                    <button class="btn btn-primary flex-grow-1 fw-bold shadow-sm" id="btnSimpan" onclick="saveSemuaPerubahan()">
+                        UPDATE DATA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<script src="config.js"></script>
+<script src="layout.js"></script>
+
+<script>
+    let allData = [], filteredData = [], selectedItems = [], currentId = null, currentTab = 'Ongoing', fullDataDetail = null;
+    let myModal, currentPage = 1, pageSize = 8;
+
+    window.onload = () => {
+        myModal = new bootstrap.Modal(document.getElementById('modalUpdate'));
+        loadRiwayat(); 
+        loadDaftarHarga(); 
+    };
+
+    async function loadRiwayat() {
+        const container = document.getElementById('listPekerjaan');
+        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2 small text-muted">Loading Data...</p></div>';
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getRiwayatAdmin' }) 
+            });
+            const result = await res.json();
+            if(result.success) { 
+                allData = result.data; 
+                applyFilter(); 
+            }
+        } catch(e) { Swal.fire('Error', 'Gagal memuat data backend', 'error'); }
+    }
+
+    function applyFilter() {
+        const fDate = document.getElementById('searchDate').value;
+        document.getElementById('tabOng').className = currentTab === 'Ongoing' ? 'btn btn-primary rounded-pill flex-fill shadow' : 'btn btn-light rounded-pill flex-fill shadow-sm';
+        document.getElementById('tabSel').className = currentTab === 'Selesai' ? 'btn btn-primary rounded-pill flex-fill shadow' : 'btn btn-light rounded-pill flex-fill shadow-sm';
+
+        filteredData = allData.filter(d => {
+            const isDone = (d.status === 'Lunas' || d.status === 'Selesai');
+            const matchStatus = (currentTab === 'Ongoing' ? !isDone : isDone);
+            if (fDate) {
+                const part = d.tgl.split(',')[0].split('/'); 
+                const dFormatted = `${part[2]}-${part[1].padStart(2,'0')}-${part[0].padStart(2,'0')}`;
+                return matchStatus && dFormatted === fDate;
+            }
+            return matchStatus;
+        });
+        renderList();
+    }
+
+    function renderList() {
+        const paginated = filteredData.slice((currentPage-1)*pageSize, currentPage*pageSize);
+        const container = document.getElementById('listPekerjaan');
+        if (paginated.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted p-5">Ora ono data, Cah.</div>';
+            document.getElementById('paginationCtrl').innerHTML = '';
+            return;
+        }
+        container.innerHTML = paginated.map(item => `
+            <div class="wo-card border" onclick="viewDetail('${item.id}')">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">${item.id}</span>
+                    <span class="badge-status fw-bold ${item.status === 'Lunas' ? 'bg-success text-white' : 'bg-warning text-dark'}">${item.status}</span>
+                </div>
+                <h6 class="fw-bold mb-1 text-uppercase text-truncate">${item.judul}</h6>
+                <div class="small mb-1 text-muted"><i class="fas fa-user me-2 text-primary"></i>${item.nama}</div>
+                <div class="text-muted" style="font-size: 0.7rem;">
+                    <i class="far fa-calendar-alt me-2"></i>${item.tgl}
+                </div>
+            </div>
+        `).join('');
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const total = Math.ceil(filteredData.length / pageSize);
+        const ctrl = document.getElementById('paginationCtrl');
+        if(total <= 1) { ctrl.innerHTML = ''; return; }
+        ctrl.innerHTML = `
+            <button class="btn btn-sm btn-outline-primary" ${currentPage === 1 ? 'disabled' : ''} onclick="currentPage--;renderList()">Prev</button>
+            <span class="small fw-bold">Hal ${currentPage} / ${total}</span>
+            <button class="btn btn-sm btn-outline-primary" ${currentPage === total ? 'disabled' : ''} onclick="currentPage++;renderList()">Next</button>
+        `;
+    }
+
+    function switchTab(t) { currentTab = t; currentPage = 1; applyFilter(); }
+
+    async function viewDetail(id) {
+        currentId = id;
+        Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getDetailAdmin', id: id }) 
+            });
+            const r = await res.json();
+            Swal.close();
+            if(r.success) {
+                fullDataDetail = r.data; 
+                document.getElementById('modalTitleID').innerText = "Detail: " + id;
+                document.getElementById('detNama').innerText = fullDataDetail.nama;
+                document.getElementById('detEmail').innerText = fullDataDetail.email;
+                document.getElementById('detAlamat').innerText = fullDataDetail.alamat || '-';
+                
+                const btnMaps = document.getElementById('btnMapsContainer');
+                if(fullDataDetail.lat && fullDataDetail.lang) {
+                    btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
+                } else { btnMaps.innerHTML = ""; }
+
+                document.getElementById('statusSelect').value = fullDataDetail.status;
+                document.getElementById('catatanProgres').value = ""; 
+                selectedItems = fullDataDetail.notaItems || [];
+                renderItems();
+                renderTimeline(fullDataDetail.history || []);
+                myModal.show();
+            }
+        } catch(e) { Swal.fire('Error', 'Gagal nyambung ning server', 'error'); }
+    }
+
+    function tambahItem(isManual) {
+        let n, h;
+        if(isManual) {
+            n = document.getElementById('manualNama').value; 
+            h = parseInt(document.getElementById('manualHarga').value);
+            if(!n || isNaN(h)) return;
+            document.getElementById('manualNama').value = "";
+            document.getElementById('manualHarga').value = "";
+        } else {
+            const s = document.getElementById('jasaSelect'); 
+            n = s.options[s.selectedIndex].text; 
+            h = parseInt(s.value);
+        }
+        const idx = selectedItems.findIndex(i => i.nama === n);
+        if(idx > -1) selectedItems[idx].qty++; 
+        else selectedItems.push({nama: n, harga: h, qty: 1});
+        renderItems();
+    }
+
+    function renderItems() {
+        let total = 0;
+        const container = document.getElementById('itemList');
+        if(selectedItems.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted small py-2">Belum ada item nota.</div>';
+            document.getElementById('txtTotal').innerText = "Rp 0";
+            return;
+        }
+        container.innerHTML = selectedItems.map((it, idx) => {
+            const h = Number(it.harga);
+            const q = Number(it.qty);
+            const sub = h * q;
+            total += sub;
+            return `<div class="d-flex justify-content-between p-2 bg-white rounded border mb-2 small">
+                <div><b>${it.nama}</b><br><span class="text-muted">Rp ${h.toLocaleString('id-ID')} x ${q}</span></div>
+                <div class="text-end">
+                    <span class="fw-bold d-block text-primary">Rp ${sub.toLocaleString('id-ID')}</span>
+                    <i class="fas fa-trash text-danger" style="cursor:pointer" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('txtTotal').innerText = "Rp " + total.toLocaleString('id-ID');
+    }
+
+    function renderTimeline(h) {
+        const container = document.getElementById('timelineList');
+        if(!h || h.length === 0) {
+            container.innerHTML = '<div class="small text-muted">Belum ada riwayat.</div>';
+            return;
+        }
+        container.innerHTML = h.map(t => `
+            <div class="border-start border-2 border-primary ps-3 mb-3 small">
+                <div class="fw-bold text-primary">${t.status}</div>
+                <div class="text-muted" style="font-size: 10px;">${t.tgl}</div>
+                <div class="bg-white p-2 border rounded mt-1">${t.detail}</div>
+            </div>
+        `).reverse().join('');
+    }
+
+    async function loadDaftarHarga() {
+        const el = document.getElementById('jasaSelect');
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+            const r = await res.json();
+            if(r.success) {
+                el.innerHTML = r.data.map(it => `<option value="${it[1]}">${it[0]}</option>`).join('');
+            }
+        } catch(e) { console.error("Gagal load harga"); }
+    }
+
+    async function saveSemuaPerubahan() {
+        const btn = document.getElementById('btnSimpan');
+        btn.disabled = true;
+        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading() });
+        const payload = {
+            action: 'updateFullData', id: currentId,
+            status: document.getElementById('statusSelect').value,
+            keterangan: document.getElementById('catatanProgres').value || "Update data oleh Admin",
+            items: selectedItems
+        };
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const r = await res.json();
+            btn.disabled = false;
+            if(r.success) { 
+                Swal.fire({ icon: 'success', title: 'Sip!', text: 'Database wis diupdate.', target: document.getElementById('modalUpdate') }).then(() => {
+                    myModal.hide(); loadRiwayat();
+                });
+            }
+        } catch(e) { btn.disabled = false; Swal.fire({ title: 'Gagal', text: 'Koneksi bermasalah.', icon: 'error', target: document.getElementById('modalUpdate') }); }
+    }
+
+    async function hapusData() {
+        const confirm = await Swal.fire({ title: 'Hapus Data?', text: 'Data sing wis ilang ra iso dibalekne!', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus!', target: document.getElementById('modalUpdate') });
+        if(confirm.isConfirmed) {
+            Swal.fire({title: 'Menghapus...', target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading()});
+            try {
+                const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteData', id: currentId, type: 'WO' }) });
+                const r = await res.json();
+                if(r.success) { myModal.hide(); Swal.fire('Terhapus', 'Data wis ilang soko database.', 'success'); loadRiwayat(); }
+            } catch(e) { Swal.fire('Error', 'Gagal mbusak data', 'error'); }
+        }
+    }
+
+    // --- BAGIAN NOTA SING TAK SAMAKNE KARO PENAWARAN ---
+   function downloadPDF() {
+        if(!fullDataDetail || selectedItems.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'Item Kosong', text: 'Isi item nota dhisik Bro!', target: document.getElementById('modalUpdate') });
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const status = document.getElementById('statusSelect').value;
+        
+        // 1. Tambah Logo (Posisine podo karo Penawaran)
+        try { 
+            doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); 
+        } catch (e) { console.error("Logo ra ketemu, skip."); }
+
+        // 2. Header Tengah (Desain Formal)
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(13, 110, 253);
+        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
+        
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
+        doc.text("SOFTWARE, NETWORK & ELECTRICAL ENGINEERING", 105, 26, { align: "center" });
+        
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence, Banyuwangi. 68421", 105, 30, { align: "center" });
+        doc.text("WA: 082331201148 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
+        
+        // 3. Garis Pembatas Putus-putus (Dashed Line)
+        doc.setDrawColor(150);
+        doc.setLineDashPattern([1, 1], 0); // Iki sing nggarap dadi putus-putus
+        doc.line(15, 38, 195, 38);
+        doc.setLineDashPattern([], 0); // Balekne dadi garis normal nggo tabel
+
+        // 4. Judul Nota
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0);
+        const judulNota = status === 'Lunas' ? "NOTA LUNAS (INVOICE)" : "NOTA TAGIHAN (BILLING)";
+        doc.text(judulNota, 15, 48);
+
+        // 5. Info Transaksi & Pelanggan
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi : #${currentId}`, 15, 56);
+        doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID')}`, 15, 61);
+        
+        doc.text(`Kepada : ${fullDataDetail.nama}`, 140, 56);
+        doc.text(`Alamat : ${fullDataDetail.alamat || '-'}`, 140, 61, {maxWidth: 55});
+
+        // 6. Tabel Item (Header Abu-abu koyo Penawaran)
+        const tableBody = selectedItems.map((it, i) => [
+            i + 1, 
+            it.nama, 
+            it.qty, 
+            `Rp ${Number(it.harga).toLocaleString('id-ID')}`, 
+            `Rp ${(it.harga * it.qty).toLocaleString('id-ID')}`
+        ]);
+
+        doc.autoTable({
+            startY: 70,
+            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga', 'Jumlah']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [100, 100, 100], textColor: 255, halign: 'center' }, // Abu-abu
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                2: { halign: 'center', cellWidth: 15 },
+                3: { halign: 'right', cellWidth: 35 },
+                4: { halign: 'right', cellWidth: 35 }
+            }
+        });
+
+        // 7. Total & Tanda Tangan
+        const finalY = doc.lastAutoTable.finalY + 10;
+        let total = selectedItems.reduce((a, b) => a + (b.harga * b.qty), 0);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text(`TOTAL PEMBAYARAN: Rp ${total.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+        
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text("Pembayaran Transfer:", 15, finalY + 5);
+        doc.setFont("helvetica", "bold");
+        // No Rekening Updated
+        doc.text("BCA - 1801826011 (A/N NANDA KRISBIANTO)", 15, finalY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text("Hormat Kami,", 165, finalY + 20, { align: "center" });
+        doc.text("NANDA TEKNIK", 165, finalY + 40, { align: "center" });
+
+        doc.save(`Nota_${fullDataDetail.nama}_${currentId}.pdf`);
+    }
+</script>
+</body>
+</html>

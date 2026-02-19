@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kelola Harga - Nanda Teknik</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <link rel="stylesheet" href="layout.css">
+    
+    <style>
+        :root { --p-blue: #0052d4; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; padding-bottom: 100px; }
+        
+        .card-custom {
+            border-radius: 22px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .card-price {
+            background: white; border-radius: 18px; border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.3s;
+            margin-bottom: 12px;
+        }
+        
+        .form-control { 
+            border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 15px; 
+            font-size: 0.9rem;
+        }
+        .form-control:focus { box-shadow: none; border-color: var(--p-blue); background: white; }
+
+        .btn-add {
+            background: var(--p-blue); border: none; border-radius: 12px;
+            padding: 12px; font-weight: 700; transition: 0.2s; color: white;
+        }
+        .btn-add:active { transform: scale(0.98); }
+        
+        .trash-btn {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fff1f2; color: #e11d48; border: none; transition: 0.2s;
+        }
+        .trash-btn:hover { background: #ffe4e6; }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4 animate__animated animate__fadeIn">
+    <div class="card card-custom p-4 mb-4 shadow-sm">
+        <div class="text-center mb-3">
+            <h6 class="fw-bold m-0 text-primary">NANDA TEKNIK BANYUWANGI</h6>
+            <small class="text-muted text-uppercase fw-bold" style="letter-spacing: 1px; font-size: 0.7rem;">Software, Network & Electrical</small>
+        </div>
+        <hr class="text-muted opacity-25">
+        <h6 class="fw-bold mb-3 small text-muted text-uppercase">Tambah Jasa Baru</h6>
+        <div class="row g-2">
+            <div class="col-7">
+                <input type="text" id="newNama" class="form-control" placeholder="Nama Jasa...">
+            </div>
+            <div class="col-5">
+                <input type="number" id="newHarga" class="form-control" placeholder="Harga">
+            </div>
+            <div class="col-12 mt-3">
+                <button class="btn btn-primary btn-add w-100 shadow-sm" onclick="saveHarga()">
+                    <i class="fas fa-plus-circle me-1"></i> SIMPAN DATA JASA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="priceListContainer">
+        <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 small text-muted">Memuat data harga...</p>
+        </div>
+    </div>
+</div>
+
+<script src="config.js"></script>
+<script src="layout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // Jalankan inisialisasi layout dan load data saat halaman siap
+    window.onload = () => {
+        if(typeof initLayout === 'function') initLayout(); 
+        loadHarga();
+    };
+
+    async function loadHarga() {
+        const container = document.getElementById('priceListContainer');
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getDaftarHarga' }) 
+            });
+            const result = await res.json();
+            
+            if(result.success) {
+                renderPriceList(result.data);
+            } else {
+                Swal.fire('Error', 'Gagal memuat data', 'error');
+            }
+        } catch (e) {
+            container.innerHTML = `
+                <div class="text-center p-4">
+                    <i class="fas fa-exclamation-triangle text-warning mb-2" style="font-size: 2rem;"></i>
+                    <p class="text-muted small">Koneksi gagal. Cek URL Script-mu, Cah!</p>
+                </div>`;
+        }
+    }
+
+    function renderPriceList(data) {
+        const container = document.getElementById('priceListContainer');
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted small mt-4">Belum ada data jasa, Cah.</div>';
+            return;
+        }
+
+        container.innerHTML = data.map(item => `
+            <div class="card-price p-3 d-flex justify-content-between align-items-center animate__animated animate__fadeInUp">
+                <div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">${item[0]}</div>
+                    <div class="text-primary fw-bold" style="font-size: 0.85rem;">Rp ${Number(item[1]).toLocaleString('id-ID')}</div>
+                </div>
+                <button class="trash-btn shadow-sm" onclick="deleteHarga('${item[0]}')">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async function saveHarga() {
+        const nama = document.getElementById('newNama').value;
+        const harga = document.getElementById('newHarga').value;
+
+        if(!nama || !harga) {
+            return Swal.fire({ icon: 'warning', title: 'Kurang Lengkap', text: 'Isi jeneng lan rego dhisik!', target: 'body' });
+        }
+
+        Swal.fire({
+            title: 'Menyimpan...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'updateHarga', 
+                    mode: 'add', 
+                    nama: nama, 
+                    harga: parseInt(harga) 
+                })
+            });
+            const result = await res.json();
+
+            if(result.success) {
+                Swal.fire({ icon: 'success', title: 'Mantap!', text: 'Jasa wis kesimpen.', timer: 1500 });
+                document.getElementById('newNama').value = '';
+                document.getElementById('newHarga').value = '';
+                loadHarga();
+            }
+        } catch (e) {
+            Swal.fire('Gagal', 'Koneksi server bermasalah.', 'error');
+        }
+    }
+
+    async function deleteHarga(nama) {
+        const confirm = await Swal.fire({
+            title: 'Hapus Jasa?',
+            text: `Tenan arep mbusak "${nama}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        });
+
+        if(confirm.isConfirmed) {
+            Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            try {
+                const res = await fetch(CONFIG.WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updateHarga', mode: 'delete', nama: nama })
+                });
+                const result = await res.json();
+                
+                if(result.success) {
+                    Swal.fire('Terhapus!', 'Data wis ilang.', 'success');
+                    loadHarga();
+                }
+            } catch (e) {
+                Swal.fire('Gagal', 'Gagal mbusak data.', 'error');
+            }
+        }
+    }
+</script>
+</body>
+</html>
