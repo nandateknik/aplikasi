@@ -66,7 +66,7 @@
         <div class="d-flex gap-2 mt-3 flex-wrap">
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="cariData()">Cari Data</button>
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="location.reload()">Reset</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="alert('Fitur Daftar')"><i class="fas fa-user-circle"></i> Daftar</button>
+            <button class="btn btn-light btn-sm border rounded-pill px-3" href="register.html"><i class="fas fa-user-circle"></i> Daftar</button>
         </div>
     </div>
 
@@ -289,7 +289,7 @@
         doc.setLineDash([2, 2], 0);
         doc.rect(15, boxY, 180, 15);
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("pembayaran bisa dilakukan melalu rekenin bca atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
+        doc.text("pembayaran bisa dilakukan melalu rekening BCA atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
         
         doc.save(`Nota_${data.id}.pdf`);
     }
