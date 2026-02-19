@@ -166,7 +166,7 @@ const SECURE_P = "d7486e9e42562479e0a0d91244e667084594c794019f20084f74d08a543666
             const hashedU = CryptoJS.SHA256(u).toString();
             const hashedP = CryptoJS.SHA256(p).toString();
 
-            if (hashedU === SECURE_U && hashedP === SECURE_P) {
+            if (hashedU == SECURE_U && hashedP == SECURE_P) {
                 localStorage.setItem('isLoggedIn', 'true');
                 window.location.href = 'admin/admin-pekerjaan.html'; 
             } else {
