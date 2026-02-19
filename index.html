@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nanda Teknik - Search</title>
+    <title>Nanda Teknik - Search & Services</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,65 +11,77 @@
     
     <style>
         :root { --g-blue: #1a0dab; --g-gray: #70757a; --g-border: #dfe1e5; }
-        body { background: #fff; font-family: 'arial', sans-serif; color: #202124; }
+        body { background: #fff; font-family: 'arial', sans-serif; color: #202124; margin: 0; }
         
-        /* Header & Search */
+        /* Header & Search Area */
         .search-wrapper { padding-top: 20px; position: sticky; top: 0; background: #fff; z-index: 1000; border-bottom: 1px solid var(--g-border); }
         .logo-text { font-size: 26px; font-weight: bold; cursor: pointer; text-decoration: none; margin-left: 160px; display: inline-block; }
         .search-box-container { max-width: 690px; margin-left: 160px; margin-bottom: 20px; }
-        .search-box { border: 1px solid var(--g-border); border-radius: 24px; padding: 5px 20px; display: flex; align-items: center; height: 46px; }
+        .search-box { border: 1px solid var(--g-border); border-radius: 24px; padding: 5px 20px; display: flex; align-items: center; height: 46px; transition: 0.3s; }
+        .search-box:focus-within { box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
         .search-box input { border: none; outline: none; width: 100%; font-size: 16px; margin-left: 10px; }
         
-        /* Google Tabs */
+        /* Google Style Tabs */
         .google-tabs { display: flex; max-width: 690px; margin-left: 160px; gap: 20px; font-size: 14px; color: var(--g-gray); }
         .g-tab { padding: 10px 0; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 6px; }
-        .g-tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+        .g-tab.active { color: #1a73e8; border-bottom-color: #1a73e8; font-weight: bold; }
 
-        /* Result Style */
+        /* Results & News List */
         .result-container { max-width: 650px; margin-left: 160px; padding-top: 20px; }
-        .g-result { margin-bottom: 28px; display: flex; gap: 15px; }
+        .g-result { margin-bottom: 28px; display: flex; gap: 15px; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
         .g-content { flex: 1; }
         .g-result h3 { font-size: 20px; color: var(--g-blue); margin-bottom: 3px; cursor: pointer; font-weight: 400; }
         .g-result h3:hover { text-decoration: underline; }
-        .g-result .cite { font-size: 14px; color: #202124; margin-bottom: 2px; display: block; }
-        .g-result .desc { font-size: 14px; color: #4d5156; }
+        .g-result .cite { font-size: 14px; color: #202124; margin-bottom: 2px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .g-result .desc { font-size: 14px; color: #4d5156; line-height: 1.5; }
         .g-thumb { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
 
-        /* Detail Area */
-        .detail-card { background: #fff; border: 1px solid var(--g-border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        /* Detail Card */
+        .detail-card { background: #fff; border: 1px solid var(--g-border); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
+        /* Responsive Mobile */
         @media (max-width: 992px) {
             .logo-text, .search-box-container, .google-tabs, .result-container { margin-left: 15px; margin-right: 15px; max-width: 100%; }
+            .logo-text { font-size: 22px; }
+            .g-thumb { width: 80px; height: 80px; }
         }
-        .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; align-items: center; justify-content: center; }
+
+        .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
-<div class="loader" id="mainLoader"><div class="spinner-border text-primary"></div></div>
+<div class="loader" id="mainLoader">
+    <div class="spinner-border text-primary mb-2"></div>
+    <div class="small text-muted">Mencari data...</div>
+</div>
 
 <div class="search-wrapper">
     <div class="logo-text" onclick="location.reload()">
         <span style="color:#4285f4">N</span><span style="color:#ea4335">a</span><span style="color:#fbbc05">n</span><span style="color:#4285f4">d</span><span style="color:#34a853">a</span> <span style="color:#70757a; font-weight:400">Teknik</span>
     </div>
+
     <div class="search-box-container">
         <div class="search-box">
             <i class="fas fa-search text-muted"></i>
-            <input type="text" id="searchInput" placeholder="ID WO, Nota, atau Email..." onkeypress="if(event.key==='Enter') cariData()">
+            <input type="text" id="searchInput" placeholder="Ketik ID WO, Nota, atau Email..." onkeypress="if(event.key==='Enter') cariData()">
         </div>
-        <div class="d-flex gap-2 mt-3">
+        <div class="d-flex gap-2 mt-3 flex-wrap">
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="cariData()">Cari Data</button>
             <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="location.reload()">Reset</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="alert('Fitur Profil')">Edit Profil</button>
+            <a href="edit-pelanggan.html" class="btn btn-light btn-sm border rounded-pill px-3">Edit Profil</a>
         </div>
     </div>
+
     <div class="google-tabs" id="mainTabs" style="display:none;">
-        <div class="g-tab active" onclick="switchTab('tabWO', this)"><i class="fas fa-tools"></i> Pekerjaan</div>
-        <div class="g-tab" onclick="switchTab('tabNota', this)"><i class="fas fa-file-invoice-dollar"></i> Nota</div>
+        <div class="g-tab active" id="tabHWO" onclick="switchTab('tabWO', this)"><i class="fas fa-tools"></i> Pekerjaan</div>
+        <div class="g-tab" id="tabHNota" onclick="switchTab('tabNota', this)"><i class="fas fa-file-invoice-dollar"></i> Nota</div>
     </div>
 </div>
 
-<div class="container-fluid pb-5">
+<div class="container-fluid">
     <div id="custProfile" class="result-container" style="display:none;">
         <h5 class="fw-bold mb-0" id="txtNama"></h5>
         <p id="txtEmailWA" class="text-muted small"></p>
@@ -78,20 +90,20 @@
 
     <div id="resultArea" class="result-container">
         <div id="sectionHome">
-            <h6 class="fw-bold text-muted mb-3">ANTRIAN AKTIF</h6>
-            <div id="antrianList" class="mb-5">Loading antrian...</div>
+            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-clock me-2"></i>ANTRIAN HARI INI</h6>
+            <div id="antrianList" class="mb-5">Memuat antrian...</div>
             
-            <h6 class="fw-bold text-muted mb-3">BERITA TERBARU</h6>
-            <div id="blogList">Loading berita...</div>
+            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-newspaper me-2"></i>BERITA TERBARU</h6>
+            <div id="blogList">Memuat berita blog...</div>
         </div>
 
         <div id="tabWO" style="display:none;">
             <div id="listWO"></div>
             <div id="detailWO" class="detail-card" style="display:none;">
                 <button class="btn btn-link btn-sm p-0 mb-3 text-decoration-none" onclick="backToList()"><i class="fas fa-arrow-left"></i> Kembali</button>
-                <h3 id="dWO_ID"></h3>
-                <h5 id="dWO_Judul" class="text-primary fw-bold"></h5>
-                <div id="dWO_Log" class="mt-3"></div>
+                <h3 id="dWO_ID" class="mb-1"></h3>
+                <h5 id="dWO_Judul" class="text-primary fw-bold mb-4"></h5>
+                <div id="dWO_Log"></div>
             </div>
         </div>
 
@@ -100,86 +112,126 @@
             <div id="detailNota" class="detail-card" style="display:none;">
                 <button class="btn btn-link btn-sm p-0 mb-3 text-decoration-none" onclick="backToList()"><i class="fas fa-arrow-left"></i> Kembali</button>
                 <div id="notaWebPreview">
-                    <h4 class="fw-bold text-center">NOTA PEMBAYARAN</h4>
-                    <div id="notaInfo" class="small mb-3"></div>
-                    <table class="table table-sm border" id="tablePreview">
-                        <thead class="table-light"><tr><th>Item</th><th class="text-center">Qty</th><th class="text-end">Total</th></tr></thead>
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold mb-0">NOTA PEMBAYARAN</h4>
+                        <p class="small text-muted" id="nIDPreview"></p>
+                    </div>
+                    <table class="table table-sm table-bordered" style="font-size: 14px;">
+                        <thead class="table-light">
+                            <tr><th>Deskripsi</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr>
+                        </thead>
                         <tbody id="nItemsBody"></tbody>
                     </table>
-                    <h5 class="text-end fw-bold" id="nTotalWeb"></h5>
+                    <h5 class="text-end fw-bold mt-3" id="nTotalWeb"></h5>
                 </div>
-                <button class="btn btn-dark w-100 mt-3" onclick="prepPDF()"><i class="fas fa-file-pdf"></i> GENERATE PDF</button>
+                <button class="btn btn-dark w-100 mt-4 py-2" onclick="prepPDF()"><i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // GANTI URL IKI nganggo Web App URL soko Apps Script-mu
     const API = 'https://script.google.com/macros/s/AKfycbzZ2XW9lVS4jj9NogR2l_W_ffQTJYR6TmJloV6xJMSEvqDEuRRv18-OAl0fxz5fjlFv/exec';
     let cache = null;
 
     window.onload = () => { loadAntrian(); fetchBlog(); };
 
+    // AMBIL ANTRIAN (Mode CORS Fix)
     async function loadAntrian() {
-        const r = await fetch(API + '?action=read&sheet=Booking');
-        const res = await r.json();
-        if(res.success) {
-            const active = res.data.filter(i => !['selesai','dibatalkan'].includes((i.status||'').toLowerCase()));
-            document.getElementById('antrianList').innerHTML = active.map(i => `
-                <div class="g-result">
-                    <div class="g-content">
-                        <span class="cite">Antrian ID: ${i.woId || i.id}</span>
-                        <h3 onclick="viewDirect('${i.woId || i.id}')">${i.pekerjaan || i.judul}</h3>
-                        <div class="desc">Status: <b>${i.status}</b></div>
-                    </div>
-                </div>`).join('') || 'Tidak ada antrian.';
-        }
+        try {
+            const r = await fetch(API + '?action=read&sheet=Booking', { method: 'GET', redirect: 'follow' });
+            const res = await r.json();
+            if(res.success) {
+                const active = res.data.filter(i => !['selesai','dibatalkan'].includes((i.status||'').toLowerCase()));
+                document.getElementById('antrianList').innerHTML = active.map(i => `
+                    <div class="g-result">
+                        <div class="g-content">
+                            <span class="cite">Antrian > ${i.woId || i.id}</span>
+                            <h3 onclick="viewDirect('${i.woId || i.id}')">${i.pekerjaan || i.judul}</h3>
+                            <div class="desc">Status pengerjaan: <b>${i.status}</b>.</div>
+                        </div>
+                    </div>`).join('') || 'Tidak ada antrian aktif hari ini.';
+            }
+        } catch(e) { document.getElementById('antrianList').innerHTML = 'Gagal memuat antrian.'; }
     }
 
+    // AMBIL BLOG (RSS2JSON)
     async function fetchBlog() {
-        const rss = 'https://www.nandateknik.com/feeds/posts/default?alt=rss';
-        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
-        const data = await res.json();
-        if(data.status === 'ok') {
-            document.getElementById('blogList').innerHTML = data.items.map(item => `
-                <div class="g-result">
-                    <div class="g-content">
-                        <span class="cite">nandateknik.com > blog</span>
-                        <h3 onclick="window.open('${item.link}')">${item.title}</h3>
-                        <div class="desc">${item.description.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
-                    </div>
-                    ${item.thumbnail ? `<img src="${item.thumbnail}" class="g-thumb">` : ''}
-                </div>`).join('');
-        }
+        try {
+            const rss = 'https://www.nandateknik.com/feeds/posts/default?alt=rss';
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
+            const data = await res.json();
+            if(data.status === 'ok') {
+                document.getElementById('blogList').innerHTML = data.items.map(item => `
+                    <div class="g-result">
+                        <div class="g-content">
+                            <span class="cite">nandateknik.com > blog</span>
+                            <h3 onclick="window.open('${item.link}')">${item.title}</h3>
+                            <div class="desc">${item.description.replace(/<[^>]*>/g, '').substring(0, 110)}...</div>
+                        </div>
+                        ${item.thumbnail ? `<img src="${item.thumbnail}" class="g-thumb" onerror="this.style.display='none'">` : ''}
+                    </div>`).join('');
+            }
+        } catch(e) { document.getElementById('blogList').innerHTML = 'Gagal memuat berita.'; }
     }
 
+    // CARI DATA (Mode CORS Fix)
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
         if(!kw) return;
         document.getElementById('mainLoader').style.display = 'flex';
-        const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
-        cache = await r.json();
-        document.getElementById('mainLoader').style.display = 'none';
-        if(cache.success) {
-            document.getElementById('sectionHome').style.display = 'none';
-            document.getElementById('mainTabs').style.display = 'flex';
-            document.getElementById('custProfile').style.display = 'block';
-            document.getElementById('txtNama').innerText = cache.customer.nama;
-            document.getElementById('txtEmailWA').innerText = cache.customer.email;
-            renderLists();
+        
+        try {
+            const r = await fetch(API, { 
+                method: 'POST', 
+                redirect: 'follow',
+                body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) 
+            });
+            cache = await r.json();
+            document.getElementById('mainLoader').style.display = 'none';
+            
+            if(cache.success) {
+                document.getElementById('sectionHome').style.display = 'none';
+                document.getElementById('mainTabs').style.display = 'flex';
+                document.getElementById('custProfile').style.display = 'block';
+                document.getElementById('txtNama').innerText = cache.customer.nama;
+                document.getElementById('txtEmailWA').innerText = `${cache.customer.email} | ${cache.customer.wa}`;
+                renderLists();
+            } else { alert("Data tidak ditemukan, Cux!"); }
+        } catch(e) { 
+            document.getElementById('mainLoader').style.display = 'none';
+            alert("Terjadi kesalahan koneksi API.");
         }
     }
 
     function renderLists() {
         const dataArr = cache.type === 'LIST' ? cache.data : [cache.data];
-        document.getElementById('listWO').innerHTML = dataArr.filter(i => (i.id||i.woId||'').startsWith('WO') || i.type === 'WO').map(w => `
-            <div class="g-result"><div class="g-content"><span class="cite">tracking > ${w.id||w.woId}</span><h3 onclick="viewDirect('${w.id||w.woId}')">${w.judul||w.pekerjaan}</h3><div class="desc">Status: ${w.status}</div></div></div>`).join('');
         
-        document.getElementById('listNota').innerHTML = dataArr.filter(i => (i.id||i.notaId||'').startsWith('INV') || i.type === 'Nota').map(n => `
-            <div class="g-result"><div class="g-content"><span class="cite">invoice > ${n.id||n.notaId}</span><h3 onclick="viewDirect('${n.id||n.notaId}')">Nota #${n.id||n.notaId}</h3><div class="desc">Klik untuk rincian & PDF.</div></div></div>`).join('');
+        // List Pekerjaan
+        const wos = dataArr.filter(i => (i.id||i.woId||'').startsWith('WO') || i.type === 'WO');
+        document.getElementById('listWO').innerHTML = wos.map(w => `
+            <div class="g-result">
+                <div class="g-content">
+                    <span class="cite">tracking > ${w.id||w.woId}</span>
+                    <h3 onclick="viewDirect('${w.id||w.woId}')">${w.judul||w.pekerjaan}</h3>
+                    <div class="desc">Update terakhir: ${w.tgl||w.tanggal}. Status: <b>${w.status}</b></div>
+                </div>
+            </div>`).join('') || 'Tidak ada data pekerjaan.';
+
+        // List Nota
+        const nts = dataArr.filter(i => (i.id||i.notaId||'').startsWith('INV') || i.type === 'Nota');
+        document.getElementById('listNota').innerHTML = nts.map(n => `
+            <div class="g-result">
+                <div class="g-content">
+                    <span class="cite">invoice > ${n.id||n.notaId}</span>
+                    <h3 onclick="viewDirect('${n.id||n.notaId}')">Nota Tagihan #${n.id||n.notaId}</h3>
+                    <div class="desc">Total tagihan: <b>Rp ${(n.total||0).toLocaleString()}</b>. Klik untuk rincian & PDF.</div>
+                </div>
+            </div>`).join('') || 'Tidak ada data nota.';
 
         if(cache.type === 'WO') showWO(cache.data);
-        if(cache.type === 'Nota') { switchTab('tabNota'); showNota(cache.data); }
+        if(cache.type === 'Nota') { switchTab('tabNota', document.getElementById('tabHNota')); showNota(cache.data); }
         if(cache.type === 'LIST') backToList();
     }
 
@@ -188,35 +240,42 @@
         document.getElementById('detailWO').style.display = 'block';
         document.getElementById('dWO_ID').innerText = item.woId || item.id;
         document.getElementById('dWO_Judul').innerText = item.pekerjaan || item.judul;
-        document.getElementById('dWO_Log').innerHTML = (item.history || []).map(l => `<div class="mb-2 border-start border-primary ps-2 small"><b>${l.status}</b><br>${l.tgl}<br>${l.detail||''}</div>`).join('');
+        document.getElementById('dWO_Log').innerHTML = (item.history || []).map(l => `
+            <div class="mb-3 border-start border-3 border-primary ps-3">
+                <div class="fw-bold small text-primary">${l.status}</div>
+                <div class="text-muted" style="font-size:11px">${l.tgl}</div>
+                <div class="small mt-1">${l.detail||''}</div>
+            </div>`).join('') || 'Log histori tidak tersedia.';
     }
 
     function showNota(n) {
         document.getElementById('listNota').style.display = 'none';
         document.getElementById('detailNota').style.display = 'block';
-        document.getElementById('notaInfo').innerHTML = `ID: ${n.notaId || n.id}<br>Tgl: ${n.tanggal || n.tgl}`;
+        document.getElementById('nIDPreview').innerText = `ID: ${n.notaId || n.id} | Tanggal: ${n.tanggal || n.tgl}`;
         const items = n.items || [];
-        document.getElementById('nItemsBody').innerHTML = items.map(it => `<tr><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('');
+        document.getElementById('nItemsBody').innerHTML = items.map(it => `
+            <tr><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('');
         document.getElementById('nTotalWeb').innerText = "Total: Rp " + (n.total||0).toLocaleString();
     }
 
     function prepPDF() {
-        const n = cache.type === 'Nota' ? cache.data : cache.data.find(x => x.type === 'Nota' || x.id.startsWith('INV'));
-        const pdfData = {
+        const n = cache.type === 'Nota' ? cache.data : cache.data.find(x => x.type === 'Nota' || (x.id && x.id.startsWith('INV')));
+        if(!n) return alert("Data nota tidak ditemukan!");
+        
+        generatePDF({
             id: n.notaId || n.id,
             tanggal: n.tanggal || n.tgl,
             email: cache.customer.email,
             items_json: n.items || [],
             total: n.total
-        };
-        generatePDF(pdfData);
+        });
     }
 
     function generatePDF(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Header Logo & Nama
+        // Header
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); } catch (e) {}
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
@@ -226,7 +285,6 @@
         doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
         doc.line(15, 38, 195, 38);
 
-        // Content
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text("NOTA PEMBAYARAN", 15, 48);
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
@@ -246,23 +304,24 @@
             head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Jumlah']],
             body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: [150, 150, 150] } // Abu-abu kyo karepmu
+            headStyles: { fillColor: [150, 150, 150] } // Abu-abu
         });
 
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        // Kotak Garis Putus-putus
+        // Kotak Pembayaran (Garis Putus-putus)
         const boxY = finalY + 15;
         doc.setLineDash([2, 2], 0);
         doc.rect(15, boxY, 180, 20);
         doc.setFontSize(10);
         doc.text("Informasi Pembayaran:", 20, boxY + 7);
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
         doc.text("Pembayaran bisa dilakukan melalui rekening BCA atas nama Nanda Krisbianto 1801826011", 20, boxY + 14);
 
-        doc.save(`Nota_${data.id}.pdf`);
+        doc.save(`Nota_NandaTeknik_${data.id}.pdf`);
     }
 
     function switchTab(id, el) {
@@ -273,10 +332,16 @@
         backToList();
     }
 
-    function viewDirect(id) { document.getElementById('searchInput').value = id; cariData(); }
+    function viewDirect(id) { 
+        document.getElementById('searchInput').value = id; 
+        cariData(); 
+    }
+
     function backToList() {
-        document.getElementById('listWO').style.display = 'block'; document.getElementById('detailWO').style.display = 'none';
-        document.getElementById('listNota').style.display = 'block'; document.getElementById('detailNota').style.display = 'none';
+        document.getElementById('listWO').style.display = 'block';
+        document.getElementById('detailWO').style.display = 'none';
+        document.getElementById('listNota').style.display = 'block';
+        document.getElementById('detailNota').style.display = 'none';
     }
 </script>
 </body>
