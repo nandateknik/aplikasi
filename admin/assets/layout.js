@@ -89,3 +89,4 @@ function confirmLogout() {
         confirmButtonColor: '#0052d4'
     }).then(r => { if(r.isConfirmed) window.location.href='login.html' });
 }
+CONFIG.checkAuth(); 
