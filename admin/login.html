@@ -2,90 +2,70 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Admin - Nanda Teknik</title>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-card { background: white; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.8); }
-        .logo-circle { width: 70px; height: 70px; background: #0d6efd; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2); }
-        .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc; }
-        .btn-primary { border-radius: 15px; padding: 13px; font-weight: 700; background: #0d6efd; border: none; transition: 0.3s; }
-        #errMsg { background: #fff5f5; color: #e53e3e; padding: 10px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #feb2b2; display: none; text-align: center; font-size: 0.85rem; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: white; padding: 40px 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        .btn-primary { border-radius: 12px; padding: 12px; font-weight: 600; background: #0d6efd; border: none; width: 100%; }
+        #errMsg { color: #dc3545; font-size: 0.85rem; text-align: center; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
     <div class="text-center mb-4">
-        <div class="logo-circle"><i class="fas fa-user-shield"></i></div>
-        <h4 class="fw-bold mb-1">NANDA TEKNIK</h4>
-        <p class="text-muted small">Panel Kendali Admin</p>
+        <h4 class="fw-bold">NANDA TEKNIK</h4>
+        <p class="text-muted small">Panel Admin (No Hash Version)</p>
     </div>
-
-    <div id="errMsg"><i class="fas fa-exclamation-circle me-1"></i> Username/Password Salah!</div>
     
     <div class="mb-3">
-        <label class="small fw-bold mb-1 text-secondary">Username</label>
-        <input type="text" id="userInput" class="form-control" placeholder="admin" autocomplete="off">
+        <label class="small fw-bold mb-1">Username</label>
+        <input type="text" id="userInput" class="form-control" placeholder="Masukkan username">
     </div>
     <div class="mb-4">
-        <label class="small fw-bold mb-1 text-secondary">Password</label>
-        <input type="password" id="passInput" class="form-control" placeholder="••••••••">
+        <label class="small fw-bold mb-1">Password</label>
+        <input type="password" id="passInput" class="form-control" placeholder="Masukkan password">
     </div>
     
-    <button class="btn btn-primary w-100" id="btnLogin" onclick="handleLogin()">LOG IN</button>
+    <button class="btn btn-primary" onclick="handleLogin()">LOG IN</button>
+    <div id="errMsg">⚠️ Username utawa Password Salah!</div>
 </div>
 
 <script>
-    // Langsung cek session
+    // Langsung cek session nek wis login
     if (localStorage.getItem('isLoggedIn') === 'true') {
         window.location.href = 'admin/admin-pekerjaan.html';
     }
 
-    // DATA KUNCI (Hash beneran kanggo 'admin' lan 'nandateknik2024')
-    const SECURE_U = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; 
-    const SECURE_P = "d7486e9e42562479e0a0d91244e667084594c794019f20084f74d08a543666f7"; 
-
     function handleLogin() {
-        const u = document.getElementById('userInput').value.trim(); // .trim() nggo mbusak spasi mrucut
-        const p = document.getElementById('passInput').value.trim();
-        const err = document.getElementById('errMsg');
-        const btn = document.getElementById('btnLogin');
+        // AMBIL INPUT
+        const user = document.getElementById('userInput').value;
+        const pass = document.getElementById('passInput').value;
+        const error = document.getElementById('errMsg');
 
-        if(!u || !p) {
-            alert("Isi dhisik to Mas!");
-            return;
-        }
+        // SETINGAN LOGIN (Ganti neng kene Mas)
+        const USER_BENER = "admin";
+        const PASS_BENER = "nandateknik2024";
 
-        btn.innerHTML = 'Ngecek...';
-        btn.disabled = true;
-
-        // Proses Hashing
-        const hashedU = CryptoJS.SHA256(u).toString();
-        const hashedP = CryptoJS.SHA256(p).toString();
-
-        console.log("Input U:", u, "Hash:", hashedU); // Delok nang inspect element nek jik gagal
-        console.log("Input P:", p, "Hash:", hashedP);
-
-        if (hashedU === SECURE_U && hashedP === SECURE_P) {
+        // CEK LOGIN
+        if (user === USER_BENER && pass === PASS_BENER) {
             localStorage.setItem('isLoggedIn', 'true');
+            // Pastikan alamat file iki bener yo Mas!
             window.location.href = 'admin/admin-pekerjaan.html'; 
         } else {
-            err.style.display = 'block';
-            btn.innerHTML = 'LOG IN';
-            btn.disabled = false;
+            error.style.display = 'block';
             document.getElementById('passInput').value = "";
-            setTimeout(() => { err.style.display = 'none'; }, 2000);
+            setTimeout(() => { error.style.display = 'none'; }, 3000);
         }
     }
 
-    document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+    // Fitur Enter
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') { handleLogin(); }
+    });
 </script>
 
 </body>
