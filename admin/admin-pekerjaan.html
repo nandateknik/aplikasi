@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <script src="assets/config.js"></script>
+    <script>
+        CONFIG.checkAuth(); 
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nanda Teknik - Pro Admin</title>
@@ -34,13 +39,19 @@
             padding: 15px 20px !important; border-top: 1px solid #eee !important;
         }
         .btn-action-group { display: flex; gap: 10px; width: 100%; }
+        
+        /* Style tambahan kanggo input qty nang list */
+        .qty-input-list { width: 50px; text-align: center; border: 1px solid #ddd; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="action-bar">
     <div class="bg-white p-2 rounded-4 shadow-sm mb-3 text-center border">
-        <small class="text-muted d-block mb-1 fw-bold">Cari Berdasarkan Tanggal:</small>
+        <div class="d-flex justify-content-between align-items-center px-2">
+            <small class="text-muted fw-bold">Filter Tanggal:</small>
+            <button class="btn btn-sm btn-light text-danger fw-bold" onclick="CONFIG.logout()">LOGOUT</button>
+        </div>
         <input type="date" id="searchDate" class="form-control border-0 text-center" onchange="applyFilter()">
     </div>
     
@@ -80,10 +91,19 @@
                             <div class="col-4"><button class="btn btn-primary w-100" onclick="tambahItem(false)">Add</button></div>
                         </div>
                         <div class="p-2 border rounded-3 bg-white mb-2">
-                            <div class="d-flex gap-2">
-                                <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Barang">
-                                <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
-                                <button class="btn btn-dark btn-sm" onclick="tambahItem(true)">Ok</button>
+                            <div class="row g-1">
+                                <div class="col-5">
+                                    <input type="text" id="manualNama" class="form-control form-control-sm border-0 bg-light" placeholder="Barang">
+                                </div>
+                                <div class="col-3">
+                                    <input type="number" id="manualHarga" class="form-control form-control-sm border-0 bg-light" placeholder="Harga">
+                                </div>
+                                <div class="col-2">
+                                    <input type="number" id="manualQty" class="form-control form-control-sm border-0 bg-light" placeholder="Qty" value="1">
+                                </div>
+                                <div class="col-2 text-end">
+                                    <button class="btn btn-dark btn-sm w-100" onclick="tambahItem(true)">Ok</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -249,21 +269,31 @@
     }
 
     function tambahItem(isManual) {
-        let n, h;
+        let n, h, q;
         if(isManual) {
             n = document.getElementById('manualNama').value; 
             h = parseInt(document.getElementById('manualHarga').value);
+            q = parseInt(document.getElementById('manualQty').value) || 1;
             if(!n || isNaN(h)) return;
             document.getElementById('manualNama').value = "";
             document.getElementById('manualHarga').value = "";
+            document.getElementById('manualQty').value = "1";
         } else {
             const s = document.getElementById('jasaSelect'); 
             n = s.options[s.selectedIndex].text; 
             h = parseInt(s.value);
+            q = 1;
         }
         const idx = selectedItems.findIndex(i => i.nama === n);
-        if(idx > -1) selectedItems[idx].qty++; 
-        else selectedItems.push({nama: n, harga: h, qty: 1});
+        if(idx > -1) selectedItems[idx].qty += q; 
+        else selectedItems.push({nama: n, harga: h, qty: q});
+        renderItems();
+    }
+
+    function updateQty(idx, val) {
+        let newQty = parseInt(val);
+        if(isNaN(newQty) || newQty < 1) newQty = 1;
+        selectedItems[idx].qty = newQty;
         renderItems();
     }
 
@@ -280,11 +310,14 @@
             const q = Number(it.qty);
             const sub = h * q;
             total += sub;
-            return `<div class="d-flex justify-content-between p-2 bg-white rounded border mb-2 small">
-                <div><b>${it.nama}</b><br><span class="text-muted">Rp ${h.toLocaleString('id-ID')} x ${q}</span></div>
-                <div class="text-end">
-                    <span class="fw-bold d-block text-primary">Rp ${sub.toLocaleString('id-ID')}</span>
-                    <i class="fas fa-trash text-danger" style="cursor:pointer" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
+            return `<div class="d-flex justify-content-between align-items-center p-2 bg-white rounded border mb-2 small">
+                <div style="flex:1"><b>${it.nama}</b><br><span class="text-muted">Rp ${h.toLocaleString('id-ID')}</span></div>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="number" class="qty-input-list" value="${q}" onchange="updateQty(${idx}, this.value)">
+                    <div class="text-end" style="min-width: 90px;">
+                        <span class="fw-bold d-block text-primary">Rp ${sub.toLocaleString('id-ID')}</span>
+                        <i class="fas fa-trash text-danger" style="cursor:pointer" onclick="selectedItems.splice(${idx},1);renderItems()"></i>
+                    </div>
                 </div>
             </div>`;
         }).join('');
@@ -351,7 +384,6 @@
         }
     }
 
-    // --- BAGIAN NOTA SESUAI REQUEST ---
     function downloadPDF() {
         if(!fullDataDetail || selectedItems.length === 0) {
             Swal.fire({ icon: 'warning', title: 'Item Kosong', text: 'Isi item nota dhisik Bro!', target: document.getElementById('modalUpdate') });
@@ -361,10 +393,8 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // 1. Logo
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); } catch (e) { }
 
-        // 2. Kop Surat
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
@@ -372,11 +402,9 @@
         doc.setFontSize(8); doc.text("Sukowidi Indah Residence D5, Banyuwangi - Jawa Timur. 68421", 105, 30, { align: "center" });
         doc.text("WA: 0823-3120-1148 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
         
-        // 3. Garis Horizontal
         doc.setLineWidth(0.5);
         doc.line(15, 38, 195, 38);
 
-        // 4. Judul Faktur & Info Customer
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text("FAKTUR PEMBAYARAN", 15, 48);
         
@@ -385,7 +413,6 @@
         doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID')}`, 15, 61);
         doc.text(`Kepada        : ${fullDataDetail.nama}`, 140, 56);
 
-        // 5. Tabel Data
         const tableBody = selectedItems.map((item, index) => [
             index + 1, 
             item.nama, 
@@ -402,21 +429,18 @@
             headStyles: { fillColor: [150, 150, 150] } 
         });
 
-        // 6. Total Akhir
         const finalY = doc.lastAutoTable.finalY + 10;
         const totalHarga = selectedItems.reduce((sum, item) => sum + (item.harga * item.qty), 0);
         
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL: Rp ${totalHarga.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        // 7. Box Info Rekening (Garis Putus-putus)
         const boxY = finalY + 15;
         doc.setLineDash([2, 2], 0);
         doc.rect(15, boxY, 180, 15);
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("pembayaran bisa dilakukan melalu rekening BCA atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
+        doc.text("Pembayaran bisa dilakukan melalui rekening BCA atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
         
-        // 8. Save
         doc.save(`Nota_${fullDataDetail.nama}_${currentId}.pdf`);
     }
 </script>
