@@ -11,181 +11,81 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #f4f7fe; 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            padding: 20px;
-        }
-        .login-card { 
-            background: white; 
-            padding: 40px 30px; 
-            border-radius: 30px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05); 
-            width: 100%; 
-            max-width: 400px;
-            border: 1px solid rgba(255,255,255,0.8);
-        }
-        .logo-circle {
-            width: 70px;
-            height: 70px;
-            background: #0d6efd;
-            color: white;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 24px;
-            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
-        }
-        .form-control {
-            border-radius: 12px;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            font-size: 0.9rem;
-        }
-        .form-control:focus {
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
-            border-color: #0d6efd;
-            background: white;
-        }
-        .btn-primary { 
-            border-radius: 15px; 
-            padding: 13px; 
-            font-weight: 700; 
-            background: #0d6efd; 
-            border: none;
-            letter-spacing: 0.5px;
-            transition: 0.3s;
-        }
-        .btn-primary:hover {
-            background: #0052cc;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(13, 110, 253, 0.2);
-        }
-        .input-group-text {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-right: none;
-            border-radius: 12px 0 0 12px;
-            color: #94a3b8;
-        }
-        .input-group .form-control {
-            border-left: none;
-            border-radius: 0 12px 12px 0;
-        }
-        #errMsg {
-            background: #fff5f5;
-            color: #e53e3e;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #feb2b2;
-            display: none;
-            animation: shake 0.5s ease-in-out;
-            font-size: 0.85rem;
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fe; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-card { background: white; padding: 40px 30px; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); width: 100%; max-width: 400px; border: 1px solid rgba(255,255,255,0.8); }
+        .logo-circle { width: 70px; height: 70px; background: #0d6efd; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2); }
+        .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc; }
+        .btn-primary { border-radius: 15px; padding: 13px; font-weight: 700; background: #0d6efd; border: none; transition: 0.3s; }
+        #errMsg { background: #fff5f5; color: #e53e3e; padding: 10px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #feb2b2; display: none; text-align: center; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
     <div class="text-center mb-4">
-        <div class="logo-circle">
-            <i class="fas fa-user-shield"></i>
-        </div>
+        <div class="logo-circle"><i class="fas fa-user-shield"></i></div>
         <h4 class="fw-bold mb-1">NANDA TEKNIK</h4>
-        <p class="text-muted small">Pro Admin Dashboard</p>
+        <p class="text-muted small">Panel Kendali Admin</p>
     </div>
 
-    <div id="errMsg" class="text-center">
-        <i class="fas fa-exclamation-circle me-1"></i> Username utawa Password Salah!
-    </div>
+    <div id="errMsg"><i class="fas fa-exclamation-circle me-1"></i> Username/Password Salah!</div>
     
     <div class="mb-3">
         <label class="small fw-bold mb-1 text-secondary">Username</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-user"></i></span>
-            <input type="text" id="userInput" class="form-control" placeholder="Admin username" autocomplete="off">
-        </div>
+        <input type="text" id="userInput" class="form-control" placeholder="admin" autocomplete="off">
     </div>
     <div class="mb-4">
         <label class="small fw-bold mb-1 text-secondary">Password</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-            <input type="password" id="passInput" class="form-control" placeholder="••••••••">
-        </div>
+        <input type="password" id="passInput" class="form-control" placeholder="••••••••">
     </div>
     
-    <button class="btn btn-primary w-100 mb-2" id="btnLogin" onclick="handleLogin()">
-        LOG IN <i class="fas fa-sign-in-alt ms-2"></i>
-    </button>
-    
-    <div class="text-center mt-4">
-        <p class="text-muted" style="font-size: 10px;">&copy; 2026 Nanda Teknik Banyuwangi</p>
-    </div>
+    <button class="btn btn-primary w-100" id="btnLogin" onclick="handleLogin()">LOG IN</button>
 </div>
 
 <script>
-    // 1. AUTO REDIRECT: Nek wis tau login, langsung buwak ning admin.html
-    window.onload = () => {
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'admin.html';
-        }
-    };
+    // Langsung cek session
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        window.location.href = 'admin/admin-pekerjaan.html';
+    }
 
-    // Username: admin
-const SECURE_U = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
-// Password: nandateknik2024 (Iki kodené sing anyar)
-const SECURE_P = "f9d4eea8cd3dedd455da17c8a69df0b81cdfccbe9ed52a155c8bd9a8b817dcf3";
+    // DATA KUNCI (Hash beneran kanggo 'admin' lan 'nandateknik2024')
+    const SECURE_U = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; 
+    const SECURE_P = "d7486e9e42562479e0a0d91244e667084594c794019f20084f74d08a543666f7"; 
 
     function handleLogin() {
-        const u = document.getElementById('userInput').value;
-        const p = document.getElementById('passInput').value;
+        const u = document.getElementById('userInput').value.trim(); // .trim() nggo mbusak spasi mrucut
+        const p = document.getElementById('passInput').value.trim();
         const err = document.getElementById('errMsg');
         const btn = document.getElementById('btnLogin');
 
-        if(!u || !p) return;
+        if(!u || !p) {
+            alert("Isi dhisik to Mas!");
+            return;
+        }
 
-        // Efek loading pas ngecek
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking...';
+        btn.innerHTML = 'Ngecek...';
         btn.disabled = true;
 
-        setTimeout(() => {
-            const hashedU = CryptoJS.SHA256(u).toString();
-            const hashedP = CryptoJS.SHA256(p).toString();
+        // Proses Hashing
+        const hashedU = CryptoJS.SHA256(u).toString();
+        const hashedP = CryptoJS.SHA256(p).toString();
 
-            if (hashedU == SECURE_U && hashedP == SECURE_P) {
-                localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = 'admin/admin-pekerjaan.html'; 
-            } else {
-                err.style.display = 'block';
-                btn.innerHTML = 'LOG IN <i class="fas fa-sign-in-alt ms-2"></i>';
-                btn.disabled = false;
-                
-                // Clear password input ben user iso nyobo maneh
-                document.getElementById('passInput').value = "";
-                
-                setTimeout(() => { err.style.display = 'none'; }, 3000);
-            }
-        }, 800);
+        console.log("Input U:", u, "Hash:", hashedU); // Delok nang inspect element nek jik gagal
+        console.log("Input P:", p, "Hash:", hashedP);
+
+        if (hashedU === SECURE_U && hashedP === SECURE_P) {
+            localStorage.setItem('isLoggedIn', 'true');
+            window.location.href = 'admin/admin-pekerjaan.html'; 
+        } else {
+            err.style.display = 'block';
+            btn.innerHTML = 'LOG IN';
+            btn.disabled = false;
+            document.getElementById('passInput').value = "";
+            setTimeout(() => { err.style.display = 'none'; }, 2000);
+        }
     }
 
-    // Ben iso login pencet Enter
-    document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') { handleLogin(); }
-    });
+    document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
 </script>
 
 </body>
