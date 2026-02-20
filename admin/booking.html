@@ -273,7 +273,7 @@
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
             document.getElementById('loader').style.display = 'none';
-            if(r.success) Swal.fire('Sip!', 'Nota tersimpan', 'success').then(() => window.location.href = 'admin.html');
+            if(r.success) Swal.fire('Sip!', 'Nota tersimpan', 'success').then(() => window.location.href = 'booking.html');
         } catch(e) { 
             document.getElementById('loader').style.display = 'none'; 
             Swal.fire('Error', 'Gagal menyimpan data', 'error');
