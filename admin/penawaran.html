@@ -248,89 +248,117 @@
     }
 
     function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // --- HEADER ---
-        doc.setFontSize(18); doc.setFont("helvetica", "bold");
-        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Software, Network & Electrical Engineering", 105, 26, { align: "center" });
-        doc.setFontSize(8); doc.text("Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur", 105, 30, { align: "center" });
-        doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
-        doc.line(15, 38, 195, 38);
-
-        // --- INFO SURAT ---
-        doc.setFontSize(11); doc.setFont("helvetica", "bold");
-        doc.text("PENAWARAN HARGA", 15, 48);
-        
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        // Kolom Kiri
-        doc.text(`No. Penawaran : ${data.id}`, 15, 56);
-        doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 61);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Perihal        : ${data.perihal || '-'}`, 15, 66);
-        
-        // Kolom Kanan
-        doc.setFont("helvetica", "normal");
-        doc.text("Kepada Yth:", 135, 56);
-        doc.setFont("helvetica", "bold");
-        doc.text(data.email, 135, 61);
-
-        // --- KALIMAT PEMBUKA ---
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        const pembuka = "Bersama surat ini, kami Nanda Teknik Banyuwangi bermaksud menyampaikan penawaran harga untuk pekerjaan/kebutuhan sebagai berikut:";
-        const splitPembuka = doc.splitTextToSize(pembuka, 180);
-        doc.text(splitPembuka, 15, 76);
-
-        // --- TABLE ITEMS ---
-        const tableBody = data.items_json.map((item, index) => [
-            index + 1, 
-            item.nama, 
-            item.qty,
-            `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
-            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
-        ]);
-
-        doc.autoTable({
-            startY: 82, 
-            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Jumlah']],
-            body: tableBody, 
-            theme: 'grid', 
-            headStyles: { fillColor: [51, 51, 51], halign: 'center' },
-            columnStyles: {
-                0: { halign: 'center', cellWidth: 10 },
-                2: { halign: 'center', cellWidth: 15 },
-                3: { halign: 'right' },
-                4: { halign: 'right' }
-            }
-        });
-
-        // --- TOTAL & PENUTUP ---
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik dengan Bapak/Ibu. Atas perhatiannya kami ucapkan terima kasih.";
-        const splitPenutup = doc.splitTextToSize(penutup, 180);
-        doc.text(splitPenutup, 15, finalY + 15);
-
-        // --- TANDA TANGAN ---
-        const ttdY = finalY + 35;
-        doc.text("Banyuwangi, " + new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}), 145, ttdY);
-        doc.text("Hormat Kami,", 145, ttdY + 5);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("Nanda Krisbianto", 145, ttdY + 30);
-        doc.setFont("helvetica", "normal");
-        doc.text("( Vendor )", 145, ttdY + 35);
-
-        doc.save(`Penawaran_${data.id}_${data.perihal}.pdf`);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // --- 1. HEADER DENGAN LOGO ---
+    try { 
+        // Logo neng pojok kiwo
+        doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
+    } catch (e) { 
+        console.error("Logo ora ketemu.");
     }
+
+    // Teks Header
+    doc.setFontSize(18); doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40); // Ireng semu abu peteng
+    doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+    
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.setTextColor(100); 
+    doc.text("Software, Network & Electrical Engineering", 45, 26);
+    doc.setFontSize(8);
+    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
+    
+    // Garis Kop (Abu-abu Peteng)
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.5);
+    doc.line(15, 40, 195, 40);
+
+    // --- 2. INFO SURAT ---
+    doc.setTextColor(0); 
+    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("PENAWARAN HARGA", 105, 50, { align: "center" });
+
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text(`No. Penawaran : #${data.id}`, 15, 60);
+    doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Perihal        : ${data.perihal || 'Penawaran Pekerjaan'}`, 15, 70);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text("Kepada Yth:", 130, 60);
+    doc.setFont("helvetica", "bold");
+    const splitEmail = doc.splitTextToSize(data.email, 60);
+    doc.text(splitEmail, 130, 65);
+
+    // --- 3. KALIMAT PEMBUKA ---
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const pembuka = "Bersama surat ini, kami Nanda Teknik Banyuwangi bermaksud menyampaikan rincian penawaran harga untuk kebutuhan sebagai berikut:";
+    const splitPembuka = doc.splitTextToSize(pembuka, 180);
+    doc.text(splitPembuka, 15, 80);
+
+    // --- 4. TABLE ITEMS (WARNA ABU-ABU) ---
+    const tableBody = data.items_json.map((item, index) => [
+        { content: index + 1, styles: { halign: 'center' } }, 
+        item.nama, 
+        { content: item.qty, styles: { halign: 'center' } },
+        `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
+        `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+    ]);
+
+    doc.autoTable({
+        startY: 86, 
+        head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Jumlah']],
+        body: tableBody, 
+        theme: 'grid', 
+        headStyles: { 
+            fillColor: [80, 80, 80], // Abu-abu peteng (Grey)
+            textColor: [255, 255, 255],
+            halign: 'center',
+            fontSize: 10
+        },
+        columnStyles: {
+            0: { cellWidth: 10 },
+            2: { cellWidth: 15 },
+            3: { halign: 'right', cellWidth: 40 },
+            4: { halign: 'right', cellWidth: 40 }
+        },
+        styles: { fontSize: 9, cellPadding: 3, lineColor: [200, 200, 200] }
+    });
+
+    // --- 5. TOTAL & PENUTUP ---
+    const finalY = doc.lastAutoTable.finalY + 10;
+    
+    // Box Total (Abu-abu Enom)
+    doc.setFillColor(240, 240, 240);
+    doc.rect(130, finalY - 5, 65, 10, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik. Atas perhatiannya kami ucapkan terima kasih.";
+    const splitPenutup = doc.splitTextToSize(penutup, 180);
+    doc.text(splitPenutup, 15, finalY + 15);
+
+    // --- 6. TANDA TANGAN ---
+    const ttdY = finalY + 35;
+    const tglSekarang = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+    
+    doc.text(`Banyuwangi, ${tglSekarang}`, 145, ttdY);
+    doc.text("Hormat Kami,", 145, ttdY + 5);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("NANDA KRISBIANTO", 145, ttdY + 30);
+    doc.setFont("helvetica", "normal");
+    doc.text("( Owner Nanda Teknik )", 145, ttdY + 35);
+
+    doc.save(`Penawaran_${data.id}.pdf`);
+}
 
     // --- FORM & CRUD FUNCTIONS ---
     function addItemRow(n='', h=0, q=1) {
