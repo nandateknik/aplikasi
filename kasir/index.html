@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>POS Iware Offline-First</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS Khusus Cetak Thermal Iware 58mm */
+        @media print {
+            body * { visibility: hidden; }
+            #receipt { visibility: visible; position: absolute; left: 0; top: 0; width: 58mm; }
+            .no-print { display: none; }
+            @page { margin: 0; size: 58mm auto; }
+        }
+        .receipt-font { font-family: 'Courier New', Courier, monospace; font-size: 12px; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-80">
+            <h2 class="text-xl font-bold mb-4 text-center">LOGIN POS</h2>
+            <input type="text" id="username" placeholder="Username" class="w-full border p-2 mb-2 rounded">
+            <input type="password" id="password" placeholder="Password" class="w-full border p-2 mb-4 rounded">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Masuk</button>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+        <header class="bg-blue-700 text-white p-4 flex justify-between items-center shadow-md">
+            <h1 class="font-bold">POS IWARE <span id="status-tag" class="text-xs bg-green-500 px-2 rounded">Online</span></h1>
+            <div class="flex items-center gap-4">
+                <span id="user-display" class="italic"></span>
+                <button onclick="location.reload()" class="bg-red-500 px-3 py-1 text-sm rounded">Keluar</button>
+            </div>
+        </header>
+
+        <div class="flex h-[calc(100-4rem)]">
+            <aside class="w-64 bg-slate-800 text-gray-300 p-4">
+                <nav class="space-y-2">
+                    <button id="btn-kasir" class="w-full text-left p-2 hover:bg-slate-700 rounded hidden">🛒 Penjualan (Kasir)</button>
+                    <button id="btn-gudang" class="w-full text-left p-2 hover:bg-slate-700 rounded hidden">📦 Stok Barang (Gudang)</button>
+                    <button id="btn-admin" class="w-full text-left p-2 hover:bg-slate-700 rounded hidden">📊 Laporan (Admin)</button>
+                </nav>
+            </aside>
+
+            <main class="flex-1 p-6" id="workspace">
+                <div id="pos-interface" class="grid grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold mb-4 border-b">Daftar Menu</h3>
+                        <div id="product-list" class="grid grid-cols-2 gap-2"></div>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold mb-4 border-b">Keranjang</h3>
+                        <div id="cart-items" class="h-64 overflow-y-auto mb-4 border-b"></div>
+                        <div class="text-xl font-bold flex justify-between">
+                            <span>TOTAL:</span><span id="cart-total">Rp 0</span>
+                        </div>
+                        <button onclick="checkout()" class="w-full bg-green-600 text-white py-4 mt-4 rounded-lg font-bold">BAYAR & CETAK (F9)</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="receipt" class="hidden receipt-font p-2 bg-white">
+        <div class="text-center font-bold mb-2">WARUNG KITA</div>
+        <div class="mb-1">No: <span id="pr-id"></span></div>
+        <div class="mb-1 border-b border-dashed"></div>
+        <div id="pr-list" class="mb-1"></div>
+        <div class="border-b border-dashed mb-1"></div>
+        <div class="flex justify-between font-bold text-sm">
+            <span>TOTAL</span><span id="pr-total"></span>
+        </div>
+        <div class="text-center mt-4 text-[10px]">Terima Kasih Atas Kunjungan Anda</div>
+    </div>
+
+    <script>
+        const GAS_URL = 'URL_DEPLOY_APPS_SCRIPT_ANDA';
+        let currentUser = null;
+        let cart = [];
+
+        // IndexedDB Logic
+        let db;
+        const request = indexedDB.open("POS_Offline", 1);
+        request.onupgradeneeded = e => {
+            db = e.target.result;
+            db.createObjectStore("sales", { keyPath: "id" });
+        };
+        request.onsuccess = e => { db = e.target.result; syncOfflineData(); };
+
+        // Role & Login Logic
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            // Hardcoded sementara untuk demo, idealnya fetch dari GAS
+            if (user === 'admin' && pass === '123') currentUser = { name: 'Admin', role: 'admin' };
+            else if (user === 'kasir' && pass === '123') currentUser = { name: 'Siti', role: 'kasir' };
+            
+            if (currentUser) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('user-display').innerText = currentUser.name;
+                setupUI(currentUser.role);
+            }
+        }
+
+        function setupUI(role) {
+            if (role === 'admin') {
+                ['btn-kasir', 'btn-gudang', 'btn-admin'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            } else if (role === 'kasir') {
+                document.getElementById('btn-kasir').classList.remove('hidden');
+            } else if (role === 'gudang') {
+                document.getElementById('btn-gudang').classList.remove('hidden');
+            }
+        }
+
+        // Logic POS & Print
+        function checkout() {
+            const sale = {
+                id: 'TRX-' + Date.now(),
+                date: new Date().toISOString(),
+                items: cart,
+                total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
+                cashier: currentUser.name
+            };
+
+            // Simpan ke IndexedDB (Selalu simpan lokal dulu)
+            const tx = db.transaction("sales", "readwrite");
+            tx.objectStore("sales").add(sale);
+            
+            // Siapkan Nota Thermal
+            document.getElementById('pr-id').innerText = sale.id;
+            document.getElementById('pr-total').innerText = sale.total;
+            // ... (logika list item nota)
+            
+            window.print(); // Pemicu Cetak Thermal
+            cart = []; // Reset keranjang
+            syncOfflineData(); // Coba kirim ke Cloud
+        }
+
+        async function syncOfflineData() {
+            if (!navigator.onLine) {
+                document.getElementById('status-tag').innerText = 'Offline';
+                document.getElementById('status-tag').className = 'text-xs bg-red-500 px-2 rounded';
+                return;
+            }
+
+            const tx = db.transaction("sales", "readonly");
+            const store = tx.objectStore("sales");
+            const allSales = await new Promise(resolve => {
+                store.getAll().onsuccess = e => resolve(e.target.result);
+            });
+
+            if (allSales.length > 0) {
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'sync_sales', payload: allSales })
+                }).then(() => {
+                    // Jika sukses, hapus data lokal
+                    const delTx = db.transaction("sales", "readwrite");
+                    delTx.objectStore("sales").clear();
+                    console.log("Sync Sukses!");
+                });
+            }
+        }
+
+        window.addEventListener('online', syncOfflineData);
+
+        // Registrasi Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
+</body>
+</html>
