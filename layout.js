@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="d-flex justify-content-between align-items-center">
             <div class="user-info-box">
                 <div class="avatar-wrapper">
-                    <img src="https://ui-avatars.com/api/?name=Nanda+Krisbianto&background=fff&color=0052d4" alt="avatar">
+                    <a href="index.html">"<img src="https://ui-avatars.com/api/?name=Nanda+Krisbianto&background=fff&color=0052d4" alt="avatar"></a>
                 </div>
                 <div class="ms-3">
                     <p class="greeting">Sugeng Dalu, Mas</p>
