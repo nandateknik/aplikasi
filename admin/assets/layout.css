@@ -190,3 +190,33 @@ body {
 .animate__fadeInUp {
     animation: fadeInUp 0.5s both;
 }
+
+.avatar-link:active img {
+    transform: scale(0.9); /* Efek mendal pas diklik */
+    filter: brightness(0.9);
+}
+
+.avatar-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+/* Nambahne indikator cilik nek iki tombol home */
+.avatar-wrapper::after {
+    content: '\f015'; /* FontAwesome Home icon */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: #0052d4;
+    color: white;
+    font-size: 0.6rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
