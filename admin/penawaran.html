@@ -247,13 +247,12 @@
         if(data) generatePDF(data);
     }
 
-    function generatePDF(data) {
+  function generatePDF(data) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
     // --- 1. HEADER DENGAN LOGO ---
     try { 
-        // Logo neng pojok kiwo
         doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
     } catch (e) { 
         console.error("Logo ora ketemu.");
@@ -261,7 +260,7 @@
 
     // Teks Header
     doc.setFontSize(18); doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40); // Ireng semu abu peteng
+    doc.setTextColor(40, 40, 40);
     doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
     
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
@@ -271,7 +270,6 @@
     doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
     doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
     
-    // Garis Kop (Abu-abu Peteng)
     doc.setDrawColor(80, 80, 80);
     doc.setLineWidth(0.5);
     doc.line(15, 40, 195, 40);
@@ -290,44 +288,78 @@
     doc.setFont("helvetica", "normal");
     doc.text("Kepada Yth:", 130, 60);
     doc.setFont("helvetica", "bold");
-    const splitEmail = doc.splitTextToSize(data.email, 60);
-    doc.text(splitEmail, 130, 65);
+    // GANTI EMAIL DADI NAMA PELANGGAN
+    const namaPelanggan = data.nama || data.pelanggan || '-'; 
+    const splitNama = doc.splitTextToSize(namaPelanggan, 60);
+    doc.text(splitNama, 130, 65);
 
     // --- 3. KALIMAT PEMBUKA ---
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     const pembuka = "Bersama surat ini, kami Nanda Teknik Banyuwangi bermaksud menyampaikan rincian penawaran harga untuk kebutuhan sebagai berikut:";
     const splitPembuka = doc.splitTextToSize(pembuka, 180);
-    doc.text(splitPembuka, 15, 80);
+    doc.text(splitPembuka, 15, 82);
 
-    // --- 4. TABLE ITEMS (WARNA ABU-ABU) ---
+    // --- 4. TABLE ITEMS ---
     const tableBody = data.items_json.map((item, index) => [
-        { content: index + 1, styles: { halign: 'center' } }, 
+        index + 1, 
         item.nama, 
-        { content: item.qty, styles: { halign: 'center' } },
+        item.qty,
         `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
         `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
     ]);
 
     doc.autoTable({
-        startY: 86, 
-        head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Jumlah']],
+        startY: 88, 
+        head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
         body: tableBody, 
         theme: 'grid', 
         headStyles: { 
-            fillColor: [80, 80, 80], // Abu-abu peteng (Grey)
+            fillColor: [80, 80, 80], 
             textColor: [255, 255, 255],
             halign: 'center',
-            fontSize: 10
+            fontSize: 9,
+            valign: 'middle'
         },
         columnStyles: {
-            0: { cellWidth: 10 },
-            2: { cellWidth: 15 },
-            3: { halign: 'right', cellWidth: 40 },
-            4: { halign: 'right', cellWidth: 40 }
+            0: { halign: 'center', cellWidth: 12 }, // NO wis tak omborne dadi 12 ben ra tumpuk
+            1: { halign: 'left' },
+            2: { halign: 'center', cellWidth: 15 },
+            3: { halign: 'right', cellWidth: 35 },
+            4: { halign: 'right', cellWidth: 35 }
         },
         styles: { fontSize: 9, cellPadding: 3, lineColor: [200, 200, 200] }
     });
+
+    // --- 5. TOTAL & PENUTUP ---
+    const finalY = doc.lastAutoTable.finalY + 10;
+    
+    doc.setFillColor(240, 240, 240);
+    doc.rect(130, finalY - 5, 65, 10, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik. Atas perhatiannya kami ucapkan terima kasih.";
+    const splitPenutup = doc.splitTextToSize(penutup, 180);
+    doc.text(splitPenutup, 15, finalY + 15);
+
+    // --- 6. TANDA TANGAN ---
+    const ttdY = finalY + 40;
+    const tglSekarang = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+    
+    doc.text(`Banyuwangi, ${tglSekarang}`, 145, ttdY);
+    doc.text("Hormat Kami,", 145, ttdY + 5);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("NANDA KRISBIANTO", 145, ttdY + 30);
+    doc.setFont("helvetica", "normal");
+    doc.text("( Owner Nanda Teknik )", 145, ttdY + 35);
+
+    doc.save(`Penawaran_${data.id}.pdf`);
+}
 
     // --- 5. TOTAL & PENUTUP ---
     const finalY = doc.lastAutoTable.finalY + 10;
