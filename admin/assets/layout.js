@@ -8,9 +8,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if (jam >= 19 || jam < 4) salam = "Sugeng Dalu";
 
    const headerTemplate = `
-    <script>
-        CONFIG.checkAuth(); 
-    </script>
 <header class="new-header">
     <div class="header-wave">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#ffffff" fill-opacity="0.1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,0L1392,0L0,0Z"></path></svg>
@@ -47,18 +44,18 @@ document.addEventListener("DOMContentLoaded", function() {
      // 2. TEMPLATE BOTTOM NAV
     const navTemplate = `
     <nav class="bottom-nav">
-        <a href="admin-pekerjaan.html" class="nav-link" id="nav-job">
+        <a href="pekerjaan.html" class="nav-link" id="nav-job">
             <i class="fas fa-clipboard-list"></i><span>Job</span>
         </a>
-        <a href="admin-pelanggan.html" class="nav-link" id="nav-client">
+        <a href="pelanggan.html" class="nav-link" id="nav-client">
             <i class="fas fa-users"></i><span>Client</span>
         </a>
         <div class="nav-center">
-            <a href="admin-buat-wo.html" class="btn-plus-main">
+            <a href="booking.html" class="btn-plus-main">
                 <i class="fas fa-plus fs-4"></i>
             </a>
         </div>
-        <a href="admin-labarugi.html" class="nav-link" id="nav-kas">
+        <a href="labarugi.html" class="nav-link" id="nav-kas">
             <i class="fas fa-chart-pie"></i><span>Kas</span>
         </a>
         <div class="dropup">
@@ -66,9 +63,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 <i class="fas fa-th-large"></i><span>More</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow">
-                <li><a class="dropdown-item py-2 small" href="admin-harga.html"><i class="fas fa-tag me-2 text-primary"></i> Master Harga</a></li>
-                <li><a class="dropdown-item py-2 small" href="admin-penawaran.html"><i class="fas fa-file-contract me-2 text-primary"></i> Penawaran</a></li>
-                <li><a class="dropdown-item py-2 small" href="admin-esign.html"><i class="fas fa-signature me-2 text-primary"></i> E-Signature</a></li>
+                <li><a class="dropdown-item py-2 small" href="harga.html"><i class="fas fa-tag me-2 text-primary"></i> Master Harga</a></li>
+                <li><a class="dropdown-item py-2 small" href="penawaran.html"><i class="fas fa-file-contract me-2 text-primary"></i> Penawaran</a></li>
+                <li><a class="dropdown-item py-2 small" href="esign.html"><i class="fas fa-signature me-2 text-primary"></i> E-Signature</a></li>
             </ul>
         </div>
     </nav>`;
@@ -92,6 +89,9 @@ function confirmLogout() {
         confirmButtonText: 'Ya',
         confirmButtonColor: '#0052d4'
     }).then(r => { if(r.isConfirmed) window.location.href='login.html' });
+}
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+     window.location.replace('login.html'); // Menggunakan replace agar tidak bisa di-back
 }
  
 
