@@ -7,11 +7,5 @@ var CONFIG = {
     BENSIN: {
         FREE_KM: 5,
         PER_KM_COST: 10000
-    },
-    // Fungsi cek login
-    checkAuth: function() {
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.replace('login.html'); // Menggunakan replace agar tidak bisa di-back
-        }
     }
 };
