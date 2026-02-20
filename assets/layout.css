@@ -1,0 +1,192 @@
+:root {
+    --p-blue: #0052d4;
+    --p-grad: linear-gradient(135deg, #0052d4 0%, #4364f7 50%, #6fb1fc 100%);
+    --glass: rgba(255, 255, 255, 0.2);
+}
+
+/* --- RESET & BODY --- */
+body { 
+    padding-bottom: 110px !important; 
+    background: #f4f7fe; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- HEADER FIX (VERSI RESIK) --- */
+.new-header {
+    background: var(--p-grad) !important;
+    min-height: 180px;
+    position: relative;
+    border-bottom-left-radius: 35px;
+    border-bottom-right-radius: 35px;
+    padding: 25px 20px 60px !important;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 82, 212, 0.2);
+}
+
+.header-wave {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    z-index: 1;
+    opacity: 0.4;
+}
+
+.header-content {
+    position: relative;
+    z-index: 10 !important;
+}
+
+.user-info-box {
+    display: flex;
+    align-items: center;
+}
+
+.avatar-wrapper {
+    width: 50px; height: 50px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 15px;
+    padding: 2px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.avatar-wrapper img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 13px;
+}
+
+.greeting {
+    font-size: 0.75rem !important;
+    color: rgba(255,255,255,0.9) !important;
+    margin: 0 !important;
+}
+
+.user-name {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: white !important;
+    margin: 0 !important;
+}
+
+.btn-logout-new {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+/* Brand Card Floating */
+.brand-card {
+    background: white !important;
+    border-radius: 20px;
+    padding: 15px 20px !important;
+    margin-top: 25px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.8);
+}
+
+.brand-title {
+    color: var(--p-blue) !important;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    margin: 0 !important;
+}
+
+.brand-sub {
+    font-size: 0.75rem !important;
+    color: #64748b !important;
+    margin: 0 !important;
+}
+
+/* --- BOTTOM NAV (SING MAU ILANG) --- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 600px; /* Maksimal lebar neng HP */
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(15px);
+    height: 75px;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    align-items: center;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0,0,0,0.05);
+    z-index: 9999 !important;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+}
+
+.nav-link {
+    text-decoration: none !important;
+    color: #94a3b8 !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    transition: 0.3s ease;
+}
+
+.nav-link i {
+    font-size: 1.4rem !important;
+    margin-bottom: 4px;
+}
+
+/* Nav Active State */
+.nav-link.active {
+    color: var(--p-blue) !important;
+    transform: translateY(-2px);
+}
+
+/* Tombol Plus Tengah */
+.btn-plus-main {
+    background: var(--p-grad) !important;
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    transform: translateY(-28px) !important;
+    box-shadow: 0 10px 20px rgba(0, 82, 212, 0.3) !important;
+    border: 5px solid #f4f7fe !important;
+}
+
+.btn-plus-main i {
+    font-size: 1.5rem !important;
+    margin: 0 !important;
+}
+
+/* Dropdown More Menu */
+.dropup .dropdown-menu {
+    border-radius: 20px !important;
+    border: none !important;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.1) !important;
+    padding: 12px !important;
+    margin-bottom: 20px !important;
+    background: white !important;
+}
+
+.dropdown-item {
+    border-radius: 10px !important;
+    padding: 10px 15px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+}
+
+.dropdown-item i {
+    width: 25px;
+    color: var(--p-blue);
+}
+
+/* Animations */
+.animate__fadeInUp {
+    animation: fadeInUp 0.5s both;
+}
