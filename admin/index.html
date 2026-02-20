@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | Nanda Teknik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="assets/layout.css">
+    
+    <style>
+        body { background: #f4f7fe; padding-top: 240px; padding-bottom: 100px; }
+        
+        /* Stats Card Style */
+        .stats-container { margin-bottom: 20px; }
+        .stat-card {
+            background: white; border-radius: 15px; padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none;
+            height: 100%; transition: 0.3s;
+        }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .bg-light-blue { background: #e0e7ff; color: #4338ca; }
+        .bg-light-green { background: #dcfce7; color: #15803d; }
+        .bg-light-red { background: #fee2e2; color: #b91c1c; }
+        .bg-light-orange { background: #ffedd5; color: #c2410c; }
+
+        /* Map Section */
+        #map { height: 450px; width: 100%; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); z-index: 1; }
+        .map-filter {
+            background: white; padding: 15px; border-radius: 15px;
+            margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .info-window-custom { font-family: 'Poppins', sans-serif; padding: 5px; }
+        .btn-nav { background: #0052d4; color: white; border-radius: 8px; font-size: 0.8rem; padding: 5px 10px; text-decoration: none; display: inline-block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row g-2 stats-container">
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__fadeIn">
+                <div class="stat-icon bg-light-orange"><i class="fas fa-tools"></i></div>
+                <small class="text-muted">Job Pending</small>
+                <h4 class="fw-bold mb-0" id="stat-pending">0</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__fadeIn">
+                <div class="stat-icon bg-light-blue"><i class="fas fa-users"></i></div>
+                <small class="text-muted">Pelanggan</small>
+                <h4 class="fw-bold mb-0" id="stat-client">0</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__fadeIn">
+                <div class="stat-icon bg-light-red"><i class="fas fa-file-invoice"></i></div>
+                <small class="text-muted">Belum Lunas</small>
+                <h4 class="fw-bold mb-0" id="stat-unpaid">0</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__fadeIn">
+                <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
+                <small class="text-muted">Saldo Kas</small>
+                <h5 class="fw-bold mb-0" id="stat-saldo" style="font-size: 0.9rem;">Rp 0</h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-filter">
+        <div class="row g-2">
+            <div class="col-6">
+                <select class="form-select border-0 bg-light" id="filter-map" onchange="updateMarkers()">
+                    <option value="job">Pekerjaan Belum Selesai</option>
+                    <option value="client">Database Pelanggan</option>
+                </select>
+            </div>
+            <div class="col-6 text-end">
+                <button class="btn btn-primary w-100" onclick="initDashboard()"><i class="fas fa-sync me-2"></i>Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/config.js"></script>
+<script src="assets/layout.js"></script>
+
+<script>
+    let map, markerLayer;
+    let dataJob = [], dataPelanggan = [], dataKas = [];
+
+    window.onload = () => {
+        initMap();
+        initDashboard();
+    };
+
+    function initMap() {
+        // Koordinat Kantor seko CONFIG
+        map = L.map('map').setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        markerLayer = L.layerGroup().addTo(map);
+
+        // Tambah Marker Kantor
+        L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng])
+            .addTo(map)
+            .bindPopup("<b>Kantor Nanda Teknik</b>")
+            .openPopup();
+    }
+
+    async function initDashboard() {
+        Swal.fire({ title: 'Loading Data...', didOpen: () => Swal.showLoading() });
+        
+        try {
+            // Fetch All Data (Sesuai action neng Apps Script-mu)
+            const [resJob, resPel, resKas] = await Promise.all([
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`).then(r => r.json()),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`).then(r => r.json()),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Labarugi`).then(r => r.json())
+            ]);
+
+            dataJob = resJob.data || [];
+            dataPelanggan = resPel.data || [];
+            dataKas = resKas.data || [];
+
+            calculateStats();
+            updateMarkers();
+            Swal.close();
+        } catch (e) {
+            Swal.fire('Error', 'Gagal njupuk data seko sheet', 'error');
+        }
+    }
+
+    function calculateStats() {
+        // 1. Job Pending (Status dudu 'Selesai')
+        const pending = dataJob.filter(j => j.status !== 'Selesai').length;
+        document.getElementById('stat-pending').innerText = pending;
+
+        // 2. Total Pelanggan
+        document.getElementById('stat-client').innerText = dataPelanggan.length;
+
+        // 3. Nota Belum Lunas (Check seko data kas utowo job id_nota)
+        const unpaid = dataJob.filter(j => j.id_nota && j.status !== 'Selesai').length;
+        document.getElementById('stat-unpaid').innerText = unpaid;
+
+        // 4. Saldo Kas (Pemasukan - Pengeluaran)
+        let totalMasuk = 0, totalKeluar = 0;
+        dataKas.forEach(k => {
+            const nominal = parseFloat(k.Nominal) || 0;
+            if (k.Kategori === 'Pemasukan') totalMasuk += nominal;
+            else totalKeluar += nominal;
+        });
+        document.getElementById('stat-saldo').innerText = 'Rp ' + (totalMasuk - totalKeluar).toLocaleString('id-ID');
+    }
+
+    function updateMarkers() {
+        markerLayer.clearLayers();
+        const mode = document.getElementById('filter-map').value;
+
+        if (mode === 'job') {
+            dataJob.filter(j => j.status !== 'Selesai' && j.lat).forEach(j => {
+                const marker = L.marker([j.lat, j.lang], { icon: colorIcon('orange') }).addTo(markerLayer);
+                marker.bindPopup(`
+                    <div class="info-window-custom">
+                        <small class="text-muted">#${j.id}</small>
+                        <h6 class="fw-bold mb-1">${j.judul}</h6>
+                        <p class="mb-1" style="font-size:0.8rem;"><i class="fas fa-map-marker-alt"></i> ${j.alamat}</p>
+                        <span class="badge bg-warning text-dark">${j.status}</span><br>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lang}" target="_blank" class="btn-nav">
+                            <i class="fas fa-directions me-1"></i> Navigasi Lokasi
+                        </a>
+                    </div>
+                `);
+            });
+        } else {
+            dataPelanggan.filter(p => p.lat).forEach(p => {
+                const marker = L.marker([p.lat, p.lang], { icon: colorIcon('blue') }).addTo(markerLayer);
+                marker.bindPopup(`
+                    <div class="info-window-custom">
+                        <h6 class="fw-bold mb-1">${p.nama}</h6>
+                        <p class="mb-1" style="font-size:0.8rem;"><i class="fas fa-envelope"></i> ${p.email}</p>
+                        <p class="mb-1" style="font-size:0.8rem;"><i class="fab fa-whatsapp"></i> ${p.wa}</p>
+                        <hr class="my-1">
+                        <small class="text-muted">${p.alamat}</small>
+                    </div>
+                `);
+            });
+        }
+    }
+
+    // Helper kanggo ganti warna marker Leaflet
+    function colorIcon(color) {
+        return new L.Icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+    }
+</script>
+</body>
+</html>
