@@ -8,84 +8,120 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="assets/layout.css">
+    
     <style>
+        /* Pengaturan Jarak Body - Sesuaike karo Header layout.css sampeyan */
         body { 
-            background: #f4f7fe; 
-            margin: 0; 
-            padding-top: 0px !important; /* Tak paksa dadi 100px ben gak keduwen */
-            padding-bottom: 100px; 
+            background: #f4f7fe !important; 
+            padding-top: 190px !important; 
+            padding-bottom: 100px !important; 
         }
         
-        .stats-container { margin-bottom: 20px; }
+        /* Stats Card Modern */
         .stat-card {
-            background: white; border-radius: 15px; padding: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none;
-            height: 100%; transition: 0.3s;
+            background: white; border-radius: 20px; padding: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: none;
+            height: 100%; transition: 0.3s ease;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
-        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .stat-card:active { transform: scale(0.95); }
+        
+        .stat-icon { 
+            width: 45px; height: 45px; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            margin-bottom: 12px; font-size: 1.2rem;
+        }
+        
         .bg-light-blue { background: #e0e7ff; color: #4338ca; }
         .bg-light-green { background: #dcfce7; color: #15803d; }
         .bg-light-red { background: #fee2e2; color: #b91c1c; }
         .bg-light-orange { background: #ffedd5; color: #c2410c; }
 
-        #map { height: 400px; width: 100%; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); z-index: 1; }
-        .map-filter {
-            background: white; padding: 15px; border-radius: 15px;
-            margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        /* Map Section */
+        #map { 
+            height: 400px; width: 100%; border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 1; 
+            border: 4px solid white;
         }
-        .info-window-custom { font-size: 0.85rem; }
+        .map-filter { 
+            background: white; padding: 12px; border-radius: 20px; 
+            margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        }
+
+        .info-window-custom { font-family: 'Poppins', sans-serif; padding: 5px; min-width: 150px; }
+        .btn-nav { 
+            background: #0052d4; color: white; border-radius: 10px; 
+            font-size: 0.8rem; padding: 8px; text-decoration: none; 
+            display: block; text-align: center; margin-top: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="mb-3 text-center">
-        <h6 class="text-muted fw-bold animate__animated animate__fadeIn">
-            <i class="fas fa-calendar-alt me-2"></i> Laporan: <span id="current-month-year">-</span>
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+        <h6 class="fw-bold text-muted mb-0">
+            <i class="fas fa-chart-pie me-2 text-primary"></i>Laporan <span id="txtBulan">-</span>
         </h6>
+        <span class="badge bg-white text-dark shadow-sm rounded-pill px-3 py-2" id="txtTahun">-</span>
     </div>
 
-    <div class="row g-2 stats-container">
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__zoomIn">
-                <div class="stat-icon bg-light-orange"><i class="fas fa-tools"></i></div>
-                <small class="text-muted">Job Aktif</small>
-                <h4 class="fw-bold mb-0" id="stat-pending">0</h4>
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <div class="stat-card animate__animated animate__fadeInLeft">
+                <div>
+                    <div class="stat-icon bg-light-orange"><i class="fas fa-toolbox"></i></div>
+                    <small class="text-muted d-block">Job Aktif</small>
+                    <h3 class="fw-bold mb-0" id="stat-pending">0</h3>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__zoomIn" style="animation-delay: 0.1s">
-                <div class="stat-icon bg-light-blue"><i class="fas fa-users"></i></div>
-                <small class="text-muted">Database Pelanggan</small>
-                <h4 class="fw-bold mb-0" id="stat-client">0</h4>
+        <div class="col-6">
+            <div class="stat-card animate__animated animate__fadeInRight">
+                <div>
+                    <div class="stat-icon bg-light-blue"><i class="fas fa-user-friends"></i></div>
+                    <small class="text-muted d-block">Pelanggan</small>
+                    <h3 class="fw-bold mb-0" id="stat-client">0</h3>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__zoomIn" style="animation-delay: 0.2s">
-                <div class="stat-icon bg-light-red"><i class="fas fa-file-invoice"></i></div>
-                <small class="text-muted">Belum Lunas</small>
-                <h4 class="fw-bold mb-0" id="stat-unpaid">0</h4>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <div class="stat-card animate__animated animate__fadeInLeft" style="animation-delay: 0.1s">
+                <div>
+                    <div class="stat-icon bg-light-red"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <small class="text-muted d-block">Belum Lunas</small>
+                    <h3 class="fw-bold mb-0 text-danger" id="stat-unpaid">0</h3>
+                </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__zoomIn" style="animation-delay: 0.3s">
-                <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
-                <small class="text-muted">Profit Bulan Ini</small>
-                <h5 class="fw-bold mb-0" id="stat-saldo" style="font-size: 0.95rem;">Rp 0</h5>
+        <div class="col-6">
+            <div class="stat-card animate__animated animate__fadeInRight" style="animation-delay: 0.1s">
+                <div>
+                    <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
+                    <small class="text-muted d-block">Profit Sasi Iki</small>
+                    <h5 class="fw-bold mb-0" id="stat-saldo">Rp 0</h5>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="map-filter">
-        <div class="row g-2">
-            <div class="col-7">
-                <select class="form-select border-0 bg-light fw-bold" id="filter-map" onchange="updateMarkers()">
-                    <option value="job">📍 Lokasi Pekerjaan</option>
+        <div class="row g-2 align-items-center">
+            <div class="col-8">
+                <select class="form-select border-0 bg-light fw-bold text-primary" id="filter-map" onchange="updateMarkers()">
+                    <option value="job">📍 Lokasi Job Aktif</option>
                     <option value="client">👥 Lokasi Pelanggan</option>
                 </select>
             </div>
-            <div class="col-5">
-                <button class="btn btn-primary w-100 shadow-sm" onclick="initDashboard()"><i class="fas fa-sync"></i> Reload</button>
+            <div class="col-4">
+                <button class="btn btn-primary w-100 rounded-pill shadow-sm" onclick="initDashboard()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -103,25 +139,24 @@
     let map, markerLayer;
     let dataJob = [], dataPelanggan = [], dataKas = [];
 
-    // Set Nama Bulan & Tahun saiki
-    const date = new Date();
-    const currentMonth = date.getMonth(); // 0-11
-    const currentYear = date.getFullYear();
+    const now = new Date();
+    const curM = now.getMonth();
+    const curY = now.getFullYear();
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    
-    document.getElementById('current-month-year').innerText = `${monthNames[currentMonth]} ${currentYear}`;
 
     window.onload = () => {
+        document.getElementById('txtBulan').innerText = monthNames[curM];
+        document.getElementById('txtTahun').innerText = curY;
         initMap();
         initDashboard();
     };
 
     function initMap() {
-        map = L.map('map', { zoomControl: false }).setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 12);
+        if(map) map.remove();
+        map = L.map('map', { zoomControl: false }).setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         markerLayer = L.layerGroup().addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
+        
         // Marker Kantor
         L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng])
             .addTo(map)
@@ -129,7 +164,7 @@
     }
 
     async function initDashboard() {
-        Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Sedang Sinkron...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
             const [resJob, resPel, resKas] = await Promise.all([
@@ -146,35 +181,44 @@
             updateMarkers();
             Swal.close();
         } catch (e) {
-            Swal.fire('Wadhuh!', 'Gagal sambung neng server.', 'error');
+            console.error(e);
+            Swal.fire('Wadhuh!', 'Gagal nyambung neng Google Sheets.', 'error');
         }
     }
 
     function calculateStats() {
-        // 1. Job Pending (Status dudu Selesai / Dibatalkan)
-        const pending = dataJob.filter(j => !['selesai','dibatalkan'].includes(j.status?.toLowerCase())).length;
+        // 1. Job Aktif (Sing dudu Selesai / Dibatalkan)
+        const pending = dataJob.filter(j => {
+            const s = (j.status || '').toLowerCase();
+            return s !== 'selesai' && s !== 'dibatalkan' && s !== '';
+        }).length;
         document.getElementById('stat-pending').innerText = pending;
 
         // 2. Total Pelanggan
         document.getElementById('stat-client').innerText = dataPelanggan.length;
 
-        // 3. Nota Belum Lunas
-        const unpaid = dataJob.filter(j => j.id_nota && !['selesai'].includes(j.status?.toLowerCase())).length;
+        // 3. Nota Belum Lunas (LOGIKA: Status Nota == 'Belum Bayar')
+        const unpaid = dataJob.filter(j => {
+            const statusNota = (j.status_nota || '').toLowerCase();
+            return statusNota === 'belum bayar';
+        }).length;
         document.getElementById('stat-unpaid').innerText = unpaid;
 
-        // 4. Kas Filter Bulan Iki & Tahun Iki
+        // 4. Profit Sasi Iki (Filter Tanggal & Nominal)
         let profit = 0;
         dataKas.forEach(k => {
-            const tglKas = new Date(k.Tanggal);
-            // Filter: Cek opo sasi lan tahun-e podo karo saiki
-            if (tglKas.getMonth() === currentMonth && tglKas.getFullYear() === currentYear) {
-                const nominal = parseFloat(k.Nominal) || 0;
-                if (k.Kategori === 'Pemasukan') profit += nominal;
-                else profit -= nominal;
+            if(!k.Tanggal || !k.Nominal) return;
+            const tgl = new Date(k.Tanggal);
+            if(tgl.getMonth() === curM && tgl.getFullYear() === curY) {
+                const nom = parseFloat(k.Nominal.toString().replace(/[^0-9.-]+/g,"")) || 0;
+                if (k.Kategori === 'Pemasukan') profit += nom;
+                else profit -= nom;
             }
         });
-        document.getElementById('stat-saldo').innerText = (profit < 0 ? '-' : '') + 'Rp ' + Math.abs(profit).toLocaleString('id-ID');
-        document.getElementById('stat-saldo').classList.add(profit >= 0 ? 'text-success' : 'text-danger');
+        
+        const elSaldo = document.getElementById('stat-saldo');
+        elSaldo.innerText = (profit < 0 ? '-' : '') + 'Rp ' + Math.abs(profit).toLocaleString('id-ID');
+        elSaldo.style.color = profit >= 0 ? '#15803d' : '#b91c1c';
     }
 
     function updateMarkers() {
@@ -182,27 +226,29 @@
         const mode = document.getElementById('filter-map').value;
 
         if (mode === 'job') {
-            dataJob.filter(j => !['selesai','dibatalkan'].includes(j.status?.toLowerCase()) && j.lat).forEach(j => {
+            dataJob.filter(j => !['selesai','dibatalkan'].includes((j.status||'').toLowerCase()) && j.lat).forEach(j => {
                 L.marker([j.lat, j.lang], { icon: colorIcon('orange') }).addTo(markerLayer)
-                    .bindPopup(`
-                        <div class="info-window-custom">
-                            <b>#${j.id || 'Job'}</b><br>${j.judul || j.pekerjaan}<br>
-                            <span class="badge bg-warning text-dark mt-1">${j.status}</span><hr class="my-1">
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lang}" target="_blank" class="btn btn-sm btn-primary w-100 text-white mt-1">
-                                <i class="fas fa-location-arrow me-1"></i> Gas Lokasi
-                            </a>
-                        </div>
-                    `);
+                .bindPopup(`
+                    <div class="info-window-custom">
+                        <small class="text-muted">#${j.id || 'Job'}</small>
+                        <h6 class="fw-bold mb-1">${j.judul || j.pekerjaan}</h6>
+                        <span class="badge bg-warning text-dark mb-2">${j.status}</span><br>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lang}" target="_blank" class="btn-nav">
+                            <i class="fas fa-location-arrow me-1"></i> NAVIGASI
+                        </a>
+                    </div>
+                `);
             });
         } else {
             dataPelanggan.filter(p => p.lat).forEach(p => {
                 L.marker([p.lat, p.lang], { icon: colorIcon('blue') }).addTo(markerLayer)
-                    .bindPopup(`
-                        <div class="info-window-custom">
-                            <b>${p.nama}</b><br><i class="fab fa-whatsapp"></i> ${p.wa}<br>
-                            <small class="text-muted">${p.alamat || ''}</small>
-                        </div>
-                    `);
+                .bindPopup(`
+                    <div class="info-window-custom">
+                        <h6 class="fw-bold mb-1">${p.nama}</h6>
+                        <p class="mb-1" style="font-size:0.8rem;"><i class="fab fa-whatsapp text-success"></i> ${p.wa}</p>
+                        <small class="text-muted">${p.alamat || ''}</small>
+                    </div>
+                `);
             });
         }
     }
