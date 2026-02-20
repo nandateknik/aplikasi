@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="assets/layout.css">
     
     <style>
-        /* Paksa padding ben ra ketutupan header */
         body { 
             background: #f4f7fe !important; 
             padding-bottom: 100px !important; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         
         .stat-card {
@@ -29,14 +29,19 @@
         .bg-light-red { background: #fee2e2; color: #b91c1c; }
         .bg-light-orange { background: #ffedd5; color: #c2410c; }
 
-        #map { height: 400px; width: 100%; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); z-index: 1; border: 5px solid white; }
+        #map { height: 450px; width: 100%; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); z-index: 1; border: 5px solid white; }
         .map-filter { background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn-nav { background: #0052d4; color: white; border-radius: 8px; font-size: 0.8rem; padding: 8px; text-decoration: none; display: block; text-align: center; margin-top: 10px; }
+        
+        /* Custom Popup Style */
+        .leaflet-popup-content-wrapper { border-radius: 15px; padding: 5px; }
+        .info-title { font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 5px; }
+        .info-detail { font-size: 0.75rem; color: #64748b; line-height: 1.4; margin-bottom: 8px; }
+        .btn-nav-group { display: grid; gap: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container mt-3">
     <div class="row g-2 mb-3">
         <div class="col-6 col-md-3">
             <div class="stat-card animate__animated animate__fadeIn">
@@ -62,7 +67,7 @@
         <div class="col-6 col-md-3">
             <div class="stat-card animate__animated animate__fadeIn">
                 <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
-                <small class="text-muted">Saldo Kas</small>
+                <small class="text-muted">Saldo Kas (Bulan Ini)</small>
                 <h5 class="fw-bold mb-0" id="stat-saldo" style="font-size: 0.85rem;">Rp 0</h5>
             </div>
         </div>
@@ -72,12 +77,12 @@
         <div class="row g-2">
             <div class="col-8">
                 <select class="form-select border-0 bg-light fw-bold" id="filter-map" onchange="updateMarkers()">
-                    <option value="job">📍 Job Belum Selesai</option>
+                    <option value="job">📍 Lokasi Job Aktif</option>
                     <option value="client">👥 Database Pelanggan</option>
                 </select>
             </div>
             <div class="col-4">
-                <button class="btn btn-primary w-100" onclick="initDashboard()"><i class="fas fa-sync"></i></button>
+                <button class="btn btn-primary w-100" onclick="initDashboard()"><i class="fas fa-sync-alt"></i></button>
             </div>
         </div>
     </div>
@@ -96,17 +101,12 @@
     let map, markerLayer;
     let dataJob = [], dataPelanggan = [], dataKas = [];
 
-    // Saiki sasi opo
     const now = new Date();
     const curMonth = now.getMonth();
     const curYear = now.getFullYear();
 
     window.onload = () => {
-        // Render Layout (Header & Nav) kudu dipancing nek ora otomatis
-        if (typeof renderLayout === "function") {
-            renderLayout(); 
-        }
-        
+        if (typeof renderLayout === "function") renderLayout(); 
         initMap();
         initDashboard();
     };
@@ -115,11 +115,15 @@
         map = L.map('map', { zoomControl: false }).setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         markerLayer = L.layerGroup().addTo(map);
-        L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng]).addTo(map).bindPopup("<b>Kantor Nanda Teknik</b>");
+        
+        // Marker Kantor
+        L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng])
+         .addTo(map)
+         .bindPopup("<b>Kantor Nanda Teknik</b><br>Banyuwangi");
     }
 
     async function initDashboard() {
-        Swal.fire({ title: 'Sinkronisasi...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Sinkronisasi...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
         try {
             const [resJob, resPel, resKas] = await Promise.all([
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`).then(r => r.json()),
@@ -135,19 +139,19 @@
             updateMarkers();
             Swal.close();
         } catch (e) {
-            Swal.fire('Error', 'Gagal njupuk data', 'error');
+            Swal.fire('Error', 'Gagal njupuk data soko server', 'error');
         }
     }
 
     function calculateStats() {
-        // Job Pending
-        const pending = dataJob.filter(j => j.status !== 'Selesai').length;
+        // Job Pending (Sik Proses/Menunggu)
+        const pending = dataJob.filter(j => j.status !== 'Selesai' && j.status !== 'Lunas').length;
         document.getElementById('stat-pending').innerText = pending;
 
         // Total Pelanggan
         document.getElementById('stat-client').innerText = dataPelanggan.length;
 
-        // Belum Lunas (Status Nota == Belum Bayar)
+        // Belum Lunas
         const unpaid = dataJob.filter(j => (j.status_nota || '').toLowerCase() === 'belum bayar').length;
         document.getElementById('stat-unpaid').innerText = unpaid;
 
@@ -169,22 +173,58 @@
         const mode = document.getElementById('filter-map').value;
 
         if (mode === 'job') {
-            dataJob.filter(j => j.status !== 'Selesai' && j.lat).forEach(j => {
+            // MODE JOB AKTIF
+            dataJob.filter(j => j.status !== 'Selesai' && j.status !== 'Lunas' && j.lat).forEach(j => {
                 const marker = L.marker([j.lat, j.lang], { icon: colorIcon('orange') }).addTo(markerLayer);
                 marker.bindPopup(`
-                    <div class="info-window-custom">
-                        <h6 class="fw-bold mb-1">${j.judul}</h6>
-                        <span class="badge bg-warning text-dark mb-2">${j.status}</span>
-                        <a href="https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lang}" target="_blank" class="btn-nav">GAS LOKASI</a>
+                    <div style="min-width: 200px;">
+                        <div class="info-title">${j.judul}</div>
+                        <div class="badge bg-warning text-dark mb-2" style="font-size:0.6rem;">${j.status}</div>
+                        <div class="info-detail">
+                            <i class="fas fa-user me-1 text-primary"></i> <b>${j.nama}</b><br>
+                            <i class="fas fa-map-marker-alt me-1 text-danger"></i> ${j.alamat || 'Alamat tidak detail'}
+                        </div>
+                        <div class="btn-nav-group">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lang}" target="_blank" class="btn btn-primary btn-sm text-white border-0">
+                                <i class="fas fa-route me-1"></i> NAVIGASI SEKARANG
+                            </a>
+                            <a href="https://wa.me/${formatWA(j.wa)}" target="_blank" class="btn btn-success btn-sm border-0">
+                                <i class="fab fa-whatsapp me-1"></i> HUBUNGI WA
+                            </a>
+                        </div>
                     </div>
                 `);
             });
         } else {
+            // MODE DATABASE PELANGGAN
             dataPelanggan.filter(p => p.lat).forEach(p => {
                 const marker = L.marker([p.lat, p.lang], { icon: colorIcon('blue') }).addTo(markerLayer);
-                marker.bindPopup(`<b>${p.nama}</b><br>${p.wa}`);
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <div class="info-title text-primary">${p.nama}</div>
+                        <div class="info-detail">
+                            <i class="fas fa-phone me-1"></i> ${p.wa}<br>
+                            <i class="fas fa-home me-1"></i> ${p.alamat || 'Alamat tidak tersedia'}
+                        </div>
+                        <div class="btn-nav-group">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lang}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-map-marked-alt me-1"></i> RUTE KE LOKASI
+                            </a>
+                            <a href="https://wa.me/${formatWA(p.wa)}" target="_blank" class="btn btn-light border btn-sm">
+                                <i class="fab fa-whatsapp me-1 text-success"></i> KIRIM PESAN
+                            </a>
+                        </div>
+                    </div>
+                `);
             });
         }
+    }
+
+    function formatWA(num) {
+        if(!num) return "";
+        let n = num.toString().replace(/[^0-9]/g, '');
+        if(n.startsWith('0')) n = '62' + n.slice(1);
+        return n;
     }
 
     function colorIcon(color) {
