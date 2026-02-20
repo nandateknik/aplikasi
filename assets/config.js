@@ -5,7 +5,7 @@
 
 const CONFIG = {
     // 1. URL Web App soko Apps Script (Ganti karo URL Deployment-mu sing anyar)
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwFLqUrqy4tCCGrJHilb4eGtz1sAL28LmDwM3UIaJj-gAGeK0oFH_pEEbCXbwDavKVR/exec",
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbx7XdXXusDSkurHqTynBRMxLBGg_Q_f18YGUVJ1VX7ca0o6-VMmSpbGwZzH5VqFsWJP/exec",
 
     // 2. Pengaturan Maps & Kantor
     KANTOR_COORDS: {
