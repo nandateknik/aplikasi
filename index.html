@@ -3,228 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin | Nanda Teknik</title>
+    <title>Customer Portal | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
-        /* FIX PADDING: Paksa dadi 80px wae ben pas neng ngisore header layout.js */
-        body { 
-            background: #f4f7fe !important; 
-            padding-top: 80px !important; 
-            padding-bottom: 100px !important; 
-        }
+        :root { --p-blue: #0052D4; --p-dark: #1e293b; --bg-soft: #f8fafc; }
+        body { background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--p-dark); }
         
-        .stat-card {
-            background: white; border-radius: 15px; padding: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none;
-            height: 100%;
-        }
-        .stat-icon { width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 0.9rem; }
-        .bg-light-blue { background: #e0e7ff; color: #4338ca; }
-        .bg-light-green { background: #dcfce7; color: #15803d; }
-        .bg-light-red { background: #fee2e2; color: #b91c1c; }
-        .bg-light-orange { background: #ffedd5; color: #c2410c; }
+        /* Header Style */
+        .portal-header { background: linear-gradient(135deg, #0052D4 0%, #4364F7 100%); padding: 60px 0 100px; color: white; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .search-container { max-width: 600px; margin: -50px auto 0; padding: 0 20px; }
+        .search-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: none; }
+        
+        /* Tab Style */
+        .nav-pills .nav-link { color: #64748b; font-weight: 600; border-radius: 12px; padding: 12px 20px; }
+        .nav-pills .nav-link.active { background: var(--p-blue); color: white; }
 
-        #map { height: 350px; width: 100%; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); z-index: 1; margin-top: 10px; }
-        .map-filter { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
-        .info-window-custom { font-size: 0.8rem; line-height: 1.4; }
+        /* Ticket Style */
+        .ticket-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: none; border-left: 5px solid #ddd; transition: 0.3s; cursor: pointer; }
+        .ticket-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .status-active { border-left-color: #3b82f6; }
+        .status-done { border-left-color: #10b981; }
+        .status-pending { border-left-color: #f59e0b; }
+
+        .progress-log { border-left: 2px dashed #e2e8f0; margin-left: 10px; padding-left: 20px; position: relative; }
+        .progress-item::before { content: ''; position: absolute; left: -7px; top: 5px; width: 12px; height: 12px; background: var(--p-blue); border-radius: 50%; }
+
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="mb-3 text-center">
-        <span class="badge bg-white text-dark shadow-sm px-3 py-2 rounded-pill">
-            <i class="fas fa-calendar-alt me-2 text-primary"></i> <span id="current-month-year">Memuat...</span>
-        </span>
-    </div>
+<div class="loader-overlay" id="loader">
+    <div class="spinner-border text-primary mb-2"></div>
+    <span class="fw-bold">Nggoleki Data...</span>
+</div>
 
-    <div class="row g-2 mb-3">
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__fadeIn">
-                <div class="stat-icon bg-light-orange"><i class="fas fa-tools"></i></div>
-                <small class="text-muted d-block" style="font-size: 0.7rem;">Job Aktif</small>
-                <h5 class="fw-bold mb-0" id="stat-pending">0</h5>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__fadeIn" style="animation-delay: 0.1s">
-                <div class="stat-icon bg-light-blue"><i class="fas fa-users"></i></div>
-                <small class="text-muted d-block" style="font-size: 0.7rem;">Pelanggan</small>
-                <h5 class="fw-bold mb-0" id="stat-client">0</h5>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__fadeIn" style="animation-delay: 0.2s">
-                <div class="stat-icon bg-light-red"><i class="fas fa-file-invoice-dollar"></i></div>
-                <small class="text-muted d-block" style="font-size: 0.7rem;">Belum Lunas</small>
-                <h5 class="fw-bold mb-0" id="stat-unpaid">0</h5>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card animate__animated animate__fadeIn" style="animation-delay: 0.3s">
-                <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
-                <small class="text-muted d-block" style="font-size: 0.7rem;">Kas Bulan Ini</small>
-                <h5 class="fw-bold mb-0" id="stat-saldo" style="font-size: 0.85rem;">Rp 0</h5>
-            </div>
-        </div>
-    </div>
+<div class="portal-header text-center">
+    <h2 class="fw-bold">Customer Portal</h2>
+    <p class="opacity-75">Tracking pekerjaan & cek nota dadi siji</p>
+</div>
 
-    <div class="map-filter shadow-sm">
-        <div class="row g-2 align-items-center">
-            <div class="col-8">
-                <select class="form-select form-select-sm border-0 bg-light fw-bold" id="filter-map" onchange="updateMarkers()">
-                    <option value="job">📍 Lokasi Pekerjaan</option>
-                    <option value="client">👥 Lokasi Pelanggan</option>
-                </select>
+<div class="search-container">
+    <div class="search-card animate__animated animate__fadeIn">
+        <label class="form-label small fw-bold text-muted text-uppercase">Input Email Anda</label>
+        <div class="input-group">
+            <span class="input-group-text bg-light border-0"><i class="fas fa-envelope text-primary"></i></span>
+            <input type="email" id="emailInput" class="form-control form-control-lg bg-light border-0" placeholder="contoh@mail.com" onkeypress="if(event.key==='Enter') loadData()">
+            <button class="btn btn-primary px-4 fw-bold shadow-sm" onclick="loadData()">CARI</button>
+        </div>
+        <div id="welcomeMsg" class="mt-3 small text-center text-muted" style="display:none;"></div>
+    </div>
+</div>
+
+<div class="container mt-5 pb-5">
+    <div id="mainContent" style="display:none;">
+        <ul class="nav nav-pills mb-4 justify-content-center gap-2" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabActive"><i class="fas fa-tools me-2"></i>Status Pekerjaan</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabHistory"><i class="fas fa-file-invoice-dollar me-2"></i>Riwayat Nota</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="tabActive">
+                <div id="listPekerjaan"></div>
             </div>
-            <div class="col-4">
-                <button class="btn btn-sm btn-primary w-100 rounded-pill" onclick="initDashboard()">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
+
+            <div class="tab-pane fade" id="tabHistory">
+                <div id="listNota"></div>
             </div>
         </div>
     </div>
 
-    <div id="map"></div>
+    <div id="emptyState" class="text-center py-5 opacity-50">
+        <i class="fas fa-search fa-3x mb-3"></i>
+        <p>Lebokne emailmu nggo ndelok history servis.</p>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetail" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold" id="detailTitle">Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-dark rounded-pill px-4 d-none" id="btnPdfAction">Download PDF</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="assets/config.js"></script>
-<script src="assets/layout.js"></script>
 
 <script>
-    let map, markerLayer;
-    let dataJob = [], dataPelanggan = [], dataKas = [];
+    let userData = { jobs: [], notes: [] };
+    const myModal = new bootstrap.Modal(document.getElementById('modalDetail'));
 
-    const now = new Date();
-    const curM = now.getMonth();
-    const curY = now.getFullYear();
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    
-    document.getElementById('current-month-year').innerText = `${monthNames[curM]} ${curY}`;
+    async function loadData() {
+        const email = document.getElementById('emailInput').value.trim();
+        if(!email) return alert("Email kudu diisi!");
 
-    window.onload = () => {
-        initMap();
-        initDashboard();
-    };
-
-    function initMap() {
-        if(map) map.remove();
-        map = L.map('map', { zoomControl: false }).setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        markerLayer = L.layerGroup().addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        document.getElementById('loader').style.display = 'flex';
         
-        L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng]).addTo(map).bindPopup("<b>🏠 Kantor Nanda Teknik</b>");
-    }
-
-    async function initDashboard() {
-        Swal.fire({ title: 'Sing sabar, mados data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const [resJob, resPel, resKas] = await Promise.all([
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`).then(r => r.json()),
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`).then(r => r.json()),
-                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Labarugi`).then(r => r.json())
-            ]);
-
-            dataJob = resJob.data || [];
-            dataPelanggan = resPel.data || [];
-            dataKas = resKas.data || [];
-
-            calculateStats();
-            updateMarkers();
-            Swal.close();
-        } catch (e) {
-            console.error(e);
-            Swal.fire('Error', 'Gagal njupuk data. Cek koneksi utowo URL Apps Script.', 'error');
-        }
-    }
-
-    function calculateStats() {
-        // 1. Job Aktif
-        const pending = dataJob.filter(j => {
-            const st = (j.status || '').toLowerCase();
-            return st !== 'selesai' && st !== 'dibatalkan' && st !== '';
-        }).length;
-        document.getElementById('stat-pending').innerText = pending;
-
-        // 2. Pelanggan
-        document.getElementById('stat-client').innerText = dataPelanggan.length;
-
-        // 3. Nota Belum Lunas (Adhedhasar kolom id_nota sing ono isine tapi status dudu selesai)
-        const unpaid = dataJob.filter(j => {
-            const hasNota = j.id_nota && j.id_nota !== '-';
-            const notDone = (j.status || '').toLowerCase() !== 'selesai';
-            return hasNota && notDone;
-        }).length;
-        document.getElementById('stat-unpaid').innerText = unpaid;
-
-        // 4. Kas Filter Bulan Iki (Fix Parsing Tanggal)
-        let profit = 0;
-        dataKas.forEach(k => {
-            if(!k.Tanggal || !k.Nominal) return;
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getCustomerHistory', email: email })
+            });
+            const result = await res.json();
             
-            // Handle format tanggal sing bedo-bedo
-            const d = new Date(k.Tanggal);
-            if (!isNaN(d.getTime())) {
-                if (d.getMonth() === curM && d.getFullYear() === curY) {
-                    const nom = parseFloat(k.Nominal.toString().replace(/[^0-9.-]+/g,"")) || 0;
-                    if (k.Kategori === 'Pemasukan') profit += nom;
-                    else profit -= nom;
-                }
+            document.getElementById('loader').style.display = 'none';
+            
+            if(result.success) {
+                userData.jobs = result.jobs;
+                userData.notes = result.notes;
+                
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('welcomeMsg').style.display = 'block';
+                document.getElementById('welcomeMsg').innerHTML = `Sugeng rawuh, <b>${result.customer.nama}</b>`;
+                
+                renderJobs();
+                renderNotes();
+            } else {
+                alert("Data email ora ketemu!");
             }
-        });
-        
-        const elSaldo = document.getElementById('stat-saldo');
-        elSaldo.innerText = 'Rp ' + Math.abs(profit).toLocaleString('id-ID');
-        elSaldo.style.color = profit >= 0 ? '#15803d' : '#b91c1c';
-    }
-
-    function updateMarkers() {
-        markerLayer.clearLayers();
-        const mode = document.getElementById('filter-map').value;
-
-        if (mode === 'job') {
-            dataJob.forEach(j => {
-                if(j.lat && j.lang && (j.status||'').toLowerCase() !== 'selesai') {
-                    L.marker([j.lat, j.lang], { icon: colorIcon('orange') }).addTo(markerLayer)
-                    .bindPopup(`
-                        <div class="info-window-custom">
-                            <b>#${j.id || 'Job'}</b><br>${j.judul || j.pekerjaan}<br>
-                            <span class="badge bg-warning text-dark mt-1">${j.status}</span><hr class="my-1">
-                            <a href="https://www.google.com/maps?q=${j.lat},${j.lang}" target="_blank" class="btn btn-sm btn-primary w-100 text-white mt-1">
-                                <i class="fas fa-location-arrow"></i> Navigasi
-                            </a>
-                        </div>
-                    `);
-                }
-            });
-        } else {
-            dataPelanggan.forEach(p => {
-                if(p.lat && p.lang) {
-                    L.marker([p.lat, p.lang], { icon: colorIcon('blue') }).addTo(markerLayer)
-                    .bindPopup(`
-                        <div class="info-window-custom">
-                            <b>${p.nama}</b><br><i class="fab fa-whatsapp text-success"></i> ${p.wa}<br>
-                            <small class="text-muted">${p.alamat || ''}</small>
-                        </div>
-                    `);
-                }
-            });
+        } catch (e) {
+            document.getElementById('loader').style.display = 'none';
+            alert("Gagal nyambung neng server!");
         }
     }
 
-    function colorIcon(color) {
-        return new L.Icon({
-            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-        });
+    function renderJobs() {
+        const container = document.getElementById('listPekerjaan');
+        if(userData.jobs.length === 0) {
+            container.innerHTML = `<div class="text-center p-5 text-muted">Ora ono pekerjaan aktif.</div>`;
+            return;
+        }
+
+        container.innerHTML = userData.jobs.map(j => `
+            <div class="ticket-card status-active shadow-sm" onclick="showJobDetail('${j.id}')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge bg-light text-primary mb-2">${j.id}</span>
+                        <h6 class="fw-bold mb-1">${j.judul}</h6>
+                        <small class="text-muted"><i class="far fa-calendar-alt me-1"></i> ${j.tanggal}</small>
+                    </div>
+                    <span class="badge ${j.status === 'Selesai' ? 'bg-success' : 'bg-primary'} rounded-pill">${j.status}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderNotes() {
+        const container = document.getElementById('listNota');
+        if(userData.notes.length === 0) {
+            container.innerHTML = `<div class="text-center p-5 text-muted">Ora ono riwayat nota.</div>`;
+            return;
+        }
+
+        container.innerHTML = userData.notes.map(n => `
+            <div class="ticket-card status-done shadow-sm" onclick="showNoteDetail('${n.id}')">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0">Nota #${n.id}</h6>
+                        <small class="text-muted">${n.tanggal}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">Rp ${Number(n.total).toLocaleString()}</div>
+                        <small class="badge bg-light text-dark border">${n.status}</small>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showJobDetail(id) {
+        const job = userData.jobs.find(j => j.id === id);
+        document.getElementById('detailTitle').innerText = "Progress Pekerjaan";
+        document.getElementById('btnPdfAction').classList.add('d-none');
+        
+        let logs = [];
+        try { logs = JSON.parse(job.progress_json || '[]'); } catch(e) {}
+
+        let logHtml = logs.map(l => `
+            <div class="progress-item mb-4 position-relative">
+                <div class="small text-muted fw-bold">${l.tgl}</div>
+                <div class="fw-bold">${l.status}</div>
+                <div class="small text-muted">${l.detail || ''}</div>
+            </div>
+        `).join('') || '<p class="text-muted">Pekerjaan nembe diproses.</p>';
+
+        document.getElementById('detailBody').innerHTML = `
+            <div class="mb-3">
+                <small class="text-muted">Judul Pekerjaan:</small>
+                <div class="fw-bold">${job.judul}</div>
+            </div>
+            <hr>
+            <div class="progress-log">
+                ${logHtml}
+            </div>
+        `;
+        myModal.show();
+    }
+
+    function showNoteDetail(id) {
+        const note = userData.notes.find(n => n.id === id);
+        document.getElementById('detailTitle').innerText = "Rincian Nota";
+        
+        let items = [];
+        try { items = JSON.parse(note.items_json || '[]'); } catch(e) {}
+
+        let tableHtml = `
+            <table class="table table-sm small mt-3">
+                <thead><tr><th>Item</th><th>Qty</th><th class="text-end">Subtotal</th></tr></thead>
+                <tbody>
+                    ${items.map(it => `<tr><td>${it.nama}</td><td>${it.qty}</td><td class="text-end">${(it.harga * it.qty).toLocaleString()}</td></tr>`).join('')}
+                </tbody>
+                <tfoot><tr><th colspan="2">TOTAL</th><th class="text-end text-primary">Rp ${Number(note.total).toLocaleString()}</th></tr></tfoot>
+            </table>
+        `;
+
+        document.getElementById('detailBody').innerHTML = `
+            <div class="text-center mb-3">
+                <h6 class="text-muted mb-1">Nota ID: ${note.id}</h6>
+                <div class="small">${note.tanggal}</div>
+            </div>
+            ${tableHtml}
+        `;
+        
+        const btnPdf = document.getElementById('btnPdfAction');
+        btnPdf.classList.remove('d-none');
+        btnPdf.onclick = () => generatePDF(note);
+        
+        myModal.show();
+    }
+
+    // Logic PDF tetep nganggo soko pratinjau sadurunge
+    function generatePDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        // ... (Tambahkan logic generatePDF-mu neng kene) ...
+        alert("Downloading PDF Nota: " + data.id);
+        doc.save(`Nota_${data.id}.pdf`);
     }
 </script>
 </body>
