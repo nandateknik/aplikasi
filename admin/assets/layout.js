@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (jam >= 19 || jam < 4) salam = "Sugeng Dalu";
 
     // --- 3. TEMPLATE HEADER ---
-    const headerTemplate = `
+const headerTemplate = `
     <header class="new-header">
         <div class="header-wave">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#ffffff" fill-opacity="0.1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,0L1392,0L0,0Z"></path></svg>
@@ -25,9 +25,11 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="container header-content">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="user-info-box">
-                    <div class="avatar-wrapper">
-                        <img src="https://ui-avatars.com/api/?name=Nanda+Krisbianto&background=fff&color=0052d4" alt="avatar">
-                    </div>
+                    <a href="index.html" class="avatar-link" style="text-decoration: none;">
+                        <div class="avatar-wrapper">
+                            <img src="https://ui-avatars.com/api/?name=Nanda+Krisbianto&background=fff&color=0052d4" alt="avatar" style="transition: 0.3s;">
+                        </div>
+                    </a>
                     <div class="ms-3">
                         <p class="greeting">${salam}, Mas</p>
                         <h5 class="user-name">Nanda Krisbianto</h5>
