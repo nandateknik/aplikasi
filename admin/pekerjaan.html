@@ -391,26 +391,49 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); } catch (e) { }
+        // --- 1. HEADER (ABU-ABU ELEGAN) ---
+        try { 
+            // Logo neng pojok kiwo
+            doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
+        } catch (e) { 
+            console.error("Logo ora ketemu.");
+        }
 
+        // Teks Header (Rata Kiri neng samping logo)
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
-        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Software, Network & Electrical Engineering", 105, 26, { align: "center" });
-        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D5, Banyuwangi - Jawa Timur. 68421", 105, 30, { align: "center" });
-        doc.text("WA: 0823-3120-1148 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
+        doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
         
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | www.nandateknik.com", 45, 35);
+        
+        // Garis Kop Abu-abu
+        doc.setDrawColor(80, 80, 80);
         doc.setLineWidth(0.5);
-        doc.line(15, 38, 195, 38);
+        doc.line(15, 40, 195, 40);
 
+        // --- 2. INFO TRANSAKSI ---
+        doc.setTextColor(0); 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text("FAKTUR PEMBAYARAN", 15, 48);
-        
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Transaksi : #${currentId}`, 15, 56);
-        doc.text(`Tanggal       : ${new Date().toLocaleDateString('id-ID')}`, 15, 61);
-        doc.text(`Kepada        : ${fullDataDetail.nama}`, 140, 56);
+        doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
 
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi : #${currentId}`, 15, 60);
+        doc.text(`Tanggal        : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
+        
+        doc.text("Kepada Yth:", 130, 60);
+        doc.setFont("helvetica", "bold");
+        doc.text(fullDataDetail.nama, 130, 65); // Jeneng Pelanggan
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const splitAlamat = doc.splitTextToSize(fullDataDetail.alamat || '-', 65);
+        doc.text(splitAlamat, 130, 69);
+
+        // --- 3. TABEL ITEM (WARNA ABU-ABU) ---
         const tableBody = selectedItems.map((item, index) => [
             index + 1, 
             item.nama, 
@@ -420,24 +443,54 @@
         ]);
 
         doc.autoTable({
-            startY: 70,
-            head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Jumlah']],
+            startY: 85,
+            head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'JUMLAH']],
             body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: [150, 150, 150] } 
+            headStyles: { 
+                fillColor: [80, 80, 80], 
+                halign: 'center',
+                fontSize: 9,
+                valign: 'middle'
+            },
+            columnStyles: {
+                0: { cellWidth: 12, halign: 'center' }, // Kolom NO dadi jembar ben ra tumpuk
+                2: { cellWidth: 15, halign: 'center' },
+                3: { halign: 'right', cellWidth: 35 },
+                4: { halign: 'right', cellWidth: 35 }
+            },
+            styles: { fontSize: 9, cellPadding: 3 }
         });
 
+        // --- 4. TOTAL & REKENING ---
         const finalY = doc.lastAutoTable.finalY + 10;
         const totalHarga = selectedItems.reduce((sum, item) => sum + (item.harga * item.qty), 0);
         
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL: Rp ${totalHarga.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+        doc.setFontSize(11);
+        doc.text(`TOTAL PEMBAYARAN: Rp ${totalHarga.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        const boxY = finalY + 15;
-        doc.setLineDash([2, 2], 0);
-        doc.rect(15, boxY, 180, 15);
+        // Kotak Rekening Garis Putus-putus
+        const rekY = finalY + 10;
+        doc.setDrawColor(150, 150, 150);
+        doc.setLineDashPattern([2, 2], 0); // Putus-putus
+        doc.rect(15, rekY, 180, 18);
+        
+        doc.setLineDashPattern([], 0); // Balik lurus meneh
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Pembayaran bisa dilakukan melalui rekening BCA atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
+        doc.text("Informasi Pembayaran Transfer:", 20, rekY + 7);
+        doc.setFont("helvetica", "bold");
+        doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rekY + 13);
+
+        // --- 5. TANDA TANGAN ---
+        const ttdY = rekY + 35;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("Hormat Kami,", 155, ttdY);
+        doc.setFont("helvetica", "bold");
+        doc.text("NANDA KRISBIANTO", 155, ttdY + 20);
+        doc.setFont("helvetica", "normal");
+        doc.text("( Owner )", 155, ttdY + 25);
         
         doc.save(`Nota_${fullDataDetail.nama}_${currentId}.pdf`);
     }
