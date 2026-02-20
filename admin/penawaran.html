@@ -19,7 +19,6 @@
 
         .filter-section { background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         
-        /* Card Style UI */
         .quote-card {
             background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
             border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
@@ -41,7 +40,6 @@
         .status-sent { background: #eff6ff; color: #2563eb; }
         .status-approved { background: #f0fdf4; color: #16a34a; }
 
-        /* Pagination Styles */
         .pagination-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
         .btn-page { 
             width: 40px; height: 40px; border-radius: 12px; border: none; 
@@ -91,7 +89,6 @@
             </div>
 
             <div id="pagination" class="pagination-container mb-5"></div>
-
         </div>
     </div>
 </div>
@@ -159,7 +156,7 @@
     let allData = [];
     let listPelanggan = [];
     let currentPage = 1;
-    const itemsPerPage = 5; // Tampilkan 5 kartu per halaman
+    const itemsPerPage = 5;
     const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
 
     window.onload = () => { 
@@ -173,7 +170,7 @@
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const r = await res.json();
             if (r.success) { 
-                allData = r.data.reverse(); // Data terbaru di atas
+                allData = r.data; 
                 renderDisplay(); 
             }
         } catch(e) { console.error("Gagal memuat data"); }
@@ -192,7 +189,6 @@
         const container = document.getElementById('cards-container');
         const pagination = document.getElementById('pagination');
         
-        // Logic Pagination
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedData = dataToRender.slice(startIndex, endIndex);
@@ -226,14 +222,13 @@
                         <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-light text-danger" onclick='generatePDF(${JSON.stringify(row)})' title="Cetak PDF">
+                        <button class="btn btn-sm btn-light text-danger" onclick='preparePDF("${row.id}")' title="Cetak PDF">
                             <i class="fas fa-file-pdf"></i>
                         </button>
                     </div>
                 </div>
             </div>`).join('');
 
-        // Render Pagination Buttons
         let navHtml = '';
         for (let i = 1; i <= totalPages; i++) {
             navHtml += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
@@ -247,11 +242,16 @@
         window.scrollTo(0, 0);
     }
 
-    // --- FUNGSI GENERATE PDF (SAMA SEPERTI SEBELUMNYA) ---
+    function preparePDF(id) {
+        const data = allData.find(r => r.id === id);
+        if(data) generatePDF(data);
+    }
+
     function generatePDF(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); } catch (e) { }
+        
+        // --- HEADER ---
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
@@ -259,28 +259,80 @@
         doc.setFontSize(8); doc.text("Jl. Gajah Mada No. 12, Banyuwangi - Jawa Timur", 105, 30, { align: "center" });
         doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
         doc.line(15, 38, 195, 38);
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+
+        // --- INFO SURAT ---
+        doc.setFontSize(11); doc.setFont("helvetica", "bold");
         doc.text("PENAWARAN HARGA", 15, 48);
+        
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Transaksi : #${data.id}`, 15, 56);
-        doc.text(`Tanggal       : ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 15, 61);
-        doc.text(`Kepada        : ${data.email}`, 140, 56);
+        // Kolom Kiri
+        doc.text(`No. Penawaran : ${data.id}`, 15, 56);
+        doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 61);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Perihal        : ${data.perihal || '-'}`, 15, 66);
+        
+        // Kolom Kanan
+        doc.setFont("helvetica", "normal");
+        doc.text("Kepada Yth:", 135, 56);
+        doc.setFont("helvetica", "bold");
+        doc.text(data.email, 135, 61);
+
+        // --- KALIMAT PEMBUKA ---
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        const pembuka = "Bersama surat ini, kami Nanda Teknik Banyuwangi bermaksud menyampaikan penawaran harga untuk pekerjaan/kebutuhan sebagai berikut:";
+        const splitPembuka = doc.splitTextToSize(pembuka, 180);
+        doc.text(splitPembuka, 15, 76);
+
+        // --- TABLE ITEMS ---
         const tableBody = data.items_json.map((item, index) => [
-            index + 1, item.nama, item.qty,
+            index + 1, 
+            item.nama, 
+            item.qty,
             `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
             `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
         ]);
+
         doc.autoTable({
-            startY: 70, head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Jumlah']],
-            body: tableBody, theme: 'grid', headStyles: { fillColor: [100, 100, 100] }
+            startY: 82, 
+            head: [['No', 'Deskripsi Pekerjaan / Barang', 'Qty', 'Harga Satuan', 'Jumlah']],
+            body: tableBody, 
+            theme: 'grid', 
+            headStyles: { fillColor: [51, 51, 51], halign: 'center' },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                2: { halign: 'center', cellWidth: 15 },
+                3: { halign: 'right' },
+                4: { halign: 'right' }
+            }
         });
+
+        // --- TOTAL & PENUTUP ---
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
-        doc.save(`Penawaran_${data.id}.pdf`);
+        doc.setFontSize(10);
+        doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik dengan Bapak/Ibu. Atas perhatiannya kami ucapkan terima kasih.";
+        const splitPenutup = doc.splitTextToSize(penutup, 180);
+        doc.text(splitPenutup, 15, finalY + 15);
+
+        // --- TANDA TANGAN ---
+        const ttdY = finalY + 35;
+        doc.text("Banyuwangi, " + new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}), 145, ttdY);
+        doc.text("Hormat Kami,", 145, ttdY + 5);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("Nanda Krisbianto", 145, ttdY + 30);
+        doc.setFont("helvetica", "normal");
+        doc.text("( Vendor )", 145, ttdY + 35);
+
+        doc.save(`Penawaran_${data.id}_${data.perihal}.pdf`);
     }
 
-    // --- FORM HELPERS ---
+    // --- FORM & CRUD FUNCTIONS ---
     function addItemRow(n='', h=0, q=1) {
         const div = document.createElement('div');
         div.className = 'row g-2 mb-2 item-row animate__animated animate__fadeInDown';
@@ -295,7 +347,9 @@
     function calcTotal() {
         let total = 0;
         document.querySelectorAll('.item-row').forEach(r => {
-            total += ((r.querySelector('.it-harga').value || 0) * (r.querySelector('.it-qty').value || 0));
+            const h = parseFloat(r.querySelector('.it-harga').value) || 0;
+            const q = parseFloat(r.querySelector('.it-qty').value) || 0;
+            total += (h * q);
         });
         document.getElementById('display-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
         return total;
@@ -318,6 +372,7 @@
     function showAddModal() {
         document.getElementById('formPenawaran').reset();
         document.getElementById('edit-id').value = '';
+        document.getElementById('display-total').innerText = 'Rp 0';
         document.getElementById('items-container').innerHTML = '';
         addItemRow();
         modalForm.show();
@@ -332,7 +387,7 @@
         document.getElementById('form-perihal').value = d.perihal || '';
         document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
-        d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
+        if(d.items_json) d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
         calcTotal();
         modalForm.show();
     }
@@ -353,11 +408,15 @@
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
-        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
-        await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        modalForm.hide();
-        loadPenawaran();
-        Swal.fire('Berhasil', 'Data disimpan', 'success');
+
+        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const r = await res.json();
+        if(r.success) {
+            modalForm.hide();
+            loadPenawaran();
+            Swal.fire('Berhasil', 'Data disimpan', 'success');
+        }
     };
 
     function filterData() {
