@@ -3,310 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nanda Teknik - Search & News</title>
+    <title>Dashboard Admin | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --g-blue: #1a0dab; --g-gray: #70757a; --g-border: #dfe1e5; }
-        body { background: #fff; font-family: 'arial', sans-serif; color: #202124; margin: 0; }
-        
-        .search-wrapper { padding-top: 20px; position: sticky; top: 0; background: #fff; z-index: 1000; border-bottom: 1px solid var(--g-border); }
-        .logo-text { font-size: 28px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
-        .logo-sub { color: #70757a; font-weight: 400; font-size: 18px; }
-
-        .search-box-container { max-width: 690px; margin-left: 160px; margin-bottom: 20px; }
-        .search-box { border: 1px solid var(--g-border); border-radius: 24px; padding: 5px 20px; display: flex; align-items: center; transition: 0.3s; height: 46px; }
-        .search-box:focus-within { box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
-        .search-box input { border: none; outline: none; width: 100%; font-size: 16px; margin-left: 10px; }
-        
-        .google-tabs { display: flex; max-width: 690px; margin-left: 160px; gap: 20px; font-size: 14px; color: var(--g-gray); }
-        .g-tab { padding: 10px 0; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 6px; }
-        .g-tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
-
-        .result-container { max-width: 650px; margin-left: 160px; padding-top: 20px; }
-        .g-result { margin-bottom: 28px; display: flex; gap: 15px; }
-        .g-content { flex: 1; }
-        .g-result .cite { font-size: 14px; color: #202124; margin-bottom: 2px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .g-result h3 { font-size: 20px; color: var(--g-blue); margin-bottom: 3px; cursor: pointer; font-weight: 400; line-height: 1.3; }
-        .g-result h3:hover { text-decoration: underline; }
-        .g-result .desc { font-size: 14px; color: #4d5156; line-height: 1.5; }
-        
-        .g-thumb { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
-
-        @media (max-width: 992px) {
-            .logo-text { font-size: 22px; }
-            .search-box-container, .google-tabs, .result-container { margin-left: 15px; margin-right: 15px; max-width: 100%; }
-            .search-wrapper { position: relative; padding-top: 10px; }
-            .g-thumb { width: 80px; height: 80px; }
+        body { 
+            background: #f4f7fe; 
+            margin: 0; 
+            padding-top: 100px !important; /* Tak paksa dadi 100px ben gak keduwen */
+            padding-bottom: 100px; 
         }
+        
+        .stats-container { margin-bottom: 20px; }
+        .stat-card {
+            background: white; border-radius: 15px; padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none;
+            height: 100%; transition: 0.3s;
+        }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .bg-light-blue { background: #e0e7ff; color: #4338ca; }
+        .bg-light-green { background: #dcfce7; color: #15803d; }
+        .bg-light-red { background: #fee2e2; color: #b91c1c; }
+        .bg-light-orange { background: #ffedd5; color: #c2410c; }
 
-        .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; align-items: center; justify-content: center; }
+        #map { height: 400px; width: 100%; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); z-index: 1; }
+        .map-filter {
+            background: white; padding: 15px; border-radius: 15px;
+            margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .info-window-custom { font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-<div class="loader" id="mainLoader"><div class="spinner-border text-primary"></div></div>
-
-<div class="search-wrapper">
-    <div class="ps-lg-5 ms-lg-5 mb-2">
-        <a href="#" onclick="location.reload()" class="logo-text">
-            <span style="color:#4285f4">N</span><span style="color:#ea4335">a</span><span style="color:#fbbc05">n</span><span style="color:#4285f4">d</span><span style="color:#34a853">a</span>
-            <span class="logo-sub">Teknik</span>
-        </a>
+<div class="container">
+    <div class="mb-3 text-center">
+        <h6 class="text-muted fw-bold animate__animated animate__fadeIn">
+            <i class="fas fa-calendar-alt me-2"></i> Laporan: <span id="current-month-year">-</span>
+        </h6>
     </div>
 
-    <div class="search-box-container">
-        <div class="search-box">
-            <i class="fas fa-search text-muted"></i>
-            <input type="text" id="searchInput" placeholder="ID WO, Nota, atau Email..." onkeypress="if(event.key==='Enter') cariData()">
+    <div class="row g-2 stats-container">
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__zoomIn">
+                <div class="stat-icon bg-light-orange"><i class="fas fa-tools"></i></div>
+                <small class="text-muted">Job Aktif</small>
+                <h4 class="fw-bold mb-0" id="stat-pending">0</h4>
+            </div>
         </div>
-        <div class="d-flex gap-2 mt-3 flex-wrap">
-            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="cariData()">Cari Data</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-3" onclick="location.reload()">Reset</button>
-            <button class="btn btn-light btn-sm border rounded-pill px-3" href="register.html"><i class="fas fa-user-circle"></i> Daftar</button>
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__zoomIn" style="animation-delay: 0.1s">
+                <div class="stat-icon bg-light-blue"><i class="fas fa-users"></i></div>
+                <small class="text-muted">Database Pelanggan</small>
+                <h4 class="fw-bold mb-0" id="stat-client">0</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__zoomIn" style="animation-delay: 0.2s">
+                <div class="stat-icon bg-light-red"><i class="fas fa-file-invoice"></i></div>
+                <small class="text-muted">Belum Lunas</small>
+                <h4 class="fw-bold mb-0" id="stat-unpaid">0</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card animate__animated animate__zoomIn" style="animation-delay: 0.3s">
+                <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
+                <small class="text-muted">Profit Bulan Ini</small>
+                <h5 class="fw-bold mb-0" id="stat-saldo" style="font-size: 0.95rem;">Rp 0</h5>
+            </div>
         </div>
     </div>
 
-    <div class="google-tabs" id="mainTabs">
-        <div class="g-tab active" id="tabHeadBerita" onclick="showSection('sectionBerita', this)"><i class="fas fa-newspaper"></i> Berita</div>
-        <div class="g-tab" id="tabHeadWO" onclick="showSection('tabWO', this)" style="display:none;"><i class="fas fa-tools"></i> Pekerjaan</div>
-        <div class="g-tab" id="tabHeadNota" onclick="showSection('tabNota', this)" style="display:none;"><i class="fas fa-file-invoice-dollar"></i> Nota</div>
+    <div class="map-filter">
+        <div class="row g-2">
+            <div class="col-7">
+                <select class="form-select border-0 bg-light fw-bold" id="filter-map" onchange="updateMarkers()">
+                    <option value="job">📍 Lokasi Pekerjaan</option>
+                    <option value="client">👥 Lokasi Pelanggan</option>
+                </select>
+            </div>
+            <div class="col-5">
+                <button class="btn btn-primary w-100 shadow-sm" onclick="initDashboard()"><i class="fas fa-sync"></i> Reload</button>
+            </div>
+        </div>
     </div>
+
+    <div id="map"></div>
 </div>
 
-<div class="container-fluid pb-5">
-    <div id="custProfile" class="result-container" style="display:none; border-bottom: 1px solid #eee; padding-bottom:10px;">
-        <h5 class="fw-bold mb-0" id="txtNama"></h5>
-        <p id="txtEmailWA" class="text-muted small mb-1"></p>
-    </div>
-
-    <div id="resultArea" class="result-container">
-        <div id="sectionBerita">
-            <div id="antrianHome" class="mb-5">
-                <h6 class="text-muted small mb-3">Antrian Aktif Hari Ini</h6>
-                <div id="antrianList">Loading antrian...</div>
-            </div>
-            
-            <h6 class="text-muted small mb-3">Berita Terbaru dari nandateknik.com</h6>
-            <div id="blogList">Loading berita...</div>
-        </div>
-
-        <div id="tabWO" style="display:none;">
-            <div id="listWO"></div>
-            <div id="detailWO" class="card p-3 shadow-sm border-0" style="display:none;">
-                <button class="btn btn-link btn-sm p-0 mb-3 text-decoration-none" onclick="backToList('WO')"><i class="fas fa-arrow-left"></i> Kembali</button>
-                <div id="woContent"></div>
-            </div>
-        </div>
-
-        <div id="tabNota" style="display:none;">
-            <div id="listNota"></div>
-            <div id="detailNota" style="display:none;">
-                <button class="btn btn-link btn-sm p-0 mb-3 text-decoration-none" onclick="backToList('Nota')"><i class="fas fa-arrow-left"></i> Kembali</button>
-                <div class="card p-4 shadow-sm mb-3" id="notaPreview">
-                    <div class="text-center mb-3">
-                        <h5 class="fw-bold">PRATINJAU NOTA</h5>
-                        <p id="nIDPreview" class="small text-muted"></p>
-                    </div>
-                    <div id="notaTableArea"></div>
-                    <div id="notaTotalArea" class="text-end fw-bold mt-2"></div>
-                </div>
-                <button class="btn btn-dark w-100" id="btnDownloadPDF"><i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF</button>
-            </div>
-        </div>
-    </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/config.js"></script>
+<script src="assets/layout.js"></script>
 
 <script>
-    const API = 'https://script.google.com/macros/s/AKfycbxZ2XW9lVS4jj9NogR2l_W_ffQTJYR6TmJloV6xJMSEvqDEuRRv18-OAl0fxz5fjlFv/exec';
-    let cache = null;
+    let map, markerLayer;
+    let dataJob = [], dataPelanggan = [], dataKas = [];
 
-    window.onload = () => { loadAntrian(); fetchBlog(); };
+    // Set Nama Bulan & Tahun saiki
+    const date = new Date();
+    const currentMonth = date.getMonth(); // 0-11
+    const currentYear = date.getFullYear();
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    
+    document.getElementById('current-month-year').innerText = `${monthNames[currentMonth]} ${currentYear}`;
 
-    async function loadAntrian() {
-        try {
-            const r = await fetch(API + '?action=read&sheet=Booking', { method: 'GET', redirect: 'follow' });
-            const res = await r.json();
-            if(res.success) {
-                const active = res.data.filter(i => !['selesai','dibatalkan'].includes((i.status||'').toLowerCase()));
-                document.getElementById('antrianList').innerHTML = active.map(i => `
-                    <div class="g-result mb-2">
-                        <div class="g-content">
-                            <span class="cite">antrian > ${i.woId || i.id}</span>
-                            <h3 style="font-size:16px" onclick="viewID('${i.woId || i.id}')">${i.pekerjaan || i.judul}</h3>
-                            <div class="desc small">Status: <b>${i.status}</b></div>
-                        </div>
-                    </div>`).join('') || 'Tidak ada antrian.';
-            }
-        } catch(e) { document.getElementById('antrianList').innerHTML = ""; }
+    window.onload = () => {
+        initMap();
+        initDashboard();
+    };
+
+    function initMap() {
+        map = L.map('map', { zoomControl: false }).setView([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        markerLayer = L.layerGroup().addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Marker Kantor
+        L.marker([CONFIG.KANTOR_COORDS.lat, CONFIG.KANTOR_COORDS.lng])
+            .addTo(map)
+            .bindPopup("<b>🏠 Kantor Nanda Teknik</b>");
     }
 
-    async function fetchBlog() {
-        try {
-            const rss = 'https://www.nandateknik.com/feeds/posts/default?alt=rss';
-            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
-            const data = await res.json();
-            if(data.status === 'ok') {
-                document.getElementById('blogList').innerHTML = data.items.map(item => {
-                    const thumb = item.thumbnail || 'logo-none-text.png';
-                    return `
-                    <div class="g-result">
-                        <div class="g-content">
-                            <span class="cite">${item.author} > blog</span>
-                            <h3 onclick="window.open('${item.link}')">${item.title}</h3>
-                            <div class="desc">${item.description.replace(/<[^>]*>/g, '').substring(0, 120)}...</div>
-                        </div>
-                        <img src="${thumb}" class="g-thumb" onerror="this.src='logo-none-text.png'">
-                    </div>`;
-                }).join('');
-            }
-        } catch(e) { document.getElementById('blogList').innerHTML = "Gagal memuat berita."; }
-    }
-
-    async function cariData() {
-        const kw = document.getElementById('searchInput').value.trim();
-        if(!kw) return;
-        document.getElementById('mainLoader').style.display = 'flex';
-        try {
-            const r = await fetch(API, { method: 'POST', redirect: 'follow', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
-            cache = await r.json();
-            document.getElementById('mainLoader').style.display = 'none';
-            if(cache.success) {
-                document.getElementById('sectionBerita').style.display = 'none';
-                document.getElementById('tabHeadWO').style.display = 'flex';
-                document.getElementById('tabHeadNota').style.display = 'flex';
-                document.getElementById('custProfile').style.display = 'block';
-                document.getElementById('txtNama').innerText = cache.customer.nama;
-                document.getElementById('txtEmailWA').innerText = cache.customer.email;
-                renderLists();
-            } else { alert("Data Gak Ketemu!"); }
-        } catch(e) { document.getElementById('mainLoader').style.display = 'none'; }
-    }
-
-    function renderLists() {
-        const dataArr = cache.type === 'LIST' ? cache.data : [cache.data];
-        const wos = dataArr.filter(i => (i.id||i.woId||'').toString().startsWith('WO') || i.type === 'WO');
-        document.getElementById('listWO').innerHTML = wos.map(w => `
-            <div class="g-result">
-                <div class="g-content">
-                    <span class="cite">tracking > ${w.id || w.woId}</span>
-                    <h3 onclick="viewID('${w.id || w.woId}')">${w.judul || w.pekerjaan}</h3>
-                    <div class="desc">Status: <b>${w.status}</b> | Update: ${w.tgl || w.tanggal}</div>
-                </div>
-            </div>`).join('');
-
-        const nts = dataArr.filter(i => (i.id||i.notaId||'').toString().startsWith('INV') || i.type === 'Nota');
-        document.getElementById('listNota').innerHTML = nts.map(n => `
-            <div class="g-result">
-                <div class="g-content">
-                    <span class="cite">invoice > ${n.id || n.notaId}</span>
-                    <h3 onclick="viewID('${n.id || n.notaId}')">Nota #${n.id || n.notaId}</h3>
-                    <div class="desc">Total tagihan: <b>Rp ${(n.total||0).toLocaleString()}</b>. Klik untuk rincian.</div>
-                </div>
-            </div>`).join('');
-
-        if(cache.type === 'WO') { showSection('tabWO', document.getElementById('tabHeadWO')); showDetailWO(cache.data); }
-        else if(cache.type === 'Nota') { showSection('tabNota', document.getElementById('tabHeadNota')); showDetailNota(cache.data); }
-        else { showSection('tabWO', document.getElementById('tabHeadWO')); }
-    }
-
-    function viewID(id) { document.getElementById('searchInput').value = id; cariData(); }
-
-    function showDetailWO(item) {
-        document.getElementById('listWO').style.display = 'none';
-        document.getElementById('detailWO').style.display = 'block';
-        const logs = item.history || [];
-        document.getElementById('woContent').innerHTML = `
-            <h4 class="fw-bold">${item.woId || item.id}</h4>
-            <p class="text-primary fw-bold">${item.pekerjaan || item.judul}</p><hr>
-            <h6>Log Progress:</h6>
-            ${logs.map(l => `<div class="mb-2 border-start border-3 border-primary ps-2"><small>${l.tgl}</small><br><b>${l.status}</b><br><span class="small">${l.detail||''}</span></div>`).join('') || 'Belum ada log.'}`;
-    }
-
-    function showDetailNota(n) {
-        document.getElementById('listNota').style.display = 'none';
-        document.getElementById('detailNota').style.display = 'block';
-        document.getElementById('nIDPreview').innerText = n.notaId || n.id;
+    async function initDashboard() {
+        Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        const items = n.items || [];
-        let html = '<table class="table table-sm border small"><thead><tr class="table-light"><th>Item</th><th class="text-center">Qty</th><th class="text-end">Total</th></tr></thead><tbody>';
-        items.forEach(it => {
-            html += `<tr><td>${it.nama}</td><td class="text-center">${it.qty}</td><td class="text-end">${(it.qty * it.harga).toLocaleString()}</td></tr>`;
+        try {
+            const [resJob, resPel, resKas] = await Promise.all([
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`).then(r => r.json()),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`).then(r => r.json()),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Labarugi`).then(r => r.json())
+            ]);
+
+            dataJob = resJob.data || [];
+            dataPelanggan = resPel.data || [];
+            dataKas = resKas.data || [];
+
+            calculateStats();
+            updateMarkers();
+            Swal.close();
+        } catch (e) {
+            Swal.fire('Wadhuh!', 'Gagal sambung neng server.', 'error');
+        }
+    }
+
+    function calculateStats() {
+        // 1. Job Pending (Status dudu Selesai / Dibatalkan)
+        const pending = dataJob.filter(j => !['selesai','dibatalkan'].includes(j.status?.toLowerCase())).length;
+        document.getElementById('stat-pending').innerText = pending;
+
+        // 2. Total Pelanggan
+        document.getElementById('stat-client').innerText = dataPelanggan.length;
+
+        // 3. Nota Belum Lunas
+        const unpaid = dataJob.filter(j => j.id_nota && !['selesai'].includes(j.status?.toLowerCase())).length;
+        document.getElementById('stat-unpaid').innerText = unpaid;
+
+        // 4. Kas Filter Bulan Iki & Tahun Iki
+        let profit = 0;
+        dataKas.forEach(k => {
+            const tglKas = new Date(k.Tanggal);
+            // Filter: Cek opo sasi lan tahun-e podo karo saiki
+            if (tglKas.getMonth() === currentMonth && tglKas.getFullYear() === currentYear) {
+                const nominal = parseFloat(k.Nominal) || 0;
+                if (k.Kategori === 'Pemasukan') profit += nominal;
+                else profit -= nominal;
+            }
         });
-        html += '</tbody></table>';
-        document.getElementById('notaTableArea').innerHTML = html;
-        document.getElementById('notaTotalArea').innerText = "Total: Rp " + (n.total||0).toLocaleString();
-
-        document.getElementById('btnDownloadPDF').onclick = () => { 
-            generatePDF({ 
-                id: n.notaId || n.id, 
-                tanggal: n.tanggal || n.tgl, 
-                nama: cache.customer.nama, // Wis ganti dadi Nama Pelanggan
-                items_json: n.items || [], 
-                total: n.total 
-            }); 
-        };
+        document.getElementById('stat-saldo').innerText = (profit < 0 ? '-' : '') + 'Rp ' + Math.abs(profit).toLocaleString('id-ID');
+        document.getElementById('stat-saldo').classList.add(profit >= 0 ? 'text-success' : 'text-danger');
     }
 
-    function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 25, 25); } catch (e) { }
+    function updateMarkers() {
+        markerLayer.clearLayers();
+        const mode = document.getElementById('filter-map').value;
 
-        doc.setFontSize(18); doc.setFont("helvetica", "bold");
-        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Software, Network & Electrical Engineering", 105, 26, { align: "center" });
-        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D5, Banyuwangi - Jawa Timur. 68421", 105, 30, { align: "center" });
-        doc.text("WA: 0812-3456-7890 | Email: nandateknik@gmail.com", 105, 34, { align: "center" });
-        doc.line(15, 38, 195, 38);
+        if (mode === 'job') {
+            dataJob.filter(j => !['selesai','dibatalkan'].includes(j.status?.toLowerCase()) && j.lat).forEach(j => {
+                L.marker([j.lat, j.lang], { icon: colorIcon('orange') }).addTo(markerLayer)
+                    .bindPopup(`
+                        <div class="info-window-custom">
+                            <b>#${j.id || 'Job'}</b><br>${j.judul || j.pekerjaan}<br>
+                            <span class="badge bg-warning text-dark mt-1">${j.status}</span><hr class="my-1">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lang}" target="_blank" class="btn btn-sm btn-primary w-100 text-white mt-1">
+                                <i class="fas fa-location-arrow me-1"></i> Gas Lokasi
+                            </a>
+                        </div>
+                    `);
+            });
+        } else {
+            dataPelanggan.filter(p => p.lat).forEach(p => {
+                L.marker([p.lat, p.lang], { icon: colorIcon('blue') }).addTo(markerLayer)
+                    .bindPopup(`
+                        <div class="info-window-custom">
+                            <b>${p.nama}</b><br><i class="fab fa-whatsapp"></i> ${p.wa}<br>
+                            <small class="text-muted">${p.alamat || ''}</small>
+                        </div>
+                    `);
+            });
+        }
+    }
 
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text("FAKTUR PEMBAYARAN", 15, 48);
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Transaksi : #${data.id}`, 15, 56);
-        doc.text(`Tanggal       : ${data.tanggal}`, 15, 61);
-        doc.text(`Kepada        : ${data.nama}`, 140, 56); // Bagian sing dijaluk
-
-        const tableBody = data.items_json.map((item, index) => [index + 1, item.nama, item.qty, `Rp ${Number(item.harga).toLocaleString('id-ID')}`, `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`]);
-
-        doc.autoTable({
-            startY: 70,
-            head: [['No', 'Deskripsi', 'Qty', 'Harga', 'Jumlah']],
-            body: tableBody,
-            theme: 'grid',
-            headStyles: { fillColor: [150, 150, 150] } 
+    function colorIcon(color) {
+        return new L.Icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
-
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
-
-        const boxY = finalY + 15;
-        doc.setLineDash([2, 2], 0);
-        doc.rect(15, boxY, 180, 15);
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("pembayaran bisa dilakukan melalu rekening BCA atas nama Nanda Krisbianto 1801826011", 105, boxY + 9, { align: "center" });
-        
-        doc.save(`Nota_${data.id}.pdf`);
-    }
-
-    function showSection(id, el) {
-        document.getElementById('sectionBerita').style.display = 'none';
-        document.getElementById('tabWO').style.display = 'none';
-        document.getElementById('tabNota').style.display = 'none';
-        document.getElementById(id).style.display = 'block';
-        document.querySelectorAll('.g-tab').forEach(x => x.classList.remove('active'));
-        el.classList.add('active');
-        backToList('ALL');
-    }
-
-    function backToList(type) {
-        if(type === 'WO' || type === 'ALL') { document.getElementById('listWO').style.display = 'block'; document.getElementById('detailWO').style.display = 'none'; }
-        if(type === 'Nota' || type === 'ALL') { document.getElementById('listNota').style.display = 'block'; document.getElementById('detailNota').style.display = 'none'; }
     }
 </script>
 </body>
