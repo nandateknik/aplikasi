@@ -1,8 +1,8 @@
 {
-    "name": "Nanda Teknik Banyuwangi",
-    "short_name": "Nanda Teknik Banyuwangi",
-    "scope": "https://www.nandateknik.com",
-    "start_url": "https://www.nandateknik.com",
+    "name": "Pelanggan NTB",
+    "short_name": "Booking NTB",
+    "scope": "https://www.nandateknik.github.io",
+    "start_url": "https://www.nandateknik.github.io",
     "display": "standalone",
     "background_color": "#fff",
     "theme_color": "#2B0C93",
@@ -37,4 +37,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }]
+
   }
