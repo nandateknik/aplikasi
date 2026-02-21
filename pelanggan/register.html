@@ -12,56 +12,17 @@
     <style>
         :root { --primary: #4e73df; --bg: #f8f9fc; --dark: #224abe; }
         body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 100px; }
-        
-        /* HEADER STYLE CONSISTENT WITH PORTAL */
-        .header-brand { 
-            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); 
-            padding: 40px 20px; 
-            text-align: center; 
-            color: white; 
-            border-radius: 0 0 35px 35px; 
-            margin-bottom: -50px; /* Overlap effect */
-            position: relative;
-            z-index: 2;
-        }
-        .header-logo { 
-            width: 70px; height: 70px; 
-            background: white; border-radius: 18px; 
-            padding: 10px; margin-bottom: 12px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
-        }
-
-        .main-card { 
-            border: none; border-radius: 25px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            background: white; 
-            position: relative;
-            z-index: 3;
-        }
-
+        .header-brand { background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); padding: 40px 20px; text-align: center; color: white; border-radius: 0 0 35px 35px; margin-bottom: -50px; position: relative; z-index: 2; }
+        .header-logo { width: 70px; height: 70px; background: white; border-radius: 18px; padding: 10px; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .main-card { border: none; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: white; position: relative; z-index: 3; }
         #map { height: 300px; border-radius: 15px; margin-top: 10px; border: 2px solid #eee; z-index: 1; }
         .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 11000; justify-content: center; align-items: center; flex-direction: column; }
         .otp-input { letter-spacing: 5px; font-size: 24px; text-align: center; font-weight: bold; border: 2px solid var(--primary); border-radius: 10px; }
         .readonly-label { background-color: #f1f3f5; opacity: 1; font-family: monospace; font-size: 0.85rem; border-radius: 8px; }
-        
-        /* FLOATING BOTTOM NAVIGATION */
-        .bottom-nav {
-            position: fixed; bottom: 15px; left: 15px; right: 15px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around;
-            padding: 12px 5px; border-radius: 22px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
-        }
-        .nav-item {
-            text-decoration: none; color: #94a3b8; text-align: center; 
-            font-size: 9px; font-weight: 700; width: 25%; transition: 0.3s;
-            display: flex; flex-direction: column; align-items: center;
-        }
+        .bottom-nav { position: fixed; bottom: 15px; left: 15px; right: 15px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 5px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 10000; border: 1px solid rgba(255,255,255,0.3); }
+        .nav-item { text-decoration: none; color: #94a3b8; text-align: center; font-size: 9px; font-weight: 700; width: 25%; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
         .nav-item i { font-size: 1.2rem; margin-bottom: 4px; transition: 0.3s; }
         .nav-item.active { color: var(--primary); }
-        .nav-item:active i { transform: scale(0.8); }
-
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -75,7 +36,7 @@
 
 <div class="header-brand">
     <img src="logo-none-text.png" class="header-logo" alt="Logo" onerror="this.src='https://via.placeholder.com/70'">
-    <h4 class="fw-bold mb-0">BOOKING JASA</h4>
+    <h4 class="fw-bold mb-0">REGISTER</h4>
     <p class="small opacity-75 mb-0">Nanda Teknik Banyuwangi</p>
 </div>
 
@@ -105,6 +66,10 @@
                             <input type="text" id="nama" class="form-control" placeholder="Nama sesuai identitas">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Tanggal Lahir</label>
+                            <input type="date" id="tgl_lahir" class="form-control">
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-bold small text-secondary">Nomor WhatsApp</label>
                             <input type="number" id="wa" class="form-control" placeholder="628xxxxxxxx">
                         </div>
@@ -113,6 +78,10 @@
                             <label class="form-label fw-bold small text-primary"><i class="fas fa-map-marker-alt me-1"></i> Lokasi (Cari Alamat / Geser Pin)</label>
                             <div id="map"></div>
                             
+                            <button class="btn btn-success btn-sm w-100 mt-2 shadow-sm fw-bold" onclick="getCurrentLocation()">
+                                <i class="fas fa-location-crosshairs me-1"></i> CEK LOKASI SAYA SAAT INI
+                            </button>
+
                             <div class="row g-2 mt-2">
                                 <div class="col-6">
                                     <input type="text" id="lat" class="form-control readonly-label" readonly placeholder="Lat">
@@ -180,7 +149,6 @@
     async function handleInitialCheck() {
         const emailInput = document.getElementById('email').value.trim().toLowerCase();
         const isAdminMode = document.getElementById('isAdmin').checked;
-        
         if(!emailInput || !emailInput.includes('@')) return Swal.fire('Error', 'Format email salah!', 'warning');
         
         showLoader(true);
@@ -189,10 +157,7 @@
             const result = await res.json();
             showLoader(false);
 
-            const isExist = result.data.some(p => {
-                const emailValue = p.Email || p.email || p.EMAIL; 
-                return emailValue && emailValue.toString().toLowerCase() === emailInput;
-            });
+            const isExist = result.data.some(p => (p.email || p.Email || "").toLowerCase() === emailInput);
 
             if(isExist) {
                 Swal.fire({
@@ -210,12 +175,9 @@
                 document.getElementById('emailSection').style.opacity = '0.6';
                 document.getElementById('email').readOnly = true;
                 initMap();
-
                 if (!isAdminMode) {
                     document.getElementById('otpSection').style.display = 'block';
                     requestOTP();
-                } else {
-                    Swal.fire('Mode Admin', 'Bypass OTP Aktif.', 'info');
                 }
             }
         } catch(e) {
@@ -230,28 +192,26 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         marker = L.marker([-8.2191, 114.3691], {draggable: true}).addTo(map);
 
-        const geocoder = L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: "Cari alamat..."
-        }).on('markgeocode', function(e) {
-            const center = e.geocode.center;
-            map.setView(center, 16);
-            marker.setLatLng(center);
-            updateLocationInfo(center.lat, center.lng);
-        }).addTo(map);
-
         marker.on('dragend', function(e) {
             const pos = e.target.getLatLng();
             updateLocationInfo(pos.lat, pos.lng);
         });
+        
+        // Coba deteksi awal
+        getCurrentLocation();
+    }
 
+    // FUNGSI CEK LOKASI SAYA
+    function getCurrentLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
-                map.setView([lat, lng], 16);
+                map.setView([lat, lng], 17);
                 marker.setLatLng([lat, lng]);
                 updateLocationInfo(lat, lng);
+            }, () => {
+                Swal.fire('Info', 'Gagal njupuk lokasi. Pastikan GPS aktif lan ijin lokasi di-allow.', 'warning');
             });
         }
     }
@@ -306,16 +266,18 @@
         const isAdminMode = document.getElementById('isAdmin').checked;
         const otpInput = document.getElementById('otpInput').value;
         const nama = document.getElementById('nama').value.trim();
+        const tgl_lahir = document.getElementById('tgl_lahir').value;
         const wa = document.getElementById('wa').value.trim();
         const lat = document.getElementById('lat').value;
 
-        if(!nama || !wa || !lat) return Swal.fire('Lengkapi Data', 'Data wajib diisi semua!', 'warning');
+        if(!nama || !wa || !lat || !tgl_lahir) return Swal.fire('Lengkapi Data', 'Data wajib diisi kabeh, Sam!', 'warning');
         if (!isAdminMode && otpInput != serverOTP) return Swal.fire('OTP Salah', 'Kode verifikasi tidak sesuai!', 'error');
 
         const data = {
             action: 'createPelanggan',
             nama: nama,
             email: document.getElementById('email').value.trim(),
+            tanggal: tgl_lahir, // Masuk ke kolom Tanggal di Sheet
             wa: wa,
             lat: lat,
             lang: document.getElementById('lang').value,
