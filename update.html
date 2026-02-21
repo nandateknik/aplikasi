@@ -7,69 +7,135 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root { --primary: #f6c23e; }
-        body { background-color: #f8f9fc; font-family: 'Segoe UI', sans-serif; }
-        .main-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .header-section { background: #f6c23e; color: #333; padding: 20px; border-radius: 15px 15px 0 0; text-align: center; }
-        #map { height: 350px; width: 100%; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; z-index: 1; }
-        .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
-        .form-control:read-only { background-color: #e9ecef !important; opacity: 1; color: #495057; font-weight: bold; }
+        :root { --primary: #4e73df; --bg: #f8f9fc; --dark: #224abe; --warning: #f6c23e; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 110px; }
+        
+        /* HEADER STYLE CONSISTENT */
+        .header-brand { 
+            background: linear-gradient(135deg, var(--warning) 0%, #d39e00 100%); 
+            padding: 40px 20px; 
+            text-align: center; 
+            color: #333; 
+            border-radius: 0 0 35px 35px; 
+            margin-bottom: -50px;
+            position: relative;
+            z-index: 2;
+        }
+        .header-logo { 
+            width: 70px; height: 70px; 
+            background: white; border-radius: 18px; 
+            padding: 10px; margin-bottom: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+        }
+
+        .main-card { 
+            border: none; border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            background: white; 
+            position: relative;
+            z-index: 3;
+        }
+
+        #map { height: 300px; width: 100%; border-radius: 15px; margin: 10px 0; border: 2px solid #eee; z-index: 1; }
+        
+        .loader { 
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(255,255,255,0.85); z-index:11000; 
+            justify-content:center; align-items:center; flex-direction:column; 
+        }
+
+        .otp-input-box {
+            background: #fff9e6;
+            border: 2px dashed var(--warning);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        /* FLOATING BOTTOM NAVIGATION */
+        .bottom-nav {
+            position: fixed; bottom: 15px; left: 15px; right: 15px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around;
+            padding: 12px 5px; border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .nav-item {
+            text-decoration: none; color: #94a3b8; text-align: center; 
+            font-size: 9px; font-weight: 700; width: 25%; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
+        .nav-item.active { color: var(--dark); }
+
+        .form-control:read-only { background-color: #f1f3f5 !important; font-weight: 600; color: #666; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="loader" id="loader">
     <div class="spinner-border text-warning"></div>
-    <p class="mt-2 fw-bold">Sik, ojo nesu... lagi diproses...</p>
+    <p class="mt-2 fw-bold">Sik Sam, lagi diproses...</p>
 </div>
 
-<div class="container py-5">
+<div class="header-brand">
+    <img src="image-none-text.png" class="header-logo" alt="Logo" onerror="this.src='https://via.placeholder.com/70'">
+    <h4 class="fw-bold mb-0">NANDA TEKNIK</h4>
+    <p class="small opacity-75 mb-0">Update Data Profil Pelanggan</p>
+</div>
+
+<div class="container mt-5 pt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card main-card">
-                <div class="header-section">
-                    <h5 class="mb-0 fw-bold">UPDATE DATA PELANGGAN</h5>
-                </div>
+        <div class="col-md-7 col-lg-6">
+            <div class="card main-card shadow-lg">
                 <div class="card-body p-4">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small">Email Terdaftar</label>
-                        <div class="input-group">
-                            <input type="email" id="email" class="form-control" placeholder="nanda@mail.com">
-                            <button class="btn btn-dark" onclick="checkRegisteredEmail()">Cari & Kirim OTP</button>
+                    <div class="mb-4" id="searchSection">
+                        <label class="form-label fw-bold small text-secondary">Email Terdaftar</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="email" id="email" class="form-control border-start-0" placeholder="nanda@mail.com">
                         </div>
+                        <button class="btn btn-dark w-100 fw-bold rounded-pill py-2" onclick="checkRegisteredEmail()">
+                            CARI & KIRIM OTP
+                        </button>
                     </div>
 
-                    <div id="fullForm" style="display:none;">
-                        <div class="card bg-light border-0 p-3 mb-3 text-center">
-                            <label class="form-label fw-bold mb-1">Masukkan Kode OTP</label>
-                            <input type="text" id="otpInput" class="form-control text-center fw-bold fs-4" maxlength="6" placeholder="000000">
+                    <div id="fullForm" style="display:none;" class="fade-in">
+                        <hr class="my-4">
+                        
+                        <div class="otp-input-box mb-4 text-center">
+                            <label class="form-label fw-bold small text-warning text-uppercase">Masukkan Kode OTP</label>
+                            <input type="text" id="otpInput" class="form-control form-control-lg text-center fw-bold border-0 shadow-sm" maxlength="6" placeholder="000000" style="letter-spacing: 8px; font-size: 1.5rem;">
+                            <small class="text-muted mt-2 d-block">Kode dikirim neng emailmu Sam.</small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Nama Lengkap</label>
-                            <input type="text" id="nama" class="form-control">
+                            <input type="text" id="nama" class="form-control rounded-3" placeholder="Nama Lengkap">
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">WhatsApp</label>
-                            <input type="number" id="wa" class="form-control">
+                            <input type="number" id="wa" class="form-control rounded-3" placeholder="628xxx">
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan</label>
+                            <label class="form-label small fw-bold text-primary"><i class="fas fa-map-marker-alt me-1"></i> Update Lokasi Pemasangan</label>
                             <div id="map"></div>
-                            <textarea id="alamat" class="form-control mt-2" rows="2"></textarea>
+                            <textarea id="alamat" class="form-control mt-2 rounded-3" rows="3" placeholder="Detail alamat..."></textarea>
                             
                             <div class="row mt-2 g-2">
                                 <div class="col-6">
-                                    <label style="font-size:11px" class="fw-bold text-danger">Latitude (WAJIB ISI)</label>
-                                    <input type="text" id="lat" class="form-control form-control-sm" readonly>
+                                    <label class="small text-muted" style="font-size:10px">LATITUDE</label>
+                                    <input type="text" id="lat" class="form-control form-control-sm border-0 bg-light" readonly>
                                 </div>
                                 <div class="col-6">
-                                    <label style="font-size:11px" class="fw-bold text-danger">Longitude (WAJIB ISI)</label>
-                                    <input type="text" id="lang" class="form-control form-control-sm" readonly>
+                                    <label class="small text-muted" style="font-size:10px">LONGITUDE</label>
+                                    <input type="text" id="lang" class="form-control form-control-sm border-0 bg-light" readonly>
                                 </div>
                             </div>
                         </div>
@@ -77,8 +143,8 @@
                         <input type="hidden" id="tanggal">
                         <input type="hidden" id="is_active">
 
-                        <button class="btn btn-warning w-100 fw-bold py-2 mt-3" onclick="updateData()">
-                            UPDATE DATA SEKARANG
+                        <button class="btn btn-warning w-100 fw-bold py-3 mt-3 rounded-pill shadow-sm" onclick="updateData()">
+                            <i class="fas fa-sync-alt me-2"></i> UPDATE DATA SEKARANG
                         </button>
                     </div>
                 </div>
@@ -86,6 +152,25 @@
         </div>
     </div>
 </div>
+
+<nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Portal</span>
+    </a>
+    <a href="update.html" class="nav-item active">
+        <i class="fas fa-user-edit"></i>
+        <span>Update</span>
+    </a>
+    <a href="register.html" class="nav-item">
+        <i class="fas fa-user-plus"></i>
+        <span>Register</span>
+    </a>
+    <a href="booking.html" class="nav-item">
+        <i class="fas fa-calendar-check"></i>
+        <span>Booking</span>
+    </a>
+</nav>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -96,8 +181,8 @@
     let map, marker, serverOTP;
 
     async function checkRegisteredEmail() {
-        const email = document.getElementById('email').value;
-        if(!email) return Swal.fire('Error', 'Email diketik dhisik!', 'warning');
+        const email = document.getElementById('email').value.trim();
+        if(!email) return Swal.fire('Error', 'Email diketik dhisik Sam!', 'warning');
 
         toggleLoader(true);
         try {
@@ -112,33 +197,28 @@
                 serverOTP = result.otp;
                 const d = result.data;
                 
-                // ISI FIELD TEKS
                 document.getElementById('nama').value = d.nama || '';
                 document.getElementById('wa').value = d.wa || '';
                 document.getElementById('alamat').value = d.alamat || '';
                 document.getElementById('tanggal').value = d.tanggal || '';
                 document.getElementById('is_active').value = d.is_active || 'Active';
-
-                // --- POINT PENTING: ISI LAT LANG DISINI ---
                 document.getElementById('lat').value = d.lat || '';
                 document.getElementById('lang').value = d.lang || '';
                 
-                // Tampilkan Form
                 document.getElementById('fullForm').style.display = 'block';
                 document.getElementById('email').readOnly = true;
                 
-                // Load Map
                 setTimeout(() => {
                     initMap(d.lat, d.lang);
                 }, 400);
 
                 Swal.fire('Ketemu!', 'OTP wis dikirim, cek emailmu!', 'success');
             } else {
-                Swal.fire('Gagal', 'Email ora ono!', 'error');
+                Swal.fire('Gagal', 'Email ora terdaftar neng database!', 'error');
             }
         } catch(e) {
             toggleLoader(false);
-            Swal.fire('Error', 'Koneksi server pedot!', 'error');
+            Swal.fire('Error', 'Koneksi bermasalah!', 'error');
         }
     }
 
@@ -147,17 +227,10 @@
         let lng = parseFloat(lngVal) || 114.3691;
         
         if (map) map.remove();
-
         map = L.map('map').setView([lat, lng], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
 
-        // Langsung isi value koordinat pas map dadi
-        document.getElementById('lat').value = lat;
-        document.getElementById('lang').value = lng;
-
-        // Pencarian
         L.Control.geocoder({
             defaultMarkGeocode: false,
             placeholder: "Goleki alamat..."
@@ -173,13 +246,12 @@
             updateFormCoords(pos.lat, pos.lng);
             reverseSearch(pos.lat, pos.lng);
         });
-
         map.invalidateSize();
     }
 
     function updateFormCoords(lat, lng, addr) {
-        document.getElementById('lat').value = lat;
-        document.getElementById('lang').value = lng;
+        document.getElementById('lat').value = lat.toFixed(7);
+        document.getElementById('lang').value = lng.toFixed(7);
         if(addr) document.getElementById('alamat').value = addr;
     }
 
@@ -187,12 +259,12 @@
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(r => r.json()).then(res => {
                 document.getElementById('alamat').value = res.display_name;
-            }).catch(e => console.log('Reverse geocode error'));
+            });
     }
 
     async function updateData() {
         const otp = document.getElementById('otpInput').value;
-        if (otp != serverOTP) return Swal.fire('OTP Kleru', 'Cek maneh emailmu!', 'error');
+        if (otp != serverOTP) return Swal.fire('OTP Kleru', 'Cek maneh emailmu Sam!', 'error');
 
         const payload = {
             action: 'updatePelanggan',
@@ -212,11 +284,11 @@
             const result = await res.json();
             toggleLoader(false);
             if(result.success) {
-                Swal.fire('Berhasil', 'Data wis aman!', 'success').then(() => location.reload());
+                Swal.fire('Berhasil', 'Data wis di-update Sam!', 'success').then(() => location.reload());
             }
         } catch(e) {
             toggleLoader(false);
-            Swal.fire('Gagal', 'Gagal update database!', 'error');
+            Swal.fire('Gagal', 'Error nyimpen data!', 'error');
         }
     }
 
