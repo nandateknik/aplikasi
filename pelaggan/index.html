@@ -163,15 +163,24 @@
 </nav>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx7XdXXusDSkurHqTynBRMxLBGg_Q_f18YGUVJ1VX7ca0o6-VMmSpbGwZzH5VqFsWJP/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyvgmBgDikD5Kk9gfiC--Q6t9AKNZ1bqCNLm7Nc7dzVtzo-9ssqV_ic2tVeJY7_KYBQ/exec';
     let fullData = { jobs: [], notes: [], customer: {} };
 
     function cleanDate(str) {
-        if (!str) return "-";
-        const d = new Date(str);
-        if (isNaN(d.getTime())) return str.split(',')[0]; 
-        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    if (!str || str === "-" || str === "undefined") return "-";
+    
+    const d = new Date(str);
+    if (isNaN(d.getTime())) {
+        // Nek dudu format date (misal string biasa), tampilne potongan ngarepe wae
+        return str.toString().split('T')[0]; 
     }
+    
+    return d.toLocaleDateString('id-ID', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+    });
+}
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
