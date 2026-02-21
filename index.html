@@ -18,18 +18,22 @@
         .header-brand { background: white; padding: 25px 20px; border-radius: 0 0 30px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); text-align: center; margin-bottom: 25px; }
         .header-brand h4 { font-weight: 800; color: var(--p-blue); margin-bottom: 2px; }
         .header-brand p { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+        
+        /* CARD ANTRIAN */
+        .card-antrian { background: linear-gradient(135deg, #0d6efd, #0043a8); color: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; display: none; }
+        
         .search-container { background: white; border-radius: 20px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .search-container input { border: none; background: transparent; padding-left: 15px; font-weight: 600; }
-        .search-container input:focus { box-shadow: none; }
+        
         .card-custom { border-radius: 25px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); display: none; background: white; margin-bottom: 20px; overflow: hidden; }
         .history-item { background: #fff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 12px 15px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .history-item:active { background: #f8fafc; transform: scale(0.98); }
         .history-item.active-item { border-color: var(--p-blue); background: #eff6ff; }
+        
         .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 15px; }
         .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
+        
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #f1f5f9; }
         .nav-item { border: none; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; width: 33%; }
-        .nav-item i { font-size: 22px; margin-bottom: 4px; }
         .nav-item.active { color: var(--p-blue); }
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
     </style>
@@ -41,7 +45,7 @@
     <span class="mt-3 fw-bold small">Sinkronisasi Data...</span>
 </div>
 
-<div class="header-brand animate__animated animate__fadeInDown">
+<div class="header-brand">
     <h4>NANDA TEKNIK</h4>
     <p>Engineering & Technology</p>
 </div>
@@ -53,34 +57,50 @@
         <button class="btn btn-primary rounded-pill px-4" onclick="cariData()">Cari</button>
     </div>
 
-    <div id="cardHistory" class="card-custom p-4 animate__animated animate__fadeInUp">
+    <div id="cardAntrian" class="card-antrian animate__animated animate__pulse animate__infinite">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <small class="opacity-75">Status Antrian Anda:</small>
+                <h3 class="fw-bold m-0" id="antrianStatus">DALAM PROSES</h3>
+            </div>
+            <i class="fas fa-clock fa-2x opacity-50"></i>
+        </div>
+    </div>
+
+    <div id="cardProfile" class="card-custom p-4 border-start border-primary border-5">
+        <h6 class="fw-bold mb-2 small text-primary">DATA PELANGGAN</h6>
+        <div class="d-flex align-items-center">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <h6 id="custNama" class="fw-bold m-0">--</h6>
+                <small id="custEmail" class="text-muted">--</small>
+            </div>
+        </div>
+    </div>
+
+    <div id="cardHistory" class="card-custom p-4">
         <h6 class="fw-bold mb-3 small"><i class="fas fa-history me-2 text-primary"></i>Riwayat Layanan</h6>
         <div id="historyList"></div>
     </div>
 
-    <div id="cardWO" class="card-custom p-4 animate__animated animate__fadeInUp">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-                <span class="badge bg-primary bg-opacity-10 text-primary mb-2 rounded-pill small">WORK ORDER</span>
-                <h4 id="woIdDisplay" class="fw-bold m-0">#WO-000</h4>
-                <p id="woCustomer" class="small text-muted mb-0">--</p>
-            </div>
-            <span id="woStatus" class="badge bg-warning text-dark rounded-pill px-3 py-2 small">Pending</span>
+    <div id="cardWO" class="card-custom p-4">
+        <div class="d-flex justify-content-between">
+            <h5 id="woIdDisplay" class="fw-bold m-0">#WO-000</h5>
+            <span id="woStatus" class="badge bg-warning text-dark rounded-pill">Pending</span>
         </div>
         <div id="woHistory" class="mt-4"></div>
     </div>
 
-    <div id="cardNota" class="card-custom p-4 animate__animated animate__fadeInUp">
+    <div id="cardNota" class="card-custom p-4">
         <div class="text-center border-bottom pb-3 mb-3">
             <h6 class="fw-bold text-primary mb-1">DATA NOTA / INVOICE</h6>
             <span id="notaIdDisplay" class="text-muted small fw-bold">#INV-000</span>
         </div>
-        <div class="table-responsive">
-            <table class="table table-sm small">
-                <thead><tr><th>Layanan</th><th class="text-end">Subtotal</th></tr></thead>
-                <tbody id="notaItems"></tbody>
-            </table>
-        </div>
+        <table class="table table-sm small">
+            <tbody id="notaItems"></tbody>
+        </table>
         <div class="bg-light p-3 rounded-4 d-flex justify-content-between align-items-center mb-4">
             <span class="small fw-bold">Total Bayar</span>
             <h5 class="fw-bold text-primary m-0" id="notaTotal">Rp 0</h5>
@@ -91,8 +111,8 @@
     </div>
 
     <div id="noData" class="text-center py-5" style="display:none;">
-        <i class="fas fa-search fa-3x text-muted mb-3 opacity-20"></i>
-        <h6 class="text-muted fw-bold">Data ora ketemu, cah!</h6>
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h6 class="text-muted">Data ora ketemu, cah!</h6>
     </div>
 </div>
 
@@ -104,8 +124,7 @@
 
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec';
-    let globalHistoryData = [];
-    let currentData = null; // Simpan data aktif
+    let currentData = null;
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
@@ -117,9 +136,15 @@
             const r = await res.json();
             showLoader(false);
             if(r.success) {
+                // Tampilne Detail Pelanggan Yen keyword Email/ID
+                if(r.customer) {
+                    document.getElementById('cardProfile').style.display = 'block';
+                    document.getElementById('custNama').innerText = r.customer.nama || 'Pelanggan Nanda Teknik';
+                    document.getElementById('custEmail').innerText = r.customer.email || kw;
+                }
+
                 if(r.type === 'LIST') {
-                    globalHistoryData = r.data;
-                    renderHistory();
+                    renderHistory(r.data);
                     if(r.data.length > 0) quickView(r.data[0].id);
                 } else if(r.type === 'WO') { showWO(r.data); }
                 else if(r.type === 'Nota') { currentData = r.data; showNota(r.data); }
@@ -127,11 +152,11 @@
         } catch(e) { showLoader(false); }
     }
 
-    function renderHistory() {
+    function renderHistory(data) {
         document.getElementById('cardHistory').style.display = 'block';
-        document.getElementById('historyList').innerHTML = globalHistoryData.map(i => `
+        document.getElementById('historyList').innerHTML = data.map(i => `
             <div class="history-item" id="item-${i.id}" onclick="quickView('${i.id}')">
-                <div class="d-flex align-items-center">
+                <div class="d-flex">
                     <div class="bg-light p-2 rounded-3 me-3"><i class="fas ${i.type=='WO'?'fa-tools text-primary':'fa-file-invoice-dollar text-success'}"></i></div>
                     <div><div class="fw-bold small">${i.id}</div><div class="text-muted" style="font-size:10px">${i.judul}</div></div>
                 </div>
@@ -151,7 +176,16 @@
                 currentData = r.data;
                 document.getElementById('cardWO').style.display = 'none';
                 document.getElementById('cardNota').style.display = 'none';
-                if(r.type === 'WO') showWO(r.data);
+                document.getElementById('cardAntrian').style.display = 'none';
+                
+                if(r.type === 'WO') {
+                    showWO(r.data);
+                    // Munculke Antrian yen status dudu Selesai
+                    if(r.data.status !== 'Selesai') {
+                        document.getElementById('cardAntrian').style.display = 'block';
+                        document.getElementById('antrianStatus').innerText = r.data.status.toUpperCase();
+                    }
+                }
                 else if(r.type === 'Nota') showNota(r.data);
             }
         } catch(e) { showLoader(false); }
@@ -160,13 +194,12 @@
     function showWO(d) {
         document.getElementById('cardWO').style.display = 'block';
         document.getElementById('woIdDisplay').innerText = d.woId;
-        document.getElementById('woCustomer').innerText = d.email;
         document.getElementById('woStatus').innerText = d.status;
         document.getElementById('woHistory').innerHTML = d.history.map(h => `
             <div class="status-step">
-                <div class="small fw-bold text-dark">${h.status}</div>
+                <div class="small fw-bold">${h.status}</div>
                 <div class="text-muted" style="font-size:9px">${h.tgl}</div>
-                <div class="small text-secondary mt-1">${h.detail || '-'}</div>
+                <div class="small text-secondary">${h.detail || '-'}</div>
             </div>`).join('');
     }
 
@@ -179,64 +212,60 @@
             <td class="text-end fw-bold">Rp ${(it.qty * it.harga).toLocaleString('id-ID')}</td></tr>`).join('');
     }
 
-    // INTEGRASI FUNGSI PDF SMEAN
     function downloadNotaPDF() {
         if(!currentData) return;
         const data = currentData;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // --- 1. HEADER KOP SURAT ---
+        // --- 1. KOP SURAT ---
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
-        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
+        doc.setFontSize(16); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100); 
-        doc.text("Software, Network & Electrical Engineering", 45, 26);
-        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 35);
-        doc.setDrawColor(80, 80, 80); doc.line(15, 40, 195, 40);
+        doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 25);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi | WA: 082331201148", 45, 29);
+        doc.setDrawColor(80); doc.line(15, 35, 195, 35);
 
-        // --- 2. INFO SURAT ---
-        doc.setTextColor(0); doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text("NOTA LAYANAN / INVOICE", 105, 50, { align: "center" });
+        // --- 2. INFO NOTA ---
+        doc.setTextColor(0); doc.setFontSize(11); doc.setFont("helvetica", "bold");
+        doc.text("NOTA LAYANAN / INVOICE", 105, 45, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Nota    : #${data.notaId}`, 15, 60);
-        doc.text(`Tanggal     : ${data.tanggal}`, 15, 65);
-        doc.text("Kepada Yth:", 130, 60);
-        doc.setFont("helvetica", "bold"); doc.text(data.email, 130, 65);
+        doc.text(`No. Nota : #${data.notaId}`, 15, 55);
+        doc.text(`Tanggal  : ${data.tanggal}`, 15, 60);
+        doc.text(`Kepada   : ${data.email}`, 130, 55);
 
-        // --- 3. TABLE ITEMS ---
-        const tableBody = data.items.map((item, index) => [
-            index + 1, item.nama, item.qty, 
-            `Rp ${item.harga.toLocaleString('id-ID')}`, 
-            `Rp ${(item.harga * item.qty).toLocaleString('id-ID')}`
-        ]);
-
+        // --- 3. TABEL ---
         doc.autoTable({
-            startY: 75,
-            head: [['NO', 'DESKRIPSI PEKERJAAN', 'QTY', 'HARGA', 'JUMLAH']],
-            body: tableBody,
+            startY: 70,
+            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'TOTAL']],
+            body: data.items.map((it, i) => [i+1, it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]),
             theme: 'grid',
-            headStyles: { fillColor: [80, 80, 80], halign: 'center' },
-            columnStyles: { 0: {halign:'center'}, 2: {halign:'center'}, 3: {halign:'right'}, 4: {halign:'right'} }
+            headStyles: { fillColor: [40, 40, 40] }
         });
 
-        // --- 4. TOTAL & TTD ---
+        // --- 4. TOTAL & PEMBAYARAN ---
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL PEMBAYARAN: Rp ${data.total.toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
+        doc.text(`TOTAL TAGIHAN: Rp ${data.total.toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
         
-        const ttdY = finalY + 25;
-        doc.setFont("helvetica", "normal");
-        doc.text(`Banyuwangi, ${data.tanggal}`, 145, ttdY);
-        doc.text("Hormat Kami,", 145, ttdY + 5);
+        // INFO REKENING BCA
+        doc.setDrawColor(200); doc.rect(15, finalY + 5, 80, 20);
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text("Pembayaran Transfer ke:", 18, finalY + 10);
         doc.setFont("helvetica", "bold");
-        doc.text("NANDA KRISBIANTO", 145, ttdY + 25);
+        doc.text("Bank BCA: 1801826011", 18, finalY + 15);
+        doc.text("A/n NANDA KRISBIANTO", 18, finalY + 20);
 
-        doc.save(`Nota_NandaTeknik_${data.notaId}.pdf`);
+        // TTD
+        doc.text(`Banyuwangi, ${data.tanggal}`, 145, finalY + 15);
+        doc.text("Hormat Kami,", 145, finalY + 20);
+        doc.text("NANDA KRISBIANTO", 145, finalY + 40);
+
+        doc.save(`Nota_${data.notaId}.pdf`);
     }
 
-    function resetUI() { ['cardWO', 'cardNota', 'cardHistory', 'noData'].forEach(id => document.getElementById(id).style.display = 'none'); }
+    function resetUI() { ['cardWO', 'cardNota', 'cardHistory', 'cardAntrian', 'cardProfile', 'noData'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).style.display = 'none'; }); }
     function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
 </script>
 </body>
