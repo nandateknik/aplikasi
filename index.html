@@ -13,16 +13,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
-        body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 100px; }
+        :root { --p-blue: #0d6efd; --dark: #0046b8; --bg-soft: #f4f7fe; }
+        body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 110px; }
         
-        /* Header Lawas Style */
-        .header-brand { background: white; padding: 25px 20px; border-radius: 0 0 30px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); text-align: center; margin-bottom: 25px; }
-        .header-brand h4 { font-weight: 800; color: var(--p-blue); margin-bottom: 2px; letter-spacing: 1px; }
-        .header-brand p { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+        /* HEADER BIRU MEWAH (KONSISTEN) */
+        .header-brand { 
+            background: linear-gradient(135deg, var(--p-blue) 0%, var(--dark) 100%); 
+            padding: 40px 20px; 
+            text-align: center; 
+            color: white; 
+            border-radius: 0 0 35px 35px; 
+            margin-bottom: -40px; 
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
+        }
+        .header-brand h4 { font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; }
+        .header-brand p { font-size: 0.75rem; opacity: 0.8; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Search Box Overlap */
+        .search-container {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+        }
         
         /* Profile Card Mewah */
-        .profile-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.02); display: none; border: 1px solid #e2e8f0; }
+        .profile-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; border: 1px solid #e2e8f0; }
         .profile-icon { width: 45px; height: 45px; background: var(--p-blue); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
         /* Tabs */
@@ -37,54 +54,26 @@
         .table-grey th { color: #475569; font-size: 12px; text-transform: uppercase; }
         
         .history-item { border: 1px solid #f1f5f9; border-radius: 15px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: white; display: flex; justify-content: space-between; align-items: center; }
-        .history-item:hover { border-color: var(--p-blue); background: #f8faff; }
+        .history-item:hover { border-color: var(--p-blue); background: #f8faff; transform: translateY(-2px); }
 
         .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 15px; }
         .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
 
-        /* Bottom Nav */
-        /* CSS Tambahan ben Bottom Nav makin rapi */
-    .bottom-nav { 
-        position: fixed; 
-        bottom: 15px; 
-        left: 15px; 
-        right: 15px; 
-        background: rgba(255, 255, 255, 0.95); 
-        backdrop-filter: blur(10px); 
-        display: flex; 
-        justify-content: space-around; 
-        padding: 12px 5px; 
-        border-radius: 22px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-        z-index: 1000; 
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    
-    .nav-item { 
-        color: #94a3b8; 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        font-size: 9px; /* Ukuran teks ben gak tumpuk */
-        font-weight: 700; 
-        text-decoration: none; 
-        width: 25%; /* Dibagi 4 menu dadi pas rata */
-        transition: 0.3s;
-    }
-    
-    .nav-item i { 
-        font-size: 1.2rem; 
-        margin-bottom: 4px; 
-        transition: 0.3s;
-    }
-    
-    .nav-item.active { 
-        color: #0d6efd; /* Warna biru brandingmu */
-    }
-    
-    .nav-item:active i {
-        transform: scale(0.8); /* Efek klik kenyal */
-    }
+        /* BOTTOM NAV (KONSISTEN) */
+        .bottom-nav { 
+            position: fixed; bottom: 15px; left: 15px; right: 15px; 
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); 
+            display: flex; justify-content: space-around; padding: 12px 5px; 
+            border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .nav-item { 
+            color: #94a3b8; display: flex; flex-direction: column; align-items: center; 
+            font-size: 9px; font-weight: 700; text-decoration: none; width: 25%; transition: 0.3s;
+        }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item.active { color: var(--p-blue); }
+        .nav-item:active i { transform: scale(0.8); }
 
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
     </style>
@@ -93,7 +82,7 @@
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary"></div>
-    <span class="mt-2 fw-bold small">Sinkronisasi Data...</span>
+    <span class="mt-2 fw-bold small">Sinkronisasi Data Sam...</span>
 </div>
 
 <div class="header-brand">
@@ -102,9 +91,11 @@
 </div>
 
 <div class="container">
-    <div class="input-group mb-4 shadow-sm rounded-pill overflow-hidden bg-white p-1">
-        <input type="text" id="searchInput" class="form-control border-0 px-3" placeholder="Masukkan Email Anda">
-        <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="cariData()">Cari</button>
+    <div class="search-container">
+        <div class="input-group mb-4 shadow-lg rounded-pill overflow-hidden bg-white p-1" style="border: 1px solid #e0e0e0;">
+            <input type="text" id="searchInput" class="form-control border-0 px-3" placeholder="Masukkan Email Anda">
+            <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="cariData()">Cari</button>
+        </div>
     </div>
 
     <div id="cardProfile" class="profile-card animate__animated animate__fadeIn">
@@ -174,7 +165,6 @@
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx7XdXXusDSkurHqTynBRMxLBGg_Q_f18YGUVJ1VX7ca0o6-VMmSpbGwZzH5VqFsWJP/exec';
     let fullData = { jobs: [], notes: [], customer: {} };
 
-    // Hilangkan Jam, Mung Tanggal
     function cleanDate(str) {
         if (!str) return "-";
         const d = new Date(str);
@@ -189,7 +179,6 @@
         resetUI();
         
         try {
-            // Kita pakai action getDetailAll agar profile ditarik lengkap dari SHEET_PELANGGAN
             const res = await fetch(WEB_APP_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) 
@@ -198,7 +187,6 @@
             showLoader(false);
 
             if(r.success && r.type === 'LIST') {
-                // Mapping data dari getDetailAll ke struktur kita
                 fullData.customer = r.customer;
                 fullData.jobs = r.data.filter(i => i.type === 'WO');
                 fullData.notes = r.data.filter(i => i.type === 'Nota');
@@ -323,32 +311,26 @@
         const r = await res.json();
         const n = r.data;
         const c = r.customer;
-
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Kop Surat
         doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(13, 110, 253);
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
         doc.text("Engineering & Information Technology Solutions", 105, 26, { align: "center" });
         doc.text("Sukowidi Indah Residence D-5 | WA: 082331201148", 105, 31, { align: "center" });
         doc.line(15, 35, 195, 35);
-
-        // Body Info
         doc.setTextColor(0); doc.setFontSize(11); doc.setFont("helvetica", "bold");
         doc.text("NOTA TAGIHAN / INVOICE", 15, 45);
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`ID Transaksi : ${n.notaId}`, 15, 51);
         doc.text(`Tanggal      : ${cleanDate(n.tanggal)}`, 15, 56);
-
         doc.text("Kepada Yth:", 130, 45);
         doc.setFont("helvetica", "bold");
         doc.text(c.nama || "Pelanggan", 130, 51);
         doc.setFont("helvetica", "normal");
         doc.text("Di Tempat", 130, 56, { maxWidth: 65 });
 
-        // Table
         doc.autoTable({
             startY: 65,
             head: [['NO', 'DESKRIPSI LAYANAN', 'QTY', 'HARGA', 'SUBTOTAL']],
@@ -359,28 +341,21 @@
         });
 
         const finalY = doc.lastAutoTable.finalY + 10;
-        
-        // Garis Putus-putus
         doc.setLineDash([1, 1], 0);
         doc.line(130, finalY - 2, 195, finalY - 2);
-        doc.setLineDash([]); // Reset ke solid
-
+        doc.setLineDash([]);
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL PEMBAYARAN: Rp ${Number(n.total).toLocaleString()}`, 195, finalY + 5, { align: "right" });
-
-        // Rekening BCA (Balekne mrene cah)
         doc.setDrawColor(200); doc.rect(15, finalY + 10, 85, 22);
         doc.setFontSize(8); doc.setFont("helvetica", "normal");
         doc.text("Metode Pembayaran Transfer:", 18, finalY + 15);
         doc.setFont("helvetica", "bold");
         doc.text("BCA: 1801826011", 18, finalY + 21);
         doc.text("A/n NANDA KRISBIANTO", 18, finalY + 27);
-
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`Banyuwangi, ${cleanDate(n.tanggal)}`, 145, finalY + 20);
         doc.text("Hormat Kami,", 145, finalY + 25);
         doc.text("NANDA KRISBIANTO", 145, finalY + 50);
-
         doc.save(`Invoice_${n.notaId}.pdf`);
     }
 
