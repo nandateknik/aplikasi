@@ -2,318 +2,321 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Portal | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        :root { --p-blue: #0052D4; --p-dark: #1e293b; --bg-soft: #f1f5f9; }
-        body { background: var(--bg-soft); font-family: 'Inter', sans-serif; padding-bottom: 80px; }
-        
-        /* Header */
-        .portal-header { background: linear-gradient(135deg, #0052D4 0%, #4364F7 100%); padding: 40px 0 60px; color: white; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+        :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
+        body { background: var(--bg-soft); font-family: 'Segoe UI', Roboto, sans-serif; padding-bottom: 100px; }
         
         /* Bottom Navigation */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; border-top: 1px solid #eee; }
-        .nav-item-btn { border: none; background: none; color: #64748b; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 600; width: 25%; transition: 0.3s; }
-        .nav-item-btn i { font-size: 20px; margin-bottom: 4px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #eee; }
+        .nav-item-btn { border: none; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 600; width: 33%; transition: 0.3s; }
+        .nav-item-btn i { font-size: 22px; margin-bottom: 4px; }
         .nav-item-btn.active { color: var(--p-blue); }
 
-        /* Sections */
-        .section-page { display: none; animation: fadeIn 0.3s ease; }
-        .section-page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Ticketing Card */
+        .ticket-card { background: white; border-radius: 18px; border-left: 5px solid #ffc107; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: 0.2s; cursor: pointer; border-top: 1px solid #f1f1f1; border-right: 1px solid #f1f1f1; border-bottom: 1px solid #f1f1f1;}
+        .ticket-card:active { transform: scale(0.97); }
+        .ticket-status { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 8px; background: #fff7ed; color: #ea580c; }
 
-        /* UI Components */
-        .card-custom { background: white; border-radius: 15px; border: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .ticket-card { border-left: 4px solid var(--p-blue); padding: 15px; }
-        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+        /* General UI */
+        .section-title { font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .card-custom { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; overflow: hidden; background: white; margin-bottom: 20px; }
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* Form Search */
+        .search-box { background: white; border-radius: 15px; padding: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 20px; }
+        .search-box input { border: none; background: transparent; padding-left: 15px; }
+        .search-box input:focus { box-shadow: none; }
+
+        /* Timeline WO */
+        .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 20px; }
+        .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
     </style>
 </head>
 <body>
 
 <div class="loader-overlay" id="loader">
-    <div class="spinner-border text-primary mb-2"></div>
-    <span class="fw-bold">Loading...</span>
+    <div class="spinner-border text-primary" role="status"></div>
+    <span class="mt-3 fw-bold">Loading Data...</span>
 </div>
 
-<div class="portal-header text-center">
-    <h3 class="fw-bold mb-1">Nanda Teknik</h3>
-    <p class="small opacity-75" id="headerSub">Customer Digital Portal</p>
-</div>
+<div class="container py-4">
+    <div id="sectionDash" class="animate__animated animate__fadeIn">
+        <div class="section-title">
+            <i class="fas fa-tools text-primary"></i>
+            <span>Pekerjaan Berjalan</span>
+            <span class="badge bg-primary rounded-pill ms-auto" id="countTicket">0</span>
+        </div>
+        <div id="ticketList">
+            <div class="text-center py-5 text-muted small">Cek data pekerjaan aktif...</div>
+        </div>
+    </div>
 
-<div class="container mt-n4">
-    <section id="home" class="section-page active">
-        <div class="card-custom p-3 shadow-sm mb-4">
-            <label class="small fw-bold text-muted mb-2">CEK STATUS PESANAN</label>
-            <div class="input-group">
-                <input type="email" id="emailSearch" class="form-control bg-light border-0" placeholder="Masukkan Email Anda">
-                <button class="btn btn-primary" onclick="loadCustomerData()"><i class="fas fa-search"></i></button>
-            </div>
+    <div id="sectionSearch" style="display:none;" class="animate__animated animate__fadeIn">
+        <div class="section-title"><i class="fas fa-search text-primary"></i> Cari Riwayat</div>
+        <div class="search-box d-flex align-items-center">
+            <i class="fas fa-search text-muted ms-2"></i>
+            <input type="text" id="inputCari" class="form-control" placeholder="ID WO / Nomor Nota / Email...">
+            <button class="btn btn-primary rounded-pill px-4" onclick="prosesCari()">Cari</button>
         </div>
-        <div id="welcomeUser" class="mb-3 px-2 d-none">
-            <h5 class="fw-bold mb-0">Halo, <span id="userNameDisplay">Pelanggan</span>!</h5>
-            <small class="text-muted">Iki riwayat pekerjaanmu:</small>
-        </div>
-        <div id="homeContent">
-            <div class="text-center py-5 opacity-50">
-                <i class="fas fa-receipt fa-3x mb-3"></i>
-                <p>Belum ada data. Silakan cari berdasarkan email.</p>
-            </div>
-        </div>
-    </section>
 
-    <section id="register" class="section-page">
-        <div class="card-custom p-4">
-            <h5 class="fw-bold mb-3">Pendaftaran Pelanggan</h5>
-            <div class="mb-3">
-                <label class="small fw-bold">Nama Lengkap</label>
-                <input type="text" id="regNama" class="form-control" placeholder="Nama Anda">
-            </div>
-            <div class="mb-3">
-                <label class="small fw-bold">Email</label>
-                <input type="email" id="regEmail" class="form-control" placeholder="email@gmail.com">
-            </div>
-            <div class="mb-3">
-                <label class="small fw-bold">No. WhatsApp</label>
-                <input type="tel" id="regWa" class="form-control" placeholder="6281xxx">
-            </div>
-            <div class="mb-3">
-                <label class="small fw-bold">Alamat Lengkap</label>
-                <textarea id="regAlamat" class="form-control" rows="3"></textarea>
-            </div>
-            <button class="btn btn-primary w-100 py-2 fw-bold" onclick="handleRegister()">DAFTAR SEKARANG</button>
+        <div id="cardList" class="card-custom p-3">
+            <h6 class="fw-bold mb-3 small text-muted">HASIL PENCARIAN</h6>
+            <div id="listHasil"></div>
         </div>
-    </section>
 
-    <section id="booking" class="section-page">
-        <div class="card-custom p-4">
-            <h5 class="fw-bold mb-3">Booking Service</h5>
-            <p class="small text-muted">Layanan pengerjaan teknis langsung ke lokasi.</p>
-            <div class="mb-3">
-                <label class="small fw-bold">Email Terdaftar</label>
-                <input type="email" id="bookEmail" class="form-control">
+        <div id="cardWO" class="card-custom p-4">
+            <div class="d-flex justify-content-between mb-3">
+                <span id="woId" class="fw-bold text-primary">#WO-000</span>
+                <span id="woStatus" class="badge bg-warning text-dark">Status</span>
             </div>
-            <div class="mb-3">
-                <label class="small fw-bold">Jenis Pekerjaan</label>
-                <select id="bookJenis" class="form-select">
-                    <option value="Servis Komputer">Servis Komputer</option>
-                    <option value="Instalasi Jaringan">Instalasi Jaringan</option>
-                    <option value="Kelistrikan">Kelistrikan</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="small fw-bold">Rencana Tanggal</label>
-                <input type="date" id="bookTgl" class="form-control">
-            </div>
-            <button class="btn btn-success w-100 py-2 fw-bold" onclick="handleBooking()">BUAT PESANAN</button>
+            <h5 id="woJudul" class="fw-bold mb-1">--</h5>
+            <p id="woEmail" class="small text-muted mb-3">--</p>
+            <div class="p-3 bg-light rounded-3 mb-4 small" id="woAlamat">--</div>
+            <div id="woHistory"></div>
         </div>
-    </section>
 
-    <section id="profile" class="section-page">
-        <div class="card-custom p-4 text-center">
-            <div class="mb-3">
-                <i class="fas fa-user-circle fa-4x text-primary"></i>
+        <div id="cardNota" class="card-custom p-4">
+            <div class="text-center border-bottom pb-3 mb-3">
+                <h6 class="fw-bold mb-1">DATA NOTA TERIWAYAT</h6>
+                <span id="notaId" class="text-muted small">#NOTA-000</span>
             </div>
-            <h5 class="fw-bold" id="profNama">Guest User</h5>
-            <p class="small text-muted" id="profEmail">-</p>
+            <table class="table table-sm small">
+                <tbody id="notaTableBody"></tbody>
+            </table>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <span class="fw-bold">Total Akhir:</span>
+                <h5 class="fw-bold text-primary mb-0" id="notaTotal">Rp 0</h5>
+            </div>
             <hr>
-            <div class="text-start">
-                <label class="small fw-bold text-muted">Update Alamat</label>
-                <textarea id="profAlamat" class="form-control mb-3" rows="2"></textarea>
-                <button class="btn btn-warning w-100 fw-bold" onclick="handleUpdateProfile()">SIMPAN PERUBAHAN</button>
-            </div>
-        </div>
-    </section>
-</div>
-
-<nav class="bottom-nav">
-    <button class="nav-item-btn active" onclick="showPage('home', this)">
-        <i class="fas fa-home"></i>Home
-    </button>
-    <button class="nav-item-btn" onclick="showPage('register', this)">
-        <i class="fas fa-user-plus"></i>Daftar
-    </button>
-    <button class="nav-item-btn" onclick="showPage('booking', this)">
-        <i class="fas fa-calendar-alt"></i>Booking
-    </button>
-    <button class="nav-item-btn" onclick="showPage('profile', this)">
-        <i class="fas fa-user-cog"></i>Profil
-    </button>
-</nav>
-
-<div class="modal fade" id="modalDetail" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="fw-bold" id="detailTitle">Rincian</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="detailBody"></div>
-            <div class="modal-footer border-0">
-                <button id="btnDownloadPdf" class="btn btn-dark w-100 rounded-pill d-none">Download Nota (PDF)</button>
-            </div>
+            <button class="btn btn-success w-100 rounded-pill py-2 fw-bold" onclick="downloadNotaPDF()">
+                <i class="fas fa-file-pdf me-2"></i>DOWNLOAD NOTA (PDF)
+            </button>
         </div>
     </div>
 </div>
 
-<script src="assets/config.js"></script>
+<nav class="bottom-nav">
+    <button class="nav-item-btn active" onclick="switchNav('dash', this)">
+        <i class="fas fa-clipboard-list"></i>Ticketing
+    </button>
+    <button class="nav-item-btn" onclick="switchNav('search', this)">
+        <i class="fas fa-history"></i>Riwayat
+    </button>
+    <button class="nav-item-btn" onclick="window.location.href='login.html'">
+        <i class="fas fa-user-shield"></i>Admin
+    </button>
+</nav>
+
 <script>
-    const myModal = new bootstrap.Modal(document.getElementById('modalDetail'));
-    let currentData = { jobs: [], notes: [] };
+    // URL Web App Google Script Sampeyan
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec';
+    let currentNotaData = null;
 
-    function showPage(pageId, btn) {
-        document.querySelectorAll('.section-page').forEach(s => s.classList.remove('active'));
+    window.onload = () => {
+        loadRunningJobs();
+    };
+
+    function switchNav(target, btn) {
         document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
         btn.classList.add('active');
-        window.scrollTo(0,0);
+        document.getElementById('sectionDash').style.display = target === 'dash' ? 'block' : 'none';
+        document.getElementById('sectionSearch').style.display = target === 'search' ? 'block' : 'none';
+        if(target === 'dash') loadRunningJobs();
     }
 
-    async function loadCustomerData() {
-        const email = document.getElementById('emailSearch').value;
-        if(!email) return alert("Email kudu diisi!");
-        
-        toggleLoader(true);
+    // LOAD TICKETING (Pekerjaan Belum Selesai)
+    async function loadRunningJobs() {
+        const container = document.getElementById('ticketList');
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getCustomerHistory', email: email })
-            });
-            const result = await res.json();
-            toggleLoader(false);
-
-            if(result.success) {
-                currentData = result;
-                renderHome();
-                // Set Profile Data
-                document.getElementById('userNameDisplay').innerText = result.customer.nama;
-                document.getElementById('welcomeUser').classList.remove('d-none');
-                document.getElementById('profNama').innerText = result.customer.nama;
-                document.getElementById('profEmail').innerText = email;
+            const res = await fetch(`${SCRIPT_URL}?action=getRunningJobs`);
+            const r = await res.json();
+            if(r.success && r.data.length > 0) {
+                document.getElementById('countTicket').innerText = r.data.length;
+                container.innerHTML = r.data.map(item => `
+                    <div class="ticket-card animate__animated animate__fadeInUp" onclick="quickCheck('${item.id}')">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-primary">#${item.id}</span>
+                            <span class="ticket-status">${item.status}</span>
+                        </div>
+                        <div class="fw-bold text-dark">${item.judul}</div>
+                        <div class="text-muted small mt-1"><i class="far fa-user me-1"></i> ${item.email}</div>
+                    </div>
+                `).join('');
             } else {
-                alert("Data ora ketemu!");
+                container.innerHTML = '<div class="text-center py-5 opacity-50">Ora ono pekerjaan aktif, cah.</div>';
             }
-        } catch(e) { toggleLoader(false); alert("Gagal konek server!"); }
+        } catch(e) { container.innerHTML = 'Gagal memuat data.'; }
     }
 
-    function renderHome() {
-        const container = document.getElementById('homeContent');
-        let html = '<h6 class="fw-bold mt-4 px-2">Pekerjaan & Nota</h6>';
+    // PROSES CARI
+    async function prosesCari() {
+        const val = document.getElementById('inputCari').value;
+        if(!val) return;
         
-        currentData.jobs.forEach(j => {
-            html += `
-                <div class="card-custom ticket-card p-3 mb-2" onclick="showJobDetail('${j.id}')">
-                    <div class="d-flex justify-content-between">
-                        <small class="text-primary fw-bold">${j.id}</small>
-                        <span class="badge bg-light text-dark border">${j.status}</span>
-                    </div>
-                    <div class="fw-bold">${j.judul}</div>
-                    <small class="text-muted">${j.tanggal}</small>
-                </div>`;
-        });
-
-        currentData.notes.forEach(n => {
-            html += `
-                <div class="card-custom p-3 mb-2 border-start border-success border-4" onclick="showNoteDetail('${n.id}')">
-                    <div class="d-flex justify-content-between">
-                        <small class="text-success fw-bold">NOTA: ${n.id}</small>
-                        <small class="fw-bold">Rp ${Number(n.total).toLocaleString()}</small>
-                    </div>
-                    <div class="fw-bold">Nota Pembayaran Servis</div>
-                    <small class="text-muted">${n.tanggal} • <span class="text-success">${n.status}</span></small>
-                </div>`;
-        });
-        container.innerHTML = html;
-    }
-
-    function showJobDetail(id) {
-        const job = currentData.jobs.find(j => j.id === id);
-        let logs = JSON.parse(job.progress_json || '[]');
-        let logHtml = logs.map(l => `
-            <div class="mb-3 border-start ps-3 position-relative" style="margin-left: 5px;">
-                <div style="position:absolute; left:-6px; top:0; width:10px; height:10px; background:#0052D4; border-radius:50%"></div>
-                <div class="small fw-bold">${l.status}</div>
-                <div class="text-muted" style="font-size:11px">${l.tgl}</div>
-                <div class="small">${l.detail}</div>
-            </div>`).join('');
+        showLoader(true);
+        resetUI();
         
-        document.getElementById('detailTitle').innerText = "Progress Pekerjaan";
-        document.getElementById('detailBody').innerHTML = logHtml || "Belum ada log progress.";
-        document.getElementById('btnDownloadPdf').classList.add('d-none');
-        myModal.show();
+        try {
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getDetailAll', keyword: val })
+            });
+            const r = await res.json();
+            showLoader(false);
+
+            if(r.success) {
+                if(r.type === 'LIST') renderList(r.data);
+                else if(r.type === 'WO') renderWO(r.data);
+                else if(r.type === 'Nota') renderNota(r.data);
+            } else {
+                Swal.fire('Kosong', 'Data ora ketemu cah.', 'info');
+            }
+        } catch(e) { showLoader(false); }
     }
 
-    function showNoteDetail(id) {
-        const n = currentData.notes.find(n => n.id === id);
-        let items = JSON.parse(n.items_json || '[]');
-        let itemHtml = items.map(it => `
-            <div class="d-flex justify-content-between small mb-1">
-                <span>${it.nama} (x${it.qty})</span>
-                <span>${(it.harga * it.qty).toLocaleString()}</span>
-            </div>`).join('');
-
-        document.getElementById('detailTitle').innerText = "Rincian Nota";
-        document.getElementById('detailBody').innerHTML = `
-            <div class="bg-light p-3 rounded mb-3">
-                <div class="fw-bold mb-2">Item Pekerjaan:</div>
-                ${itemHtml}
-                <hr>
-                <div class="d-flex justify-content-between fw-bold">
-                    <span>TOTAL</span>
-                    <span class="text-primary">Rp ${Number(n.total).toLocaleString()}</span>
+    function renderList(data) {
+        document.getElementById('cardList').style.display = 'block';
+        document.getElementById('listHasil').innerHTML = data.map(i => `
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center" onclick="quickCheck('${i.id}')" style="cursor:pointer">
+                <div>
+                    <div class="fw-bold small">${i.id}</div>
+                    <div class="text-muted" style="font-size:11px">${i.judul}</div>
                 </div>
+                <i class="fas fa-chevron-right text-muted fa-xs"></i>
             </div>
-            <p class="small text-muted text-center">Simpan nota iki minangka bukti pembayaran sing sah.</p>
-        `;
-        const btn = document.getElementById('btnDownloadPdf');
-        btn.classList.remove('d-none');
-        btn.onclick = () => generatePDF(n);
-        myModal.show();
+        `).join('');
     }
 
-    async function handleRegister() {
-        const data = {
-            action: 'createPelanggan',
-            nama: document.getElementById('regNama').value,
-            email: document.getElementById('regEmail').value,
-            wa: document.getElementById('regWa').value,
-            alamat: document.getElementById('regAlamat').value
-        };
-        toggleLoader(true);
-        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(data)});
-        toggleLoader(false);
-        alert("Pendaftaran Berhasil! Saiki sampeyan iso login neng Home.");
-        location.reload();
+    function renderWO(d) {
+        document.getElementById('cardWO').style.display = 'block';
+        document.getElementById('woId').innerText = "#" + d.woId;
+        document.getElementById('woStatus').innerText = d.status;
+        document.getElementById('woJudul').innerText = d.judul || 'Service Maintenance';
+        document.getElementById('woEmail').innerText = d.email;
+        document.getElementById('woAlamat').innerText = d.alamat;
+        document.getElementById('woHistory').innerHTML = d.history.map(h => `
+            <div class="status-step">
+                <div class="small fw-bold">${h.status}</div>
+                <div class="text-muted" style="font-size:10px">${h.tgl}</div>
+                <div class="small text-secondary">${h.detail || '-'}</div>
+            </div>
+        `).join('');
     }
 
-    function toggleLoader(show) {
-        document.getElementById('loader').style.display = show ? 'flex' : 'none';
+    function renderNota(d) {
+        currentNotaData = d;
+        document.getElementById('cardNota').style.display = 'block';
+        document.getElementById('notaId').innerText = "#" + d.notaId;
+        document.getElementById('notaTotal').innerText = "Rp " + d.total.toLocaleString('id-ID');
+        document.getElementById('notaTableBody').innerHTML = d.items.map(it => `
+            <tr>
+                <td>${it.nama}</td>
+                <td class="text-end text-nowrap">x${it.qty}</td>
+                <td class="text-end fw-bold">Rp ${(it.qty * it.harga).toLocaleString('id-ID')}</td>
+            </tr>
+        `).join('');
     }
 
-    // PDF Generator (Header ala Penawaran)
-    function generatePDF(note) {
+    // GENERATE PDF (FORMAT PENAWARAN)
+    function downloadNotaPDF() {
+        if(!currentNotaData) return;
+        const d = currentNotaData;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        let items = JSON.parse(note.items_json || '[]');
 
-        doc.setFontSize(18).setTextColor(0, 82, 212).text(CONFIG.BRAND.name, 14, 20);
-        doc.setFontSize(9).setTextColor(100).text(CONFIG.BRAND.address, 14, 27);
-        doc.line(14, 35, 196, 35);
+        // 1. KOP SURAT (Samakan dgn Penawaran)
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
+        doc.setTextColor(13, 110, 253);
+        doc.text("NANDA TEKNIK BANYUWANGI", 15, 20);
         
-        doc.setFontSize(14).setTextColor(0).text("NOTA PEMBAYARAN", 14, 45);
-        doc.setFontSize(10).text(`ID: ${note.id} | Tgl: ${note.tanggal}`, 14, 52);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 15, 26);
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 15, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 15, 35);
+        
+        doc.setDrawColor(80);
+        doc.setLineWidth(0.5);
+        doc.line(15, 39, 195, 39);
+        doc.setLineWidth(0.1);
+        doc.line(15, 40, 195, 40);
 
-        const body = items.map((it, i) => [i+1, it.nama, it.qty, it.harga.toLocaleString(), (it.harga*it.qty).toLocaleString()]);
-        doc.autoTable({ startY: 60, head: [['No', 'Item', 'Qty', 'Harga', 'Subtotal']], body: body });
+        // 2. INFO NOTA
+        doc.setTextColor(0);
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("NOTA LAYANAN / INVOICE", 105, 50, { align: "center" });
+
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Nota : #${d.notaId}`, 15, 60);
+        doc.text(`Tanggal  : ${d.tanggal}`, 15, 65);
         
-        doc.text(`Total Tagihan: Rp ${Number(note.total).toLocaleString()}`, 196, doc.lastAutoTable.finalY + 10, {align:'right'});
-        doc.save(`Nota_${note.id}.pdf`);
+        doc.setFont("helvetica", "bold");
+        doc.text("Kepada Yth:", 130, 60);
+        doc.text(d.email, 130, 65);
+
+        // 3. TABLE
+        const tableBody = d.items.map((it, i) => [
+            i + 1, it.nama, it.qty, 
+            `Rp ${it.harga.toLocaleString('id-ID')}`, 
+            `Rp ${(it.qty * it.harga).toLocaleString('id-ID')}`
+        ]);
+
+        doc.autoTable({
+            startY: 75,
+            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [80, 80, 80], halign: 'center' },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                2: { halign: 'center', cellWidth: 15 },
+                3: { halign: 'right', cellWidth: 35 },
+                4: { halign: 'right', cellWidth: 35 }
+            }
+        });
+
+        // 4. TOTAL
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFillColor(240, 240, 240);
+        doc.rect(130, finalY - 5, 65, 10, 'F');
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL: Rp ${d.total.toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
+
+        // 5. TTD
+        doc.setFont("helvetica", "normal");
+        doc.text("Hormat Kami,", 150, finalY + 30);
+        doc.setFont("helvetica", "bold");
+        doc.text("NANDA KRISBIANTO", 150, finalY + 55);
+        doc.setFont("helvetica", "normal");
+        doc.text("( Owner Nanda Teknik )", 150, finalY + 60);
+
+        doc.save(`Nota_NandaTeknik_${d.notaId}.pdf`);
+    }
+
+    function quickCheck(id) {
+        switchNav('search', document.querySelectorAll('.nav-item-btn')[1]);
+        document.getElementById('inputCari').value = id;
+        prosesCari();
+    }
+
+    function resetUI() {
+        ['cardList', 'cardWO', 'cardNota'].forEach(id => document.getElementById(id).style.display = 'none');
+    }
+
+    function showLoader(s) {
+        document.getElementById('loader').style.display = s ? 'flex' : 'none';
     }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
