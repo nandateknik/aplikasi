@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Customer - Nanda Teknik</title>
+    <title>Customer Portal - Nanda Teknik</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,27 +13,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --p-blue: #0d6efd; --bg-soft: #f8faff; }
-        body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; }
+        :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
+        body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 100px; }
         
         .header-brand { background: white; padding: 20px; border-radius: 0 0 25px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
         
-        /* Profile Card Keren */
-        .profile-card { background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%); border-radius: 20px; border: 1px solid #e0eaff; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.02); display: none; }
-        .profile-icon { width: 50px; height: 50px; background: var(--p-blue); color: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        /* Profile Card */
+        .profile-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.02); display: none; border-top: 5px solid var(--p-blue); }
+        .profile-icon { width: 50px; height: 50px; background: #eef2ff; color: var(--p-blue); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
 
-        /* Tab Style */
-        .nav-tabs-custom { display: flex; background: #e9ecef; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
-        .nav-link-custom { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; color: #6c757d; transition: 0.3s; border: none; background: none; }
+        /* Tab Switcher */
+        .nav-tabs-custom { display: flex; background: #e2e8f0; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
+        .nav-link-custom { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 700; color: #64748b; transition: 0.3s; border: none; background: none; font-size: 14px; }
         .nav-link-custom.active { background: white; color: var(--p-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
         .card-custom { border-radius: 20px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.04); background: white; padding: 20px; margin-bottom: 15px; display: none; }
         
-        .history-item { border: 1px solid #f1f5f9; border-radius: 15px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: white; }
-        .history-item:hover { border-color: var(--p-blue); background: #f0f7ff; }
+        .history-item { border: 1px solid #f1f5f9; border-radius: 15px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: white; display: flex; justify-content: space-between; align-items: center; }
+        .history-item:hover { border-color: var(--p-blue); background: #f8faff; }
 
-        .status-step { border-left: 2px solid #dee2e6; padding-left: 20px; position: relative; padding-bottom: 15px; }
+        /* Timeline */
+        .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 15px; }
         .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
+
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #f1f5f9; }
+        .nav-item { border: none; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; text-decoration: none; width: 33%; }
+        .nav-item.active { color: var(--p-blue); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
 
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
     </style>
@@ -42,39 +49,48 @@
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary"></div>
-    <span class="mt-2 fw-bold">Sinkronisasi...</span>
+    <span class="mt-2 fw-bold small">Loading Data...</span>
 </div>
 
 <div class="header-brand">
     <h4 class="fw-bold text-primary mb-0">NANDA TEKNIK</h4>
-    <p class="small text-muted mb-0">Customer Portal v5.0</p>
+    <p class="small text-muted mb-0">Engineering & IT Solutions</p>
 </div>
 
 <div class="container">
     <div class="input-group mb-4 shadow-sm rounded-pill overflow-hidden bg-white p-1">
-        <input type="text" id="searchInput" class="form-control border-0 px-3" placeholder="Masukkan Email atau ID">
-        <button class="btn btn-primary rounded-pill px-4" onclick="cariData()">Cari</button>
+        <input type="text" id="searchInput" class="form-control border-0 px-3" placeholder="Email / ID WO / ID Nota">
+        <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="cariData()">Cari</button>
     </div>
 
     <div id="cardProfile" class="profile-card animate__animated animate__fadeIn">
-        <div class="d-flex align-items-center mb-3">
-            <div class="profile-icon me-3"><i class="fas fa-user"></i></div>
+        <div class="d-flex align-items-center mb-4">
+            <div class="profile-icon me-3"><i class="fas fa-id-card"></i></div>
             <div>
-                <h5 id="pNama" class="fw-bold mb-0 text-dark">--</h5>
+                <h5 id="pNama" class="fw-bold mb-0">--</h5>
                 <small id="pEmail" class="text-primary fw-bold">--</small>
             </div>
         </div>
-        <div class="row g-2">
-            <div class="col-6"><small class="text-muted d-block">WhatsApp</small><span id="pWa" class="small fw-bold">--</span></div>
-            <div class="col-6"><small class="text-muted d-block">Tgl Lahir</small><span id="pTgl" class="small fw-bold">--</span></div>
-            <div class="col-12 mt-2"><small class="text-muted d-block">Alamat Rumah</small><span id="pAlamat" class="small fw-bold">--</span></div>
+        <div class="row g-3">
+            <div class="col-6">
+                <small class="text-muted d-block"><i class="fab fa-whatsapp me-1"></i> WhatsApp</small>
+                <span id="pWa" class="small fw-bold text-dark">--</span>
+            </div>
+            <div class="col-6">
+                <small class="text-muted d-block"><i class="fas fa-calendar-alt me-1"></i> Terdaftar</small>
+                <span id="pTgl" class="small fw-bold text-dark">--</span>
+            </div>
+            <div class="col-12">
+                <small class="text-muted d-block"><i class="fas fa-map-marker-alt me-1"></i> Alamat Rumah</small>
+                <span id="pAlamat" class="small fw-bold text-dark">--</span>
+            </div>
         </div>
     </div>
 
     <div id="tabContainer" style="display: none;">
         <div class="nav-tabs-custom">
-            <button class="nav-link-custom active" id="tabWO" onclick="switchTab('WO')">Pekerjaan</button>
-            <button class="nav-link-custom" id="tabNota" onclick="switchTab('Nota')">Nota & Penawaran</button>
+            <button class="nav-link-custom active" id="tabWO" onclick="switchTab('WO')">RIWAYAT KERJA</button>
+            <button class="nav-link-custom" id="tabNota" onclick="switchTab('Nota')">NOTA & BIAYA</button>
         </div>
     </div>
 
@@ -87,25 +103,37 @@
 
     <div id="noData" class="text-center py-5" style="display:none;">
         <i class="fas fa-search fa-3x text-muted mb-3 opacity-25"></i>
-        <h6 class="text-muted">Data ora ketemu, cah!</h6>
+        <h6 class="text-muted fw-bold">Data ora ketemu, cah!</h6>
     </div>
 </div>
 
+<nav class="bottom-nav">
+    <a href="javascript:void(0)" class="nav-item active" onclick="location.reload()">
+        <i class="fas fa-home"></i>Portal
+    </a>
+    <a href="https://wa.me/6282331201148" class="nav-item">
+        <i class="fab fa-whatsapp"></i>WhatsApp
+    </a>
+    <a href="login.html" class="nav-item">
+        <i class="fas fa-user-shield"></i>Admin
+    </a>
+</nav>
+
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx7XdXXusDSkurHqTynBRMxLBGg_Q_f18YGUVJ1VX7ca0o6-VMmSpbGwZzH5VqFsWJP/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec';
     let fullData = { jobs: [], notes: [], customer: {} };
 
+    // Fix Tanggal 1970 & Format Indonesia
     function formatTgl(tglRaw) {
         if (!tglRaw) return "-";
         const d = new Date(tglRaw);
-        if (isNaN(d.getTime())) return tglRaw; // Nek dudu tanggal balikne asline
+        if (isNaN(d.getTime())) return tglRaw; 
         return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
         if(!kw) return;
-        
         showLoader(true);
         resetUI();
         
@@ -119,11 +147,8 @@
 
             if(r.success) {
                 fullData = r;
-                // Reverse data ben sing paling anyar ning dhuwur
-                fullData.jobs = r.jobs || [];
-                fullData.notes = r.notes || [];
-                
-                showProfile(r.customer);
+                // Backend-mu wis nge-reverse, kene kari nampilne
+                showProfile(r.customer, kw);
                 document.getElementById('tabContainer').style.display = 'flex';
                 switchTab('WO');
             } else {
@@ -131,16 +156,16 @@
             }
         } catch(e) {
             showLoader(false);
-            console.error(e);
+            alert("Gagal koneksi ke server.");
         }
     }
 
-    function showProfile(c) {
+    function showProfile(c, email) {
         document.getElementById('cardProfile').style.display = 'block';
-        document.getElementById('pNama').innerText = c.nama || "-";
-        document.getElementById('pEmail').innerText = document.getElementById('searchInput').value;
+        document.getElementById('pNama').innerText = c.nama || "Pelanggan";
+        document.getElementById('pEmail').innerText = email;
         document.getElementById('pWa').innerText = c.wa || "-";
-        document.getElementById('pTgl').innerText = formatTgl(c.tanggal_lahir); // Sesuaikan jeneng kolom neng backend
+        document.getElementById('pTgl').innerText = formatTgl(c.tanggal); // Kolom 3: Tanggal Daftar
         document.getElementById('pAlamat').innerText = c.alamat || "-";
     }
 
@@ -152,7 +177,7 @@
 
         if(type === 'WO') {
             document.getElementById('tabWO').classList.add('active');
-            renderList('listPekerjaan', fullData.jobs, 'WO');
+            renderList('listPekerjaan', fullData.jobs, 'Kerja');
         } else {
             document.getElementById('tabNota').classList.add('active');
             renderList('listNota', fullData.notes, 'Nota');
@@ -163,18 +188,18 @@
         const target = document.getElementById(targetId);
         target.style.display = 'block';
         if(data.length === 0) {
-            target.innerHTML = `<p class="text-center text-muted mt-3">Ora ono riwayat ${type}</p>`;
+            target.innerHTML = `<div class="text-center p-4 text-muted small">Ora ono data ${type}</div>`;
             return;
         }
 
         target.innerHTML = data.map(item => `
-            <div class="history-item d-flex justify-content-between align-items-center" onclick="showDetail('${item.id}', '${type}')">
+            <div class="history-item animate__animated animate__fadeInLeft" onclick="showDetail('${item.id}', '${type}')">
                 <div>
-                    <span class="badge bg-light text-primary mb-1">${item.id}</span>
-                    <div class="fw-bold">${item.judul || 'Layanan Teknik'}</div>
-                    <small class="text-muted">${formatTgl(item.tanggal)}</small>
+                    <span class="badge bg-light text-primary mb-1" style="font-size:10px">${item.id}</span>
+                    <div class="fw-bold" style="font-size:14px">${item.judul || 'Layanan Servis'}</div>
+                    <small class="text-muted" style="font-size:11px">${formatTgl(item.tanggal)}</small>
                 </div>
-                <span class="badge rounded-pill ${item.status === 'Lunas' || item.status === 'Selesai' ? 'bg-success' : 'bg-warning text-dark'}">${item.status}</span>
+                <i class="fas fa-chevron-right text-muted fa-xs"></i>
             </div>
         `).join('');
     }
@@ -184,7 +209,7 @@
         const content = document.getElementById('detailContent');
         detailBox.style.display = 'block';
         
-        if(type === 'WO') {
+        if(type === 'Kerja') {
             const wo = fullData.jobs.find(j => j.id === id);
             let historyHTML = "";
             try {
@@ -193,18 +218,21 @@
                     <div class="status-step">
                         <small class="fw-bold d-block">${h.status}</small>
                         <small class="text-muted" style="font-size:10px">${formatTgl(h.tgl)}</small>
-                        <div class="small">${h.detail || '-'}</div>
+                        <div class="small text-secondary">${h.detail || '-'}</div>
                     </div>
                 `).join('');
-            } catch(e) { historyHTML = "Data progress kosong"; }
+            } catch(e) { historyHTML = "Log progress tidak tersedia"; }
 
             content.innerHTML = `
-                <h5 class="fw-bold mb-3">Detail Pekerjaan ${wo.id}</h5>
-                <div class="bg-light p-3 rounded-4 mb-3 small">
-                    <strong>Pekerjaan:</strong> ${wo.judul}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold m-0 text-primary">${wo.id}</h6>
+                    <span class="badge bg-primary rounded-pill">${wo.status}</span>
                 </div>
-                <h6 class="fw-bold small mb-3">Log History:</h6>
-                ${historyHTML}
+                <div class="bg-light p-3 rounded-4 mb-3 small">
+                    <strong>Pekerjaan:</strong><br>${wo.judul}
+                </div>
+                <h6 class="fw-bold small mb-3 text-muted">LOG PROGRESS:</h6>
+                <div class="ms-2">${historyHTML}</div>
             `;
         } else {
             const nota = fullData.notes.find(n => n.id === id);
@@ -213,84 +241,85 @@
             
             content.innerHTML = `
                 <div class="text-center mb-4">
-                    <h6 class="fw-bold mb-0">${nota.id.startsWith('OFF') ? 'PENAWARAN' : 'INVOICE'}</h6>
-                    <small class="text-muted">${formatTgl(nota.tanggal)}</small>
+                    <h6 class="fw-bold mb-0 text-primary">${nota.id.startsWith('OFF') ? 'PENAWARAN' : 'INVOICE'}</h6>
+                    <small class="text-muted fw-bold">#${nota.id} | ${formatTgl(nota.tanggal)}</small>
                 </div>
                 <table class="table table-sm small">
-                    ${items.map(it => `<tr><td>${it.nama}<br><small>${it.qty} x ${Number(it.harga).toLocaleString()}</small></td><td class="text-end fw-bold">Rp ${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('')}
+                    <thead class="table-light"><tr><th>Item</th><th class="text-end">Total</th></tr></thead>
+                    <tbody>
+                    ${items.map(it => `<tr><td>${it.nama}<br><small class="text-muted">${it.qty} x ${Number(it.harga).toLocaleString()}</small></td><td class="text-end fw-bold">Rp ${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('')}
+                    </tbody>
                 </table>
-                <div class="d-flex justify-content-between fw-bold p-2 bg-light rounded mt-2">
-                    <span>Total</span><span>Rp ${Number(nota.total).toLocaleString()}</span>
+                <div class="d-flex justify-content-between fw-bold p-3 bg-primary bg-opacity-10 text-primary rounded-4 mt-3">
+                    <span>TOTAL</span><span>Rp ${Number(nota.total).toLocaleString()}</span>
                 </div>
-                <button class="btn btn-success w-100 rounded-pill mt-4 fw-bold" onclick="generatePDFNota('${nota.id}')">
-                    <i class="fas fa-file-pdf me-2"></i> Download PDF
+                <button class="btn btn-success w-100 rounded-pill mt-4 py-3 fw-bold shadow-sm" onclick="generatePDFNota('${nota.id}')">
+                    <i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF RESMI
                 </button>
             `;
         }
         detailBox.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // FUNGSI PDF INTEGRATED
     function generatePDFNota(id) {
         const nota = fullData.notes.find(n => n.id === id);
         const cust = fullData.customer;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Kop Surat
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 105, 26, { align: "center" });
+        doc.text("Sukowidi Indah Residence D-5 | WA: 082331201148", 105, 26, { align: "center" });
         doc.line(15, 30, 195, 30);
 
-        // Info
+        const judulDoc = id.startsWith('OFF') ? "SURAT PENAWARAN HARGA" : "NOTA TAGIHAN / INVOICE";
         doc.setFontSize(11); doc.setFont("helvetica", "bold");
-        doc.text(id.startsWith('OFF') ? "SURAT PENAWARAN" : "NOTA LAYANAN", 15, 40);
+        doc.text(judulDoc, 15, 42);
         
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No: ${id}`, 15, 46);
-        doc.text(`Tanggal: ${formatTgl(nota.tanggal)}`, 15, 51);
+        doc.text(`ID Dokumen: ${id}`, 15, 48);
+        doc.text(`Tanggal   : ${formatTgl(nota.tanggal)}`, 15, 53);
 
-        doc.text("Kepada Yth:", 130, 40);
+        doc.text("KEPADA YTH:", 130, 42);
         doc.setFont("helvetica", "bold");
-        doc.text(cust.nama || "Pelanggan", 130, 46);
+        doc.text(cust.nama || "Pelanggan Setia", 130, 48);
         doc.setFont("helvetica", "normal");
-        doc.text(cust.alamat || "-", 130, 51, { maxWidth: 60 });
+        doc.text(cust.alamat || "-", 130, 53, { maxWidth: 60 });
 
-        // Table
         const items = JSON.parse(nota.items_json);
         doc.autoTable({
             startY: 65,
-            head: [['ITEM', 'QTY', 'HARGA', 'SUBTOTAL']],
-            body: items.map(it => [it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]),
+            head: [['NO', 'DESKRIPSI', 'QTY', 'SUBTOTAL']],
+            body: items.map((it, i) => [i+1, it.nama, it.qty, (it.qty*it.harga).toLocaleString()]),
             theme: 'grid',
             headStyles: { fillColor: [13, 110, 253] }
         });
 
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL PEMBAYARAN: Rp ${Number(nota.total).toLocaleString()}`, 195, finalY, { align: "right" });
+        doc.text(`TOTAL BAYAR: Rp ${Number(nota.total).toLocaleString()}`, 195, finalY, { align: "right" });
 
-        // Rekening BCA
         if(!id.startsWith('OFF')) {
-            doc.setDrawColor(200); doc.rect(15, finalY + 5, 80, 20);
+            doc.setDrawColor(200); doc.rect(15, finalY + 5, 85, 22);
             doc.setFontSize(8); doc.setFont("helvetica", "normal");
-            doc.text("Transfer ke Rekening BCA:", 18, finalY + 11);
+            doc.text("Silahkan Transfer ke Rekening BCA:", 18, finalY + 11);
             doc.setFont("helvetica", "bold");
-            doc.text("1801826011 - NANDA KRISBIANTO", 18, finalY + 17);
+            doc.text("1801826011", 18, finalY + 17);
+            doc.text("A/n NANDA KRISBIANTO", 18, finalY + 23);
         }
+
+        doc.text(`Banyuwangi, ${formatTgl(nota.tanggal)}`, 145, finalY + 15);
+        doc.text("Hormat Kami,", 145, finalY + 20);
+        doc.text("NANDA KRISBIANTO", 145, finalY + 45);
 
         doc.save(`${id}_NandaTeknik.pdf`);
     }
 
     function resetUI() {
-        document.getElementById('cardProfile').style.display = 'none';
-        document.getElementById('tabContainer').style.display = 'none';
-        document.getElementById('listPekerjaan').style.display = 'none';
-        document.getElementById('listNota').style.display = 'none';
-        document.getElementById('detailView').style.display = 'none';
-        document.getElementById('noData').style.display = 'none';
+        ['cardProfile', 'tabContainer', 'listPekerjaan', 'listNota', 'detailView', 'noData'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
     }
 
     function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
