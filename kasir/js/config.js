@@ -5,7 +5,7 @@ db.version(1).stores({
     settings: 'id'
 });
 
-const URL_API = 'URL_APPS_SCRIPT_ANDA';
+const URL_API = 'https://script.google.com/macros/s/AKfycbyDo9YNJ-z_T51k8gtJc8lxl8LUft1OED2Sm5ExkT6RA-SOvuP3WRHr9Yd2v2LRlZ7e/exec';
 
 // Fungsi proteksi halaman
 const session = JSON.parse(localStorage.getItem("pos_session"));
