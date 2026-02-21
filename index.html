@@ -8,315 +8,282 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
-        body { background: var(--bg-soft); font-family: 'Segoe UI', Roboto, sans-serif; padding-bottom: 100px; }
+        /* CSS PADHA KARO DESAIN PENAWARAN PELANGGAN */
+        body { background: #f4f7fe; padding-bottom: 110px; font-family: 'Segoe UI', Tahoma, sans-serif; }
         
-        /* Bottom Navigation */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #eee; }
-        .nav-item-btn { border: none; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 600; width: 33%; transition: 0.3s; }
-        .nav-item-btn i { font-size: 22px; margin-bottom: 4px; }
-        .nav-item-btn.active { color: var(--p-blue); }
+        /* HEADER / BRAND SECTION */
+        .brand-section { 
+            text-align: center; margin-bottom: 25px; background: white; 
+            padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); 
+            margin-top: 20px;
+        }
+        .brand-section h5 { font-weight: 800; color: #0d6efd; margin-bottom: 2px; }
+        .brand-subtitle { font-size: 0.75rem; color: #64748b; font-weight: 600; letter-spacing: 1px; }
 
-        /* Ticketing Card */
-        .ticket-card { background: white; border-radius: 18px; border-left: 5px solid #ffc107; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: 0.2s; cursor: pointer; border-top: 1px solid #f1f1f1; border-right: 1px solid #f1f1f1; border-bottom: 1px solid #f1f1f1;}
-        .ticket-card:active { transform: scale(0.97); }
-        .ticket-status { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 8px; background: #fff7ed; color: #ea580c; }
-
-        /* General UI */
-        .section-title { font-weight: 800; color: #1e293b; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .card-custom { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: none; overflow: hidden; background: white; margin-bottom: 20px; }
-        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        /* CARDS (Identik karo Quote-Card) */
+        .custom-card {
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: transform 0.2s; position: relative; border: 1px solid rgba(0,0,0,0.02);
+        }
+        .custom-card:active { transform: scale(0.97); }
         
-        /* Form Search */
-        .search-box { background: white; border-radius: 15px; padding: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 20px; }
-        .search-box input { border: none; background: transparent; padding-left: 15px; }
-        .search-box input:focus { box-shadow: none; }
+        .card-id { font-size: 0.75rem; font-weight: 700; color: #94a3b8; }
+        .card-title-text { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 5px; }
+        .card-client { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 5px; }
+        
+        .card-footer-custom {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;
+        }
 
-        /* Timeline WO */
-        .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 20px; }
-        .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
+        /* STATUS BADGES */
+        .badge-status { padding: 6px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .status-pending { background: #fff7ed; color: #ea580c; }
+        .status-approved { background: #f0fdf4; color: #16a34a; }
+        .status-sent { background: #eff6ff; color: #2563eb; }
+
+        /* SEARCH BOX */
+        .filter-section { 
+            background: white; border-radius: 20px; padding: 15px; 
+            margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); 
+        }
+
+        /* BOTTOM NAVIGATION (IDENTIK KARO PENAWARAN) */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; background: white; 
+            display: flex; justify-content: space-around; padding: 15px 0; 
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #f1f5f9; 
+        }
+        .nav-item-btn { 
+            border: none; background: none; color: #94a3b8; display: flex; 
+            flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; 
+            width: 33%; transition: 0.3s;
+        }
+        .nav-item-btn i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item-btn.active { color: #0d6efd; }
+
+        /* LOADER */
+        .loader-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; 
+            align-items: center; justify-content: center; 
+        }
+
+        /* TIMELINE WO */
+        .timeline-item { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 20px; }
+        .timeline-item::before { 
+            content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; 
+            border-radius: 50%; background: #0d6efd; border: 2px solid white; box-shadow: 0 0 0 2px #0d6efd;
+        }
     </style>
 </head>
 <body>
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary" role="status"></div>
-    <span class="mt-3 fw-bold">Loading Data...</span>
 </div>
 
-<div class="container py-4">
-    <div id="sectionDash" class="animate__animated animate__fadeIn">
-        <div class="section-title">
-            <i class="fas fa-tools text-primary"></i>
-            <span>Pekerjaan Berjalan</span>
-            <span class="badge bg-primary rounded-pill ms-auto" id="countTicket">0</span>
+<div class="container">
+    <div class="brand-section animate__animated animate__fadeIn">
+        <h5>NANDA TEKNIK BANYUWANGI</h5>
+        <div class="brand-subtitle">SOFTWARE, NETWORK & ELECTRICAL ENGINEERING</div>
+    </div>
+
+    <div id="section-dash">
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+            <h6 class="fw-bold m-0"><i class="fas fa-ticket-alt me-2 text-primary"></i>Tugas Aktif</h6>
+            <span class="badge bg-primary rounded-pill px-3" id="count-ticket">0</span>
         </div>
-        <div id="ticketList">
-            <div class="text-center py-5 text-muted small">Cek data pekerjaan aktif...</div>
+        <div id="container-ticket">
+            <div class="text-center p-5 opacity-50 small">Memuat data aktif...</div>
         </div>
     </div>
 
-    <div id="sectionSearch" style="display:none;" class="animate__animated animate__fadeIn">
-        <div class="section-title"><i class="fas fa-search text-primary"></i> Cari Riwayat</div>
-        <div class="search-box d-flex align-items-center">
-            <i class="fas fa-search text-muted ms-2"></i>
-            <input type="text" id="inputCari" class="form-control" placeholder="ID WO / Nomor Nota / Email...">
-            <button class="btn btn-primary rounded-pill px-4" onclick="prosesCari()">Cari</button>
-        </div>
-
-        <div id="cardList" class="card-custom p-3">
-            <h6 class="fw-bold mb-3 small text-muted">HASIL PENCARIAN</h6>
-            <div id="listHasil"></div>
-        </div>
-
-        <div id="cardWO" class="card-custom p-4">
-            <div class="d-flex justify-content-between mb-3">
-                <span id="woId" class="fw-bold text-primary">#WO-000</span>
-                <span id="woStatus" class="badge bg-warning text-dark">Status</span>
+    <div id="section-search" style="display:none;">
+        <h6 class="fw-bold mb-3 px-2"><i class="fas fa-history me-2 text-primary"></i>Cari Riwayat</h6>
+        <div class="filter-section animate__animated animate__fadeIn">
+            <div class="input-group">
+                <input type="text" id="input-cari" class="form-control border-0 bg-light py-2" placeholder="ID WO / No. Nota / Email">
+                <button class="btn btn-primary px-4" onclick="prosesCari()">Cari</button>
             </div>
-            <h5 id="woJudul" class="fw-bold mb-1">--</h5>
-            <p id="woEmail" class="small text-muted mb-3">--</p>
-            <div class="p-3 bg-light rounded-3 mb-4 small" id="woAlamat">--</div>
-            <div id="woHistory"></div>
         </div>
-
-        <div id="cardNota" class="card-custom p-4">
-            <div class="text-center border-bottom pb-3 mb-3">
-                <h6 class="fw-bold mb-1">DATA NOTA TERIWAYAT</h6>
-                <span id="notaId" class="text-muted small">#NOTA-000</span>
-            </div>
-            <table class="table table-sm small">
-                <tbody id="notaTableBody"></tbody>
-            </table>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <span class="fw-bold">Total Akhir:</span>
-                <h5 class="fw-bold text-primary mb-0" id="notaTotal">Rp 0</h5>
-            </div>
-            <hr>
-            <button class="btn btn-success w-100 rounded-pill py-2 fw-bold" onclick="downloadNotaPDF()">
-                <i class="fas fa-file-pdf me-2"></i>DOWNLOAD NOTA (PDF)
-            </button>
-        </div>
+        <div id="container-hasil"></div>
     </div>
 </div>
 
 <nav class="bottom-nav">
-    <button class="nav-item-btn active" onclick="switchNav('dash', this)">
-        <i class="fas fa-clipboard-list"></i>Ticketing
+    <button class="nav-item-btn active" onclick="navigasi('dash', this)">
+        <i class="fas fa-layer-group"></i>Tugas Aktif
     </button>
-    <button class="nav-item-btn" onclick="switchNav('search', this)">
-        <i class="fas fa-history"></i>Riwayat
+    <button class="nav-item-btn" onclick="navigasi('search', this)">
+        <i class="fas fa-search"></i>Cari Riwayat
     </button>
     <button class="nav-item-btn" onclick="window.location.href='login.html'">
-        <i class="fas fa-user-shield"></i>Admin
+        <i class="fas fa-user-lock"></i>Admin
     </button>
 </nav>
 
+<div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0 bg-light rounded-top-4">
+                <h6 class="modal-title fw-bold" id="detailTitle">Detail Data</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="detailBody">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
 <script>
-    // URL Web App Google Script Sampeyan
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec';
-    let currentNotaData = null;
-
-    window.onload = () => {
-        loadRunningJobs();
+    const CONFIG = {
+        URL: 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec'
     };
+    const modalDetail = new bootstrap.Modal(document.getElementById('modalDetail'));
 
-    function switchNav(target, btn) {
+    window.onload = () => loadRunningJobs();
+
+    function navigasi(target, el) {
         document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('sectionDash').style.display = target === 'dash' ? 'block' : 'none';
-        document.getElementById('sectionSearch').style.display = target === 'search' ? 'block' : 'none';
+        el.classList.add('active');
+        document.getElementById('section-dash').style.display = target === 'dash' ? 'block' : 'none';
+        document.getElementById('section-search').style.display = target === 'search' ? 'block' : 'none';
         if(target === 'dash') loadRunningJobs();
     }
 
-    // LOAD TICKETING (Pekerjaan Belum Selesai)
     async function loadRunningJobs() {
-        const container = document.getElementById('ticketList');
+        const cont = document.getElementById('container-ticket');
         try {
-            const res = await fetch(`${SCRIPT_URL}?action=getRunningJobs`);
+            const res = await fetch(`${CONFIG.URL}?action=getRunningJobs`);
             const r = await res.json();
-            if(r.success && r.data.length > 0) {
-                document.getElementById('countTicket').innerText = r.data.length;
-                container.innerHTML = r.data.map(item => `
-                    <div class="ticket-card animate__animated animate__fadeInUp" onclick="quickCheck('${item.id}')">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="fw-bold text-primary">#${item.id}</span>
-                            <span class="ticket-status">${item.status}</span>
-                        </div>
-                        <div class="fw-bold text-dark">${item.judul}</div>
-                        <div class="text-muted small mt-1"><i class="far fa-user me-1"></i> ${item.email}</div>
-                    </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<div class="text-center py-5 opacity-50">Ora ono pekerjaan aktif, cah.</div>';
+            if(r.success) {
+                document.getElementById('count-ticket').innerText = r.data.length;
+                renderCards(r.data, 'container-ticket');
             }
-        } catch(e) { container.innerHTML = 'Gagal memuat data.'; }
+        } catch(e) { cont.innerHTML = "Gagal memuat."; }
     }
 
-    // PROSES CARI
+    function renderCards(data, containerId) {
+        const cont = document.getElementById(containerId);
+        if(!data.length) {
+            cont.innerHTML = '<div class="text-center p-5 opacity-50 small">Belum ada tugas aktif.</div>';
+            return;
+        }
+        cont.innerHTML = data.map(item => `
+            <div class="custom-card animate__animated animate__fadeInUp" onclick="cekItem('${item.id}')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="card-id">#${item.id}</span>
+                        <div class="card-title-text">${item.judul || 'Maintenance'}</div>
+                        <div class="card-client mt-1">
+                            <i class="fas fa-user-circle"></i> ${item.email}
+                        </div>
+                    </div>
+                    <span class="badge-status status-pending">${item.status}</span>
+                </div>
+                <div class="card-footer-custom">
+                    <div>
+                        <small class="text-muted d-block">Status Terakhir:</small>
+                        <span class="fw-bold text-primary small">${item.tanggal || '-'}</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted"></i>
+                </div>
+            </div>
+        `).join('');
+    }
+
     async function prosesCari() {
-        const val = document.getElementById('inputCari').value;
-        if(!val) return;
-        
+        const kw = document.getElementById('input-cari').value;
+        if(!kw) return;
         showLoader(true);
-        resetUI();
-        
         try {
-            const res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getDetailAll', keyword: val })
-            });
+            const res = await fetch(CONFIG.URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
             const r = await res.json();
             showLoader(false);
-
             if(r.success) {
-                if(r.type === 'LIST') renderList(r.data);
-                else if(r.type === 'WO') renderWO(r.data);
-                else if(r.type === 'Nota') renderNota(r.data);
+                if(r.type === 'LIST') renderCards(r.data, 'container-hasil');
+                else showDetailModal(r);
             } else {
-                Swal.fire('Kosong', 'Data ora ketemu cah.', 'info');
+                Swal.fire('Info', 'Data tidak ditemukan.', 'info');
             }
         } catch(e) { showLoader(false); }
     }
 
-    function renderList(data) {
-        document.getElementById('cardList').style.display = 'block';
-        document.getElementById('listHasil').innerHTML = data.map(i => `
-            <div class="p-3 border-bottom d-flex justify-content-between align-items-center" onclick="quickCheck('${i.id}')" style="cursor:pointer">
-                <div>
-                    <div class="fw-bold small">${i.id}</div>
-                    <div class="text-muted" style="font-size:11px">${i.judul}</div>
-                </div>
-                <i class="fas fa-chevron-right text-muted fa-xs"></i>
-            </div>
-        `).join('');
+    function showDetailModal(r) {
+        const body = document.getElementById('detailBody');
+        const d = r.data;
+        
+        if(r.type === 'Nota') {
+            body.innerHTML = `
+                <div class="p-2">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0 text-primary">Invoice #${d.notaId}</h5>
+                        <span class="badge bg-success">TERBAYAR</span>
+                    </div>
+                    <div class="row small mb-4">
+                        <div class="col-6 text-muted">Pelanggan:<br><b class="text-dark">${d.email}</b></div>
+                        <div class="col-6 text-end text-muted">Tanggal:<br><b class="text-dark">${d.tanggal}</b></div>
+                    </div>
+                    <table class="table table-sm small">
+                        <thead><tr class="text-muted"><th>Item</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>${d.items.map(it => `<tr><td>${it.nama}<br><small class="text-muted">${it.qty} x ${it.harga.toLocaleString()}</small></td><td class="text-end fw-bold">Rp ${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('')}</tbody>
+                    </table>
+                    <div class="d-flex justify-content-between fs-5 fw-bold mt-3 border-top pt-3">
+                        <span>Total</span><span class="text-primary">Rp ${d.total.toLocaleString()}</span>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-4 py-3 rounded-pill fw-bold" onclick='cetakNota(${JSON.stringify(d)})'>
+                        <i class="fas fa-file-pdf me-2"></i>DOWNLOAD NOTA (PDF)
+                    </button>
+                </div>`;
+        } else {
+            body.innerHTML = `
+                <h5 class="fw-bold mb-3 text-primary">Work Order #${d.woId}</h5>
+                <div class="p-3 bg-light rounded-3 mb-4 small"><b>Pelanggan:</b> ${d.email}<br><b>Status:</b> ${d.status}</div>
+                <div class="timeline mt-3">${d.history.map(h => `<div class="timeline-item"><div class="fw-bold small">${h.status}</div><div class="text-muted" style="font-size:10px">${h.tgl}</div><div class="small">${h.detail || '-'}</div></div>`).join('')}</div>`;
+        }
+        modalDetail.show();
     }
 
-    function renderWO(d) {
-        document.getElementById('cardWO').style.display = 'block';
-        document.getElementById('woId').innerText = "#" + d.woId;
-        document.getElementById('woStatus').innerText = d.status;
-        document.getElementById('woJudul').innerText = d.judul || 'Service Maintenance';
-        document.getElementById('woEmail').innerText = d.email;
-        document.getElementById('woAlamat').innerText = d.alamat;
-        document.getElementById('woHistory').innerHTML = d.history.map(h => `
-            <div class="status-step">
-                <div class="small fw-bold">${h.status}</div>
-                <div class="text-muted" style="font-size:10px">${h.tgl}</div>
-                <div class="small text-secondary">${h.detail || '-'}</div>
-            </div>
-        `).join('');
-    }
-
-    function renderNota(d) {
-        currentNotaData = d;
-        document.getElementById('cardNota').style.display = 'block';
-        document.getElementById('notaId').innerText = "#" + d.notaId;
-        document.getElementById('notaTotal').innerText = "Rp " + d.total.toLocaleString('id-ID');
-        document.getElementById('notaTableBody').innerHTML = d.items.map(it => `
-            <tr>
-                <td>${it.nama}</td>
-                <td class="text-end text-nowrap">x${it.qty}</td>
-                <td class="text-end fw-bold">Rp ${(it.qty * it.harga).toLocaleString('id-ID')}</td>
-            </tr>
-        `).join('');
-    }
-
-    // GENERATE PDF (FORMAT PENAWARAN)
-    function downloadNotaPDF() {
-        if(!currentNotaData) return;
-        const d = currentNotaData;
+    function cetakNota(d) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-
-        // 1. KOP SURAT (Samakan dgn Penawaran)
+        
+        // KOP PERSIS PENAWARAN
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.setTextColor(13, 110, 253);
         doc.text("NANDA TEKNIK BANYUWANGI", 15, 20);
-        
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.setTextColor(100); 
+        doc.setTextColor(100);
         doc.text("Software, Network & Electrical Engineering", 15, 26);
-        doc.setFontSize(8);
-        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 15, 31);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 15, 35);
-        
-        doc.setDrawColor(80);
-        doc.setLineWidth(0.5);
-        doc.line(15, 39, 195, 39);
-        doc.setLineWidth(0.1);
-        doc.line(15, 40, 195, 40);
+        doc.setLineWidth(0.5); doc.line(15, 38, 195, 38);
 
-        // 2. INFO NOTA
-        doc.setTextColor(0);
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text("NOTA LAYANAN / INVOICE", 105, 50, { align: "center" });
-
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Nota : #${d.notaId}`, 15, 60);
-        doc.text(`Tanggal  : ${d.tanggal}`, 15, 65);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("Kepada Yth:", 130, 60);
-        doc.text(d.email, 130, 65);
-
-        // 3. TABLE
-        const tableBody = d.items.map((it, i) => [
-            i + 1, it.nama, it.qty, 
-            `Rp ${it.harga.toLocaleString('id-ID')}`, 
-            `Rp ${(it.qty * it.harga).toLocaleString('id-ID')}`
-        ]);
+        doc.setTextColor(0); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("NOTA LAYANAN", 105, 50, { align: "center" });
 
         doc.autoTable({
-            startY: 75,
-            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
-            body: tableBody,
+            startY: 70,
+            head: [['DESKRIPSI', 'QTY', 'HARGA', 'SUBTOTAL']],
+            body: d.items.map(it => [it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]),
             theme: 'grid',
-            headStyles: { fillColor: [80, 80, 80], halign: 'center' },
-            columnStyles: {
-                0: { halign: 'center', cellWidth: 10 },
-                2: { halign: 'center', cellWidth: 15 },
-                3: { halign: 'right', cellWidth: 35 },
-                4: { halign: 'right', cellWidth: 35 }
-            }
+            headStyles: { fillColor: [80, 80, 80] }
         });
 
-        // 4. TOTAL
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFillColor(240, 240, 240);
-        doc.rect(130, finalY - 5, 65, 10, 'F');
+        const fY = doc.lastAutoTable.finalY + 10;
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL: Rp ${d.total.toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
-
-        // 5. TTD
-        doc.setFont("helvetica", "normal");
-        doc.text("Hormat Kami,", 150, finalY + 30);
-        doc.setFont("helvetica", "bold");
-        doc.text("NANDA KRISBIANTO", 150, finalY + 55);
-        doc.setFont("helvetica", "normal");
-        doc.text("( Owner Nanda Teknik )", 150, finalY + 60);
-
-        doc.save(`Nota_NandaTeknik_${d.notaId}.pdf`);
+        doc.text(`TOTAL: Rp ${d.total.toLocaleString('id-ID')}`, 192, fY, { align: "right" });
+        doc.save(`Nota_${d.notaId}.pdf`);
     }
 
-    function quickCheck(id) {
-        switchNav('search', document.querySelectorAll('.nav-item-btn')[1]);
-        document.getElementById('inputCari').value = id;
-        prosesCari();
-    }
-
-    function resetUI() {
-        ['cardList', 'cardWO', 'cardNota'].forEach(id => document.getElementById(id).style.display = 'none');
-    }
-
-    function showLoader(s) {
-        document.getElementById('loader').style.display = s ? 'flex' : 'none';
-    }
+    function showLoader(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
+    function cekItem(id) { navigasi('search', document.querySelectorAll('.nav-item-btn')[1]); document.getElementById('input-cari').value = id; prosesCari(); }
 </script>
 </body>
 </html>
