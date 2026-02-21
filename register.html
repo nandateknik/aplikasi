@@ -11,30 +11,59 @@
     
     <style>
         :root { --primary: #4e73df; --bg: #f8f9fc; --dark: #224abe; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 80px; }
-        .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; background: white; }
-        .header-section { background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); color: white; padding: 30px 20px; text-align: center; }
-        #map { height: 350px; border-radius: 15px; margin-top: 10px; border: 2px solid #eee; z-index: 1; }
-        .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
-        .otp-input { letter-spacing: 5px; font-size: 24px; text-align: center; font-weight: bold; border: 2px solid var(--primary); }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        .readonly-label { background-color: #e9ecef; opacity: 1; font-family: monospace; font-size: 0.85rem; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 100px; }
         
-        /* BOTTOM NAVIGATION STYLE */
+        /* HEADER STYLE CONSISTENT WITH PORTAL */
+        .header-brand { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); 
+            padding: 40px 20px; 
+            text-align: center; 
+            color: white; 
+            border-radius: 0 0 35px 35px; 
+            margin-bottom: -50px; /* Overlap effect */
+            position: relative;
+            z-index: 2;
+        }
+        .header-logo { 
+            width: 70px; height: 70px; 
+            background: white; border-radius: 18px; 
+            padding: 10px; margin-bottom: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+        }
+
+        .main-card { 
+            border: none; border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            background: white; 
+            position: relative;
+            z-index: 3;
+        }
+
+        #map { height: 300px; border-radius: 15px; margin-top: 10px; border: 2px solid #eee; z-index: 1; }
+        .spinner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 11000; justify-content: center; align-items: center; flex-direction: column; }
+        .otp-input { letter-spacing: 5px; font-size: 24px; text-align: center; font-weight: bold; border: 2px solid var(--primary); border-radius: 10px; }
+        .readonly-label { background-color: #f1f3f5; opacity: 1; font-family: monospace; font-size: 0.85rem; border-radius: 8px; }
+        
+        /* FLOATING BOTTOM NAVIGATION */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; display: flex; justify-content: space-around;
-            padding: 12px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 9999; border-top-left-radius: 20px; border-top-right-radius: 20px;
+            position: fixed; bottom: 15px; left: 15px; right: 15px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around;
+            padding: 12px 5px; border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
         }
         .nav-item {
-            text-decoration: none; color: #858796; text-align: center; font-size: 12px; transition: 0.3s;
+            text-decoration: none; color: #94a3b8; text-align: center; 
+            font-size: 9px; font-weight: 700; width: 25%; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 2px; }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-        .nav-item:hover { color: var(--dark); }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item:active i { transform: scale(0.8); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -44,15 +73,16 @@
     <span class="mt-2 fw-bold">Sedang diproses...</span>
 </div>
 
-<div class="container py-4">
+<div class="header-brand">
+    <img src="image-none-text.png" class="header-logo" alt="Logo" onerror="this.src='https://via.placeholder.com/70'">
+    <h4 class="fw-bold mb-0">NANDA TEKNIK</h4>
+    <p class="small opacity-75 mb-0">Registrasi Pelanggan Baru</p>
+</div>
+
+<div class="container mt-5 pt-4">
     <div class="row justify-content-center">
         <div class="col-md-7 col-lg-6">
-            <div class="card main-card">
-                <div class="header-section">
-                    <h4 class="mb-1 fw-bold"><i class="fas fa-user-plus me-2"></i>Registrasi Pelanggan</h4>
-                    <p class="small mb-0 opacity-75">Nanda Teknik CRM System</p>
-                </div>
-                
+            <div class="card main-card shadow-lg">
                 <div class="card-body p-4">
                     <div id="adminPanel" class="form-check form-switch mb-4" style="display: none;">
                         <input class="form-check-input" type="checkbox" id="isAdmin">
@@ -62,14 +92,14 @@
                     <div class="mb-4" id="emailSection">
                         <label class="form-label fw-bold small text-secondary">Alamat Email</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="fas fa-envelope text-muted"></i></span>
-                            <input type="email" id="email" class="form-control" placeholder="user@mail.com">
-                            <button class="btn btn-primary px-3" onclick="handleInitialCheck()">Cek</button>
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
+                            <input type="email" id="email" class="form-control border-start-0" placeholder="user@mail.com">
+                            <button class="btn btn-primary px-4 fw-bold" onclick="handleInitialCheck()">CEK</button>
                         </div>
                     </div>
 
                     <div id="fullForm" style="display:none;" class="fade-in">
-                        <hr>
+                        <hr class="my-4">
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-secondary">Nama Lengkap</label>
                             <input type="text" id="nama" class="form-control" placeholder="Nama sesuai identitas">
@@ -80,16 +110,14 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-primary"><i class="fas fa-map-marker-alt"></i> Lokasi Pemasangan (Cari Alamat/Geser Pin)</label>
+                            <label class="form-label fw-bold small text-primary"><i class="fas fa-map-marker-alt me-1"></i> Lokasi (Cari Alamat / Geser Pin)</label>
                             <div id="map"></div>
                             
-                            <div class="row g-2 mt-3">
+                            <div class="row g-2 mt-2">
                                 <div class="col-6">
-                                    <label class="small text-muted">Latitude</label>
                                     <input type="text" id="lat" class="form-control readonly-label" readonly placeholder="Lat">
                                 </div>
                                 <div class="col-6">
-                                    <label class="small text-muted">Longitude</label>
                                     <input type="text" id="lang" class="form-control readonly-label" readonly placeholder="Lng">
                                 </div>
                             </div>
@@ -106,7 +134,7 @@
                             </div>
                         </div>
 
-                        <button class="btn btn-primary w-100 py-3 shadow fw-bold" onclick="processRegistration()">
+                        <button class="btn btn-primary w-100 py-3 shadow fw-bold rounded-pill" onclick="processRegistration()">
                             <i class="fas fa-save me-2"></i> SIMPAN & DAFTARKAN
                         </button>
                     </div>
@@ -119,19 +147,19 @@
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item">
         <i class="fas fa-home"></i>
-        <span>Home</span>
+        <span>Portal</span>
+    </a>
+    <a href="update.html" class="nav-item">
+        <i class="fas fa-user-edit"></i>
+        <span>Update</span>
+    </a>
+    <a href="register.html" class="nav-item active">
+        <i class="fas fa-user-plus"></i>
+        <span>Register</span>
     </a>
     <a href="booking.html" class="nav-item">
-        <i class="fas fa-tools"></i>
-        <span>Servis</span>
-    </a>
-    <a href="registrasi.html" class="nav-item active">
-        <i class="fas fa-user-plus"></i>
-        <span>Daftar</span>
-    </a>
-    <a href="status.html" class="nav-item">
-        <i class="fas fa-search-location"></i>
-        <span>Cek WO</span>
+        <i class="fas fa-calendar-check"></i>
+        <span>Booking</span>
     </a>
 </nav>
 
@@ -140,7 +168,6 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // GANTI IKI KARO URL WEB APP-MU SING ANYAR (V5.0)
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZ2XW9lVS4jj9NogR2l_W_ffQTJYR6TmJloV6xJMSEvqDEuRRv18-OAl0fxz5fjlFv/exec'; 
     let map, marker, serverOTP;
 
@@ -151,65 +178,61 @@
     };
 
     async function handleInitialCheck() {
-    const emailInput = document.getElementById('email').value.trim().toLowerCase();
-    const isAdminMode = document.getElementById('isAdmin').checked;
-    
-    if(!emailInput || !emailInput.includes('@')) return Swal.fire('Error', 'Format email salah!', 'warning');
-    
-    showLoader(true);
-    try {
-        const res = await fetch(`${WEB_APP_URL}?action=read&sheet=Pelanggan`);
-        const result = await res.json();
-        showLoader(false);
+        const emailInput = document.getElementById('email').value.trim().toLowerCase();
+        const isAdminMode = document.getElementById('isAdmin').checked;
+        
+        if(!emailInput || !emailInput.includes('@')) return Swal.fire('Error', 'Format email salah!', 'warning');
+        
+        showLoader(true);
+        try {
+            const res = await fetch(`${WEB_APP_URL}?action=read&sheet=Pelanggan`);
+            const result = await res.json();
+            showLoader(false);
 
-        // PENGAMAN: Cek kabeh kemungkinan jeneng kolom (Email, email, EMAIL)
-        const isExist = result.data.some(p => {
-            // Goleki value email mboh iku key-ne huruf gede opo cilik
-            const emailValue = p.Email || p.email || p.EMAIL; 
-            return emailValue && emailValue.toString().toLowerCase() === emailInput;
-        });
-
-        if(isExist) {
-            Swal.fire({
-                title: 'Email Terdaftar!',
-                text: 'Anda sudah menjadi pelanggan Nanda Teknik.',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Lanjut Booking',
-                cancelButtonText: 'Tutup'
-            }).then((res) => {
-                if(res.isConfirmed) window.location.href = 'booking.html';
+            const isExist = result.data.some(p => {
+                const emailValue = p.Email || p.email || p.EMAIL; 
+                return emailValue && emailValue.toString().toLowerCase() === emailInput;
             });
-        } else {
-            document.getElementById('fullForm').style.display = 'block';
-            document.getElementById('emailSection').style.opacity = '0.6';
-            document.getElementById('email').readOnly = true;
-            initMap();
 
-            if (!isAdminMode) {
-                document.getElementById('otpSection').style.display = 'block';
-                requestOTP();
+            if(isExist) {
+                Swal.fire({
+                    title: 'Email Terdaftar!',
+                    text: 'Sampeyan wis terdaftar dadi pelanggan Nanda Teknik.',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Lanjut Booking',
+                    cancelButtonText: 'Tutup'
+                }).then((res) => {
+                    if(res.isConfirmed) window.location.href = 'booking.html';
+                });
             } else {
-                Swal.fire('Mode Admin', 'Bypass OTP Aktif.', 'info');
+                document.getElementById('fullForm').style.display = 'block';
+                document.getElementById('emailSection').style.opacity = '0.6';
+                document.getElementById('email').readOnly = true;
+                initMap();
+
+                if (!isAdminMode) {
+                    document.getElementById('otpSection').style.display = 'block';
+                    requestOTP();
+                } else {
+                    Swal.fire('Mode Admin', 'Bypass OTP Aktif.', 'info');
+                }
             }
+        } catch(e) {
+            showLoader(false);
+            Swal.fire('Error', 'Gagal sinkronisasi database.', 'error');
         }
-    } catch(e) {
-        showLoader(false);
-        console.error("Detail Eror:", e);
-        Swal.fire('Error', 'Gagal sinkronisasi database. Pastikan Sheet "Pelanggan" sudah ada.', 'error');
     }
-}
+
     function initMap() {
         if (map) return;
-        
-        // Default Center (Misal Banyuwangi)
         map = L.map('map').setView([-8.2191, 114.3691], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         marker = L.marker([-8.2191, 114.3691], {draggable: true}).addTo(map);
 
         const geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Cari lokasi..."
+            placeholder: "Cari alamat..."
         }).on('markgeocode', function(e) {
             const center = e.geocode.center;
             map.setView(center, 16);
@@ -236,7 +259,6 @@
     function updateLocationInfo(lat, lng) {
         document.getElementById('lat').value = lat.toFixed(7);
         document.getElementById('lang').value = lng.toFixed(7);
-        
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
             .then(res => res.json()).then(data => {
                 document.getElementById('alamat').value = data.display_name || "";
@@ -253,11 +275,10 @@
             });
             const result = await res.json();
             showLoader(false);
-            
             if(result.success) {
                 serverOTP = result.otp;
                 startTimer(60);
-                Swal.fire('OTP Dikirim', 'Cek kotak masuk email Anda.', 'success');
+                Swal.fire('OTP Dikirim', 'Cek email Anda.', 'success');
             }
         } catch (e) {
             showLoader(false);
@@ -288,8 +309,8 @@
         const wa = document.getElementById('wa').value.trim();
         const lat = document.getElementById('lat').value;
 
-        if(!nama || !wa || !lat) return Swal.fire('Lengkapi Data', 'Nama, WA, lan Lokasi gak oleh kosong!', 'warning');
-        if (!isAdminMode && otpInput != serverOTP) return Swal.fire('OTP Salah', 'Kode verifikasi gak podo!', 'error');
+        if(!nama || !wa || !lat) return Swal.fire('Lengkapi Data', 'Data wajib diisi semua!', 'warning');
+        if (!isAdminMode && otpInput != serverOTP) return Swal.fire('OTP Salah', 'Kode verifikasi tidak sesuai!', 'error');
 
         const data = {
             action: 'createPelanggan',
@@ -304,22 +325,16 @@
 
         showLoader(true);
         try {
-            const res = await fetch(WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify(data) 
-            });
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) });
             const result = await res.json();
             showLoader(false);
-
             if(result.success) {
-                Swal.fire('Sukses!', 'Sampeyan wis terdaftar dadi pelanggan.', 'success')
+                Swal.fire('Sukses!', 'Sampeyan wis terdaftar.', 'success')
                 .then(() => window.location.href = 'booking.html');
-            } else {
-                Swal.fire('Gagal', 'Gagal nyimpen data.', 'error');
             }
         } catch(e) {
             showLoader(false);
-            Swal.fire('Error', 'Koneksi bermasalah.', 'error');
+            Swal.fire('Error', 'Gagal menyimpan.', 'error');
         }
     }
 
