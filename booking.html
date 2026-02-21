@@ -3,134 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Order & Nota CRM - Nanda Teknik</title>
+    <title>Booking Pekerjaan - Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { background: #f4f7f6; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        .card { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        #map { height: 250px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #ddd; }
-        .is-valid-email { color: #198754; font-size: 0.85rem; display: none; font-weight: 600; }
-        .btn-register { display: none; margin-top: 8px; }
-        .price-box { background: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #dee2e6; margin-top: 20px; }
-        .item-list { max-height: 300px; overflow-y: auto; margin-top: 10px; }
+        :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
+        body { background: var(--bg-soft); font-family: 'Segoe UI', Tahoma, sans-serif; padding-bottom: 120px; }
+        
+        /* HEADER BIRU MEWAH */
+        .header-brand {
+            background: linear-gradient(-45deg, #0d6efd, #00c6ff);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15);
+        }
+        .header-logo { width: 60px; height: 60px; background: white; border-radius: 15px; padding: 8px; margin-bottom: 10px; }
+
+        .card { border-radius: 20px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+        #map { height: 200px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #ddd; z-index: 1; }
+        
+        .price-box { background: #f8faff; padding: 15px; border-radius: 15px; border: 1px dashed #0d6efd; margin-top: 20px; }
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        .qty-controls .btn { padding: 0px 8px; font-size: 0.8rem; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 15px; left: 15px; right: 15px; background: white; display: flex; justify-content: space-around; padding: 12px 5px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 1000; }
+        .nav-item { color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 9px; font-weight: 700; text-decoration: none; width: 25%; }
+        .nav-item.active { color: var(--p-blue); }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
 <div class="loader-overlay" id="loader">
-    <div class="spinner-border text-primary" role="status"></div>
+    <div class="spinner-border text-primary"></div>
     <span class="mt-2 fw-bold">Memproses Data...</span>
 </div>
 
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-7 col-lg-6">
-            <div class="card p-4">
-                <h4 class="fw-bold mb-4 text-center text-primary"><i class="fas fa-file-invoice"></i> Buat Work Order</h4>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Email Pelanggan</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fas fa-envelope text-muted"></i></span>
-                        <input type="email" id="email" class="form-control" placeholder="Masukkan email pelanggan..." oninput="checkEmailDelay()">
-                        <span class="input-group-text bg-white" id="statusIcon"><i class="fas fa-search"></i></span>
-                    </div>
-                    <div id="emailMsg" class="is-valid-email mt-2"><i class="fas fa-check-circle"></i> Pelanggan ditemukan di database</div>
-                    <button id="btnReg" class="btn btn-sm btn-outline-danger btn-register w-100" onclick="location.href='pelanggan.html'">
-                        Email tidak terdaftar. Klik untuk Daftar Baru
-                    </button>
-                </div>
+<div class="header-brand">
+    <img src="image-none-text.png" class="header-logo" alt="Logo" onerror="this.style.display='none'">
+    <h5 class="fw-bold mb-0">BOOKING PEKERJAAN</h5>
+    <p class="small opacity-75 mb-0">Nanda Teknik Banyuwangi</p>
+</div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Jadwal Pengerjaan</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fas fa-calendar-alt text-muted"></i></span>
-                        <input type="datetime-local" id="tglBooking" class="form-control">
-                    </div>
-                </div>
+<div class="container">
+    <div class="card p-4">
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">EMAIL PELANGGAN</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="fas fa-envelope text-muted"></i></span>
+                <input type="email" id="email" class="form-control" placeholder="Contoh: nanda@gmail.com" oninput="checkEmailDelay()">
+            </div>
+            <div id="emailMsg" class="text-success small fw-bold mt-2" style="display:none;"><i class="fas fa-check-circle"></i> Pelanggan Terdaftar</div>
+            <button id="btnReg" class="btn btn-sm btn-outline-danger w-100 mt-2" style="display:none;" onclick="location.href='register.html'">Email Belum Ada. Daftar Baru?</button>
+        </div>
 
-                <div class="form-check form-switch mb-3">
-                    <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
-                    <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat sesuai data pendaftaran</label>
-                </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">JADWAL PENGERJAAN</label>
+            <input type="datetime-local" id="tglBooking" class="form-control">
+        </div>
 
-                <div class="mb-3">
-                    <div id="map"></div>
-                    <label class="form-label small text-muted">Detail Alamat Pekerjaan:</label>
-                    <textarea id="alamat" class="form-control" rows="2" placeholder="Alamat otomatis muncul saat pin digeser..."></textarea>
-                    <input type="hidden" id="lat">
-                    <input type="hidden" id="lang">
-                </div>
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
+            <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat pendaftaran</label>
+        </div>
 
-                <hr>
+        <div class="mb-3">
+            <div id="map"></div>
+            <textarea id="alamat" class="form-control small" rows="2" placeholder="Detail Alamat..."></textarea>
+            <input type="hidden" id="lat"><input type="hidden" id="lang">
+        </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Tambah Jasa / Pekerjaan</label>
-                    <div class="input-group mb-2">
-                        <select id="jasaSelect" class="form-select">
-                            <option value="">-- Pilih dari Daftar Harga --</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="tambahJasaList()">Tambah</button>
-                    </div>
-                    <div class="input-group mb-2">
-                        <input type="text" id="manualNama" class="form-control w-50" placeholder="Nama Jasa Manual">
-                        <input type="number" id="manualHarga" class="form-control w-25" placeholder="Harga">
-                        <button class="btn btn-secondary" onclick="tambahJasaManual()">Manual</button>
-                    </div>
-                </div>
+        <hr>
 
-                <div id="itemContainer" style="display:none;">
-                    <h6 class="fw-bold small text-muted">KERANJANG JASA:</h6>
-                    <ul class="list-group item-list mb-3" id="itemList"></ul>
-                </div>
-
-                <div class="price-box">
-                    <div class="d-flex justify-content-between small mb-2">
-                        <span>Subtotal Jasa:</span>
-                        <span class="fw-bold" id="txtSubtotalJasa">Rp 0</span>
-                    </div>
-                    <div class="d-flex justify-content-between small mb-2">
-                        <span>Bensin (Jarak: <span id="valJarak">0</span> km):</span>
-                        <span class="fw-bold" id="txtBensin">Rp 0</span>
-                    </div>
-                    <div class="d-flex justify-content-between fs-5 fw-bold border-top pt-2 text-primary">
-                        <span>TOTAL AKHIR:</span>
-                        <span id="txtTotal">Rp 0</span>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-100 mt-4 p-3 fw-bold shadow" onclick="simpanDataNota()">
-                    <i class="fas fa-save"></i> SIMPAN WORK ORDER & NOTA
-                </button>
+        <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">PILIH JASA/PEKERJAAN</label>
+            <div class="input-group mb-2">
+                <select id="jasaSelect" class="form-select small"><option value="">-- Pilih Jasa --</option></select>
+                <button class="btn btn-primary" onclick="tambahJasaList()">Tambah</button>
+            </div>
+            <div class="input-group mb-2">
+                <input type="text" id="manualNama" class="form-control w-50 small" placeholder="Jasa Manual">
+                <input type="number" id="manualHarga" class="form-control w-25 small" placeholder="Harga">
+                <button class="btn btn-secondary btn-sm" onclick="tambahJasaManual()">Manual</button>
             </div>
         </div>
+
+        <ul class="list-group mb-3" id="itemList"></ul>
+
+        <div class="price-box">
+            <div class="d-flex justify-content-between small"><span>Subtotal Jasa:</span><span id="txtSubtotalJasa">Rp 0</span></div>
+            <div class="d-flex justify-content-between small"><span>Ongkir/Bensin:</span><span id="txtBensin">Rp 0</span></div>
+            <div class="d-flex justify-content-between fw-bold text-primary fs-5 border-top mt-2 pt-2"><span>TOTAL:</span><span id="txtTotal">Rp 0</span></div>
+        </div>
+
+        <button class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow" onclick="simpanDataNota()">
+            <i class="fas fa-save me-2"></i>SIMPAN BOOKING
+        </button>
     </div>
 </div>
 
+<nav class="bottom-nav">
+    <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>Portal</span></a>
+    <a href="update.html" class="nav-item"><i class="fas fa-user-edit"></i><span>Update</span></a>
+    <a href="register.html" class="nav-item"><i class="fas fa-user-plus"></i><span>Register</span></a>
+    <a href="booking.html" class="nav-item active"><i class="fas fa-calendar-check"></i><span>Booking</span></a>
+</nav>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzYHg4GancnzifepaUK02Eboq8Gp5X7twalj4SCcww-ztpCwSXPgJVCHrxqYaHjaSD4/exec';
+    // URL SCRIPT GOOGLE SAMA SEPERTI DI PROMPT ANDA
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx7XdXXusDSkurHqTynBRMxLBGg_Q_f18YGUVJ1VX7ca0o6-VMmSpbGwZzH5VqFsWJP/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
     
     let map, marker, timeoutCheck;
     let pelangganData = null;
     let selectedItems = []; 
-    let bensinCost = 0;
 
     window.onload = () => {
-        // Set default tanggal hari ini
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
-
         initMap();
         loadDaftarHarga();
     };
@@ -138,14 +137,6 @@
     function initMap() {
         map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Cari Alamat..." }).on('markgeocode', function(e) {
-            let center = e.geocode.center;
-            map.setView(center, 16);
-            marker.setLatLng(center);
-            updateLocationInfo(center.lat, center.lng);
-        }).addTo(map);
-
         marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
         marker.on('dragend', (e) => updateLocationInfo(e.target.getLatLng().lat, e.target.getLatLng().lng));
     }
@@ -172,12 +163,10 @@
         const result = await res.json();
         if(result.success) {
             pelangganData = result.data;
-            document.getElementById('statusIcon').innerHTML = '<i class="fas fa-check text-success"></i>';
             document.getElementById('emailMsg').style.display = 'block';
             document.getElementById('btnReg').style.display = 'none';
         } else {
             pelangganData = null;
-            document.getElementById('statusIcon').innerHTML = '<i class="fas fa-times text-danger"></i>';
             document.getElementById('emailMsg').style.display = 'none';
             document.getElementById('btnReg').style.display = 'block';
         }
@@ -204,7 +193,7 @@
             result.data.forEach(item => {
                 select.innerHTML += `<option value="${item[1]}">${item[0]}</option>`;
             });
-        } catch(e) { console.error("Gagal load harga"); }
+        } catch(e) {}
     }
 
     function tambahJasaList() {
@@ -221,21 +210,10 @@
     function tambahJasaManual() {
         const nama = document.getElementById('manualNama').value;
         const harga = parseInt(document.getElementById('manualHarga').value);
-        if(!nama || !harga) return Swal.fire('Error', 'Isi nama dan harga jasa manual', 'error');
+        if(!nama || !harga) return;
         selectedItems.push({ nama: "[M] " + nama, harga, qty: 1 });
         document.getElementById('manualNama').value = '';
         document.getElementById('manualHarga').value = '';
-        renderItems();
-    }
-
-    function updateQty(index, delta) {
-        selectedItems[index].qty += delta;
-        if(selectedItems[index].qty <= 0) { selectedItems.splice(index, 1); }
-        renderItems();
-    }
-
-    function removeItem(index) {
-        selectedItems.splice(index, 1);
         renderItems();
     }
 
@@ -243,26 +221,18 @@
         const list = document.getElementById('itemList');
         list.innerHTML = '';
         selectedItems.forEach((item, index) => {
-            const sub = item.harga * item.qty;
-            list.innerHTML += `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div style="max-width: 60%">
-                        <div class="fw-bold">${item.nama}</div>
-                        <div class="small text-muted">Rp ${item.harga.toLocaleString()} x ${item.qty}</div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <span class="fw-bold me-2 small">Rp ${sub.toLocaleString()}</span>
-                        <div class="btn-group btn-group-sm qty-controls">
-                            <button class="btn btn-outline-secondary" onclick="updateQty(${index}, -1)">-</button>
-                            <button class="btn btn-outline-secondary" onclick="updateQty(${index}, 1)">+</button>
-                            <button class="btn btn-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                </li>`;
+            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2">
+                <div class="small fw-bold">${item.nama}</div>
+                <div class="d-flex align-items-center">
+                    <span class="small me-2">Rp ${(item.harga * item.qty).toLocaleString()}</span>
+                    <button class="btn btn-sm btn-danger py-0" onclick="removeItem(${index})">&times;</button>
+                </div>
+            </li>`;
         });
-        document.getElementById('itemContainer').style.display = selectedItems.length > 0 ? 'block' : 'none';
         hitungBiaya();
     }
+
+    function removeItem(index) { selectedItems.splice(index, 1); renderItems(); }
 
     function hitungBiaya() {
         const lat = document.getElementById('lat').value;
@@ -271,55 +241,41 @@
         if(lat && lng) {
             jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
         }
-        document.getElementById('valJarak').innerText = jarak.toFixed(1);
-        bensinCost = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
-        document.getElementById('txtBensin').innerText = "Rp " + bensinCost.toLocaleString();
-        const subtotalJasa = selectedItems.reduce((acc, curr) => acc + (curr.harga * curr.qty), 0);
-        document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotalJasa.toLocaleString();
-        const totalSemua = subtotalJasa + bensinCost;
-        document.getElementById('txtTotal').innerText = "Rp " + totalSemua.toLocaleString();
-        return totalSemua;
+        let bensin = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
+        const subtotal = selectedItems.reduce((acc, curr) => acc + (curr.harga * curr.qty), 0);
+        document.getElementById('txtBensin').innerText = "Rp " + bensin.toLocaleString();
+        document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotal.toLocaleString();
+        document.getElementById('txtTotal').innerText = "Rp " + (subtotal + bensin).toLocaleString();
+        return subtotal + bensin;
     }
 
     async function simpanDataNota() {
         const email = document.getElementById('email').value;
         const tgl = document.getElementById('tglBooking').value;
-        const lat = document.getElementById('lat').value;
-        const lang = document.getElementById('lang').value;
-        const alamat = document.getElementById('alamat').value;
-        const finalTotal = hitungBiaya();
-
-        if(!email || !tgl || selectedItems.length === 0) {
-            return Swal.fire('Peringatan', 'Lengkapi Email, Tanggal, dan minimal 1 Jasa', 'warning');
-        }
-        if(!lat || !alamat) return Swal.fire('Peringatan', 'Tentukan lokasi pekerjaan di map', 'warning');
+        const total = hitungBiaya();
+        if(!email || !tgl || selectedItems.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'warning');
 
         document.getElementById('loader').style.display = 'flex';
         try {
             const payload = {
                 action: 'createNota', 
                 email: email,
-                tglPengerjaan: tgl.replace('T', ' '), // Format YYYY-MM-DD HH:mm
+                tglPengerjaan: tgl.replace('T', ' '),
                 items: selectedItems,
-                total: finalTotal,
-                lat: lat,
-                lang: lang,
-                alamat: alamat
+                total: total,
+                lat: document.getElementById('lat').value,
+                lang: document.getElementById('lang').value,
+                alamat: document.getElementById('alamat').value
             };
-
             const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const result = await response.json();
+            const res = await response.json();
             document.getElementById('loader').style.display = 'none';
-
-            if(result.success) {
-                Swal.fire({ title: 'Berhasil!', html: `Nota: <b>${result.notaId}</b><br>WO: <b>${result.woId}</b>`, icon: 'success' })
-                .then(() => location.reload());
-            } else {
-                Swal.fire('Gagal', result.message, 'error');
+            if(res.success) {
+                Swal.fire('Berhasil!', 'Nota: ' + res.notaId, 'success').then(() => location.reload());
             }
-        } catch(e) {
+        } catch(e) { 
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', e.message, 'error');
+            Swal.fire('Error', 'Gagal simpan', 'error'); 
         }
     }
 </script>
