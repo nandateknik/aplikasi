@@ -31,6 +31,37 @@
         .header-brand h4 { font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; }
         .header-brand p { font-size: 0.75rem; opacity: 0.8; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
 
+
+        /* HEADER BIRU MEWAH (SAIKI WIS DISESUAIKE) */
+.header-brand { 
+    background: linear-gradient(135deg, var(--p-blue) 0%, var(--dark) 100%); 
+    padding: 40px 20px; /* Podo karo koncone */
+    text-align: center; 
+    color: white; 
+    border-radius: 0 0 35px 35px; /* Radius podo karo update.html */
+    margin-bottom: -50px; /* Ben overlap-e pas */
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.15);
+}
+
+.header-logo { 
+    width: 70px; height: 70px; 
+    background: white; border-radius: 18px; 
+    padding: 10px; margin-bottom: 12px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+}
+
+/* Penyesuaian jarak container ben gak nabrak header */
+.container { 
+    margin-top: 5rem !important; /* Ben search box-e nggantung pas neng tengah radius */
+}
+
+.search-container {
+    position: relative;
+    z-index: 10;
+    padding: 0 10px;
+}
         /* Search Box Overlap */
         .search-container {
             position: relative;
