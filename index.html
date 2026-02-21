@@ -15,55 +15,23 @@
     <style>
         :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
         body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 100px; color: #334155; }
-        
-        /* HEADER MOBILE */
-        .header-brand {
-            background: white; padding: 25px 20px; border-radius: 0 0 30px 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); text-align: center; margin-bottom: 25px;
-        }
+        .header-brand { background: white; padding: 25px 20px; border-radius: 0 0 30px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); text-align: center; margin-bottom: 25px; }
         .header-brand h4 { font-weight: 800; color: var(--p-blue); margin-bottom: 2px; }
         .header-brand p { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
-
-        /* SEARCH BOX */
         .search-container { background: white; border-radius: 20px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .search-container input { border: none; background: transparent; padding-left: 15px; font-weight: 600; }
         .search-container input:focus { box-shadow: none; }
-        .btn-search { border-radius: 15px; padding: 10px 25px; font-weight: 700; }
-
-        /* CARD STYLE */
-        .card-custom { 
-            border-radius: 25px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); 
-            display: none; background: white; margin-bottom: 20px; overflow: hidden;
-        }
-        
-        /* HISTORY ITEM */
-        .history-item { 
-            background: #fff; border: 1px solid #f1f5f9; border-radius: 18px; 
-            padding: 12px 15px; margin-bottom: 10px; transition: 0.2s; cursor: pointer;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .card-custom { border-radius: 25px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.04); display: none; background: white; margin-bottom: 20px; overflow: hidden; }
+        .history-item { background: #fff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 12px 15px; margin-bottom: 10px; transition: 0.2s; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .history-item:active { background: #f8fafc; transform: scale(0.98); }
         .history-item.active-item { border-color: var(--p-blue); background: #eff6ff; }
-
-        /* TIMELINE WO */
         .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 15px; }
-        .status-step::before { 
-            content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; 
-            border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); 
-        }
-
-        /* BOTTOM NAV */
-        .bottom-nav { 
-            position: fixed; bottom: 0; left: 0; right: 0; background: white; 
-            display: flex; justify-content: space-around; padding: 12px 0; 
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #f1f5f9; 
-        }
+        .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 25px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #f1f5f9; }
         .nav-item { border: none; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; width: 33%; }
         .nav-item i { font-size: 22px; margin-bottom: 4px; }
         .nav-item.active { color: var(--p-blue); }
-
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        .admin-tools { background: #fff3cd; border: 1px dashed #ffc107; border-radius: 15px; padding: 15px; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
@@ -81,14 +49,13 @@
 <div class="container">
     <div class="search-container d-flex align-items-center mb-4">
         <i class="fas fa-search text-muted ms-3"></i>
-        <input type="text" id="searchInput" class="form-control" placeholder="Masukkan Email / ID...">
-        <button class="btn btn-primary btn-search" onclick="cariData()">Cari</button>
+        <input type="text" id="searchInput" class="form-control" placeholder="Email / ID WO / ID Nota">
+        <button class="btn btn-primary rounded-pill px-4" onclick="cariData()">Cari</button>
     </div>
 
     <div id="cardHistory" class="card-custom p-4 animate__animated animate__fadeInUp">
-        <h6 class="fw-bold mb-3"><i class="fas fa-history me-2 text-primary"></i>Riwayat Layanan</h6>
+        <h6 class="fw-bold mb-3 small"><i class="fas fa-history me-2 text-primary"></i>Riwayat Layanan</h6>
         <div id="historyList"></div>
-        <div id="paginationControls"></div>
     </div>
 
     <div id="cardWO" class="card-custom p-4 animate__animated animate__fadeInUp">
@@ -100,19 +67,7 @@
             </div>
             <span id="woStatus" class="badge bg-warning text-dark rounded-pill px-3 py-2 small">Pending</span>
         </div>
-        <div class="bg-light p-3 rounded-4 mb-3">
-            <small class="text-muted d-block">Alamat Pengerjaan:</small>
-            <strong id="woAlamat" class="small">--</strong>
-        </div>
-        <h6 class="fw-bold mb-3 small">Log Progress:</h6>
-        <div id="woHistory"></div>
-
-        <div class="admin-tools" id="adminToolsWO">
-            <div class="d-flex gap-2">
-                <button class="btn btn-dark btn-sm w-100 rounded-pill" onclick="updateStatusProgress()">Update Status</button>
-                <button class="btn btn-outline-danger btn-sm rounded-circle" onclick="hapusData('WO')"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
+        <div id="woHistory" class="mt-4"></div>
     </div>
 
     <div id="cardNota" class="card-custom p-4 animate__animated animate__fadeInUp">
@@ -120,30 +75,19 @@
             <h6 class="fw-bold text-primary mb-1">DATA NOTA / INVOICE</h6>
             <span id="notaIdDisplay" class="text-muted small fw-bold">#INV-000</span>
         </div>
-        <div class="row small mb-3">
-            <div class="col-6">
-                <span class="text-muted">Pelanggan:</span><br>
-                <strong id="notaEmailDisplay">--</strong>
-            </div>
-            <div class="col-6 text-end">
-                <span class="text-muted">Tanggal:</span><br>
-                <strong id="notaDate">--</strong>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-sm small">
+                <thead><tr><th>Layanan</th><th class="text-end">Subtotal</th></tr></thead>
+                <tbody id="notaItems"></tbody>
+            </table>
         </div>
-        <table class="table table-sm small mb-3">
-            <thead class="table-light"><tr><th>Layanan</th><th class="text-end">Total</th></tr></thead>
-            <tbody id="notaItems"></tbody>
-        </table>
-        <div class="d-flex justify-content-between align-items-center bg-primary bg-opacity-10 p-3 rounded-4">
-            <span class="fw-bold small">Total Bayar</span>
+        <div class="bg-light p-3 rounded-4 d-flex justify-content-between align-items-center mb-4">
+            <span class="small fw-bold">Total Bayar</span>
             <h5 class="fw-bold text-primary m-0" id="notaTotal">Rp 0</h5>
         </div>
-        <button class="btn btn-success w-100 rounded-pill py-3 mt-4 fw-bold" onclick="downloadNotaJS()">
-            <i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF
+        <button class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="downloadNotaPDF()">
+            <i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF RESMI
         </button>
-        <div class="admin-tools" id="adminToolsNota">
-            <button class="btn btn-outline-danger btn-sm w-100 rounded-pill" onclick="hapusData('Nota')">Hapus Nota</button>
-        </div>
     </div>
 
     <div id="noData" class="text-center py-5" style="display:none;">
@@ -161,39 +105,31 @@
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-yvnYijId9ViAFQHnIM6BjQnwAr-onhLxrpaUSmlEZS5CIU5U-IozkCijI2buqbU3/exec';
     let globalHistoryData = [];
-    let currentNotaData = null;
+    let currentData = null; // Simpan data aktif
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
         if(!kw) return;
         showLoader(true);
         resetUI();
-        
         try {
             const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
             const r = await res.json();
             showLoader(false);
-
             if(r.success) {
                 if(r.type === 'LIST') {
                     globalHistoryData = r.data;
                     renderHistory();
-                    // OTOMATIS BUKAK SING PALING ANYAR NENG NGISORE
-                    if(r.data.length > 0) quickView(r.data[0].id); 
-                } else if(r.type === 'WO') {
-                    showWO(r.data);
-                } else if(r.type === 'Nota') {
-                    currentNotaData = r.data;
-                    showNota(r.data);
-                }
+                    if(r.data.length > 0) quickView(r.data[0].id);
+                } else if(r.type === 'WO') { showWO(r.data); }
+                else if(r.type === 'Nota') { currentData = r.data; showNota(r.data); }
             } else { document.getElementById('noData').style.display = 'block'; }
-        } catch(e) { showLoader(false); Swal.fire('Error', 'Server error', 'error'); }
+        } catch(e) { showLoader(false); }
     }
 
     function renderHistory() {
         document.getElementById('cardHistory').style.display = 'block';
-        const list = document.getElementById('historyList');
-        list.innerHTML = globalHistoryData.map(i => `
+        document.getElementById('historyList').innerHTML = globalHistoryData.map(i => `
             <div class="history-item" id="item-${i.id}" onclick="quickView('${i.id}')">
                 <div class="d-flex align-items-center">
                     <div class="bg-light p-2 rounded-3 me-3"><i class="fas ${i.type=='WO'?'fa-tools text-primary':'fa-file-invoice-dollar text-success'}"></i></div>
@@ -204,20 +140,19 @@
     }
 
     async function quickView(id) {
-        // Highlight item sing dipilih
         document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active-item'));
         if(document.getElementById('item-'+id)) document.getElementById('item-'+id).classList.add('active-item');
-
         showLoader(true);
         try {
             const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
             const r = await res.json();
             showLoader(false);
             if(r.success) {
+                currentData = r.data;
                 document.getElementById('cardWO').style.display = 'none';
                 document.getElementById('cardNota').style.display = 'none';
                 if(r.type === 'WO') showWO(r.data);
-                else if(r.type === 'Nota') { currentNotaData = r.data; showNota(r.data); }
+                else if(r.type === 'Nota') showNota(r.data);
             }
         } catch(e) { showLoader(false); }
     }
@@ -227,72 +162,82 @@
         document.getElementById('woIdDisplay').innerText = d.woId;
         document.getElementById('woCustomer').innerText = d.email;
         document.getElementById('woStatus').innerText = d.status;
-        document.getElementById('woAlamat').innerText = d.alamat || '-';
         document.getElementById('woHistory').innerHTML = d.history.map(h => `
             <div class="status-step">
                 <div class="small fw-bold text-dark">${h.status}</div>
                 <div class="text-muted" style="font-size:9px">${h.tgl}</div>
-                <div class="small text-secondary" style="font-size:11px">${h.detail || '-'}</div>
+                <div class="small text-secondary mt-1">${h.detail || '-'}</div>
             </div>`).join('');
-        checkAdmin();
     }
 
     function showNota(d) {
         document.getElementById('cardNota').style.display = 'block';
         document.getElementById('notaIdDisplay').innerText = "#" + d.notaId;
-        document.getElementById('notaEmailDisplay').innerText = d.email;
-        document.getElementById('notaDate').innerText = d.tanggal;
-        document.getElementById('notaTotal').innerText = "Rp " + d.total.toLocaleString();
+        document.getElementById('notaTotal').innerText = "Rp " + d.total.toLocaleString('id-ID');
         document.getElementById('notaItems').innerHTML = d.items.map(it => `
-            <tr><td>${it.nama}<br><small class="text-muted">${it.qty} x ${it.harga.toLocaleString()}</small></td>
-            <td class="text-end fw-bold">Rp ${(it.qty * it.harga).toLocaleString()}</td></tr>`).join('');
-        checkAdmin();
+            <tr><td>${it.nama}<br><small class="text-muted">${it.qty} x ${it.harga.toLocaleString('id-ID')}</small></td>
+            <td class="text-end fw-bold">Rp ${(it.qty * it.harga).toLocaleString('id-ID')}</td></tr>`).join('');
     }
 
-    function downloadNotaJS() {
-        if(!currentNotaData) return;
-        const d = currentNotaData;
+    // INTEGRASI FUNGSI PDF SMEAN
+    function downloadNotaPDF() {
+        if(!currentData) return;
+        const data = currentData;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFontSize(18); doc.setTextColor(13, 110, 253); doc.setFont("helvetica", "bold");
-        doc.text("NANDA TEKNIK BANYUWANGI", 15, 20);
-        doc.setFontSize(9); doc.setTextColor(100); doc.setFont("helvetica", "normal");
-        doc.text("Software, Network & Electrical Engineering", 15, 26);
-        doc.setDrawColor(13, 110, 253); doc.line(15, 35, 195, 35);
-        doc.setTextColor(0); doc.setFontSize(12); doc.text("NOTA LAYANAN", 105, 45, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(`No. Nota : #${d.notaId}`, 15, 55);
-        doc.text(`Tanggal  : ${d.tanggal}`, 15, 60);
-        doc.text(`Client   : ${d.email}`, 15, 65);
+        
+        // --- 1. HEADER KOP SURAT ---
+        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 35);
+        doc.setDrawColor(80, 80, 80); doc.line(15, 40, 195, 40);
+
+        // --- 2. INFO SURAT ---
+        doc.setTextColor(0); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("NOTA LAYANAN / INVOICE", 105, 50, { align: "center" });
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Nota    : #${data.notaId}`, 15, 60);
+        doc.text(`Tanggal     : ${data.tanggal}`, 15, 65);
+        doc.text("Kepada Yth:", 130, 60);
+        doc.setFont("helvetica", "bold"); doc.text(data.email, 130, 65);
+
+        // --- 3. TABLE ITEMS ---
+        const tableBody = data.items.map((item, index) => [
+            index + 1, item.nama, item.qty, 
+            `Rp ${item.harga.toLocaleString('id-ID')}`, 
+            `Rp ${(item.harga * item.qty).toLocaleString('id-ID')}`
+        ]);
+
         doc.autoTable({
-            startY: 70, head: [['DESKRIPSI', 'QTY', 'HARGA', 'SUBTOTAL']],
-            body: d.items.map(it => [it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]),
-            headStyles: { fillColor: [13, 110, 253] }
+            startY: 75,
+            head: [['NO', 'DESKRIPSI PEKERJAAN', 'QTY', 'HARGA', 'JUMLAH']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [80, 80, 80], halign: 'center' },
+            columnStyles: { 0: {halign:'center'}, 2: {halign:'center'}, 3: {halign:'right'}, 4: {halign:'right'} }
         });
-        doc.text(`TOTAL: Rp ${d.total.toLocaleString()}`, 195, doc.lastAutoTable.finalY + 10, { align: "right" });
-        doc.save(`Nota_${d.notaId}.pdf`);
+
+        // --- 4. TOTAL & TTD ---
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL PEMBAYARAN: Rp ${data.total.toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
+        
+        const ttdY = finalY + 25;
+        doc.setFont("helvetica", "normal");
+        doc.text(`Banyuwangi, ${data.tanggal}`, 145, ttdY);
+        doc.text("Hormat Kami,", 145, ttdY + 5);
+        doc.setFont("helvetica", "bold");
+        doc.text("NANDA KRISBIANTO", 145, ttdY + 25);
+
+        doc.save(`Nota_NandaTeknik_${data.notaId}.pdf`);
     }
 
     function resetUI() { ['cardWO', 'cardNota', 'cardHistory', 'noData'].forEach(id => document.getElementById(id).style.display = 'none'); }
     function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
-    function checkAdmin() { if(localStorage.getItem('role') === 'admin') document.querySelectorAll('.admin-tools').forEach(el => el.style.display = 'block'); }
-    
-    // Admin Actions (Simplified)
-    async function updateStatusProgress() {
-        const id = document.getElementById('woIdDisplay').innerText;
-        const { value: val } = await Swal.fire({
-            title: 'Update Progress',
-            html: `<select id="s-st" class="form-select mb-2"><option value="Proses">Proses</option><option value="Selesai">Selesai</option></select><input id="s-kt" class="form-control" placeholder="Keterangan">`,
-            preConfirm: () => [document.getElementById('s-st').value, document.getElementById('s-kt').value]
-        });
-        if(val) { showLoader(true); await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'updateStatus', woId: id, newStatus: val[0], keterangan: val[1] }) }); quickView(id); }
-    }
-    async function hapusData(type) {
-        const id = (type === 'WO') ? document.getElementById('woIdDisplay').innerText : document.getElementById('notaIdDisplay').innerText;
-        if((await Swal.fire({ title: 'Hapus?', showCancelButton: true })).isConfirmed) {
-            showLoader(true); await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteData', id: id.replace('#',''), type: type }) }); location.reload();
-        }
-    }
 </script>
 </body>
 </html>
