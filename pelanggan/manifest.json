@@ -1,0 +1,40 @@
+{
+    "name": "Nanda Teknik Banyuwangi",
+    "short_name": "Nanda Teknik Banyuwangi",
+    "scope": "https://www.nandateknik.com",
+    "start_url": "https://www.nandateknik.com",
+    "display": "standalone",
+    "background_color": "#fff",
+    "theme_color": "#2B0C93",
+    "description": "Electrical, Software, Network Engineer",
+    "icons": [{
+        
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s48/engineering%20(1).png",
+      "sizes": "48x48",
+      "type": "image/png"
+    }, {
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s72/engineering%20(1).png",
+      "sizes": "72x72",
+      "type": "image/png"
+    }, {
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s96/engineering%20(1).png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }, {
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s144/engineering%20(1).png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }, {
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s168/engineering%20(1).png",
+      "sizes": "168x168",
+      "type": "image/png"
+    }, {
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s192/engineering%20(1).png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }, {
+      "src": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9HBlS7m_-qEK-n46cjlc1OADmqlobkfaO4qVHdMnMUNeqyd_MGIibmSS2PP7E_FDU6UszMwlnVfOmHD2Il77fI0bpmWp2VMI1yg8adc0CklSou482nY5OOKSeVBuYjXrPHSWc8wdLBBCJnpJIunwypaUNQScJ2brgltbh0RY8zqTj9UzflCpSco2Z9w/s512/engineering%20(1).png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }]
+  }
