@@ -9,116 +9,180 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root { --p-blue: #0d6efd; --bg-soft: #f4f7fe; }
-        body { background: var(--bg-soft); font-family: 'Segoe UI', Tahoma, sans-serif; padding-bottom: 120px; }
+        :root { --primary: #0d6efd; --bg: #f8f9fc; --dark: #0046b8; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 110px; }
         
-        /* HEADER BIRU MEWAH */
-        .header-brand {
-            background: linear-gradient(-45deg, #0d6efd, #00c6ff);
-            padding: 30px 20px;
-            text-align: center;
-            color: white;
-            border-radius: 0 0 30px 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15);
+        /* HEADER STYLE CONSISTENT */
+        .header-brand { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); 
+            padding: 40px 20px; 
+            text-align: center; 
+            color: white; 
+            border-radius: 0 0 35px 35px; 
+            margin-bottom: -50px; /* Overlap effect */
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
         }
-        .header-logo { width: 60px; height: 60px; background: white; border-radius: 15px; padding: 8px; margin-bottom: 10px; }
+        .header-logo { 
+            width: 70px; height: 70px; 
+            background: white; border-radius: 18px; 
+            padding: 10px; margin-bottom: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+        }
 
-        .card { border-radius: 20px; border: none; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
-        #map { height: 200px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #ddd; z-index: 1; }
+        .main-card { 
+            border: none; border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            background: white; 
+            position: relative;
+            z-index: 3;
+        }
+
+        #map { height: 220px; border-radius: 15px; margin-bottom: 10px; border: 2px solid #eee; z-index: 1; }
         
-        .price-box { background: #f8faff; padding: 15px; border-radius: 15px; border: 1px dashed #0d6efd; margin-top: 20px; }
-        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .price-box { 
+            background: #f0f7ff; 
+            padding: 18px; 
+            border-radius: 20px; 
+            border: 1px dashed var(--primary); 
+            margin-top: 20px; 
+        }
+        
+        .loader-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.85); z-index: 11000; 
+            flex-direction: column; align-items: center; justify-content: center; 
+        }
 
-        /* BOTTOM NAV */
-        .bottom-nav { position: fixed; bottom: 15px; left: 15px; right: 15px; background: white; display: flex; justify-content: space-around; padding: 12px 5px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 1000; }
-        .nav-item { color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 9px; font-weight: 700; text-decoration: none; width: 25%; }
-        .nav-item.active { color: var(--p-blue); }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
+        /* FLOATING BOTTOM NAVIGATION */
+        .bottom-nav {
+            position: fixed; bottom: 15px; left: 15px; right: 15px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around;
+            padding: 12px 5px; border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .nav-item {
+            text-decoration: none; color: #94a3b8; text-align: center; 
+            font-size: 9px; font-weight: 700; width: 25%; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+
+        .form-label-custom { font-size: 11px; font-weight: 800; color: #6c757d; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .list-group-item { border: none; background: #f8f9fc; margin-bottom: 5px; border-radius: 12px !important; }
     </style>
 </head>
 <body>
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary"></div>
-    <span class="mt-2 fw-bold">Memproses Data...</span>
+    <span class="mt-2 fw-bold">Memproses Data Sam...</span>
 </div>
 
 <div class="header-brand">
-    <img src="image-none-text.png" class="header-logo" alt="Logo" onerror="this.style.display='none'">
-    <h5 class="fw-bold mb-0">BOOKING PEKERJAAN</h5>
+    <img src="image-none-text.png" class="header-logo" alt="Logo" onerror="this.src='https://via.placeholder.com/70'">
+    <h4 class="fw-bold mb-0">BOOKING JASA</h4>
     <p class="small opacity-75 mb-0">Nanda Teknik Banyuwangi</p>
 </div>
 
-<div class="container">
-    <div class="card p-4">
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">EMAIL PELANGGAN</label>
-            <div class="input-group">
-                <span class="input-group-text bg-white"><i class="fas fa-envelope text-muted"></i></span>
-                <input type="email" id="email" class="form-control" placeholder="Contoh: nanda@gmail.com" oninput="checkEmailDelay()">
+<div class="container mt-5 pt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card main-card shadow-lg mb-4">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label-custom text-uppercase">Email Pelanggan</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
+                            <input type="email" id="email" class="form-control border-start-0" placeholder="nanda@gmail.com" oninput="checkEmailDelay()">
+                        </div>
+                        <div id="emailMsg" class="text-success small fw-bold mt-2" style="display:none;"><i class="fas fa-check-circle"></i> Pelanggan Terdaftar</div>
+                        <button id="btnReg" class="btn btn-sm btn-outline-danger w-100 mt-2 rounded-pill" style="display:none;" onclick="location.href='register.html'">Email Belum Ada. Daftar Baru?</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-custom text-uppercase">Jadwal Pengerjaan</label>
+                        <input type="datetime-local" id="tglBooking" class="form-control rounded-3">
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
+                            <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat pendaftaran</label>
+                        </div>
+                        <div id="map"></div>
+                        <textarea id="alamat" class="form-control small rounded-3" rows="2" placeholder="Detail Alamat Pengerjaan..."></textarea>
+                        <input type="hidden" id="lat"><input type="hidden" id="lang">
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-3">
+                        <label class="form-label-custom text-uppercase">Pilih Jasa / Pekerjaan</label>
+                        <div class="input-group mb-2">
+                            <select id="jasaSelect" class="form-select rounded-start-3"><option value="">-- Pilih Jasa --</option></select>
+                            <button class="btn btn-primary px-3" onclick="tambahJasaList()"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div class="input-group mb-2">
+                            <input type="text" id="manualNama" class="form-control w-50" placeholder="Jasa Manual">
+                            <input type="number" id="manualHarga" class="form-control w-25" placeholder="Rp">
+                            <button class="btn btn-secondary btn-sm px-3" onclick="tambahJasaManual()">Ok</button>
+                        </div>
+                    </div>
+
+                    <ul class="list-group mb-3" id="itemList"></ul>
+
+                    <div class="price-box shadow-sm">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted">Subtotal Jasa:</span>
+                            <span id="txtSubtotalJasa" class="fw-bold">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-muted">Ongkir / Bensin:</span>
+                            <span id="txtBensin" class="fw-bold">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold text-primary fs-5 border-top mt-2 pt-2">
+                            <span>TOTAL:</span>
+                            <span id="txtTotal">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow" onclick="simpanDataNota()">
+                        <i class="fas fa-save me-2"></i> SIMPAN BOOKING
+                    </button>
+                </div>
             </div>
-            <div id="emailMsg" class="text-success small fw-bold mt-2" style="display:none;"><i class="fas fa-check-circle"></i> Pelanggan Terdaftar</div>
-            <button id="btnReg" class="btn btn-sm btn-outline-danger w-100 mt-2" style="display:none;" onclick="location.href='register.html'">Email Belum Ada. Daftar Baru?</button>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">JADWAL PENGERJAAN</label>
-            <input type="datetime-local" id="tglBooking" class="form-control">
-        </div>
-
-        <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
-            <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat pendaftaran</label>
-        </div>
-
-        <div class="mb-3">
-            <div id="map"></div>
-            <textarea id="alamat" class="form-control small" rows="2" placeholder="Detail Alamat..."></textarea>
-            <input type="hidden" id="lat"><input type="hidden" id="lang">
-        </div>
-
-        <hr>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">PILIH JASA/PEKERJAAN</label>
-            <div class="input-group mb-2">
-                <select id="jasaSelect" class="form-select small"><option value="">-- Pilih Jasa --</option></select>
-                <button class="btn btn-primary" onclick="tambahJasaList()">Tambah</button>
-            </div>
-            <div class="input-group mb-2">
-                <input type="text" id="manualNama" class="form-control w-50 small" placeholder="Jasa Manual">
-                <input type="number" id="manualHarga" class="form-control w-25 small" placeholder="Harga">
-                <button class="btn btn-secondary btn-sm" onclick="tambahJasaManual()">Manual</button>
-            </div>
-        </div>
-
-        <ul class="list-group mb-3" id="itemList"></ul>
-
-        <div class="price-box">
-            <div class="d-flex justify-content-between small"><span>Subtotal Jasa:</span><span id="txtSubtotalJasa">Rp 0</span></div>
-            <div class="d-flex justify-content-between small"><span>Ongkir/Bensin:</span><span id="txtBensin">Rp 0</span></div>
-            <div class="d-flex justify-content-between fw-bold text-primary fs-5 border-top mt-2 pt-2"><span>TOTAL:</span><span id="txtTotal">Rp 0</span></div>
-        </div>
-
-        <button class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow" onclick="simpanDataNota()">
-            <i class="fas fa-save me-2"></i>SIMPAN BOOKING
-        </button>
     </div>
 </div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>Portal</span></a>
-    <a href="update.html" class="nav-item"><i class="fas fa-user-edit"></i><span>Update</span></a>
-    <a href="register.html" class="nav-item"><i class="fas fa-user-plus"></i><span>Register</span></a>
-    <a href="booking.html" class="nav-item active"><i class="fas fa-calendar-check"></i><span>Booking</span></a>
+    <a href="index.html" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Portal</span>
+    </a>
+    <a href="update.html" class="nav-item">
+        <i class="fas fa-user-edit"></i>
+        <span>Update</span>
+    </a>
+    <a href="register.html" class="nav-item">
+        <i class="fas fa-user-plus"></i>
+        <span>Register</span>
+    </a>
+    <a href="booking.html" class="nav-item active">
+        <i class="fas fa-calendar-check"></i>
+        <span>Booking</span>
+    </a>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // URL SCRIPT GOOGLE SAMA SEPERTI DI PROMPT ANDA
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx7XdXXusDSkurHqTynBRMxLBGg_Q_f18YGUVJ1VX7ca0o6-VMmSpbGwZzH5VqFsWJP/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
     
@@ -157,19 +221,21 @@
     }
 
     async function checkEmail() {
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         if(email.length < 5) return;
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
-        const result = await res.json();
-        if(result.success) {
-            pelangganData = result.data;
-            document.getElementById('emailMsg').style.display = 'block';
-            document.getElementById('btnReg').style.display = 'none';
-        } else {
-            pelangganData = null;
-            document.getElementById('emailMsg').style.display = 'none';
-            document.getElementById('btnReg').style.display = 'block';
-        }
+        try {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
+            const result = await res.json();
+            if(result.success) {
+                pelangganData = result.data;
+                document.getElementById('emailMsg').style.display = 'block';
+                document.getElementById('btnReg').style.display = 'none';
+            } else {
+                pelangganData = null;
+                document.getElementById('emailMsg').style.display = 'none';
+                document.getElementById('btnReg').style.display = 'block';
+            }
+        } catch(e) {}
     }
 
     function toggleSync() {
@@ -198,9 +264,9 @@
 
     function tambahJasaList() {
         const select = document.getElementById('jasaSelect');
+        if(!select.value) return;
         const nama = select.options[select.selectedIndex].text;
         const harga = parseInt(select.value);
-        if(!harga) return;
         const existing = selectedItems.find(i => i.nama === nama);
         if(existing) { existing.qty += 1; } 
         else { selectedItems.push({ nama, harga, qty: 1 }); }
@@ -221,11 +287,11 @@
         const list = document.getElementById('itemList');
         list.innerHTML = '';
         selectedItems.forEach((item, index) => {
-            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2">
-                <div class="small fw-bold">${item.nama}</div>
+            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                <div class="small fw-bold text-dark">${item.nama}</div>
                 <div class="d-flex align-items-center">
-                    <span class="small me-2">Rp ${(item.harga * item.qty).toLocaleString()}</span>
-                    <button class="btn btn-sm btn-danger py-0" onclick="removeItem(${index})">&times;</button>
+                    <span class="small me-3 fw-bold">Rp ${(item.harga * item.qty).toLocaleString()}</span>
+                    <button class="btn btn-sm btn-danger rounded-circle p-1" style="width:24px;height:24px;line-height:10px;" onclick="removeItem(${index})">&times;</button>
                 </div>
             </li>`;
         });
@@ -237,11 +303,11 @@
     function hitungBiaya() {
         const lat = document.getElementById('lat').value;
         const lng = document.getElementById('lang').value;
-        let jarak = 0;
+        let bensin = 0;
         if(lat && lng) {
-            jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+            let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+            bensin = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         }
-        let bensin = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         const subtotal = selectedItems.reduce((acc, curr) => acc + (curr.harga * curr.qty), 0);
         document.getElementById('txtBensin').innerText = "Rp " + bensin.toLocaleString();
         document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotal.toLocaleString();
@@ -250,10 +316,10 @@
     }
 
     async function simpanDataNota() {
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         const tgl = document.getElementById('tglBooking').value;
         const total = hitungBiaya();
-        if(!email || !tgl || selectedItems.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'warning');
+        if(!email || !tgl || selectedItems.length === 0) return Swal.fire('Lengkapi Data', 'Email, Jadwal, lan Jasa kudu diisi Sam!', 'warning');
 
         document.getElementById('loader').style.display = 'flex';
         try {
@@ -271,11 +337,11 @@
             const res = await response.json();
             document.getElementById('loader').style.display = 'none';
             if(res.success) {
-                Swal.fire('Berhasil!', 'Nota: ' + res.notaId, 'success').then(() => location.reload());
+                Swal.fire('Berhasil Sam!', 'ID Nota: ' + res.notaId, 'success').then(() => location.reload());
             }
         } catch(e) { 
             document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Gagal simpan', 'error'); 
+            Swal.fire('Error', 'Gagal nyimpen data!', 'error'); 
         }
     }
 </script>
