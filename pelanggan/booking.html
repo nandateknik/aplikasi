@@ -10,66 +10,58 @@
     
     <style>
         :root { --primary: #0d6efd; --bg: #f8f9fc; --dark: #0046b8; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 110px; }
+        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 120px; }
         
-        /* HEADER STYLE CONSISTENT */
+        /* HEADER STYLE */
         .header-brand { 
             background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); 
-            padding: 40px 20px; 
-            text-align: center; 
-            color: white; 
-            border-radius: 0 0 35px 35px; 
-            margin-bottom: -50px; /* Overlap effect */
-            position: relative;
-            z-index: 2;
+            padding: 40px 20px; text-align: center; color: white; 
+            border-radius: 0 0 35px 35px; margin-bottom: -50px; 
+            position: relative; z-index: 10;
             box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
         }
         .header-logo { 
-            width: 70px; height: 70px; 
-            background: white; border-radius: 18px; 
-            padding: 10px; margin-bottom: 12px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+            width: 70px; height: 70px; background: white; border-radius: 18px; 
+            padding: 10px; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
         }
 
         .main-card { 
             border: none; border-radius: 25px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            background: white; 
-            position: relative;
-            z-index: 3;
+            background: white; position: relative; z-index: 20;
         }
 
-        #map { height: 220px; border-radius: 15px; margin-bottom: 10px; border: 2px solid #eee; z-index: 1; }
+        /* MAP FIX: Pastikan Z-Index di bawah Card tapi di atas background */
+        #map { 
+            height: 250px; width: 100%; border-radius: 15px; 
+            margin-bottom: 10px; border: 2px solid #eee; 
+            z-index: 5 !important; position: relative;
+        }
         
         .price-box { 
-            background: #f0f7ff; 
-            padding: 18px; 
-            border-radius: 20px; 
-            border: 1px dashed var(--primary); 
-            margin-top: 20px; 
+            background: #f0f7ff; padding: 18px; border-radius: 20px; 
+            border: 1px dashed var(--primary); margin-top: 20px; 
         }
         
         .loader-overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.85); z-index: 11000; 
+            background: rgba(255,255,255,0.85); z-index: 99999; 
             flex-direction: column; align-items: center; justify-content: center; 
         }
 
-        /* FLOATING BOTTOM NAVIGATION */
         .bottom-nav {
             position: fixed; bottom: 15px; left: 15px; right: 15px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around;
+            background: white; display: flex; justify-content: space-around;
             padding: 12px 5px; border-radius: 22px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
+            z-index: 10000; border: 1px solid rgba(0,0,0,0.05);
         }
         .nav-item {
             text-decoration: none; color: #94a3b8; text-align: center; 
-            font-size: 9px; font-weight: 700; width: 25%; transition: 0.3s;
+            font-size: 9px; font-weight: 700; width: 25%;
             display: flex; flex-direction: column; align-items: center;
         }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
 
         .form-label-custom { font-size: 11px; font-weight: 800; color: #6c757d; letter-spacing: 0.5px; margin-bottom: 5px; }
@@ -80,7 +72,7 @@
 
 <div class="loader-overlay" id="loader">
     <div class="spinner-border text-primary"></div>
-    <span class="mt-2 fw-bold">Memproses Data Sam...</span>
+    <span class="mt-2 fw-bold" id="loaderText">Memproses Data Sam...</span>
 </div>
 
 <div class="header-brand">
@@ -92,7 +84,7 @@
 <div class="container mt-5 pt-4">
     <div class="row justify-content-center">
         <div class="col-md-7 col-lg-6">
-            <div class="card main-card shadow-lg mb-4">
+            <div class="card main-card mb-4">
                 <div class="card-body p-4">
                     <div class="mb-3">
                         <label class="form-label-custom text-uppercase">Email Pelanggan</label>
@@ -100,7 +92,7 @@
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
                             <input type="email" id="email" class="form-control border-start-0" placeholder="nanda@gmail.com" oninput="checkEmailDelay()">
                         </div>
-                        <div id="emailMsg" class="text-success small fw-bold mt-2" style="display:none;"><i class="fas fa-check-circle"></i> Pelanggan Terdaftar</div>
+                        <div id="emailMsg" class="small fw-bold mt-2" style="display:none;"></div>
                         <button id="btnReg" class="btn btn-sm btn-outline-danger w-100 mt-2 rounded-pill" style="display:none;" onclick="location.href='register.html'">Email Belum Ada. Daftar Baru?</button>
                     </div>
 
@@ -111,11 +103,11 @@
 
                     <div class="mb-3">
                         <div class="form-check form-switch mb-2">
-                            <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()">
+                            <input class="form-check-input" type="checkbox" id="syncAddress" onchange="toggleSync()" disabled>
                             <label class="form-check-label small fw-bold" for="syncAddress">Gunakan alamat pendaftaran</label>
                         </div>
                         <div id="map"></div>
-                        <textarea id="alamat" class="form-control small rounded-3" rows="2" placeholder="Detail Alamat Pengerjaan..."></textarea>
+                        <textarea id="alamat" class="form-control small rounded-3" rows="2" placeholder="Tarik pin di peta atau tulis detail alamat..."></textarea>
                         <input type="hidden" id="lat"><input type="hidden" id="lang">
                     </div>
 
@@ -161,22 +153,10 @@
 </div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item">
-        <i class="fas fa-home"></i>
-        <span>Portal</span>
-    </a>
-    <a href="update.html" class="nav-item">
-        <i class="fas fa-user-edit"></i>
-        <span>Update</span>
-    </a>
-    <a href="register.html" class="nav-item">
-        <i class="fas fa-user-plus"></i>
-        <span>Register</span>
-    </a>
-    <a href="booking.html" class="nav-item active">
-        <i class="fas fa-calendar-check"></i>
-        <span>Booking</span>
-    </a>
+    <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>Portal</span></a>
+    <a href="update.html" class="nav-item"><i class="fas fa-user-edit"></i><span>Update</span></a>
+    <a href="register.html" class="nav-item"><i class="fas fa-user-plus"></i><span>Register</span></a>
+    <a href="booking.html" class="nav-item active"><i class="fas fa-calendar-check"></i><span>Booking</span></a>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -194,15 +174,27 @@
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
+        
         initMap();
         loadDaftarHarga();
     };
 
     function initMap() {
-        map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
-        marker.on('dragend', (e) => updateLocationInfo(e.target.getLatLng().lat, e.target.getLatLng().lng));
+        // Fix for grey tiles: Ensure map container is sized
+        setTimeout(() => {
+            map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            
+            marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
+            marker.on('dragend', (e) => {
+                const pos = e.target.getLatLng();
+                updateLocationInfo(pos.lat, pos.lng);
+            });
+            
+            map.invalidateSize(); // Force refresh map render
+        }, 300);
     }
 
     function updateLocationInfo(lat, lng) {
@@ -222,38 +214,56 @@
 
     async function checkEmail() {
         const email = document.getElementById('email').value.trim();
+        const msgDiv = document.getElementById('emailMsg');
         if(email.length < 5) return;
+
+        msgDiv.style.display = 'block';
+        msgDiv.className = "text-muted small mt-2";
+        msgDiv.innerHTML = "Mengecek email...";
+
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getPelangganByEmail', email: email }) });
+            // Gunakan query string untuk GET biar lebih stabil untuk pencarian
+            const res = await fetch(`${WEB_APP_URL}?action=getPelangganByEmail&email=${encodeURIComponent(email)}`);
             const result = await res.json();
+            
             if(result.success) {
                 pelangganData = result.data;
-                document.getElementById('emailMsg').style.display = 'block';
+                msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Pelanggan: ${result.data.nama}`;
+                msgDiv.className = "text-success small fw-bold mt-2";
                 document.getElementById('btnReg').style.display = 'none';
+                document.getElementById('syncAddress').disabled = false;
             } else {
                 pelangganData = null;
-                document.getElementById('emailMsg').style.display = 'none';
+                msgDiv.style.display = 'none';
                 document.getElementById('btnReg').style.display = 'block';
+                document.getElementById('syncAddress').disabled = true;
+                document.getElementById('syncAddress').checked = false;
             }
-        } catch(e) {}
+        } catch(e) {
+            console.error(e);
+            msgDiv.innerHTML = "Gagal koneksi server";
+        }
     }
 
     function toggleSync() {
         if(document.getElementById('syncAddress').checked && pelangganData) {
-            const lat = pelangganData.lat;
-            const lng = pelangganData.lang;
-            map.setView([lat, lng], 16);
-            marker.setLatLng([lat, lng]);
-            document.getElementById('alamat').value = pelangganData.alamat;
-            document.getElementById('lat').value = lat;
-            document.getElementById('lang').value = lng;
-            hitungBiaya();
+            const lat = parseFloat(pelangganData.lat);
+            const lng = parseFloat(pelangganData.lang);
+            if(lat && lng) {
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                document.getElementById('alamat').value = pelangganData.alamat;
+                document.getElementById('lat').value = lat;
+                document.getElementById('lang').value = lng;
+                hitungBiaya();
+                map.invalidateSize();
+            }
         }
     }
 
     async function loadDaftarHarga() {
         try {
-            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDaftarHarga' }) });
+            const res = await fetch(`${WEB_APP_URL}?action=getDaftarHarga`);
             const result = await res.json();
             const select = document.getElementById('jasaSelect');
             result.data.forEach(item => {
