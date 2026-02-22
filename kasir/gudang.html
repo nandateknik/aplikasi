@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gudang (Restock) - POS PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50">
+
+    <header class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">G</div>
+                <h1 class="font-black text-xl text-slate-800 tracking-tight uppercase">Gudang<span class="text-orange-600">Stock</span></h1>
+            </div>
+            <div id="user-display" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full"></div>
+        </div>
+    </header>
+
+    <nav class="max-w-7xl mx-auto p-4 flex gap-2 overflow-x-auto whitespace-nowrap">
+        <a href="index.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Dashboard</a>
+        <a href="product.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Produk</a>
+        <a href="gudang.html" class="nav-btn active-nav !bg-orange-600">Gudang</a>
+        <a href="kasir.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Kasir</a>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <section class="card h-fit sticky top-20">
+            <h3 class="font-extrabold text-slate-800 uppercase tracking-wider text-sm mb-6">Input Stok Masuk</h3>
+            
+            <div class="space-y-4">
+                <input type="hidden" id="g-id">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Produk Terpilih</label>
+                    <input type="text" id="g-nama" readonly class="bg-slate-100 cursor-not-allowed font-bold" placeholder="Pilih produk di tabel...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Stok Saat Ini</label>
+                        <input type="text" id="g-stok-lama" readonly class="bg-slate-100 cursor-not-allowed text-center font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-orange-600 uppercase tracking-widest ml-1">Jumlah Tambah</label>
+                        <input type="number" id="g-tambah" placeholder="0" class="text-center border-orange-300 focus:ring-orange-500 text-lg font-black">
+                    </div>
+                </div>
+                
+                <div class="pt-4">
+                    <button onclick="updateStok()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black hover:bg-orange-700 shadow-lg shadow-orange-200 transition-all">
+                        KONFIRMASI STOK MASUK
+                    </button>
+                    <button onclick="resetForm()" class="w-full mt-2 text-slate-400 text-xs font-bold hover:text-slate-600">BATAL</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-2 card">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-extrabold text-slate-800 uppercase tracking-wider text-sm">Cek & Pilih Barang</h3>
+                <input type="text" id="g-search" onkeyup="renderGudang()" placeholder="Cari barang..." class="!w-48 text-xs">
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-100">
+                            <th class="pb-4">Produk</th>
+                            <th class="pb-4 text-center">Stok Sekarang</th>
+                            <th class="pb-4 text-center">Status</th>
+                            <th class="pb-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gudang-table-body" class="text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script>
+        if(session) document.getElementById('user-display').innerText = `Admin: ${session.nama}`;
+
+        async function renderGudang() {
+            const searchQuery = document.getElementById('g-search').value.toLowerCase();
+            const products = await db.products.toArray();
+            const filtered = products.filter(p => p.nama.toLowerCase().includes(searchQuery));
+            
+            const body = document.getElementById('gudang-table-body');
+            
+            body.innerHTML = filtered.map(p => `
+                <tr class="border-b border-slate-50 hover:bg-orange-50/30 transition-all">
+                    <td class="py-4">
+                        <div class="font-bold text-slate-700">${p.nama}</div>
+                        <div class="text-[10px] text-slate-400 font-mono italic">Modal: Rp ${ (p.hargaBeli || 0).toLocaleString() }</div>
+                    </td>
+                    <td class="py-4 text-center font-black text-slate-600">
+                        ${p.stock}
+                    </td>
+                    <td class="py-4 text-center">
+                        ${p.stock < 5 ? 
+                            '<span class="bg-red-100 text-red-600 text-[9px] px-2 py-1 rounded-full font-black uppercase">Kritis</span>' : 
+                            '<span class="bg-green-100 text-green-600 text-[9px] px-2 py-1 rounded-full font-black uppercase">Aman</span>'}
+                    </td>
+                    <td class="py-4 text-center">
+                        <button onclick="pilihProduk(${p.id}, '${p.nama}', ${p.stock})" 
+                                class="bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg text-xs font-black hover:bg-orange-600 hover:text-white transition-all">
+                            PILIH
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function pilihProduk(id, nama, stok) {
+            document.getElementById('g-id').value = id;
+            document.getElementById('g-nama').value = nama;
+            document.getElementById('g-stok-lama').value = stok;
+            document.getElementById('g-tambah').focus();
+        }
+
+        async function updateStok() {
+            const id = document.getElementById('g-id').value;
+            const tambah = parseInt(document.getElementById('g-tambah').value);
+            const stokLama = parseInt(document.getElementById('g-stok-lama').value);
+
+            if(!id) return alert("Pilih produk dulu!");
+            if(isNaN(tambah) || tambah <= 0) return alert("Masukkan jumlah tambahan yang benar!");
+
+            try {
+                const totalBaru = stokLama + tambah;
+                await db.products.update(Number(id), { stock: totalBaru });
+                
+                alert(`Berhasil! Stok ${document.getElementById('g-nama').value} sekarang: ${totalBaru}`);
+                resetForm();
+                renderGudang();
+            } catch (e) {
+                alert("Gagal update stok: " + e.message);
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('g-id').value = '';
+            document.getElementById('g-nama').value = '';
+            document.getElementById('g-stok-lama').value = '';
+            document.getElementById('g-tambah').value = '';
+        }
+
+        renderGudang();
+    </script>
+</body>
+</html>
