@@ -15,7 +15,7 @@
     <header class="bg-white border-b sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-200">P</div>
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">P</div>
                 <h1 class="font-black text-xl text-slate-800 tracking-tight">POS<span class="text-blue-600">PRO</span></h1>
             </div>
             <div class="flex items-center gap-4">
@@ -45,6 +45,10 @@
                     <input type="text" id="p-nama" placeholder="Ketik nama produk...">
                 </div>
                 <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Harga Modal / Beli (Rp)</label>
+                    <input type="number" id="p-harga-beli" placeholder="0" class="!bg-orange-50/50 focus:ring-orange-500">
+                </div>
+                <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Harga Jual (Rp)</label>
                     <input type="number" id="p-harga" placeholder="0">
                 </div>
@@ -54,7 +58,7 @@
                 </div>
                 
                 <div class="flex gap-2 pt-4">
-                    <button onclick="saveProduct()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">SIMPAN DATA</button>
+                    <button onclick="saveProduct()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">SIMPAN DATA</button>
                     <button onclick="clearForm()" class="px-4 py-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-all">BATAL</button>
                 </div>
             </div>
@@ -64,7 +68,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h3 class="font-extrabold text-slate-800 uppercase tracking-wider text-sm">Inventaris Barang</h3>
-                    <p class="text-xs text-slate-400">Total produk tersedia di database lokal</p>
+                    <p class="text-xs text-slate-400">Kelola stok dan margin profit</p>
                 </div>
                 <div class="flex gap-2 w-full md:w-auto">
                     <input type="text" id="p-search" onkeyup="renderProducts()" placeholder="Cari..." class="text-xs py-2 px-3 !w-full md:!w-48">
@@ -79,13 +83,14 @@
                     <thead>
                         <tr class="text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-100">
                             <th class="pb-4 font-black">Produk</th>
-                            <th class="pb-4 font-black text-right">Harga</th>
+                            <th class="pb-4 font-black text-right">Modal</th>
+                            <th class="pb-4 font-black text-right">Jual</th>
                             <th class="pb-4 font-black text-center">Stok</th>
                             <th class="pb-4 font-black text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="product-table-body" class="text-sm">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -93,10 +98,8 @@
 
     <script src="js/config.js"></script>
     <script>
-        // Set User Display
         if(session) document.getElementById('user-display').innerText = `KASIR: ${session.nama}`;
 
-        // RENDER DATA
         async function renderProducts() {
             const searchQuery = document.getElementById('p-search').value.toLowerCase();
             const products = await db.products.toArray();
@@ -105,7 +108,7 @@
             const body = document.getElementById('product-table-body');
             
             if (filtered.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="py-12 text-center text-slate-300 italic text-xs">Produk tidak ditemukan...</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-300 italic text-xs">Produk tidak ditemukan...</td></tr>`;
                 return;
             }
 
@@ -114,6 +117,9 @@
                     <td class="py-4">
                         <div class="font-bold text-slate-700">${p.nama}</div>
                         <div class="text-[10px] text-slate-400 font-mono">ID-${p.id.toString().padStart(4, '0')}</div>
+                    </td>
+                    <td class="py-4 text-right text-slate-400 italic">
+                        ${(p.hargaBeli || 0).toLocaleString()}
                     </td>
                     <td class="py-4 text-right font-black text-blue-600">
                         <span class="text-[10px] font-normal mr-1 italic text-slate-400">Rp</span>${p.harga.toLocaleString()}
@@ -125,27 +131,36 @@
                     </td>
                     <td class="py-4 text-center">
                         <div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onclick="editProduct(${p.id})" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                            <button onclick="deleteProduct(${p.id})" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            <button onclick="editProduct(${p.id})" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            <button onclick="deleteProduct(${p.id})" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
                         </div>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // SAVE LOGIC
         async function saveProduct() {
             const id = document.getElementById('p-id').value;
             const nama = document.getElementById('p-nama').value.trim();
+            const hargaBeli = parseInt(document.getElementById('p-harga-beli').value) || 0;
             const harga = parseInt(document.getElementById('p-harga').value);
             const stock = parseInt(document.getElementById('p-stok').value);
 
             if(!nama || isNaN(harga)) {
-                alert("Lengkapi nama dan harga!");
+                alert("Lengkapi nama barang dan harga jual!");
                 return;
             }
 
-            const data = { nama, harga, stock: stock || 0 };
+            const data = { 
+                nama, 
+                hargaBeli, // Data harga beli ditambahkan
+                harga, 
+                stock: stock || 0 
+            };
 
             try {
                 if(id) {
@@ -165,6 +180,7 @@
             if(p) {
                 document.getElementById('p-id').value = p.id;
                 document.getElementById('p-nama').value = p.nama;
+                document.getElementById('p-harga-beli').value = p.hargaBeli || 0;
                 document.getElementById('p-harga').value = p.harga;
                 document.getElementById('p-stok').value = p.stock;
                 document.getElementById('mode-badge').innerText = "Mode Edit";
@@ -182,13 +198,13 @@
         function clearForm() {
             document.getElementById('p-id').value = '';
             document.getElementById('p-nama').value = '';
+            document.getElementById('p-harga-beli').value = '';
             document.getElementById('p-harga').value = '';
             document.getElementById('p-stok').value = '';
             document.getElementById('mode-badge').innerText = "Tambah Baru";
             document.getElementById('mode-badge').className = "text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase";
         }
 
-        // PDF EXPORT
         async function exportToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -199,17 +215,24 @@
             doc.setFontSize(10);
             doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 28);
 
-            const tableData = prods.map(p => [p.id, p.nama, `Rp ${p.harga.toLocaleString()}`, p.stock]);
+            // Export PDF juga menyertakan kolom modal
+            const tableData = prods.map(p => [
+                p.id, 
+                p.nama, 
+                `Rp ${(p.hargaBeli || 0).toLocaleString()}`, 
+                `Rp ${p.harga.toLocaleString()}`, 
+                p.stock
+            ]);
             
             doc.autoTable({
-                head: [['ID', 'Nama Barang', 'Harga', 'Stok']],
+                head: [['ID', 'Nama Barang', 'Modal', 'Harga Jual', 'Stok']],
                 body: tableData,
                 startY: 35,
                 theme: 'grid',
                 headStyles: { fillColor: [37, 99, 235] }
             });
 
-            doc.save("stok-produk.pdf");
+            doc.save("stok-produk-lengkap.pdf");
         }
 
         renderProducts();
