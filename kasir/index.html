@@ -3,320 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem POS Terintegrasi</title>
+    <title>Dashboard - POS PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <style>
-        @media print { body * { visibility: hidden; } #nota-print, #nota-print * { visibility: visible; }
-            #nota-print { position: absolute; left: 0; top: 0; width: 58mm; color: black; } }
-        .page { display: none; } .page.active { display: block; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-50">
+<body class="bg-slate-50">
 
-    <div id="page-login" class="page active flex items-center justify-center h-screen">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-3xl font-bold mb-6 text-center text-blue-700">POS LOGIN</h2>
-            <input type="text" id="l-user" placeholder="Username" class="w-full p-3 mb-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="password" id="l-pass" placeholder="Password" class="w-full p-3 mb-6 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition">MASUK</button>
-        </div>
-    </div>
-
-    <div id="app" class="page min-h-screen">
-        <nav class="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-50">
+    <header class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img id="nav-logo" src="" class="h-10 w-10 rounded-full bg-white hidden object-cover">
-                <div>
-                    <div id="nav-store-name" class="font-bold leading-none">MEMUAT...</div>
-                    <div id="user-info" class="text-[10px] opacity-75 uppercase tracking-wider"></div>
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">P</div>
+                <h1 class="font-black text-xl text-slate-800 tracking-tight uppercase">Admin<span class="text-blue-600">Pro</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="user-display" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full"></div>
+                <button onclick="logout()" class="text-red-500 hover:text-red-700 text-sm font-bold">Keluar</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="max-w-7xl mx-auto p-4 flex gap-2">
+        <a href="index.html" class="nav-btn active-nav">Dashboard</a>
+        <a href="product.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Produk</a>
+        <a href="kasir.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Kasir</a>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4">
+        
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card flex flex-col justify-between border-l-4 border-l-blue-600">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Produk</span>
+                <div class="flex items-end justify-between mt-2">
+                    <span id="stat-total-items" class="text-4xl font-black text-slate-800">0</span>
+                    <span class="text-xs text-slate-400">Items</span>
                 </div>
             </div>
-            <div id="menu" class="hidden md:flex gap-4 text-sm font-medium"></div>
-            <button onclick="location.reload()" class="bg-red-500 px-4 py-1 rounded-lg text-xs font-bold shadow">LOGOUT</button>
-        </nav>
-
-        <main class="p-4 max-w-6xl mx-auto">
-            <div id="sec-kasir" class="section hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 space-y-4">
-                    <input type="text" onkeyup="filterProduk(this.value)" placeholder="Cari produk..." class="w-full p-3 border rounded-xl shadow-sm">
-                    <div id="prod-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+            
+            <div class="card flex flex-col justify-between border-l-4 border-l-orange-500">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stok Menipis (< 5)</span>
+                <div class="flex items-end justify-between mt-2">
+                    <span id="stat-low-stock" class="text-4xl font-black text-orange-600">0</span>
+                    <span class="text-xs text-slate-400">Perlu Restock</span>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-xl h-fit border">
-                    <h3 class="font-black text-xl mb-4 border-b pb-2">KERANJANG</h3>
-                    <div id="cart-list" class="space-y-3 mb-6 min-h-[100px]"></div>
-                    <div class="border-t pt-4 space-y-2">
-                        <div class="flex justify-between font-bold text-2xl"><span>TOTAL</span><span id="total-price">0</span></div>
-                        <button onclick="checkout()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-lg shadow-lg hover:bg-green-700 mt-4">BAYAR SEKARANG</button>
+            </div>
+
+            <div class="card flex flex-col justify-between border-l-4 border-l-green-600">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estimasi Nilai Barang</span>
+                <div class="flex items-end justify-between mt-2">
+                    <span id="stat-total-value" class="text-2xl font-black text-slate-800 text-green-600">Rp 0</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <div class="card">
+                <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-6">Navigasi Cepat</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="kasir.html" class="flex flex-col items-center justify-center p-6 bg-blue-50 border border-blue-100 rounded-2xl group hover:bg-blue-600 transition-all">
+                        <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mb-3 group-hover:bg-white group-hover:text-blue-600 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <span class="font-bold text-blue-700 group-hover:text-white">Buka Kasir</span>
+                    </a>
+                    <a href="product.html" class="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-100 rounded-2xl group hover:bg-slate-800 transition-all">
+                        <div class="w-12 h-12 bg-slate-800 text-white rounded-full flex items-center justify-center mb-3 group-hover:bg-white group-hover:text-slate-800 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        </div>
+                        <span class="font-bold text-slate-700 group-hover:text-white">Kelola Produk</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card overflow-hidden">
+                <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-4">Peringatan Stok</h3>
+                <div id="low-stock-list" class="divide-y divide-slate-100">
                     </div>
-                </div>
             </div>
 
-            <div id="sec-gudang" class="section hidden space-y-6">
-                <div class="bg-white p-6 rounded-xl shadow border">
-                    <h3 class="font-bold text-lg mb-4">Input Barang Masuk / Baru</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" id="g-nama" placeholder="Nama Barang" class="p-2 border rounded">
-                        <input type="number" id="g-harga" placeholder="Harga Jual" class="p-2 border rounded">
-                        <input type="number" id="g-stok" placeholder="Jumlah Masuk" class="p-2 border rounded">
-                        <button onclick="updateStokGudang()" class="bg-blue-600 text-white p-2 rounded font-bold">+ Tambah Stok</button>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow border overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead><tr class="border-b"><th class="p-2">Produk</th><th class="p-2">Harga</th><th class="p-2">Stok</th></tr></thead>
-                        <tbody id="inventory-list"></tbody>
-                    </table>
-                </div>
-            </div>
+        </section>
+    </main>
 
-            <div id="sec-admin" class="section hidden bg-white p-8 rounded-2xl shadow-xl border max-w-2xl mx-auto">
-                <h3 class="text-2xl font-black mb-6">PENGATURAN TOKO</h3>
-                <div class="space-y-5">
-                    <div><label class="block text-sm font-bold mb-1">Nama Toko</label><input type="text" id="set-nama" class="w-full p-3 border rounded-xl"></div>
-                    <div><label class="block text-sm font-bold mb-1">Alamat Lengkap</label><textarea id="set-alamat" class="w-full p-3 border rounded-xl"></textarea></div>
-                    <div>
-                        <label class="block text-sm font-bold mb-1">Logo Toko</label>
-                        <input type="file" accept="image/*" onchange="processFile(this)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        <img id="set-preview" class="mt-4 h-24 w-24 object-cover rounded-lg border hidden">
-                    </div>
-                    <button onclick="saveSettings()" class="w-full bg-blue-700 text-white p-4 rounded-xl font-bold shadow-lg">SIMPAN PERUBAHAN</button>
-                    <button onclick="pullDataFromServer()" class="w-full bg-gray-200 text-gray-700 p-2 rounded-xl text-sm">Tarik Data dari Cloud (Sync)</button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="nota-print" class="hidden">
-        <center>
-            <img id="n-logo" src="" class="h-12 w-12 mb-2 hidden">
-            <h2 id="n-toko" class="font-bold text-lg"></h2>
-            <p id="n-alamat" class="text-[10px]"></p>
-            <div class="my-2 text-[10px]">------------------------------------------</div>
-        </center>
-        <div id="n-items" class="text-[10px] space-y-1"></div>
-        <div class="my-2 text-[10px]">------------------------------------------</div>
-        <div class="flex justify-between font-bold text-xs"><span>TOTAL</span><span id="n-total"></span></div>
-        <center><p class="mt-4 text-[10px]">Terima Kasih Atas Kunjungan Anda</p></center>
-    </div>
-
+    <script src="js/config.js"></script>
     <script>
-        const URL_API = 'https://script.google.com/macros/s/AKfycbyDo9YNJ-z_T51k8gtJc8lxl8LUft1OED2Sm5ExkT6RA-SOvuP3WRHr9Yd2v2LRlZ7e/exec';
-        const db = new Dexie("POS_FINAL");
-        db.version(1).stores({
-            settings: 'id',
-            users: 'username, role',
-            products: '++id, nama, harga, stock',
-            transactions: '++id, status'
-        });
-
-        let currentRole = "";
-        let cart = [];
-
-        // INIT
-        window.onload = async () => {
-            const s = await db.settings.get(1);
-            if(s) {
-                document.getElementById('nav-store-name').innerText = s.nama;
-                document.getElementById('nav-logo').src = s.logo;
-                document.getElementById('nav-logo').classList.remove('hidden');
-                document.getElementById('set-nama').value = s.nama;
-                document.getElementById('set-alamat').value = s.alamat;
-                document.getElementById('set-preview').src = s.logo;
-                document.getElementById('set-preview').classList.remove('hidden');
-            } else {
-                document.getElementById('nav-store-name').innerText = "Toko Baru";
+        async function updateDashboard() {
+            if(session) {
+                document.getElementById('user-display').innerText = `USER: ${session.nama} (${session.role})`;
             }
-        };
 
-        // AUTH
-        async function login() {
-            const u = document.getElementById('l-user').value;
-            const p = document.getElementById('l-pass').value;
-            // Default login untuk akses pertama kali jika IndexedDB kosong
-            if(u === 'admin' && p === '123') { 
-                proceedLogin('admin', 'Admin'); 
+            const products = await db.products.toArray();
+            
+            // 1. Hitung Total Produk
+            document.getElementById('stat-total-items').innerText = products.length;
+
+            // 2. Hitung Stok Rendah (< 5)
+            const lowStockItems = products.filter(p => p.stock < 5);
+            document.getElementById('stat-low-stock').innerText = lowStockItems.length;
+
+            // 3. Hitung Estimasi Nilai Aset
+            const totalValue = products.reduce((acc, curr) => acc + (curr.harga * curr.stock), 0);
+            document.getElementById('stat-total-value').innerText = `Rp ${totalValue.toLocaleString()}`;
+
+            // 4. Render List Stok Rendah
+            const list = document.getElementById('low-stock-list');
+            if (lowStockItems.length === 0) {
+                list.innerHTML = `<p class="py-4 text-center text-xs text-slate-400 italic">Semua stok aman!</p>`;
             } else {
-                const user = await db.users.get(u);
-                if(user && p === '123') proceedLogin(u, user.role);
-                else alert("User tidak ditemukan atau pass salah!");
-            }
-        }
-
-        function proceedLogin(user, role) {
-            currentRole = role;
-            document.getElementById('page-login').classList.remove('active');
-            document.getElementById('app').classList.add('active');
-            document.getElementById('user-info').innerText = `${user} | ${role}`;
-            buildMenu(role);
-            showSection(role === 'Gudang' ? 'gudang' : 'kasir');
-        }
-
-        function buildMenu(role) {
-            const m = document.getElementById('menu');
-            m.classList.remove('hidden');
-            let h = '';
-            if(role === 'Admin' || role === 'Kasir') h += `<button onclick="showSection('kasir')">PENJUALAN</button>`;
-            if(role === 'Admin' || role === 'Gudang') h += `<button onclick="showSection('gudang')">GUDANG</button>`;
-            if(role === 'Admin') h += `<button onclick="showSection('admin')">PENGATURAN</button>`;
-            m.innerHTML = h;
-        }
-
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('sec-' + id).classList.remove('hidden');
-            if(id === 'kasir') renderProducts();
-            if(id === 'gudang') renderInventory();
-        }
-
-        // LOGIC KASIR
-        async function renderProducts() {
-            const prods = await db.products.toArray();
-            document.getElementById('prod-grid').innerHTML = prods.map(p => `
-                <div onclick="addToCart(${p.id},'${p.nama}',${p.harga},${p.stock})" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-blue-500 cursor-pointer transition">
-                    <div class="font-bold text-gray-800">${p.nama}</div>
-                    <div class="text-blue-600 font-bold">Rp ${p.harga.toLocaleString()}</div>
-                    <div class="text-[10px] text-gray-400">Stok: ${p.stock}</div>
-                </div>
-            `).join('');
-        }
-
-        function addToCart(id, nama, harga, stock) {
-            if(stock <= 0) return alert("Stok Habis!");
-            cart.push({id, nama, harga});
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            const list = document.getElementById('cart-list');
-            list.innerHTML = cart.map((item, index) => `
-                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-sm">
-                    <span>${item.nama}</span>
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold">${item.harga.toLocaleString()}</span>
-                        <button onclick="cart.splice(${index},1);updateCartUI()" class="text-red-500 font-bold">✕</button>
+                list.innerHTML = lowStockItems.slice(0, 5).map(item => `
+                    <div class="py-3 flex justify-between items-center">
+                        <div>
+                            <div class="text-sm font-bold text-slate-700">${item.nama}</div>
+                            <div class="text-[10px] text-slate-400 uppercase font-mono">ID: ${item.id}</div>
+                        </div>
+                        <div class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-[10px] font-black">
+                            Sisa: ${item.stock}
+                        </div>
                     </div>
-                </div>
-            `).join('');
-            const total = cart.reduce((a, b) => a + b.harga, 0);
-            document.getElementById('total-price').innerText = total.toLocaleString();
-        }
-
-        async function checkout() {
-            if(cart.length === 0) return;
-            const total = cart.reduce((a, b) => a + b.harga, 0);
-            
-            // Potong Stok & Simpan Transaksi Lokal
-            for(let item of cart) {
-                const p = await db.products.get(item.id);
-                await db.products.update(item.id, { stock: p.stock - 1 });
-            }
-
-            const trxId = Date.now();
-            await db.transactions.add({ id: trxId, items: cart, total, status: 'pending', tgl: new Date().toLocaleString() });
-
-            // Cetak Nota
-            const s = await db.settings.get(1);
-            document.getElementById('n-logo').src = s?.logo || '';
-            if(s?.logo) document.getElementById('n-logo').classList.remove('hidden');
-            document.getElementById('n-toko').innerText = s?.nama || "TOKO";
-            document.getElementById('n-alamat').innerText = s?.alamat || "-";
-            document.getElementById('n-items').innerHTML = cart.map(i => `<div class="flex justify-between"><span>${i.nama}</span><span>${i.harga.toLocaleString()}</span></div>`).join('');
-            document.getElementById('n-total').innerText = total.toLocaleString();
-            
-            window.print();
-            
-            cart = [];
-            updateCartUI();
-            renderProducts();
-            syncData(); // Push ke Sheets
-        }
-
-        // LOGIC GUDANG
-        async function updateStokGudang() {
-            const nama = document.getElementById('g-nama').value;
-            const harga = parseInt(document.getElementById('g-harga').value);
-            const qty = parseInt(document.getElementById('g-stok').value);
-
-            const exist = await db.products.where('nama').equalsIgnoreCase(nama).first();
-            if(exist) {
-                await db.products.update(exist.id, { stock: exist.stock + qty, harga: harga });
-            } else {
-                await db.products.add({ nama, harga, stock: qty });
-            }
-            alert("Stok Diperbarui");
-            renderInventory();
-            syncData();
-        }
-
-        async function renderInventory() {
-            const prods = await db.products.toArray();
-            document.getElementById('inventory-list').innerHTML = prods.map(p => `
-                <tr class="border-b text-sm">
-                    <td class="p-2">${p.nama}</td>
-                    <td class="p-2">${p.harga.toLocaleString()}</td>
-                    <td class="p-2 font-bold ${p.stock < 5 ? 'text-red-600' : ''}">${p.stock}</td>
-                </tr>
-            `).join('');
-        }
-
-        // LOGIC SETTINGS & SYNC
-        function processFile(input) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                document.getElementById('set-preview').src = e.target.result;
-                document.getElementById('set-preview').classList.remove('hidden');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-
-        async function saveSettings() {
-            const data = {
-                id: 1,
-                nama: document.getElementById('set-nama').value,
-                alamat: document.getElementById('set-alamat').value,
-                logo: document.getElementById('set-preview').src
-            };
-            await db.settings.put(data);
-            alert("Pengaturan Berhasil Disimpan!");
-            location.reload();
-        }
-
-        async function syncData() {
-            if(!navigator.onLine) return;
-            const pending = await db.transactions.where('status').equals('pending').toArray();
-            for(let t of pending) {
-                const res = await fetch(URL_API, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        targetSheet: 'Transactions',
-                        action: 'insert',
-                        rowValues: [t.tgl, t.total, t.id]
-                    })
-                });
-                if(res.ok) await db.transactions.update(t.id, {status: 'synced'});
+                `).join('');
             }
         }
 
-        async function pullDataFromServer() {
-            if(!URL_API.includes('http')) return alert("Masukkan URL API dulu!");
-            const res = await fetch(`${URL_API}?action=pullData`);
-            const data = await res.json();
-            
-            if(data.products) {
-                await db.products.clear();
-                await db.products.bulkAdd(data.products);
-            }
-            if(data.users) {
-                await db.users.clear();
-                await db.users.bulkAdd(data.users);
-            }
-            alert("Data Berhasil Sinkron dengan Cloud!");
-        }
-
-        function filterProduk(val) {
-            // Logic filter sederhana bisa ditambahkan di sini
-        }
+        // Jalankan saat load
+        updateDashboard();
     </script>
 </body>
 </html>
