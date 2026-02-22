@@ -1,1 +1,22 @@
-
+{
+  "short_name": "POS PRO",
+  "name": "POS PRO - Sistem Kasir Pintar",
+  "icons": [
+    {
+      "src": "logo-none-text.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-none-text.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait"
+}
