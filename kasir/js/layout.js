@@ -1,7 +1,10 @@
 // js/layout.js
 const renderLayout = () => {
     const path = window.location.pathname;
-    const page = path.split("/").pop() || "index.html";
+    let page = path.split("/").pop() || "index.html";
+    
+    // Jika path kosong atau hanya "/", anggap index.html
+    if (page === "" || page === "/") page = "index.html";
 
     const sidebarContent = `
         <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 z-50 transition-transform duration-300 sidebar-hidden lg:sidebar-active lg:translate-x-0">
@@ -11,23 +14,28 @@ const renderLayout = () => {
             </div>
             
             <nav class="mt-6 px-4 space-y-2">
-                <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'index.html' ? 'nav-link-active' : 'hover:bg-slate-800'}">
+                <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'index.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
                     <span>📊</span> <span class="text-sm font-bold">Dashboard</span>
                 </a>
-                <a href="kasir.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'kasir.html' ? 'nav-link-active' : 'hover:bg-slate-800'}">
+                <a href="kasir.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'kasir.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
                     <span>🛒</span> <span class="text-sm font-bold">Mesin Kasir</span>
                 </a>
-                <a href="product.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'product.html' ? 'nav-link-active' : 'hover:bg-slate-800'}">
+                <a href="product.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'product.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
                     <span>📦</span> <span class="text-sm font-bold">Stok Produk</span>
                 </a>
-                <a href="gudang.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'gudang.html' ? 'nav-link-active' : 'hover:bg-slate-800'}">
+                <a href="gudang.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'gudang.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
                     <span>🏭</span> <span class="text-sm font-bold">Gudang</span>
                 </a>
-                <a href="riwayat.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'riwayat.html' ? 'nav-link-active' : 'hover:bg-slate-800'}">
-                    <span>📜</span> <span class="text-sm font-bold">Riwayat Laba</span>
+                <a href="riwayat.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'riwayat.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
+                    <span>📜</span> <span class="text-sm font-bold">Log Transaksi</span>
                 </a>
+                <a href="laporan.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'laporan.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
+                    <span>📈</span> <span class="text-sm font-bold">Laporan Laba</span>
+                </a>
+                
                 <hr class="border-slate-800 my-4">
-                <a href="settings.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'settings.html' ? 'nav-link-active' : 'hover:bg-slate-800'}">
+                
+                <a href="settings.html" class="flex items-center gap-3 p-3 rounded-xl transition-all ${page === 'settings.html' ? 'nav-link-active bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800'}">
                     <span>⚙️</span> <span class="text-sm font-bold">Pengaturan</span>
                 </a>
             </nav>
@@ -55,12 +63,12 @@ const renderLayout = () => {
     `;
 
     document.body.insertAdjacentHTML('afterbegin', sidebarContent);
-    document.getElementById('layout-header').innerHTML = headerContent;
+    const headerEl = document.getElementById('layout-header');
+    if (headerEl) headerEl.innerHTML = headerContent;
 };
 
-// --- TAMBAHAN FITUR PWA (AUTOMATIC) ---
+// --- PWA (AUTOMATIC) ---
 const initPWA = () => {
-    // 1. Suntik Manifest ke Head
     if (!document.querySelector('link[rel="manifest"]')) {
         const manifest = document.createElement('link');
         manifest.rel = 'manifest';
@@ -68,7 +76,6 @@ const initPWA = () => {
         document.head.appendChild(manifest);
     }
 
-    // 2. Registrasi Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then(() => console.log("PWA: Service Worker Active"))
@@ -76,20 +83,33 @@ const initPWA = () => {
     }
 };
 
-// Toggle Sidebar Mobile
 window.toggleSidebar = () => {
     const sb = document.getElementById('sidebar');
-    sb.classList.toggle('sidebar-hidden');
-    sb.classList.toggle('translate-x-0');
+    if (sb) {
+        sb.classList.toggle('sidebar-hidden');
+        sb.classList.toggle('translate-x-0');
+    }
 };
 
-// Run Layout & PWA
+// Fungsi Logout
+window.logout = () => {
+    if(confirm("Apakah Anda ingin keluar?")) {
+        localStorage.removeItem('session');
+        window.location.href = 'login.html';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     renderLayout();
-    initPWA(); // Aktifkan PWA
+    initPWA();
     
-    if(typeof session !== 'undefined' && session) {
-        document.getElementById('user-name').innerText = session.nama;
-        document.getElementById('user-role').innerText = session.role;
+    // Ambil session dari localStorage
+    const savedSession = localStorage.getItem('session');
+    if(savedSession) {
+        const session = JSON.parse(savedSession);
+        const nameEl = document.getElementById('user-name');
+        const roleEl = document.getElementById('user-role');
+        if(nameEl) nameEl.innerText = session.nama;
+        if(roleEl) roleEl.innerText = session.role;
     }
 });
