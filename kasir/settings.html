@@ -3,74 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setting Toko - POS PRO</title>
+    <title>Pengaturan Toko - POS PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 min-h-screen">
 
-    <header class="bg-white border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">P</div>
-                <h1 class="font-black text-xl text-slate-800 tracking-tight uppercase">Store<span class="text-blue-600">Setting</span></h1>
+    <div class="lg:ml-64 flex flex-col min-h-screen">
+        <div id="layout-header"></div>
+
+        <main class="p-4 lg:p-8 flex-1 flex justify-center">
+            <div class="w-full max-w-2xl">
+                
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">PENGATURAN</h2>
+                    <p class="text-sm text-slate-500 font-medium">Kustomisasi identitas toko untuk nota dan laporan.</p>
+                </div>
+
+                <section class="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="h-32 bg-gradient-to-r from-blue-600 to-indigo-700 relative">
+                        <div class="absolute -bottom-12 left-8 p-1 bg-white rounded-[32px] shadow-lg">
+                            <div class="w-24 h-24 bg-slate-50 rounded-[28px] border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group relative">
+                                <img id="logo-preview" src="" class="hidden w-full h-full object-cover">
+                                <div id="logo-placeholder" class="text-slate-400 text-[10px] font-black text-center uppercase tracking-tighter p-2">No Logo</div>
+                                
+                                <label for="u-logo" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                    <span class="text-white text-xs font-bold">UBAH</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-16 p-8">
+                        <input type="file" id="u-logo" accept="image/*" onchange="previewLogo(this)" class="hidden">
+                        
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Toko</label>
+                                    <input type="text" id="s-nama" placeholder="Nama bisnismu..." 
+                                           class="!rounded-2xl !py-3 focus:ring-2 focus:ring-blue-500 font-bold text-slate-700">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. WhatsApp</label>
+                                    <input type="text" id="s-wa" placeholder="0812..." 
+                                           class="!rounded-2xl !py-3 focus:ring-2 focus:ring-blue-500 font-bold text-slate-700">
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Alamat Lengkap (Muncul di Nota)</label>
+                                <textarea id="s-alamat" rows="3" placeholder="Jl. Nama Jalan No. XX..." 
+                                          class="!rounded-2xl !py-3 focus:ring-2 focus:ring-blue-500 font-medium text-slate-600"></textarea>
+                            </div>
+
+                            <div class="pt-6 border-t border-slate-50">
+                                <button onclick="saveSettings()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-3">
+                                    <span>💾</span> SIMPAN PERUBAHAN
+                                </button>
+                                <p class="text-center text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-tighter">Data disimpan secara lokal di browser ini</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="mt-8 bg-blue-50 rounded-2xl p-4 flex gap-4 items-center">
+                    <div class="text-2xl">💡</div>
+                    <p class="text-[11px] text-blue-700 font-medium leading-relaxed">
+                        Logo yang diupload akan muncul secara otomatis pada cetak struk di halaman <b>Kasir</b> dan laporan <b>PDF</b>. Gunakan gambar persegi (1:1) untuk hasil terbaik.
+                    </p>
+                </div>
+
             </div>
-            <button onclick="logout()" class="text-red-500 text-sm font-bold">Keluar</button>
-        </div>
-    </header>
-
-    <nav class="max-w-7xl mx-auto p-4 flex gap-2">
-        <a href="index.html" class="nav-btn bg-white text-slate-600 border">Dashboard</a>
-        <a href="product.html" class="nav-btn bg-white text-slate-600 border">Produk</a>
-        <a href="kasir.html" class="nav-btn bg-white text-slate-600 border">Kasir</a>
-        <a href="settings.html" class="nav-btn active-nav">Setting</a>
-    </nav>
-
-    <main class="max-w-3xl mx-auto p-4">
-        <section class="card">
-            <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-6">Identitas Toko</h3>
-            
-            <div class="space-y-5">
-                <div class="flex flex-col items-center mb-6">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-2">Logo Toko</label>
-                    <div class="w-24 h-24 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden">
-                        <img id="logo-preview" src="" class="hidden w-full h-full object-cover">
-                        <span id="logo-placeholder" class="text-slate-400 text-[10px] text-center p-2">Belum ada logo</span>
-                    </div>
-                    <input type="file" id="u-logo" accept="image/*" onchange="previewLogo(this)" class="mt-4 text-xs">
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Nama Toko</label>
-                        <input type="text" id="s-nama" placeholder="Contoh: Berkah Jaya Cel">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">No. WhatsApp</label>
-                        <input type="text" id="s-wa" placeholder="08123456xxx">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Alamat Lengkap</label>
-                    <textarea id="s-alamat" rows="3" placeholder="Jl. Raya No. 123..."></textarea>
-                </div>
-
-                <div class="pt-4">
-                    <button onclick="saveSettings()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
-                        SIMPAN PERUBAHAN
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
+        </main>
+    </div>
 
     <script src="js/config.js"></script>
+    <script src="js/layout.js"></script>
     <script>
         let base64Logo = "";
 
-        // 1. Load Data Saat Halaman Dibuka
         async function loadSettings() {
             const data = await db.settings.get("info_toko");
             if(data) {
@@ -80,28 +93,28 @@
                 
                 if(data.logo) {
                     base64Logo = data.logo;
-                    document.getElementById('logo-preview').src = data.logo;
-                    document.getElementById('logo-preview').classList.remove('hidden');
+                    const img = document.getElementById('logo-preview');
+                    img.src = data.logo;
+                    img.classList.remove('hidden');
                     document.getElementById('logo-placeholder').classList.add('hidden');
                 }
             }
         }
 
-        // 2. Preview & Convert Logo ke Base64
         function previewLogo(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     base64Logo = e.target.result;
-                    document.getElementById('logo-preview').src = e.target.result;
-                    document.getElementById('logo-preview').classList.remove('hidden');
+                    const img = document.getElementById('logo-preview');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
                     document.getElementById('logo-placeholder').classList.add('hidden');
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // 3. Simpan ke Database
         async function saveSettings() {
             const nama = document.getElementById('s-nama').value;
             const wa = document.getElementById('s-wa').value;
@@ -115,8 +128,19 @@
                     alamat,
                     logo: base64Logo
                 });
-                alert("Pengaturan Toko Berhasil Disimpan!");
-                location.reload(); // Refresh untuk update tampilan
+                
+                // Efek sukses sederhana
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "✅ BERHASIL DISIMPAN!";
+                btn.classList.replace('bg-slate-900', 'bg-green-600');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.replace('bg-green-600', 'bg-slate-900');
+                    location.reload();
+                }, 1500);
+
             } catch (e) {
                 alert("Gagal menyimpan: " + e.message);
             }
