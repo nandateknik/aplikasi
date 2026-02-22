@@ -1,5 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-
+.sidebar-active { transform: translateX(0); }
+@media (max-width: 1024px) {
+    .sidebar-hidden { transform: translateX(-100%); }
+}
+.nav-link-active {
+    @apply bg-blue-600 text-white shadow-lg shadow-blue-200;
+}
 body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
 
 /* Custom Utilities */
