@@ -58,6 +58,24 @@ const renderLayout = () => {
     document.getElementById('layout-header').innerHTML = headerContent;
 };
 
+// --- TAMBAHAN FITUR PWA (AUTOMATIC) ---
+const initPWA = () => {
+    // 1. Suntik Manifest ke Head
+    if (!document.querySelector('link[rel="manifest"]')) {
+        const manifest = document.createElement('link');
+        manifest.rel = 'manifest';
+        manifest.href = './manifest.json';
+        document.head.appendChild(manifest);
+    }
+
+    // 2. Registrasi Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("PWA: Service Worker Active"))
+            .catch(err => console.error("PWA: Error", err));
+    }
+};
+
 // Toggle Sidebar Mobile
 window.toggleSidebar = () => {
     const sb = document.getElementById('sidebar');
@@ -65,10 +83,12 @@ window.toggleSidebar = () => {
     sb.classList.toggle('translate-x-0');
 };
 
-// Run Layout
+// Run Layout & PWA
 document.addEventListener('DOMContentLoaded', () => {
     renderLayout();
-    if(session) {
+    initPWA(); // Aktifkan PWA
+    
+    if(typeof session !== 'undefined' && session) {
         document.getElementById('user-name').innerText = session.nama;
         document.getElementById('user-role').innerText = session.role;
     }
