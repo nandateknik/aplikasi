@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir - POS PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Sembunyikan elemen saat cetak nota */
+        @media print {
+            body * { visibility: hidden; }
+            #nota-print, #nota-print * { visibility: visible; }
+            #nota-print { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <header class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">P</div>
+                <h1 class="font-black text-xl text-slate-800 tracking-tight uppercase">Kasir<span class="text-blue-600">Pro</span></h1>
+            </div>
+            <div id="user-display" class="text-sm font-semibold text-slate-600 px-3 py-1 bg-slate-100 rounded-full"></div>
+        </div>
+    </header>
+
+    <nav class="max-w-7xl mx-auto p-4 flex gap-2">
+        <a href="index.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Dashboard</a>
+        <a href="product.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Produk</a>
+        <a href="kasir.html" class="nav-btn active-nav">Kasir</a>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <section class="lg:col-span-7 space-y-4">
+            <div class="card !p-4">
+                <input type="text" id="p-search" onkeyup="filterProduk()" placeholder="Cari Nama Produk..." class="!bg-white shadow-inner">
+            </div>
+
+            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-[600px] pr-2">
+                </div>
+        </section>
+
+        <section class="lg:col-span-5">
+            <div class="card flex flex-col h-[700px]">
+                <h3 class="font-black text-slate-800 uppercase tracking-widest text-xs mb-4">Keranjang Belanja</h3>
+                
+                <div id="cart-list" class="flex-1 overflow-y-auto space-y-3 mb-6">
+                    </div>
+
+                <div class="border-t pt-4 space-y-3">
+                    <div class="flex justify-between text-slate-500 font-bold">
+                        <span>Subtotal</span>
+                        <span id="subtotal">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-2xl font-black text-slate-800">
+                        <span>TOTAL</span>
+                        <span id="total-tagihan" class="text-blue-600">Rp 0</span>
+                    </div>
+                    
+                    <div class="pt-4 space-y-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Uang Bayar (Tunai)</label>
+                            <input type="number" id="bayar" onkeyup="hitungKembalian()" placeholder="0" class="text-xl font-bold py-3">
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-slate-100 rounded-xl">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Kembalian</span>
+                            <span id="kembalian" class="font-black text-slate-800">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <button onclick="prosesTransaksi()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-green-200 transition-all mt-4">
+                        SELESAI & CETAK NOTA
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="nota-print" class="hidden font-mono text-xs p-4">
+        <center>
+            <h3 class="font-bold text-lg">POS PRO STORE</h3>
+            <p>Banyuwangi, Jawa Timur</p>
+            <p>--------------------------------</p>
+        </center>
+        <div id="nota-items" class="my-4"></div>
+        <p>--------------------------------</p>
+        <div class="flex justify-between font-bold">
+            <span>TOTAL:</span>
+            <span id="nota-total"></span>
+        </div>
+        <div class="flex justify-between">
+            <span>BAYAR:</span>
+            <span id="nota-bayar"></span>
+        </div>
+        <div class="flex justify-between">
+            <span>KEMBALI:</span>
+            <span id="nota-kembali"></span>
+        </div>
+        <center class="mt-6">
+            <p>Terima Kasih</p>
+            <p id="nota-waktu"></p>
+        </center>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        let keranjang = [];
+
+        // 1. Tampilkan Produk dari Database
+        async function loadProduk() {
+            const products = await db.products.toArray();
+            renderGrid(products);
+        }
+
+        function renderGrid(data) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = data.map(p => `
+                <div onclick="tambahKeKeranjang(${p.id}, '${p.nama}', ${p.harga}, ${p.stock})" 
+                     class="card !p-3 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group">
+                    <div class="text-xs font-bold text-slate-500 mb-1 uppercase">${p.nama}</div>
+                    <div class="font-black text-blue-600">Rp ${p.harga.toLocaleString()}</div>
+                    <div class="text-[10px] mt-2 text-slate-400">Stok: <span class="${p.stock < 5 ? 'text-red-500 font-bold' : ''}">${p.stock}</span></div>
+                </div>
+            `).join('');
+        }
+
+        // 2. Filter Produk (Pencarian)
+        async function filterProduk() {
+            const q = document.getElementById('p-search').value.toLowerCase();
+            const products = await db.products.toArray();
+            const filtered = products.filter(p => p.nama.toLowerCase().includes(q));
+            renderGrid(filtered);
+        }
+
+        // 3. Tambah ke Keranjang
+        function tambahKeKeranjang(id, nama, harga, stock) {
+            const itemExist = keranjang.find(item => item.id === id);
+            
+            if (itemExist) {
+                if (itemExist.qty >= stock) return alert("Stok tidak mencukupi!");
+                itemExist.qty += 1;
+            } else {
+                if (stock <= 0) return alert("Stok Kosong!");
+                keranjang.push({ id, nama, harga, qty: 1, stock });
+            }
+            updateCartUI();
+        }
+
+        // 4. Update Tampilan Keranjang
+        function updateCartUI() {
+            const list = document.getElementById('cart-list');
+            list.innerHTML = keranjang.map((item, index) => `
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="flex-1">
+                        <div class="text-xs font-bold text-slate-700">${item.nama}</div>
+                        <div class="text-[10px] text-slate-400">Rp ${item.harga.toLocaleString()} x ${item.qty}</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-slate-800 text-sm">Rp ${(item.harga * item.qty).toLocaleString()}</span>
+                        <button onclick="hapusItem(${index})" class="text-red-400 hover:text-red-600 font-bold">✕</button>
+                    </div>
+                </div>
+            `).join('');
+
+            hitungTotal();
+        }
+
+        function hapusItem(index) {
+            keranjang.splice(index, 1);
+            updateCartUI();
+        }
+
+        // 5. Hitung Total & Kembalian
+        function hitungTotal() {
+            const subtotal = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
+            document.getElementById('subtotal').innerText = `Rp ${subtotal.toLocaleString()}`;
+            document.getElementById('total-tagihan').innerText = `Rp ${subtotal.toLocaleString()}`;
+            hitungKembalian();
+        }
+
+        function hitungKembalian() {
+            const total = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
+            const bayar = parseInt(document.getElementById('bayar').value) || 0;
+            const kembali = bayar - total;
+            document.getElementById('kembalian').innerText = `Rp ${kembali > 0 ? kembali.toLocaleString() : 0}`;
+        }
+
+        // 6. Selesai & Potong Stok
+        async function prosesTransaksi() {
+            const total = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
+            const bayar = parseInt(document.getElementById('bayar').value) || 0;
+
+            if (keranjang.length === 0) return alert("Keranjang masih kosong!");
+            if (bayar < total) return alert("Uang bayar kurang!");
+
+            try {
+                // Potong stok di IndexedDB
+                for (const item of keranjang) {
+                    const prod = await db.products.get(item.id);
+                    await db.products.update(item.id, { stock: prod.stock - item.qty });
+                }
+
+                // Siapkan Data Nota
+                document.getElementById('nota-items').innerHTML = keranjang.map(i => `
+                    <div class="flex justify-between">
+                        <span>${i.nama} x ${i.qty}</span>
+                        <span>${(i.harga * i.qty).toLocaleString()}</span>
+                    </div>
+                `).join('');
+                document.getElementById('nota-total').innerText = total.toLocaleString();
+                document.getElementById('nota-bayar').innerText = bayar.toLocaleString();
+                document.getElementById('nota-kembali').innerText = (bayar - total).toLocaleString();
+                document.getElementById('nota-waktu').innerText = new Date().toLocaleString();
+
+                // Cetak
+                window.print();
+
+                // Reset
+                keranjang = [];
+                document.getElementById('bayar').value = '';
+                updateCartUI();
+                loadProduk();
+                alert("Transaksi Berhasil!");
+
+            } catch (err) {
+                alert("Gagal memproses transaksi: " + err);
+            }
+        }
+
+        // Init
+        document.getElementById('user-display').innerText = `Kasir: ${session.nama}`;
+        loadProduk();
+    </script>
+</body>
+</html>
