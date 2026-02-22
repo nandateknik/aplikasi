@@ -6,19 +6,13 @@
     <title>Kasir - POS PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        @media print {
-            body * { visibility: hidden; }
-            #nota-print, #nota-print * { visibility: visible; }
-            #nota-print { 
-                position: absolute; left: 0; top: 0; width: 58mm; 
-                padding: 2mm; margin: 0; background: white;
-            }
-            @page { margin: 0; size: auto; }
-        }
         #product-grid::-webkit-scrollbar { width: 4px; }
         #product-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* Hilangkan nota-print lama karena pakai jsPDF */
+        #nota-print { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -81,28 +75,6 @@
         </main>
     </div>
 
-    <div id="nota-print" class="hidden font-mono text-[10px] leading-tight">
-        <center>
-            <h3 id="nota-nama-toko" style="font-size: 14px; font-weight: bold; text-transform: uppercase;">POS PRO</h3>
-            <p id="nota-alamat-toko"></p>
-            <p id="nota-wa-toko"></p>
-            <p>--------------------------------</p>
-        </center>
-        <div id="nota-items"></div>
-        <p>--------------------------------</p>
-        <div style="display: flex; justify-content: space-between; font-weight: bold;">
-            <span>TOTAL:</span><span id="nota-total"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span>BAYAR:</span><span id="nota-bayar"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span>KEMBALI:</span><span id="nota-kembali"></span>
-        </div>
-        <p>--------------------------------</p>
-        <center><p>Terima Kasih</p><p id="nota-waktu" style="font-size: 8px;"></p></center>
-    </div>
-
     <script src="js/config.js"></script>
     <script src="js/layout.js"></script>
     <script>
@@ -111,16 +83,6 @@
         async function loadProduk() {
             const products = await db.products.toArray();
             renderGrid(products);
-            updateStoreInfo();
-        }
-
-        async function updateStoreInfo() {
-            const info = await db.settings.get("info_toko");
-            if(info) {
-                if(document.getElementById('nota-nama-toko')) document.getElementById('nota-nama-toko').innerText = info.nama;
-                if(document.getElementById('nota-alamat-toko')) document.getElementById('nota-alamat-toko').innerText = info.alamat;
-                if(document.getElementById('nota-wa-toko')) document.getElementById('nota-wa-toko').innerText = "WA: " + info.wa;
-            }
         }
 
         function renderGrid(data) {
@@ -133,7 +95,7 @@
                     <div class="font-black text-slate-800 text-lg">Rp ${p.harga.toLocaleString()}</div>
                     <div class="flex items-center justify-between mt-3">
                         <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${p.stock < 5 ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-400'} uppercase">Stok: ${p.stock}</span>
-                        <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs">+</div>
+                        <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs group-hover:bg-blue-600 group-hover:text-white transition-colors">+</div>
                     </div>
                 </div>
             `).join('');
@@ -214,6 +176,61 @@
             }
         }
 
+        // --- FUNGSI CETAK NOTA DENGAN JSDPF ---
+        async function cetakNotaPDF(info, total, bayar, waktu) {
+            const { jsPDF } = window.jspdf;
+            
+            // Tinggi nota dinamis: 70mm dasar + 10mm per item
+            const tinggiNota = 80 + (keranjang.length * 8);
+            const doc = new jsPDF({
+                unit: 'mm',
+                format: [58, tinggiNota]
+            });
+
+            doc.setFont("courier", "bold");
+            doc.setFontSize(12);
+            doc.text(info.nama.toUpperCase(), 29, 10, { align: 'center' });
+            
+            doc.setFontSize(8);
+            doc.setFont("courier", "normal");
+            doc.text(info.alamat || "", 29, 15, { align: 'center' });
+            doc.text("WA: " + (info.wa || "-"), 29, 19, { align: 'center' });
+            doc.text("-------------------------------", 29, 23, { align: 'center' });
+
+            let y = 28;
+            keranjang.forEach((item) => {
+                doc.text(item.nama.substring(0, 22), 5, y);
+                y += 4;
+                doc.text(`${item.qty} x ${item.harga.toLocaleString()}`, 5, y);
+                doc.text((item.qty * item.harga).toLocaleString(), 53, y, { align: 'right' });
+                y += 6;
+            });
+
+            doc.text("-------------------------------", 29, y, { align: 'center' });
+            y += 5;
+            doc.setFont("courier", "bold");
+            doc.text("TOTAL  :", 5, y);
+            doc.text("Rp " + total.toLocaleString(), 53, y, { align: 'right' });
+            
+            y += 4;
+            doc.setFont("courier", "normal");
+            doc.text("BAYAR  :", 5, y);
+            doc.text("Rp " + bayar.toLocaleString(), 53, y, { align: 'right' });
+            
+            y += 4;
+            doc.text("KEMBALI:", 5, y);
+            doc.text("Rp " + (bayar - total).toLocaleString(), 53, y, { align: 'right' });
+
+            y += 8;
+            doc.setFontSize(7);
+            doc.text("Terima Kasih Atas Kunjungannya", 29, y, { align: 'center' });
+            y += 4;
+            doc.text(new Date(waktu).toLocaleString(), 29, y, { align: 'center' });
+
+            // Preview & Print
+            window.open(doc.output('bloburl'), '_blank');
+        }
+
         async function prosesTransaksi() {
             const total = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
             const bayarInput = document.getElementById('bayar');
@@ -224,6 +241,9 @@
             
             try {
                 const waktu = new Date().getTime();
+                const infoToko = await db.settings.get("info_toko") || { nama: "POS PRO", alamat: "Indonesia", wa: "000" };
+
+                // 1. Simpan Transaksi ke DB
                 await db.transactions.add({
                     waktu: waktu,
                     items: JSON.parse(JSON.stringify(keranjang)),
@@ -233,31 +253,25 @@
                     kasir: (typeof session !== 'undefined') ? session.nama : 'Admin'
                 });
 
+                // 2. Potong Stok Produk
                 for (const item of keranjang) {
                     const prod = await db.products.get(item.id);
-                    await db.products.update(item.id, { stock: prod.stock - item.qty });
+                    if(prod) {
+                        await db.products.update(item.id, { stock: prod.stock - item.qty });
+                    }
                 }
 
-                document.getElementById('nota-items').innerHTML = keranjang.map(i => `
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>${i.nama.substring(0,18)} x${i.qty}</span>
-                        <span>${(i.harga * i.qty).toLocaleString()}</span>
-                    </div>
-                `).join('');
-                document.getElementById('nota-total').innerText = total.toLocaleString();
-                document.getElementById('nota-bayar').innerText = bayar.toLocaleString();
-                document.getElementById('nota-kembali').innerText = (bayar - total).toLocaleString();
-                document.getElementById('nota-waktu').innerText = new Date(waktu).toLocaleString();
+                // 3. Panggil Fungsi Cetak PDF
+                await cetakNotaPDF(infoToko, total, bayar, waktu);
 
-                window.print();
-
+                // 4. Reset & Refresh
                 keranjang = [];
                 if(bayarInput) bayarInput.value = '';
                 updateCartUI();
                 loadProduk();
                 
             } catch (err) {
-                alert("Error: " + err);
+                alert("Gagal Transaksi: " + err);
             }
         }
 
