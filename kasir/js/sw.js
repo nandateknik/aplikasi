@@ -1,15 +1,40 @@
-const CACHE_NAME = 'pos-cache-v1';
-const assets = [
-    './index.html',
-    'https://cdn.tailwindcss.com'
+const CACHE_NAME = 'pos-pro-v1';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/kasir.html',
+  '/riwayat.html',
+  '/css/style.css',
+  '/logo-none-text.png',
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/dexie/dist/dexie.js'
 ];
 
-self.addEventListener('install', (e) => {
-    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(assets)));
+// Install Service Worker
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
 });
 
-self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then(res => res || fetch(e.request))
-    );
+// Aktivasi & Hapus Cache Lama
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
+  );
+});
+
+// Strategi Fetch (Ambil dari Network, kalau gagal ambil dari Cache)
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
+  );
 });
