@@ -5,7 +5,8 @@ const db = new Dexie("POS_SYSTEM");
 db.version(1).stores({
     products: '++id, nama, harga, stock',
     users: 'username, password, role, nama', // Penting: Harus ada store users
-    settings: 'id'
+    settings: 'id',
+    transactions: '++id, waktu, total, bayar, kembali'
 });
 
 // 2. Cek Session (Proteksi Halaman)
