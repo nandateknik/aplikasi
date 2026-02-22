@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan User - POS PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50">
+
+    <header class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">P</div>
+                <h1 class="font-black text-xl text-slate-800 tracking-tight uppercase">User<span class="text-blue-600">Config</span></h1>
+            </div>
+            <button onclick="logout()" class="text-red-500 text-sm font-bold">Keluar</button>
+        </div>
+    </header>
+
+    <nav class="max-w-7xl mx-auto p-4 flex gap-2 overflow-x-auto">
+        <a href="index.html" class="nav-btn bg-white text-slate-600 border">Dashboard</a>
+        <a href="product.html" class="nav-btn bg-white text-slate-600 border">Produk</a>
+        <a href="kasir.html" class="nav-btn bg-white text-slate-600 border">Kasir</a>
+        <a href="users.html" class="nav-btn active-nav">User</a>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <section class="card h-fit">
+            <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-6">Tambah / Edit User</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Nama Lengkap</label>
+                    <input type="text" id="u-nama" placeholder="Nama asli">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Username</label>
+                    <input type="text" id="u-user" placeholder="Untuk login">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Password</label>
+                    <input type="password" id="u-pass" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Role / Hak Akses</label>
+                    <select id="u-role" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        <option value="Kasir">Kasir</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button onclick="saveUser()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all text-sm">SIMPAN USER</button>
+                    <button onclick="clearForm()" class="px-4 py-3 bg-slate-100 text-slate-500 rounded-xl text-sm">BATAL</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-2 card">
+            <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-6">User Terdaftar</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-slate-400 text-[10px] uppercase border-b border-slate-100">
+                            <th class="pb-4 font-black">Nama</th>
+                            <th class="pb-4 font-black">Username</th>
+                            <th class="pb-4 font-black">Role</th>
+                            <th class="pb-4 font-black text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body" class="text-sm text-slate-700">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script>
+        // Pastikan hanya admin yang bisa masuk halaman ini
+        if (session.role !== 'Admin') {
+            alert("Hanya Admin yang boleh mengakses halaman ini!");
+            window.location.href = 'index.html';
+        }
+
+        async function renderUsers() {
+            const users = await db.users.toArray();
+            const body = document.getElementById('user-table-body');
+            
+            body.innerHTML = users.map(u => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
+                    <td class="py-4 font-bold">${u.nama}</td>
+                    <td class="py-4 font-mono text-xs text-slate-500">${u.username}</td>
+                    <td class="py-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${u.role === 'Admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'} uppercase">
+                            ${u.role}
+                        </span>
+                    </td>
+                    <td class="py-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editUser('${u.username}')" class="text-blue-500 hover:text-blue-700 text-xs font-bold">Edit</button>
+                            ${u.username === 'admin' ? '' : `<button onclick="deleteUser('${u.username}')" class="text-red-400 hover:text-red-600 text-xs font-bold">Hapus</button>`}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function saveUser() {
+            const nama = document.getElementById('u-nama').value.trim();
+            const username = document.getElementById('u-user').value.trim().toLowerCase();
+            const password = document.getElementById('u-pass').value;
+            const role = document.getElementById('u-role').value;
+
+            if(!nama || !username || !password) return alert("Semua field wajib diisi!");
+
+            try {
+                // Gunakan put() untuk add atau update sekaligus berdasarkan username (primary key)
+                await db.users.put({ nama, username, password, role });
+                clearForm();
+                renderUsers();
+                alert("Data user berhasil disimpan!");
+            } catch (e) {
+                alert("Gagal simpan user: " + e.message);
+            }
+        }
+
+        async function editUser(username) {
+            const u = await db.users.get(username);
+            if(u) {
+                document.getElementById('u-nama').value = u.nama;
+                document.getElementById('u-user').value = u.username;
+                document.getElementById('u-user').readOnly = true; // Username tidak boleh diganti saat edit
+                document.getElementById('u-user').classList.add('bg-slate-200');
+                document.getElementById('u-pass').value = u.password;
+                document.getElementById('u-role').value = u.role;
+            }
+        }
+
+        async function deleteUser(username) {
+            if(confirm(`Hapus user ${username}?`)) {
+                await db.users.delete(username);
+                renderUsers();
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('u-nama').value = '';
+            document.getElementById('u-user').value = '';
+            document.getElementById('u-user').readOnly = false;
+            document.getElementById('u-user').classList.remove('bg-slate-200');
+            document.getElementById('u-pass').value = '';
+            document.getElementById('u-role').value = 'Kasir';
+        }
+
+        renderUsers();
+    </script>
+</body>
+</html>
