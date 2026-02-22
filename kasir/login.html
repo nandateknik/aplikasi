@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - POS PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-80">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">POS PRO LOGIN</h2>
+        <div class="space-y-4">
+            <input type="text" id="user" placeholder="Username" class="w-full p-2 border rounded">
+            <input type="password" id="pass" placeholder="Password" class="w-full p-2 border rounded">
+            <button onclick="prosesLogin()" class="w-full bg-blue-600 text-white p-2 rounded font-bold">MASUK</button>
+        </div>
+        <p class="text-[10px] text-gray-400 mt-4 text-center">Default: admin / 123</p>
+    </div>
+
+    <script>
+        // Pakai database yang sama dengan config.js
+        const db = new Dexie("POS_SYSTEM");
+        db.version(1).stores({
+            users: 'username, password, role, nama'
+        });
+
+        async function prosesLogin() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+
+            // Shortcut login admin kalau DB masih kosong
+            if(u === 'admin' && p === '123') {
+                const dataAdmin = { username: 'admin', nama: 'Master Admin', role: 'Admin' };
+                localStorage.setItem("pos_session", JSON.stringify(dataAdmin));
+                window.location.href = 'product.html'; // Arahkan ke produk
+                return;
+            }
+
+            // Cek ke Database IndexedDB
+            const user = await db.users.get(u);
+            if(user && user.password === p) {
+                localStorage.setItem("pos_session", JSON.stringify(user));
+                window.location.href = 'product.html';
+            } else {
+                alert("Login Gagal! Username/Password salah.");
+            }
+        }
+
+        // Kalau sudah login, langsung masuk aja
+        if(localStorage.getItem("pos_session")) {
+            window.location.href = 'product.html';
+        }
+    </script>
+</body>
+</html>
