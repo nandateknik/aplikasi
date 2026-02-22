@@ -6,7 +6,8 @@ db.version(1).stores({
     products: '++id, nama, harga, stock',
     users: 'username, password, role, nama', // Penting: Harus ada store users
     settings: 'id',
-    transactions: '++id, waktu, total, bayar, kembali'
+    transactions: '++id, waktu, total, bayar, kembali',
+    stock_history: '++id, waktu, produkId, namaProduk, jumlah, tipe' // Tabel baru
 });
 
 // 2. Cek Session (Proteksi Halaman)
