@@ -8,13 +8,25 @@
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Sembunyikan elemen saat cetak nota */
+        /* CONFIG KIOSK PRINTING (Kertas Thermal) */
         @media print {
+            /* Sembunyikan elemen dashboard */
             body * { visibility: hidden; }
+            /* Munculkan hanya area nota */
             #nota-print, #nota-print * { visibility: visible; }
-            #nota-print { position: absolute; left: 0; top: 0; width: 100%; visibility: visible !important; }
+            #nota-print { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 58mm; /* Sesuaikan ke 80mm jika printernya besar */
+                padding: 2mm;
+                margin: 0;
+                background: white;
+            }
+            /* Hilangkan header/footer bawaan browser (tanggal/url) */
+            @page { margin: 0; size: auto; }
         }
-        /* Custom scrollbar untuk grid produk */
+
         #product-grid::-webkit-scrollbar { width: 4px; }
         #product-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -29,13 +41,13 @@
             <section class="xl:col-span-7 space-y-6">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">MESIN KASIR</h2>
-                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Pilih produk untuk dijual</p>
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Mesin Kasir</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Klik barang untuk belanja</p>
                     </div>
                     <div class="relative group">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
                         <input type="text" id="p-search" onkeyup="filterProduk()" placeholder="Cari Nama Produk..." 
-                               class="!pl-10 !pr-4 !py-3 !w-full md:!w-64 bg-white border-none shadow-sm rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all">
+                               class="!pl-10 !pr-4 !py-3 !w-full md:!w-64 bg-white border-none shadow-sm rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-bold">
                     </div>
                 </div>
 
@@ -47,7 +59,7 @@
                 <div class="bg-white rounded-[32px] shadow-xl border border-slate-100 p-6 flex flex-col h-[calc(100vh-120px)] sticky top-24">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-black text-slate-800 uppercase tracking-widest text-xs">Keranjang Belanja</h3>
-                        <span id="cart-count" class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full font-black">0 ITEMS</span>
+                        <span id="cart-count" class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full font-black uppercase">0 Items</span>
                     </div>
                     
                     <div id="cart-list" class="flex-1 overflow-y-auto space-y-3 mb-6 pr-2">
@@ -59,24 +71,24 @@
 
                     <div class="border-t border-dashed pt-4 space-y-4">
                         <div class="flex justify-between items-center text-3xl font-black text-slate-800">
-                            <span class="text-sm uppercase tracking-tighter text-slate-400">TOTAL</span>
-                            <span id="total-tagihan" class="text-blue-600">Rp 0</span>
+                            <span class="text-xs uppercase tracking-tighter text-slate-400 font-black">Total Tagihan</span>
+                            <span id="total-tagihan" class="text-blue-600 tracking-tighter">Rp 0</span>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2 sm:col-span-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bayar (Cash)</label>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Bayar (Cash)</label>
                                 <input type="number" id="bayar" onkeyup="hitungKembalian()" placeholder="Rp 0" 
-                                       class="!text-xl !font-black !py-4 bg-slate-50 border-none focus:ring-2 focus:ring-blue-500">
+                                       class="!text-xl !font-black !py-4 bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl w-full">
                             </div>
-                            <div class="col-span-2 sm:col-span-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kembalian</label>
-                                <div id="kembalian" class="text-xl font-black py-4 px-4 bg-slate-50 rounded-2xl text-slate-800">Rp 0</div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Kembalian</label>
+                                <div id="kembalian" class="text-xl font-black py-4 px-4 bg-slate-50 rounded-2xl text-slate-800 h-[60px] flex items-center">Rp 0</div>
                             </div>
                         </div>
 
-                        <button onclick="prosesTransaksi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-blue-100 transition-all transform active:scale-95 flex items-center justify-center gap-3">
-                            <span>CETAK NOTA SEKARANG</span>
+                        <button onclick="prosesTransaksi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-blue-100 transition-all active:scale-95 flex items-center justify-center gap-3">
+                            <span>CETAK NOTA</span>
                             <span>⚡</span>
                         </button>
                     </div>
@@ -85,31 +97,31 @@
         </main>
     </div>
 
-    <div id="nota-print" class="hidden font-mono text-[10px] p-4 w-[58mm]">
-        <center>
-            <h3 id="nota-nama-toko" class="font-bold text-sm uppercase"></h3>
-            <p id="nota-alamat-toko" class="mb-1"></p>
-            <p id="nota-wa-toko"></p>
-            <p>================================</p>
+    <div id="nota-print" class="hidden font-mono text-[10px] leading-tight">
+        <center style="margin-bottom: 5px;">
+            <h3 id="nota-nama-toko" style="font-size: 14px; margin: 0; font-weight: bold; text-transform: uppercase;">POS PRO</h3>
+            <p id="nota-alamat-toko" style="margin: 0;"></p>
+            <p id="nota-wa-toko" style="margin: 0;"></p>
+            <p>--------------------------------</p>
         </center>
-        <div id="nota-items" class="my-2 space-y-1"></div>
-        <p>================================</p>
-        <div class="flex justify-between font-bold text-xs">
+        <div id="nota-items" style="margin-bottom: 5px;"></div>
+        <p style="margin: 0;">--------------------------------</p>
+        <div style="display: flex; justify-content: space-between; font-weight: bold;">
             <span>TOTAL:</span>
             <span id="nota-total"></span>
         </div>
-        <div class="flex justify-between">
+        <div style="display: flex; justify-content: space-between;">
             <span>BAYAR:</span>
             <span id="nota-bayar"></span>
         </div>
-        <div class="flex justify-between font-bold">
+        <div style="display: flex; justify-content: space-between;">
             <span>KEMBALI:</span>
             <span id="nota-kembali"></span>
         </div>
-        <p>================================</p>
-        <center class="mt-4">
-            <p>TERIMA KASIH</p>
-            <p id="nota-waktu" class="text-[8px]"></p>
+        <p style="margin: 0;">--------------------------------</p>
+        <center style="margin-top: 5px;">
+            <p style="margin: 0;">Terima Kasih</p>
+            <p id="nota-waktu" style="font-size: 8px; margin: 0;"></p>
         </center>
     </div>
 
@@ -139,20 +151,21 @@
                 <div onclick="tambahKeKeranjang(${p.id}, '${p.nama}', ${p.harga}, ${p.stock}, ${p.hargaBeli || 0})" 
                      class="bg-white p-4 rounded-3xl cursor-pointer hover:ring-2 hover:ring-blue-500 shadow-sm border border-slate-100 transition-all group active:scale-95">
                     <div class="text-[10px] font-black text-slate-400 mb-1 uppercase tracking-widest truncate">${p.nama}</div>
-                    <div class="font-black text-slate-800 text-lg">Rp ${p.harga.toLocaleString()}</div>
+                    <div class="font-black text-slate-800 text-lg tracking-tighter">Rp ${p.harga.toLocaleString()}</div>
                     <div class="flex items-center justify-between mt-3">
-                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${p.stock < 5 ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-400'}">STOK: ${p.stock}</span>
+                        <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${p.stock < 5 ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-400'} uppercase">Stok: ${p.stock}</span>
                         <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs group-hover:bg-blue-600 group-hover:text-white transition-colors">+</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function filterProduk() {
+        function filterProduk() {
             const q = document.getElementById('p-search').value.toLowerCase();
-            const products = await db.products.toArray();
-            const filtered = products.filter(p => p.nama.toLowerCase().includes(q));
-            renderGrid(filtered);
+            db.products.toArray().then(products => {
+                const filtered = products.filter(p => p.nama.toLowerCase().includes(q));
+                renderGrid(filtered);
+            });
         }
 
         function tambahKeKeranjang(id, nama, harga, stock, hargaBeli) {
@@ -172,28 +185,26 @@
             const empty = document.getElementById('cart-empty');
             
             if(keranjang.length === 0) {
-                empty.classList.remove('hidden');
+                empty.style.display = 'block';
+                list.innerHTML = "";
+                list.appendChild(empty);
             } else {
-                empty.classList.add('hidden');
+                empty.style.display = 'none';
+                list.innerHTML = keranjang.map((item, index) => `
+                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div class="flex-1">
+                            <div class="text-xs font-black text-slate-700 uppercase">${item.nama}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">Rp ${item.harga.toLocaleString()} x ${item.qty}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-sm font-black text-slate-800 font-mono">Rp ${(item.harga * item.qty).toLocaleString()}</div>
+                            <button onclick="hapusItem(${index})" class="text-red-400 hover:text-red-600 font-black">✕</button>
+                        </div>
+                    </div>
+                `).join('');
             }
 
             document.getElementById('cart-count').innerText = `${keranjang.length} ITEMS`;
-
-            list.innerHTML = keranjang.map((item, index) => `
-                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-right-4 duration-200">
-                    <div class="flex-1">
-                        <div class="text-xs font-black text-slate-700 uppercase">${item.nama}</div>
-                        <div class="text-[10px] text-slate-400 font-bold">Rp ${item.harga.toLocaleString()} x ${item.qty}</div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-sm font-black text-slate-800 font-mono">Rp ${(item.harga * item.qty).toLocaleString()}</div>
-                        <button onclick="hapusItem(${index})" class="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-600 rounded-full transition-all">✕</button>
-                    </div>
-                </div>
-            `).join('');
-            
-            if(keranjang.length > 0) list.append(empty); // Tetap simpan element empty tapi hidden
-            
             hitungTotal();
         }
 
@@ -212,37 +223,39 @@
             const total = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
             const bayar = parseInt(document.getElementById('bayar').value) || 0;
             const kembali = bayar - total;
-            document.getElementById('kembalian').innerText = `Rp ${kembali > 0 ? kembali.toLocaleString() : 0}`;
-            document.getElementById('kembalian').style.color = kembali >= 0 ? '#1e293b' : '#ef4444';
+            const kembalianEl = document.getElementById('kembalian');
+            kembalianEl.innerText = `Rp ${kembali > 0 ? kembali.toLocaleString() : 0}`;
+            kembalianEl.style.color = kembali >= 0 ? '#1e293b' : '#ef4444';
         }
 
         async function prosesTransaksi() {
             const total = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
             const bayar = parseInt(document.getElementById('bayar').value) || 0;
 
-            if (keranjang.length === 0) return alert("Pilih produk dulu!");
-            if (bayar < total) return alert("Uang pembayaran kurang!");
+            if (keranjang.length === 0) return alert("Keranjang masih kosong!");
+            if (bayar < total) return alert("Uang bayar kurang!");
             
             try {
-                const waktu = new Date().getTime();
+                // Simpan Database
                 await db.transactions.add({
-                    waktu: waktu,
+                    waktu: new Date().getTime(),
                     items: JSON.parse(JSON.stringify(keranjang)),
                     total: total,
                     bayar: bayar,
                     kembali: bayar - total,
-                    kasir: session.nama
+                    kasir: session ? session.nama : 'Admin'
                 });
 
+                // Update Stok
                 for (const item of keranjang) {
                     const prod = await db.products.get(item.id);
                     await db.products.update(item.id, { stock: prod.stock - item.qty });
                 }
 
-                // Render Nota
+                // Render Data ke Nota
                 document.getElementById('nota-items').innerHTML = keranjang.map(i => `
-                    <div class="flex justify-between">
-                        <span>${i.nama.substring(0,15)} x${i.qty}</span>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${i.nama.substring(0,18)} x${i.qty}</span>
                         <span>${(i.harga * i.qty).toLocaleString()}</span>
                     </div>
                 `).join('');
@@ -251,17 +264,17 @@
                 document.getElementById('nota-kembali').innerText = (bayar - total).toLocaleString();
                 document.getElementById('nota-waktu').innerText = new Date().toLocaleString();
 
+                // CETAK!
                 window.print();
 
-                // Reset All
+                // Reset
                 keranjang = [];
                 document.getElementById('bayar').value = '';
                 updateCartUI();
                 loadProduk();
-                alert("Transaksi Berhasil & Stok Berkurang!");
-
+                
             } catch (err) {
-                alert("Error: " + err);
+                alert("Gagal Transaksi: " + err);
             }
         }
 
