@@ -1,1 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Profit - POS PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
 
+    <div class="lg:ml-64 flex flex-col min-h-screen">
+        <div id="layout-header"></div>
+
+        <main class="p-4 lg:p-8 flex-1">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">ANALISIS LABA</h2>
+                    <p class="text-sm text-slate-500 font-medium">Pantau performa bisnis dan keuntungan bersih Anda.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="month" id="filter-bulan" onchange="loadLaporan()" 
+                           class="!py-3 !px-4 !rounded-2xl border-slate-200 text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4 text-xl">💰</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Omzet (Bruto)</p>
+                    <h3 id="stat-omzet" class="text-2xl font-black text-slate-800 mt-1">Rp 0</h3>
+                </div>
+
+                <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                    <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-4 text-xl">📦</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Modal Barang</p>
+                    <h3 id="stat-modal" class="text-2xl font-black text-slate-800 mt-1">Rp 0</h3>
+                </div>
+
+                <div class="bg-green-600 p-6 rounded-[32px] shadow-xl shadow-green-100 text-white">
+                    <div class="w-10 h-10 bg-white/20 text-white rounded-xl flex items-center justify-center mb-4 text-xl">📈</div>
+                    <p class="text-[10px] font-black text-white/70 uppercase tracking-widest">Estimasi Laba Bersih</p>
+                    <h3 id="stat-laba" class="text-2xl font-black mt-1">Rp 0</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <section class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-6">
+                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <span>🔥</span> Produk Terlaris
+                    </h3>
+                    <div id="top-products" class="space-y-4">
+                        </div>
+                </section>
+
+                <section class="bg-white rounded-[32px] shadow-sm border border-slate-100 p-6">
+                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <span>📊</span> Rincian Profit Per Hari
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                                    <th class="pb-4">Tanggal</th>
+                                    <th class="pb-4 text-right">Omzet</th>
+                                    <th class="pb-4 text-right">Laba</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daily-profit-table" class="text-sm font-bold text-slate-700">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        // Set default filter bulan ke bulan ini
+        const now = new Date();
+        document.getElementById('filter-bulan').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        async function loadLaporan() {
+            const filterBulan = document.getElementById('filter-bulan').value; // format: "YYYY-MM"
+            const transactions = await db.transactions.toArray();
+            
+            // Filter berdasarkan bulan yang dipilih
+            const filteredTrx = transactions.filter(t => {
+                const tDate = new Date(t.waktu);
+                const tMonth = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
+                return tMonth === filterBulan;
+            });
+
+            let totalOmzet = 0;
+            let totalModal = 0;
+            let productSales = {}; // Untuk hitung terlaris
+            let dailyData = {}; // Untuk rincian harian
+
+            filteredTrx.forEach(t => {
+                totalOmzet += t.total;
+                
+                // Hitung Modal & Laba per transaksi
+                let trxModal = 0;
+                t.items.forEach(item => {
+                    const modalItem = (item.hargaBeli || 0) * item.qty;
+                    trxModal += modalItem;
+                    
+                    // Data Terlaris
+                    productSales[item.nama] = (productSales[item.nama] || 0) + item.qty;
+                });
+                totalModal += trxModal;
+
+                // Data Harian
+                const tDate = new Date(t.waktu).toLocaleDateString('id-ID');
+                if(!dailyData[tDate]) dailyData[tDate] = { omzet: 0, laba: 0 };
+                dailyData[tDate].omzet += t.total;
+                dailyData[tDate].laba += (t.total - trxModal);
+            });
+
+            // Update Statistik Atas
+            document.getElementById('stat-omzet').innerText = `Rp ${totalOmzet.toLocaleString()}`;
+            document.getElementById('stat-modal').innerText = `Rp ${totalModal.toLocaleString()}`;
+            document.getElementById('stat-laba').innerText = `Rp ${(totalOmzet - totalModal).toLocaleString()}`;
+
+            // Render Produk Terlaris (Top 5)
+            const sortedProducts = Object.entries(productSales)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+
+            document.getElementById('top-products').innerHTML = sortedProducts.map(([name, qty], index) => `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 flex items-center justify-center bg-blue-600 text-white text-[10px] font-black rounded-lg">${index + 1}</span>
+                        <span class="text-xs font-black text-slate-700 uppercase">${name}</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-400">${qty} Terjual</span>
+                </div>
+            `).join('') || '<p class="text-center py-10 text-slate-400 italic text-xs">Belum ada data penjualan.</p>';
+
+            // Render Tabel Harian
+            const dailyEntries = Object.entries(dailyData).sort().reverse();
+            document.getElementById('daily-profit-table').innerHTML = dailyEntries.map(([date, data]) => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
+                    <td class="py-4 font-medium text-slate-500 uppercase text-[10px] tracking-widest">${date}</td>
+                    <td class="py-4 text-right">Rp ${data.omzet.toLocaleString()}</td>
+                    <td class="py-4 text-right text-green-600">+ Rp ${data.laba.toLocaleString()}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="3" class="text-center py-10 text-slate-300">Kosong</td></tr>';
+        }
+
+        loadLaporan();
+    </script>
+</body>
+</html>
