@@ -1,5 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
 body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-.nav-btn { @apply px-4 py-2 rounded-lg transition font-medium text-sm; }
-.active-nav { @apply bg-blue-600 text-white shadow-md; }
+
+/* Custom Utilities */
 .card { @apply bg-white p-6 rounded-2xl shadow-sm border border-slate-200; }
-input { @apply w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500; }
+.nav-btn { @apply px-4 py-2 rounded-lg transition font-medium text-sm flex items-center gap-2; }
+.active-nav { @apply bg-blue-600 text-white shadow-md shadow-blue-200; }
+
+input, textarea { 
+    @apply w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all; 
+}
+
+/* Chrome, Safari, Edge, Opera - hilangkan spin button number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
