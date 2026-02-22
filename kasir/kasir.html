@@ -197,6 +197,19 @@
 
             if (keranjang.length === 0) return alert("Keranjang masih kosong!");
             if (bayar < total) return alert("Uang bayar kurang!");
+            
+            try {
+            const waktu = new Date().getTime();
+            
+            // SIMPAN KE RIWAYAT
+            await db.transactions.add({
+                waktu: waktu,
+                items: keranjang, // simpan array belanjaan
+                total: total,
+                bayar: bayar,
+                kembali: bayar - total,
+                kasir: session.nama
+            });
 
             try {
                 // Potong stok di IndexedDB
