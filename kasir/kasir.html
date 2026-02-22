@@ -42,7 +42,7 @@
             </div>
 
             <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-[600px] pr-2">
-                </div>
+            </div>
         </section>
 
         <section class="lg:col-span-5">
@@ -50,7 +50,7 @@
                 <h3 class="font-black text-slate-800 uppercase tracking-widest text-xs mb-4">Keranjang Belanja</h3>
                 
                 <div id="cart-list" class="flex-1 overflow-y-auto space-y-3 mb-6">
-                    </div>
+                </div>
 
                 <div class="border-t pt-4 space-y-3">
                     <div class="flex justify-between text-slate-500 font-bold">
@@ -83,8 +83,9 @@
 
     <div id="nota-print" class="hidden font-mono text-xs p-4">
         <center>
-            <h3 class="font-bold text-lg">POS PRO STORE</h3>
-            <p>Banyuwangi, Jawa Timur</p>
+            <h3 id="nota-nama-toko" class="font-bold text-lg uppercase">POS PRO STORE</h3>
+            <p id="nota-alamat-toko">Banyuwangi, Jawa Timur</p>
+            <p id="nota-wa-toko"></p>
             <p>--------------------------------</p>
         </center>
         <div id="nota-items" class="my-4"></div>
@@ -115,12 +116,23 @@
         async function loadProduk() {
             const products = await db.products.toArray();
             renderGrid(products);
+            updateStoreInfo(); // Update info toko di nota
+        }
+
+        async function updateStoreInfo() {
+            const info = await db.settings.get("info_toko");
+            if(info) {
+                document.getElementById('nota-nama-toko').innerText = info.nama;
+                document.getElementById('nota-alamat-toko').innerText = info.alamat;
+                document.getElementById('nota-wa-toko').innerText = "WA: " + info.wa;
+            }
         }
 
         function renderGrid(data) {
             const grid = document.getElementById('product-grid');
+            // Ditambahkan p.hargaBeli ke parameter fungsi
             grid.innerHTML = data.map(p => `
-                <div onclick="tambahKeKeranjang(${p.id}, '${p.nama}', ${p.harga}, ${p.stock})" 
+                <div onclick="tambahKeKeranjang(${p.id}, '${p.nama}', ${p.harga}, ${p.stock}, ${p.hargaBeli || 0})" 
                      class="card !p-3 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group">
                     <div class="text-xs font-bold text-slate-500 mb-1 uppercase">${p.nama}</div>
                     <div class="font-black text-blue-600">Rp ${p.harga.toLocaleString()}</div>
@@ -129,7 +141,6 @@
             `).join('');
         }
 
-        // 2. Filter Produk (Pencarian)
         async function filterProduk() {
             const q = document.getElementById('p-search').value.toLowerCase();
             const products = await db.products.toArray();
@@ -137,8 +148,8 @@
             renderGrid(filtered);
         }
 
-        // 3. Tambah ke Keranjang
-        function tambahKeKeranjang(id, nama, harga, stock) {
+        // 3. Tambah ke Keranjang (Menyimpan hargaBeli)
+        function tambahKeKeranjang(id, nama, harga, stock, hargaBeli) {
             const itemExist = keranjang.find(item => item.id === id);
             
             if (itemExist) {
@@ -146,12 +157,12 @@
                 itemExist.qty += 1;
             } else {
                 if (stock <= 0) return alert("Stok Kosong!");
-                keranjang.push({ id, nama, harga, qty: 1, stock });
+                // Harga Beli dimasukkan ke object keranjang
+                keranjang.push({ id, nama, harga, hargaBeli, qty: 1, stock });
             }
             updateCartUI();
         }
 
-        // 4. Update Tampilan Keranjang
         function updateCartUI() {
             const list = document.getElementById('cart-list');
             list.innerHTML = keranjang.map((item, index) => `
@@ -166,7 +177,6 @@
                     </div>
                 </div>
             `).join('');
-
             hitungTotal();
         }
 
@@ -175,7 +185,6 @@
             updateCartUI();
         }
 
-        // 5. Hitung Total & Kembalian
         function hitungTotal() {
             const subtotal = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
             document.getElementById('subtotal').innerText = `Rp ${subtotal.toLocaleString()}`;
@@ -190,7 +199,7 @@
             document.getElementById('kembalian').innerText = `Rp ${kembali > 0 ? kembali.toLocaleString() : 0}`;
         }
 
-        // 6. Selesai & Potong Stok
+        // 6. Selesai & Simpan Transaksi (Termasuk Harga Beli untuk Laporan Profit)
         async function prosesTransaksi() {
             const total = keranjang.reduce((a, b) => a + (b.harga * b.qty), 0);
             const bayar = parseInt(document.getElementById('bayar').value) || 0;
@@ -199,26 +208,25 @@
             if (bayar < total) return alert("Uang bayar kurang!");
             
             try {
-            const waktu = new Date().getTime();
-            
-            // SIMPAN KE RIWAYAT
-            await db.transactions.add({
-                waktu: waktu,
-                items: keranjang, // simpan array belanjaan
-                total: total,
-                bayar: bayar,
-                kembali: bayar - total,
-                kasir: session.nama
-            });
+                const waktu = new Date().getTime();
+                
+                // SIMPAN KE RIWAYAT (Beserta Harga Beli di dalam items)
+                await db.transactions.add({
+                    waktu: waktu,
+                    items: JSON.parse(JSON.stringify(keranjang)), // Clone keranjang
+                    total: total,
+                    bayar: bayar,
+                    kembali: bayar - total,
+                    kasir: session.nama
+                });
 
-            try {
                 // Potong stok di IndexedDB
                 for (const item of keranjang) {
                     const prod = await db.products.get(item.id);
                     await db.products.update(item.id, { stock: prod.stock - item.qty });
                 }
 
-                // Siapkan Data Nota
+                // Render ke Nota
                 document.getElementById('nota-items').innerHTML = keranjang.map(i => `
                     <div class="flex justify-between">
                         <span>${i.nama} x ${i.qty}</span>
@@ -230,7 +238,6 @@
                 document.getElementById('nota-kembali').innerText = (bayar - total).toLocaleString();
                 document.getElementById('nota-waktu').innerText = new Date().toLocaleString();
 
-                // Cetak
                 window.print();
 
                 // Reset
@@ -246,7 +253,7 @@
         }
 
         // Init
-        document.getElementById('user-display').innerText = `Kasir: ${session.nama}`;
+        if(session) document.getElementById('user-display').innerText = `Kasir: ${session.nama}`;
         loadProduk();
     </script>
 </body>
