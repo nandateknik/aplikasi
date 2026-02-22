@@ -8,139 +8,108 @@
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 min-h-screen">
 
-    <header class="bg-white border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div id="logo-container" class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg overflow-hidden">
-                    <span id="initial-logo">P</span>
-                    <img id="img-logo" class="hidden w-full h-full object-cover">
+    <div class="lg:ml-64 flex flex-col min-h-screen">
+        <div id="layout-header"></div>
+
+        <main class="p-4 lg:p-8 flex-1">
+            <div class="mb-8">
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Halo, <span id="welcome-name" class="text-blue-600">Owner</span>!</h2>
+                <p id="display-alamat-toko" class="text-slate-500 font-medium">Memuat info toko...</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:border-blue-500 transition-all">
+                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">💰</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Omzet Hari Ini</p>
+                    <h3 id="stat-omzet" class="text-2xl font-black text-slate-800 mt-1">Rp 0</h3>
                 </div>
-                <h1 id="display-nama-toko" class="font-black text-xl text-slate-800 tracking-tight uppercase">
-                    POS<span class="text-blue-600">PRO</span>
-                </h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <span id="user-display" class="hidden md:block text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full"></span>
-                <button onclick="logout()" class="text-red-500 hover:text-red-700 font-bold text-sm">Keluar</button>
-            </div>
-        </div>
-    </header>
+                
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:border-green-500 transition-all">
+                    <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📝</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Transaksi</p>
+                    <h3 id="stat-transaksi" class="text-2xl font-black text-slate-800 mt-1">0</h3>
+                </div>
 
-    <nav class="max-w-7xl mx-auto p-4 flex gap-2 overflow-x-auto whitespace-nowrap">
-        <a href="index.html" class="nav-btn active-nav">Dashboard</a>
-        <a href="product.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Produk</a>
-        <a href="kasir.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Kasir</a>
-        <a href="riwayat.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Riwayat</a>
-        <a href="settings.html" class="nav-btn bg-white text-slate-600 border border-slate-200">Setting</a>
-    </nav>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:border-orange-500 transition-all">
+                    <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📦</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Varian Produk</p>
+                    <h3 id="stat-produk" class="text-2xl font-black text-slate-800 mt-1">0</h3>
+                </div>
 
-    <main class="max-w-7xl mx-auto p-4">
-        <section class="mb-8">
-            <h2 class="text-2xl font-black text-slate-800">Selamat Datang, <span id="welcome-name" class="text-blue-600">User</span>! 👋</h2>
-            <p id="display-alamat-toko" class="text-slate-400 text-sm mt-1 italic">Memuat alamat toko...</p>
-        </section>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="card border-l-4 border-blue-500">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Omzet Hari Ini</p>
-                <h3 id="stat-omzet" class="text-2xl font-black text-slate-800 mt-1">Rp 0</h3>
-            </div>
-            <div class="card border-l-4 border-green-500">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaksi</p>
-                <h3 id="stat-transaksi" class="text-2xl font-black text-slate-800 mt-1">0</h3>
-            </div>
-            <div class="card border-l-4 border-orange-500">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produk Tersedia</p>
-                <h3 id="stat-produk" class="text-2xl font-black text-slate-800 mt-1">0</h3>
-            </div>
-            <div class="card border-l-4 border-purple-500">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kontak Toko</p>
-                <h3 id="stat-wa" class="text-sm font-bold text-slate-800 mt-1">-</h3>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="card bg-slate-800 text-white">
-                <h3 class="font-bold mb-4">Akses Cepat</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="kasir.html" class="p-4 bg-slate-700 rounded-xl hover:bg-blue-600 transition-all text-center">
-                        <div class="text-2xl mb-1">🛒</div>
-                        <div class="text-xs font-bold uppercase">Buka Kasir</div>
-                    </a>
-                    <a href="product.html" class="p-4 bg-slate-700 rounded-xl hover:bg-blue-600 transition-all text-center">
-                        <div class="text-2xl mb-1">📦</div>
-                        <div class="text-xs font-bold uppercase">Stok Barang</div>
-                    </a>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:border-purple-500 transition-all">
+                    <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📱</div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">WA CS Toko</p>
+                    <h3 id="stat-wa" class="text-sm font-black text-slate-800 mt-2">-</h3>
                 </div>
             </div>
 
-            <div class="card">
-                <h3 class="font-black text-slate-800 text-sm uppercase mb-4">Transaksi Terakhir</h3>
-                <div id="recent-list" class="space-y-3">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div class="xl:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-black text-slate-800 uppercase text-xs tracking-widest">Transaksi Terakhir</h3>
+                        <a href="riwayat.html" class="text-blue-600 text-xs font-bold hover:underline">Lihat Semua</a>
                     </div>
+                    <div id="recent-list" class="space-y-4">
+                        </div>
+                </div>
+
+                <div class="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-200 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-black mb-2" id="card-nama-toko text-white">POSPRO STORE</h3>
+                        <p class="text-blue-100 text-sm mb-6" id="card-alamat-toko">Alamat belum diatur</p>
+                        <div class="space-y-3">
+                            <a href="kasir.html" class="block w-full py-4 bg-white text-blue-600 rounded-2xl text-center font-black shadow-lg hover:bg-blue-50 transition-all">
+                                BUKA KASIR SEKARANG
+                            </a>
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500 rounded-full opacity-50"></div>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="js/config.js"></script>
+    <script src="js/layout.js"></script>
     <script>
-        // Set User Session
-        if(session) {
-            document.getElementById('user-display').innerText = `${session.role}: ${session.nama}`;
-            document.getElementById('welcome-name').innerText = session.nama;
-        }
-
         async function initDashboard() {
-            // 1. Ambil Pengaturan Toko
+            // Ambil Info Toko
             const info = await db.settings.get("info_toko");
             if(info) {
-                // Terapkan Nama Toko
-                document.getElementById('display-nama-toko').innerHTML = `${info.nama.toUpperCase()}`;
-                document.getElementById('display-alamat-toko').innerText = info.alamat || "Alamat belum diatur";
-                document.getElementById('stat-wa').innerText = info.wa || "-";
-
-                // Terapkan Logo jika ada
-                if(info.logo) {
-                    document.getElementById('initial-logo').classList.add('hidden');
-                    document.getElementById('img-logo').src = info.logo;
-                    document.getElementById('img-logo').classList.remove('hidden');
-                }
+                document.getElementById('display-alamat-toko').innerText = info.alamat;
+                document.getElementById('card-alamat-toko').innerText = info.alamat;
+                document.getElementById('stat-wa').innerText = info.wa;
             }
 
-            // 2. Ambil Statistik
-            const products = await db.products.toArray();
+            // Statistik & Transaksi (Logic tetap sama)
             const transactions = await db.transactions.toArray();
-            
-            // Omzet Hari Ini
+            const products = await db.products.toArray();
             const today = new Date().toISOString().split('T')[0];
             const trxHariIni = transactions.filter(t => new Date(t.waktu).toISOString().split('T')[0] === today);
-            const totalOmzet = trxHariIni.reduce((a, b) => a + b.total, 0);
-
+            
             document.getElementById('stat-produk').innerText = products.length;
             document.getElementById('stat-transaksi').innerText = trxHariIni.length;
-            document.getElementById('stat-omzet').innerText = `Rp ${totalOmzet.toLocaleString()}`;
+            document.getElementById('stat-omzet').innerText = `Rp ${trxHariIni.reduce((a,b)=>a+b.total,0).toLocaleString()}`;
 
-            // 3. Tampilkan 3 Transaksi Terakhir
-            const recent = transactions.reverse().slice(0, 3);
-            const listContainer = document.getElementById('recent-list');
-            
-            if(recent.length === 0) {
-                listContainer.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada transaksi.</p>`;
-            } else {
-                listContainer.innerHTML = recent.map(t => `
-                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+            const recent = transactions.reverse().slice(0, 5);
+            document.getElementById('recent-list').innerHTML = recent.map(t => `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">🛒</div>
                         <div>
-                            <div class="text-xs font-bold text-slate-700">TRX-${t.id}</div>
-                            <div class="text-[10px] text-slate-400">${new Date(t.waktu).toLocaleTimeString()}</div>
+                            <div class="font-black text-slate-800 text-sm uppercase">TRX #${t.id}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase">${new Date(t.waktu).toLocaleTimeString()} - ${t.kasir}</div>
                         </div>
-                        <div class="text-sm font-black text-blue-600">Rp ${t.total.toLocaleString()}</div>
                     </div>
-                `).join('');
-            }
+                    <div class="text-right">
+                        <div class="font-black text-blue-600">Rp ${t.total.toLocaleString()}</div>
+                        <div class="text-[9px] font-bold text-green-500 uppercase italic">Paid</div>
+                    </div>
+                </div>
+            `).join('');
         }
-
         initDashboard();
     </script>
 </body>
