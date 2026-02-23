@@ -1,92 +1,138 @@
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-3 align-items-center">
-            <div class="col-12 col-md-4">
-                <div class="input-group">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelanggan - Nanda Teknik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="d-flex">
+    <div class="bg-white border-end d-none d-md-block" style="width: 250px; min-height: 100vh;">
+        <div class="p-4 text-center border-bottom">
+            <h5 class="fw-bold text-primary mb-0">NANDA CRM</h5>
+        </div>
+        <div class="list-group list-group-flush mt-3">
+            <a href="index.html" class="list-group-item list-group-item-action border-0 py-3"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+            <a href="pelanggan.html" class="list-group-item list-group-item-action border-0 py-3 active bg-primary text-white"><i class="bi bi-people me-2"></i> Pelanggan</a>
+            <a href="#" class="list-group-item list-group-item-action border-0 py-3"><i class="bi bi-calendar-event me-2"></i> Booking</a>
+        </div>
+    </div>
+
+    <div class="flex-grow-1">
+        <nav class="navbar navbar-light bg-white border-bottom px-4 py-3">
+            <h5 class="fw-bold mb-0">Data Pelanggan</h5>
+            <div id="userProfile" class="small text-muted"></div>
+        </nav>
+
+        <div class="p-4">
+            <div class="d-flex flex-wrap justify-content-between mb-4 gap-2">
+                <div class="input-group shadow-sm w-auto flex-grow-1">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="searchPelanggan" class="form-control border-start-0" placeholder="Cari nama atau alamat..." onkeyup="filterDataPelanggan()">
+                    <input type="text" id="searchBar" class="form-control border-start-0" placeholder="Cari nama atau alamat..." onkeyup="ModulPelanggan.filter()">
                 </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <select id="filterKategori" class="form-select" onchange="filterDataPelanggan()">
+                <select id="filterKat" class="form-select shadow-sm w-auto" onchange="ModulPelanggan.filter()">
                     <option value="Semua">Semua Kategori</option>
                     <option value="Rumahan">🏠 Rumahan</option>
                     <option value="Instansi">🏢 Instansi</option>
                 </select>
-            </div>
-            <div class="col-6 col-md-5 text-end">
-                <button class="btn btn-primary px-4 w-100 w-md-auto" onclick="formPelanggan()">
-                    <i class="bi bi-person-plus-fill me-2"></i>Tambah Pelanggan
+                <button class="btn btn-primary px-4 shadow-sm" onclick="openForm('Pelanggan')">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah
                 </button>
             </div>
+
+            <div class="row" id="list-pelanggan-container">
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="bg-white p-3 rounded shadow-sm border-start border-primary border-4">
-            <small class="text-muted d-block text-uppercase fw-bold">Total</small>
-            <span id="statTotal" class="h4 fw-bold">-</span>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="bg-white p-3 rounded shadow-sm border-start border-success border-4">
-            <small class="text-muted d-block text-uppercase fw-bold">Rumahan</small>
-            <span id="statRumahan" class="h4 fw-bold">-</span>
-        </div>
-    </div>
-    <div class="col-12 col-md-3">
-        <div class="bg-white p-3 rounded shadow-sm border-start border-info border-4">
-            <small class="text-muted d-block text-uppercase fw-bold">Instansi</small>
-            <span id="statInstansi" class="h4 fw-bold">-</span>
-        </div>
-    </div>
-</div>
+<nav class="fixed-bottom bg-white border-top d-md-none d-flex justify-content-around py-2 shadow-lg">
+    <a href="index.html" class="text-center text-muted text-decoration-none">
+        <i class="bi bi-speedometer2 fs-5 d-block"></i><small>Home</small>
+    </a>
+    <a href="pelanggan.html" class="text-center text-primary text-decoration-none fw-bold">
+        <i class="bi bi-people fs-5 d-block"></i><small>Pelanggan</small>
+    </a>
+</nav>
 
-<div class="row" id="listPelanggan">
-    <div class="text-center p-5">
-        <div class="spinner-border text-primary"></div>
-        <p class="mt-2">Mengambil data pelanggan...</p>
-    </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/config.js"></script>
+<script src="jsutils.js"></script>
+<script>
+    const ModulPelanggan = {
+        dataCache: [],
 
-<template id="tpl-form-pelanggan">
-    <div class="text-start">
-        <div class="mb-3">
-            <label class="form-label small fw-bold">Kategori Pelanggan</label>
-            <div class="d-flex gap-2">
-                <input type="radio" class="btn-check" name="kat" id="k1" value="Rumahan" checked>
-                <label class="btn btn-outline-success flex-fill" for="k1">🏠 Rumahan</label>
-                <input type="radio" class="btn-check" name="kat" id="k2" value="Instansi">
-                <label class="btn btn-outline-primary flex-fill" for="k2">🏢 Instansi</label>
-            </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label small fw-bold">Nama Lengkap / Nama Perusahaan</label>
-            <input type="text" id="f-nama" class="form-control" placeholder="Masukkan nama...">
-        </div>
-        <div class="mb-3">
-            <label class="form-label small fw-bold">Email (Untuk Promo)</label>
-            <input type="email" id="f-email" class="form-control" placeholder="email@contoh.com">
-        </div>
-        <div class="mb-3">
-            <label class="form-label small fw-bold">No. WhatsApp (Gunakan 62)</label>
-            <input type="number" id="f-wa" class="form-control" placeholder="62812345678">
-        </div>
-        <div class="mb-3">
-            <label class="form-label small fw-bold">Alamat Lengkap</label>
-            <textarea id="f-alamat" class="form-control" rows="2" placeholder="Alamat jalan, nomor, dsb..."></textarea>
-        </div>
-        <div class="row">
-            <div class="col-6">
-                <label class="form-label small fw-bold">Latitude</label>
-                <input type="text" id="f-lat" class="form-control" placeholder="-6.xxx">
-            </div>
-            <div class="col-6">
-                <label class="form-label small fw-bold">Longitude</label>
-                <input type="text" id="f-lang" class="form-control" placeholder="106.xxx">
-            </div>
-        </div>
-    </div>
-</template>
+        async init() {
+            const user = JSON.parse(localStorage.getItem('userCRM'));
+            if(!user) window.location.href = 'login.html';
+            document.getElementById('userProfile').innerHTML = `<i class="bi bi-person-circle"></i> ${user.nama}`;
+
+            try {
+                // Gunakan fungsi dari config.js
+                const data = await CONFIG.getData("Pelanggan");
+                this.dataCache = data;
+                this.render(data);
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        render(data) {
+            const container = document.getElementById('list-pelanggan-container');
+            container.innerHTML = '';
+            data.forEach(p => {
+                const isInstansi = p.kategori === 'Instansi';
+                container.innerHTML += `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card card-mobile p-3 border-0 shadow-sm h-100 border-start border-4 ${isInstansi ? 'border-primary' : 'border-success'}">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <small class="fw-bold text-muted" style="font-size:0.7rem">${isInstansi ? '🏢 INSTANSI' : '🏠 RUMAHAN'}</small>
+                                    <h6 class="fw-bold mb-1">${p.nama}</h6>
+                                    <p class="small text-muted mb-2 text-truncate" style="max-width: 180px;">${p.alamat || '-'}</p>
+                                </div>
+                            </div>
+                            <div class="mt-auto d-flex gap-2">
+                                <button class="btn btn-sm btn-light border flex-grow-1" onclick="openForm('Pelanggan', '${p.id}')">Edit</button>
+                                <button class="btn btn-sm btn-success" onclick="Utils.sendWhatsApp('${p.wa}', 'Halo Pak/Bu ${p.nama}...')">
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        },
+
+        filter() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const kat = document.getElementById('filterKat').value;
+            const filtered = this.dataCache.filter(p => {
+                const matchQuery = p.nama.toLowerCase().includes(query) || p.alamat.toLowerCase().includes(query);
+                const matchKat = (kat === 'Semua') || (p.kategori === kat);
+                return matchQuery && matchKat;
+            });
+            this.render(filtered);
+        }
+    };
+
+    // Jalankan modul saat halaman dibuka
+    ModulPelanggan.init();
+
+    // Fungsi Logout mandiri
+    function logout() {
+        localStorage.removeItem('userCRM');
+        window.location.href = 'login.html';
+    }
+</script>
+
+<script src="js/app.js"></script> 
+
+</body>
+</html>
