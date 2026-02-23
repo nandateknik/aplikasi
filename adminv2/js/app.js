@@ -76,57 +76,116 @@ async function loadModule(moduleName) {
 
 async function renderDashboard() {
     const content = document.getElementById('mainContent');
-    
+    content.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+
     try {
-        const stats = await CONFIG.getData("any", "getStats");
-        
+        const stats = await CONFIG.getData("any", "getStats"); // Data angka
+        const allBookings = await CONFIG.getData("Booking"); // Data detail tugas
+
+        // Filter Tugas
+        const urgentJobs = allBookings.filter(b => b.status !== "Selesai" && b.prioritas === "Urgent");
+        const todayJobs = allBookings.filter(b => b.status !== "Selesai" && b.tanggal === new Date().toISOString().split('T')[0]);
+
         content.innerHTML = `
-            <div class="row g-3 animate__animated animate__fadeIn">
+            <div class="d-flex gap-2 mb-4 overflow-x-auto pb-2">
+                <button class="btn btn-primary rounded-pill shadow-sm flex-shrink-0" onclick="openForm('Booking')">
+                    <i class="bi bi-plus-circle me-1"></i> Tambah Kerja
+                </button>
+                <button class="btn btn-outline-primary rounded-pill shadow-sm flex-shrink-0" onclick="loadModule('Pelanggan')">
+                    <i class="bi bi-search me-1"></i> Cari User
+                </button>
+            </div>
+
+            ${urgentJobs.length > 0 ? `
+            <div class="alert alert-danger border-0 shadow-sm mb-4 animate__animated animate__headShake">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Perhatian!</h6>
+                        <small>Ada ${urgentJobs.length} pekerjaan Urgent yang belum beres.</small>
+                    </div>
+                </div>
+            </div>` : ''}
+
+            <div class="row g-3 mb-4">
                 <div class="col-6 col-md-3">
-                    <div class="card p-3 shadow-sm border-0 bg-primary text-white card-mobile">
-                        <small>Pelanggan</small><h3>${stats.totalPelanggan || 0}</h3>
+                    <div class="card p-3 border-0 shadow-sm bg-white card-mobile">
+                        <span class="text-muted small">Job Hari Ini</span>
+                        <h4 class="fw-bold mb-0">${todayJobs.length}</h4>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="card p-3 shadow-sm border-0 bg-warning text-dark card-mobile">
-                        <small>Pending Jobs</small><h3>${stats.pendingJobs || 0}</h3>
+                    <div class="card p-3 border-0 shadow-sm bg-white card-mobile">
+                        <span class="text-muted small">Total Pending</span>
+                        <h4 class="fw-bold mb-0 text-warning">${stats.pendingJobs}</h4>
                     </div>
                 </div>
                 <div class="col-12 col-md-6">
-                    <div class="card p-3 shadow-sm border-0 bg-success text-white card-mobile">
-                        <small>Estimasi Saldo Bulan Ini</small><h3>${Utils.formatRupiah(stats.pendapatanBulanan - stats.pengeluaranBulanan)}</h3>
+                    <div class="card p-3 border-0 shadow-sm bg-white card-mobile">
+                        <span class="text-muted small">Estimasi Cuan (Bulan Ini)</span>
+                        <h4 class="fw-bold mb-0 text-success">${Utils.formatRupiah(stats.pendapatanBulanan - stats.pengeluaranBulanan)}</h4>
                     </div>
                 </div>
-                
-                <div class="col-12 mt-3">
-                    <ul class="nav nav-pills mb-2" id="dbTab">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-graph">Grafik Laba</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-map" onclick="initMap()">Peta Lokasi</button></li>
-                    </ul>
-                    <div class="tab-content card p-3 shadow-sm border-0">
-                        <div class="tab-pane fade show active" id="tab-graph">
-                            <canvas id="myChart" style="max-height: 300px;"></canvas>
-                        </div>
-                        <div class="tab-pane fade" id="tab-map">
-                            <div id="map" style="height: 350px; border-radius: 10px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+            </div>
 
-        // Safe Chart Initialization
-        if (typeof Chart !== 'undefined' && stats.chartData) {
+            <div class="row">
+                <div class="col-lg-7 mb-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Agenda Kerja Hari Ini</h6>
+                    <div id="todayTaskList">
+                        ${todayJobs.length === 0 ? '<div class="text-muted small p-4 text-center bg-light rounded">Santai dulu, belum ada jadwal hari ini.</div>' : ''}
+                        ${todayJobs.map(job => `
+                            <div class="card border-0 shadow-sm mb-2 p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-truncate" style="max-width: 70%;">
+                                        <div class="fw-bold">${job.judul}</div>
+                                        <small class="text-muted">${job.nama}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-light" onclick="Utils.sendWhatsApp('${job.wa}', 'Halo Pak ${job.nama}, teknisi akan meluncur ke lokasi.')">
+                                        <i class="bi bi-whatsapp text-success"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <ul class="nav nav-pills mb-3 p-1 bg-light rounded-pill" id="pills-tab">
+                        <li class="nav-item flex-fill"><button class="nav-link active rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#tab-map" onclick="initMap()">Lokasi</button></li>
+                        <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#tab-graph">Laba</button></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="tab-map">
+                            <div id="map" style="height: 300px; border-radius: 20px;" class="shadow-sm"></div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-graph">
+                            <div class="card border-0 shadow-sm p-3">
+                                <canvas id="myChart" style="max-height: 250px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Render Chart jika tab laba diklik
+        if (typeof Chart !== 'undefined') {
             new Chart(document.getElementById('myChart'), {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: stats.chartData.labels,
-                    datasets: [{ label: 'Nominal', data: stats.chartData.values, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3 }]
+                    datasets: [{ label: 'Pendapatan', data: stats.chartData.values, backgroundColor: '#6366f1', borderRadius: 10 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: true, plugins: { legend: { display: false } } }
             });
         }
-    } catch (err) {
-        content.innerHTML = `<div class="alert alert-warning">Gagal memuat dashboard. Pastikan Sheet "Labarugi" & "Booking" terisi.</div>`;
+        
+        // Auto init Map
+        initMap();
+
+    } catch (e) {
+        console.error(e);
+        content.innerHTML = `<div class="alert alert-danger">Dashboard error: ${e.message}</div>`;
     }
 }
 
