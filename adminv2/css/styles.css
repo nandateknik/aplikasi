@@ -80,3 +80,14 @@ body {
 .overflow-x-auto::-webkit-scrollbar {
     display: none;
 }
+
+.bg-light-warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b !important;
+}
+
+.overflow-x-auto {
+    display: flex;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
