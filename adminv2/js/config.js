@@ -18,13 +18,15 @@ const CONFIG = {
     // Perbaikan di config.js
 getData: async (table, action = "read", query = "") => {
     const url = `${CONFIG.API_URL}?table=${table}&action=${action}&query=${query}`;
+    
+    // Jangan tambahkan header atau mode aneh-aneh
     const response = await fetch(url, {
         method: "GET",
-        mode: "cors", // Tambahkan mode cors
-        headers: {
-            "Content-Type": "text/plain;charset=utf-8",
-        },
+        redirect: "follow" // INI KUNCINYA
     });
+
+    if (!response.ok) throw new Error('Network response was not ok');
+    
     return await response.json();
 }
 };
