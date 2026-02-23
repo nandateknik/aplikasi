@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Laba Rugi | Service App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-light">
+<div id="app">
+    <div class="container-fluid py-4">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-primary text-white">
+                    <div class="card-body">
+                        <h6>Total Pendapatan (Nota)</h6>
+                        <h3 id="txtPendapatan">Rp 0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-danger text-white">
+                    <div class="card-body">
+                        <h6>Total Pengeluaran</h6>
+                        <h3 id="txtPengeluaran">Rp 0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-success text-white">
+                    <div class="card-body">
+                        <h6>Laba Bersih</h6>
+                        <h3 id="txtLaba">Rp 0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <h5 class="fw-bold mb-0">Input Pengeluaran Baru</h5>
+            </div>
+            <div class="card-body">
+                <form id="formPengeluaran" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="date" name="Tanggal" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="Kategori" class="form-select">
+                            <option value="Sparepart">Sparepart</option>
+                            <option value="Bensin">Bensin/Transport</option>
+                            <option value="Alat">Pembelian Alat</option>
+                            <option value="Lainnya">Lain-lain</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="Nominal" class="form-control" placeholder="Nominal Rp" required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-dark w-100">Catat Pengeluaran</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <canvas id="labaChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="config.js"></script>
+<script src="layout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", loadLaporan);
+
+    async function loadLaporan() {
+        // Ambil Data Nota & Pengeluaran secara paralel
+        const [resNota, resKeluar] = await Promise.all([
+            fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) }),
+            fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Labarugi' }) })
+        ]);
+
+        const notaData = await resNota.json();
+        const pengeluaranData = await resKeluar.json();
+
+        const totalMasuk = notaData.reduce((sum, n) => sum + (parseInt(n.total) || 0), 0);
+        const totalKeluar = pengeluaranData.reduce((sum, p) => sum + (parseInt(p.Nominal) || 0), 0);
+
+        document.getElementById('txtPendapatan').innerText = "Rp " + totalMasuk.toLocaleString();
+        document.getElementById('txtPengeluaran').innerText = "Rp " + totalKeluar.toLocaleString();
+        document.getElementById('txtLaba').innerText = "Rp " + (totalMasuk - totalKeluar).toLocaleString();
+        
+        initChart(totalMasuk, totalKeluar);
+    }
+
+    function initChart(masuk, keluar) {
+        const ctx = document.getElementById('labaChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Pendapatan', 'Pengeluaran'],
+                datasets: [{
+                    label: 'Rupiah',
+                    data: [masuk, keluar],
+                    backgroundColor: ['#0d6efd', '#dc3545']
+                }]
+            }
+        });
+    }
+
+    document.getElementById('formPengeluaran').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        data.Status = "Selesai";
+
+        await fetch(CONFIG.GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'insert', sheet: 'Labarugi', data: data })
+        });
+        
+        Swal.fire('Berhasil', 'Pengeluaran dicatat', 'success').then(() => location.reload());
+    });
+</script>
+</body>
+</html>
