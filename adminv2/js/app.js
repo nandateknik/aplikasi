@@ -1,6 +1,6 @@
 /**
  * CRM Jasa Servis - Main App Logic
- * Version: 3.1 (Fix Chart & Map Loading)
+ * Version: 4.0 (Integrated Proactive Dashboard & Warranty Alerts)
  */
 
 const menus = [
@@ -53,7 +53,6 @@ async function loadModule(moduleName) {
     document.getElementById('pageTitle').innerText = moduleName;
     const content = document.getElementById('mainContent');
     
-    // UI Active State
     document.querySelectorAll('.nav-link-custom, .menu-item').forEach(el => el.classList.remove('active', 'bg-primary', 'text-white'));
     const activeMob = document.getElementById(`m-mob-${moduleName}`);
     const activeDesk = document.getElementById(`m-desk-${moduleName}`);
@@ -79,10 +78,9 @@ async function renderDashboard() {
     content.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
 
     try {
-        const stats = await CONFIG.getData("any", "getStats"); // Data angka
-        const allBookings = await CONFIG.getData("Booking"); // Data detail tugas
+        const stats = await CONFIG.getData("any", "getStats");
+        const allBookings = await CONFIG.getData("Booking");
 
-        // Filter Tugas
         const urgentJobs = allBookings.filter(b => b.status !== "Selesai" && b.prioritas === "Urgent");
         const todayJobs = allBookings.filter(b => b.status !== "Selesai" && b.tanggal === new Date().toISOString().split('T')[0]);
 
@@ -101,8 +99,8 @@ async function renderDashboard() {
                 <div class="d-flex align-items-center">
                     <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
                     <div>
-                        <h6 class="mb-0 fw-bold">Perhatian!</h6>
-                        <small>Ada ${urgentJobs.length} pekerjaan Urgent yang belum beres.</small>
+                        <h6 class="mb-0 fw-bold">Pekerjaan Urgent!</h6>
+                        <small>Ada ${urgentJobs.length} tugas yang harus segera diselesaikan.</small>
                     </div>
                 </div>
             </div>` : ''}
@@ -122,17 +120,37 @@ async function renderDashboard() {
                 </div>
                 <div class="col-12 col-md-6">
                     <div class="card p-3 border-0 shadow-sm bg-white card-mobile">
-                        <span class="text-muted small">Estimasi Cuan (Bulan Ini)</span>
+                        <span class="text-muted small">Estimasi Saldo (Bulan Ini)</span>
                         <h4 class="fw-bold mb-0 text-success">${Utils.formatRupiah(stats.pendapatanBulanan - stats.pengeluaranBulanan)}</h4>
                     </div>
                 </div>
             </div>
 
+            ${stats.garansiAlerts && stats.garansiAlerts.length > 0 ? `
+            <div class="mb-4">
+                <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-shield-exclamation me-2"></i>Garansi Hampir Habis</h6>
+                <div class="d-flex gap-2 overflow-x-auto pb-2">
+                    ${stats.garansiAlerts.map(g => `
+                        <div class="card border-0 shadow-sm p-3" style="min-width: 250px; background-color: #fffbeb; border-left: 4px solid #f59e0b !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold small text-truncate" style="max-width: 150px;">${g.nama}</div>
+                                    <div class="text-danger small fw-bold">Habis dlm ${g.sisa} hari</div>
+                                </div>
+                                <button class="btn btn-sm btn-success rounded-pill" onclick="Utils.sendWhatsApp('${g.wa}', 'Halo Pak/Bu ${g.nama}, kami dari Nanda Teknik menginfokan masa garansi Anda akan habis dlm ${g.sisa} hari. Ada kendala?')">
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>` : ''}
+
             <div class="row">
                 <div class="col-lg-7 mb-4">
-                    <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Agenda Kerja Hari Ini</h6>
+                    <h6 class="fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Agenda Hari Ini</h6>
                     <div id="todayTaskList">
-                        ${todayJobs.length === 0 ? '<div class="text-muted small p-4 text-center bg-light rounded">Santai dulu, belum ada jadwal hari ini.</div>' : ''}
+                        ${todayJobs.length === 0 ? '<div class="text-muted small p-4 text-center bg-light rounded border border-dashed">Belum ada jadwal kerja hari ini.</div>' : ''}
                         ${todayJobs.map(job => `
                             <div class="card border-0 shadow-sm mb-2 p-3">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -140,7 +158,7 @@ async function renderDashboard() {
                                         <div class="fw-bold">${job.judul}</div>
                                         <small class="text-muted">${job.nama}</small>
                                     </div>
-                                    <button class="btn btn-sm btn-light" onclick="Utils.sendWhatsApp('${job.wa}', 'Halo Pak ${job.nama}, teknisi akan meluncur ke lokasi.')">
+                                    <button class="btn btn-sm btn-light border" onclick="Utils.sendWhatsApp('${job.wa}', 'Halo Pak ${job.nama}, teknisi meluncur ke lokasi.')">
                                         <i class="bi bi-whatsapp text-success"></i>
                                     </button>
                                 </div>
@@ -156,7 +174,7 @@ async function renderDashboard() {
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="tab-map">
-                            <div id="map" style="height: 300px; border-radius: 20px;" class="shadow-sm"></div>
+                            <div id="map" style="height: 300px; border-radius: 20px;" class="shadow-sm border"></div>
                         </div>
                         <div class="tab-pane fade" id="tab-graph">
                             <div class="card border-0 shadow-sm p-3">
@@ -168,53 +186,45 @@ async function renderDashboard() {
             </div>
         `;
 
-        // Render Chart jika tab laba diklik
-        if (typeof Chart !== 'undefined') {
+        if (typeof Chart !== 'undefined' && stats.chartData) {
             new Chart(document.getElementById('myChart'), {
                 type: 'bar',
                 data: {
                     labels: stats.chartData.labels,
-                    datasets: [{ label: 'Pendapatan', data: stats.chartData.values, backgroundColor: '#6366f1', borderRadius: 10 }]
+                    datasets: [{ label: 'Pendapatan', data: stats.chartData.values, backgroundColor: '#6366f1', borderRadius: 8 }]
                 },
                 options: { responsive: true, plugins: { legend: { display: false } } }
             });
         }
-        
-        // Auto init Map
         initMap();
-
     } catch (e) {
-        console.error(e);
-        content.innerHTML = `<div class="alert alert-danger">Dashboard error: ${e.message}</div>`;
+        content.innerHTML = `<div class="alert alert-danger">Gagal memuat dashboard: ${e.message}</div>`;
     }
 }
 
 async function initMap() {
-    // Timeout agar elemen #map ter-render dulu di DOM
     setTimeout(async () => {
         if (mapInstance) mapInstance.remove();
-        
-        // Cek apakah library Leaflet (L) ada
         if (typeof L === 'undefined') return;
 
         mapInstance = L.map('map').setView([-6.2000, 106.8166], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
 
-        const pelanggan = await CONFIG.getData("Pelanggan");
-        const bookings = await CONFIG.getData("Booking");
+        try {
+            const pelanggan = await CONFIG.getData("Pelanggan");
+            const bookings = await CONFIG.getData("Booking");
 
-        pelanggan.forEach(p => {
-            if (p.lat && p.lang) L.marker([p.lat, p.lang]).addTo(mapInstance).bindPopup(`Pelanggan: ${p.nama}`);
-        });
+            pelanggan.forEach(p => {
+                if (p.lat && p.lang) L.marker([p.lat, p.lang]).addTo(mapInstance).bindPopup(`Pelanggan: ${p.nama}`);
+            });
 
-        bookings.filter(b => b.status !== "Selesai").forEach(b => {
-            if (b.lat && b.langa) {
-                L.circleMarker([b.lat, b.langa], {color: 'red', radius: 8, fillOpacity: 0.8}).addTo(mapInstance).bindPopup(`<b>PENDING</b><br>${b.judul}`);
-            }
-        });
-        
-        // Memaksa leaflet menghitung ulang ukuran container
-        mapInstance.invalidateSize();
+            bookings.filter(b => b.status !== "Selesai").forEach(b => {
+                if (b.lat && b.langa) {
+                    L.circleMarker([b.lat, b.langa], {color: 'red', radius: 8, fillOpacity: 0.8}).addTo(mapInstance).bindPopup(`<b>PENDING</b><br>${b.judul}`);
+                }
+            });
+            mapInstance.invalidateSize();
+        } catch(e) { console.warn("Peta gagal memuat titik data."); }
     }, 400);
 }
 
@@ -222,18 +232,18 @@ function renderTable(name, data) {
     const content = document.getElementById('mainContent');
     content.innerHTML = `
         <div class="d-flex justify-content-between mb-3 gap-2">
-            <div class="input-group">
+            <div class="input-group shadow-sm">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control border-start-0" placeholder="Cari data..." onkeyup="searchData('${name}', this.value)">
             </div>
-            <button class="btn btn-primary px-4" onclick="openForm('${name}')"><i class="bi bi-plus-lg"></i> <span class="d-none d-md-inline">Tambah</span></button>
+            <button class="btn btn-primary px-4 shadow-sm" onclick="openForm('${name}')"><i class="bi bi-plus-lg"></i></button>
         </div>
         <div class="row" id="dataList"></div>
     `;
 
     const list = document.getElementById('dataList');
     if(data.length === 0) {
-        list.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data ditemukan.</div>';
+        list.innerHTML = '<div class="text-center p-5 text-muted">Data kosong.</div>';
         return;
     }
 
@@ -241,10 +251,10 @@ function renderTable(name, data) {
         const idKey = item.id || item.nama || item.email;
         list.innerHTML += `
             <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card card-mobile p-3 border-0 shadow-sm h-100">
+                <div class="card card-mobile p-3 border-0 shadow-sm h-100 animate__animated animate__fadeIn">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="text-truncate">
-                            <h6 class="fw-bold mb-1 text-truncate">${item.nama || item.judul || item.Jasa || 'Tanpa Nama'}</h6>
+                            <h6 class="fw-bold mb-1 text-truncate">${item.nama || item.judul || item.Jasa || 'Data'}</h6>
                             <p class="small text-muted mb-2">${item.email || item.Keterangan || item.tanggal || '-'}</p>
                         </div>
                         <span class="badge ${item.status === 'Selesai' || item.is_active === 'TRUE' ? 'bg-success' : 'bg-secondary'}">${item.status || (item.is_active === 'TRUE' ? 'Aktif' : 'Nonaktif')}</span>
@@ -260,4 +270,23 @@ function renderTable(name, data) {
     });
 }
 
-// Tambahkan sisa fungsi CRUD (openForm, deleteData, searchData, logout) sesuai kode sebelumnya...
+// Sisa fungsi CRUD standar
+async function deleteData(table, id) {
+    const confirm = await Swal.fire({ title: 'Hapus data?', icon: 'warning', showCancelButton: true });
+    if (confirm.isConfirmed) {
+        const res = await CONFIG.postData(table, 'delete', {}, id);
+        if (res.status === 'success') { loadModule(table); }
+    }
+}
+
+async function searchData(table, query) {
+    if (query.length > 2 || query.length === 0) {
+        const data = await CONFIG.getData(table, "read", query);
+        renderTable(table, data);
+    }
+}
+
+function logout() {
+    localStorage.removeItem('userCRM');
+    window.location.href = "login.html";
+}
