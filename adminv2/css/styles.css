@@ -54,3 +54,29 @@ body {
     box-shadow: var(--card-shadow);
     margin-bottom: 15px;
 }
+
+.animate__animated { animation-duration: 0.8s; }
+
+.nav-pills .nav-link {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #6366f1 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.card-mobile {
+    transition: all 0.3s ease;
+}
+
+.card-mobile:hover {
+    transform: translateY(-5px);
+}
+
+/* Custom Scrollbar untuk Action Row */
+.overflow-x-auto::-webkit-scrollbar {
+    display: none;
+}
