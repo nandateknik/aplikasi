@@ -1,7 +1,7 @@
 // config.js
 const CONFIG = {
     // Masukkan URL Web App Google Apps Script kamu di sini
-    API_URL: "https://script.google.com/macros/s/AKfycbxAf69MBsR0OOxBQeCdmXECZkiOeolazQ_gQu-UIABnEnRXZSAduAK6AqXahUpjgc6fnA/exec,
+    API_URL: "https://script.google.com/macros/s/AKfycbxAf69MBsR0OOxBQeCdmXECZkiOeolazQ_gQu-UIABnEnRXZSAduAK6AqXahUpjgc6fnA/exec",
     
     // Fungsi helper untuk fetch data (POST)
     postData: async (table, action, data = {}, id = null) => {
