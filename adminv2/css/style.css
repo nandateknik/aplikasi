@@ -1,0 +1,56 @@
+:root {
+    --primary: #6366f1;
+    --bg-light: #f8fafc;
+    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Inter', sans-serif;
+    padding-bottom: 70px; /* Jarak untuk bottom nav mobile */
+}
+
+/* Glassmorphism Header */
+.header-glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Mobile Bottom Navigation */
+@media (max-width: 768px) {
+    .sidebar { display: none; }
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        z-index: 1000;
+    }
+    .bottom-nav a { text-align: center; color: #94a3b8; text-decoration: none; font-size: 10px; }
+    .bottom-nav a.active { color: var(--primary); }
+    .bottom-nav i { font-size: 20px; display: block; }
+}
+
+/* Desktop Sidebar */
+@media (min-width: 769px) {
+    .bottom-nav { display: none; }
+    .main-wrapper { display: flex; }
+    .sidebar { width: 280px; height: 100vh; position: sticky; top: 0; background: white; border-right: 1px solid #eee; }
+}
+
+.card-mobile {
+    border: none;
+    border-radius: 15px;
+    transition: transform 0.2s;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 15px;
+}
