@@ -15,9 +15,16 @@ const CONFIG = {
     },
 
     // Fungsi helper untuk ambil data (GET)
-    getData: async (table, action = "read", query = "") => {
-        const url = `${CONFIG.API_URL}?table=${table}&action=${action}&query=${query}`;
-        const response = await fetch(url);
-        return await response.json();
-    }
+    // Perbaikan di config.js
+getData: async (table, action = "read", query = "") => {
+    const url = `${CONFIG.API_URL}?table=${table}&action=${action}&query=${query}`;
+    const response = await fetch(url, {
+        method: "GET",
+        mode: "cors", // Tambahkan mode cors
+        headers: {
+            "Content-Type": "text/plain;charset=utf-8",
+        },
+    });
+    return await response.json();
+}
 };
