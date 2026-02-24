@@ -7,150 +7,188 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    <style>
+    <link rel="stylesheet" href="css/styles.css"> <style>
         :root { --premium-blue: #007AFF; }
-        body { font-family: 'Segoe UI', sans-serif; }
-        .quote-preview { background: #fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; font-size: 14px; }
-        .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; }
         
-        .history-card { border-radius: 18px; border: none; background: white; margin-bottom: 12px; transition: 0.3s; }
-        .history-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important; }
-        
-        .badge-pending { background-color: #FF9500; color: #fff; }
-        .badge-approved { background-color: #34C759; color: #fff; }
-        .badge-rejected { background-color: #FF3B30; color: #fff; }
-        
-        .qty-control { display: flex; align-items: center; gap: 8px; justify-content: center; }
-        .qty-btn { cursor: pointer; font-size: 1.1rem; color: var(--premium-blue); }
+        /* Desain Kertas A4 / Surat */
+        .quote-preview { 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 0; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            min-height: 297mm;
+            position: relative;
+        }
 
+        .header-nota { border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+        .logo-box { background: #333; color: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; font-size: 24px; }
+        
+        .info-rekening {
+            border: 2px dashed #ccc;
+            padding: 15px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 30px;
+        }
+
+        .qty-control { display: flex; align-items: center; gap: 8px; justify-content: center; }
+        .qty-btn { cursor: pointer; color: var(--premium-blue); font-size: 1.2rem; }
+
+        /* Khusus Print */
         @media print {
-            .d-print-none, .nav, .btn, .input-area { display: none !important; }
-            .quote-preview { box-shadow: none; padding: 0; border: none; }
-            body { background: white; }
+            body { background: white; padding: 0; margin: 0; }
+            .d-print-none, #header-container, #nav-container, .nav-pills, .btn, .input-area { display: none !important; }
+            .quote-preview { box-shadow: none; border: none; padding: 0; width: 100%; }
+            .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            @page { margin: 1.5cm; }
         }
     </style>
 </head>
-<body class="bg-light pb-5">
+<body class="pb-5">
 
-<div id="app">
-    <div class="container py-3">
-        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none" id="quoteTab" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
-                    <i class="bi bi-file-earmark-plus me-1"></i> Buat Penawaran
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="tab-list" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchQuoteHistory()">
-                    <i class="bi bi-archive me-1"></i> Arsip Penawaran
-                </button>
-            </li>
-        </ul>
+<div id="header-container"></div> <div id="app" class="container py-3">
+    <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none">
+        <li class="nav-item">
+            <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
+                <i class="bi bi-file-earmark-plus me-1"></i> Buat Penawaran
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="tab-list" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchQuoteHistory()">
+                <i class="bi bi-archive me-1"></i> Arsip
+            </button>
+        </li>
+    </ul>
 
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="content-buat">
-                <div class="d-flex gap-2 mb-3 d-print-none">
-                    <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="savePenawaran()">
-                        <i class="bi bi-send-check me-1"></i> SIMPAN PENAWARAN
-                    </button>
-                    <button class="btn btn-outline-dark rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="window.print()">
-                        <i class="bi bi-printer"></i> PRINT / PDF
-                    </button>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="content-buat">
+            <div class="d-flex gap-2 mb-3 d-print-none">
+                <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold" onclick="savePenawaran()">
+                    <i class="bi bi-cloud-arrow-up"></i> SIMPAN
+                </button>
+                <button class="btn btn-dark rounded-4 shadow-sm flex-fill fw-bold" onclick="window.print()">
+                    <i class="bi bi-printer"></i> PRINT PDF
+                </button>
+            </div>
+
+            <div class="quote-preview mx-auto">
+                <div class="header-nota row align-items-center">
+                    <div class="col-2">
+                        <div class="logo-box">NT</div>
+                    </div>
+                    <div class="col-10">
+                        <h3 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h3>
+                        <p class="small text-muted mb-0">
+                            Sukowidi Indah Residence, D05, Klatak, Banyuwangi<br>
+                            Email: nandateknik02@gmail.com | Web: www.nandateknik.com<br>
+                            WhatsApp: 082331201148
+                        </p>
+                    </div>
                 </div>
 
-                <div class="quote-preview">
-                    <div class="row mb-4">
-                        <div class="col-8">
-                            <h4 class="fw-bold text-primary mb-0">NANDA TEKNIK</h4>
-                            <p class="small text-muted">Jasa Service, Maintenance & Sparepart Elektronik</p>
-                            
-                            <div class="mt-4">
-                                <label class="small fw-bold text-muted d-print-none">Kepada Yth:</label>
-                                <select id="selectPelanggan" class="form-select border-0 bg-light fw-bold mb-1 rounded-3" onchange="updateInfoPelanggan()">
-                                    <option value="">-- Pilih Pelanggan --</option>
-                                </select>
-                                <div id="penerimaAlamat" class="small text-muted" style="max-width: 250px;">-</div>
-                            </div>
-                        </div>
-                        <div class="col-4 text-end">
-                            <div id="idQuote" class="fw-bold text-dark">#OFFER-AUTO</div>
-                            <input type="date" id="tglQuote" class="form-control form-control-sm border-0 bg-light text-end fw-bold shadow-none mt-2">
-                        </div>
+                <div class="row mb-4">
+                    <div class="col-7">
+                        <label class="small fw-bold text-uppercase text-muted">Kepada Yth:</label>
+                        <select id="selectPelanggan" class="form-select border-0 bg-light fw-bold p-0 d-print-none" onchange="updateInfoPelanggan()">
+                            <option value="">-- Pilih Pelanggan --</option>
+                        </select>
+                        <h5 id="penerimaNama" class="fw-bold mb-1 mt-1">-</h5>
+                        <div id="penerimaAlamat" class="small text-muted">Alamat belum dipilih</div>
                     </div>
-
-                    <div class="mb-4 bg-light p-3 rounded-3">
-                        <label class="small fw-bold text-muted d-print-none text-uppercase">Perihal Pekerjaan:</label>
-                        <input type="text" id="perihal" class="form-control border-0 bg-transparent fw-bold p-0 fs-6" placeholder="Contoh: Pengadaan Unit AC & Pemasangan">
+                    <div class="col-5 text-end">
+                        <h4 class="fw-bold text-primary">PENAWARAN HARGA</h4>
+                        <div id="idQuote" class="fw-bold">#OFFR-AUTO</div>
+                        <input type="date" id="tglQuote" class="form-control form-control-sm border-0 text-end fw-bold p-0">
                     </div>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="table-light">
-                                <tr class="small text-uppercase">
-                                    <th class="py-3">Deskripsi Jasa / Barang</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-end">Total Harga</th>
-                                </tr>
-                            </thead>
-                            <tbody id="quoteBody">
-                                </tbody>
-                            <tfoot>
-                                <tr class="fs-5">
-                                    <td colspan="2" class="text-end fw-bold py-4">ESTIMASI TOTAL</td>
-                                    <td id="totalQuote" class="text-end fw-bold text-primary py-4">Rp 0</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                <div class="mb-4 bg-light p-3 rounded-3 border-start border-4 border-primary">
+                    <label class="small fw-bold text-muted d-print-none text-uppercase">Perihal Pekerjaan:</label>
+                    <input type="text" id="perihal" class="form-control border-0 bg-transparent fw-bold p-0 fs-6" placeholder="Judul Proyek / Pekerjaan...">
+                </div>
+
+                <table class="table table-hover mt-4">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="py-3">Deskripsi Jasa / Barang</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quoteBody">
+                        </tbody>
+                    <tfoot>
+                        <tr class="fs-5">
+                            <td colspan="2" class="text-end fw-bold py-4">GRAND TOTAL</td>
+                            <td id="totalQuote" class="text-end fw-bold text-primary py-4">Rp 0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="info-rekening text-center">
+                    <div class="small fw-bold text-muted text-uppercase mb-1">Transfer Pembayaran:</div>
+                    <h5 class="fw-bold mb-0">BANK BCA</h5>
+                    <div class="fs-4 fw-bold text-primary">1801826011</div>
+                    <div class="small fw-bold">a/n NANDA TEKNIK</div>
+                </div>
+
+                <div class="mt-5 small text-muted">
+                    <p class="mb-1 fw-bold text-dark">Syarat & Ketentuan:</p>
+                    <ul class="ps-3">
+                        <li>Harga sudah termasuk pajak (jika ada) dan berlaku selama 14 hari.</li>
+                        <li>Pekerjaan dimulai setelah konfirmasi persetujuan diterima.</li>
+                    </ul>
+                </div>
+                
+                <div class="row mt-5 text-center">
+                    <div class="col-4">
+                        <div class="small mb-5">Hormat Kami,</div>
+                        <div class="fw-bold">( Nanda Teknik )</div>
                     </div>
-
-                    <div class="input-area mt-4 p-3 rounded-4 bg-light d-print-none border-dashed border-2">
-                        <h6 class="fw-bold mb-3 small text-muted"><i class="bi bi-plus-circle me-1"></i> TAMBAH ITEM PENAWARAN</h6>
-                        <div class="row g-2">
-                            <div class="col-12 col-md-5">
-                                <input type="text" id="addName" class="form-control border-0 rounded-3 shadow-sm" placeholder="Nama Jasa / Barang..." list="listHarga">
-                                <datalist id="listHarga"></datalist>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <input type="number" id="addPrice" class="form-control border-0 rounded-3 shadow-sm" placeholder="Harga (Rp)">
-                            </div>
-                            <div class="col-3 col-md-2">
-                                <input type="number" id="addQty" class="form-control border-0 rounded-3 shadow-sm text-center" value="1">
-                            </div>
-                            <div class="col-3 col-md-2">
-                                <button class="btn btn-primary w-100 rounded-3" onclick="addItem()"><i class="bi bi-plus-lg"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 small text-muted">
-                        <p class="mb-1 fw-bold text-dark">Syarat & Ketentuan:</p>
-                        <ol class="ps-3">
-                            <li>Harga penawaran berlaku selama 14 hari kerja.</li>
-                            <li>Pembayaran dapat dilakukan setelah pengerjaan selesai / sesuai kesepakatan.</li>
-                        </ol>
+                    <div class="col-4"></div>
+                    <div class="col-4">
+                        <div class="small mb-5">Disetujui Oleh,</div>
+                        <div class="fw-bold">( ............................ )</div>
                     </div>
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="content-list">
-                <div class="input-group bg-white rounded-4 shadow-sm mb-3 p-1">
-                    <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="filterSearch" class="form-control border-0 shadow-none" placeholder="Cari penawaran atau pelanggan..." onkeyup="renderQuoteCards()">
+            <div class="input-area mt-4 p-3 rounded-4 bg-white shadow-sm d-print-none">
+                <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle"></i> Tambah Item</h6>
+                <div class="row g-2">
+                    <div class="col-12 col-md-5">
+                        <input type="text" id="addName" class="form-control bg-light border-0" placeholder="Cari Jasa/Barang..." list="listHarga">
+                        <datalist id="listHarga"></datalist>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <input type="number" id="addPrice" class="form-control bg-light border-0" placeholder="Harga">
+                    </div>
+                    <div class="col-3 col-md-2">
+                        <input type="number" id="addQty" class="form-control bg-light border-0 text-center" value="1">
+                    </div>
+                    <div class="col-3 col-md-2">
+                        <button class="btn btn-primary w-100" onclick="addItem()"><i class="bi bi-plus"></i></button>
+                    </div>
                 </div>
-                <div id="loadingQuote" class="text-center py-5" style="display:none;">
-                    <div class="spinner-border text-primary"></div>
-                </div>
-                <div id="historyQuoteBody"></div>
             </div>
+        </div>
+
+        <div class="tab-pane fade" id="content-list">
+            <div class="input-group bg-white rounded-4 shadow-sm mb-3 p-1">
+                <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="filterSearch" class="form-control border-0" placeholder="Cari penawaran..." onkeyup="renderQuoteCards()">
+            </div>
+            <div id="loadingQuote" class="text-center py-5" style="display:none;"><div class="spinner-border text-primary"></div></div>
+            <div id="historyQuoteBody"></div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div id="nav-container"></div> <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/config.js"></script>
+<script src="js/layout.js"></script>
 
 <script>
     let currentItems = [];
@@ -162,6 +200,7 @@
         document.getElementById('tglQuote').valueAsDate = new Date();
         document.getElementById('idQuote').innerText = `OFFR-${Date.now().toString().slice(-6)}`;
         await Promise.all([fetchPelanggan(), fetchHarga()]);
+        if(typeof renderLayout === "function") renderLayout();
     });
 
     async function fetchPelanggan() {
@@ -177,29 +216,28 @@
         hargaData = await res.json();
         let listHtml = '';
         hargaData.forEach(h => {
-            const n = h.nama || h.Nama || h.Jasa;
+            const n = h.nama || h.Jasa;
             const p = h.harga || h.Harga;
             listHtml += `<option value="${n}">Rp ${parseInt(p).toLocaleString()}</option>`;
         });
         document.getElementById('listHarga').innerHTML = listHtml;
     }
 
-    // Auto-price fill
     document.getElementById('addName').addEventListener('input', (e) => {
-        const item = hargaData.find(x => (x.nama || x.Nama || x.Jasa) === e.target.value);
+        const item = hargaData.find(x => (x.nama || x.Jasa) === e.target.value);
         if (item) document.getElementById('addPrice').value = item.harga || item.Harga;
     });
 
     function addItem() {
         const n = document.getElementById('addName').value;
         const p = parseInt(document.getElementById('addPrice').value);
-        const q = parseInt(document.getElementById('addQty').value);
+        const q = parseInt(document.getElementById('addQty').value) || 1;
         if(!n || isNaN(p)) return;
-        
         currentItems.push({ item: n, price: p, qty: q, total: p * q });
         renderItems();
         document.getElementById('addName').value = '';
         document.getElementById('addPrice').value = '';
+        document.getElementById('addQty').value = 1;
     }
 
     function renderItems() {
@@ -216,7 +254,7 @@
                     <td class="text-center">
                         <div class="qty-control d-print-none">
                             <i class="bi bi-dash-circle qty-btn" onclick="updateQty(${i}, -1)"></i>
-                            <span class="fw-bold">${it.qty}</span>
+                            <span class="fw-bold mx-2">${it.qty}</span>
                             <i class="bi bi-plus-circle qty-btn" onclick="updateQty(${i}, 1)"></i>
                         </div>
                         <span class="d-none d-print-block">${it.qty}</span>
@@ -224,7 +262,7 @@
                     <td class="text-end fw-bold">Rp ${it.total.toLocaleString()}</td>
                 </tr>`;
         });
-        document.getElementById('quoteBody').innerHTML = html || '<tr><td colspan="3" class="text-center py-4 text-muted small">Belum ada item ditambahkan</td></tr>';
+        document.getElementById('quoteBody').innerHTML = html || '<tr><td colspan="3" class="text-center py-4 text-muted">Tambahkan item...</td></tr>';
         document.getElementById('totalQuote').innerText = "Rp " + total.toLocaleString();
     }
 
@@ -237,40 +275,32 @@
 
     function updateInfoPelanggan() {
         const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
-        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : '-';
+        document.getElementById('penerimaNama').innerText = p ? p.nama : '-';
+        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : 'Alamat belum dipilih';
     }
 
     async function savePenawaran() {
         const id = document.getElementById('idQuote').innerText;
         const perihal = document.getElementById('perihal').value;
         const email = document.getElementById('selectPelanggan').value;
-        const totalVal = currentItems.reduce((s, i) => s + i.total, 0);
-
         if(!email || !perihal || currentItems.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
 
         Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-        try {
-            await fetch(CONFIG.GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'insert', sheet: 'Penawaran',
-                    data: { 
-                        id: id, tanggal: document.getElementById('tglQuote').value, email: email, 
-                        items_json: JSON.stringify(currentItems), total: totalVal, status: 'Pending', perihal: perihal 
-                    }
-                })
-            });
-            Swal.fire('Berhasil!', 'Penawaran telah disimpan.', 'success').then(() => location.reload());
-        } catch (e) { Swal.fire('Gagal', 'Terjadi kesalahan sistem', 'error'); }
+        await fetch(CONFIG.GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'insert', sheet: 'Penawaran',
+                data: { id: id, tanggal: document.getElementById('tglQuote').value, email: email, items_json: JSON.stringify(currentItems), total: currentItems.reduce((s, i) => s + i.total, 0), status: 'Pending', perihal: perihal }
+            })
+        });
+        Swal.fire('Berhasil!', 'Simpan sukses', 'success').then(() => location.reload());
     }
 
     async function fetchQuoteHistory() {
         document.getElementById('loadingQuote').style.display = 'block';
-        try {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Penawaran' }) });
-            quoteHistory = await res.json();
-            renderQuoteCards();
-        } catch (e) { console.error(e); }
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Penawaran' }) });
+        quoteHistory = await res.json();
+        renderQuoteCards();
         document.getElementById('loadingQuote').style.display = 'none';
     }
 
@@ -281,44 +311,20 @@
         
         container.innerHTML = filtered.map(q => {
             const p = pelangganData.find(x => x.email === q.email);
-            const statusClass = `badge-${q.status.toLowerCase()}`;
             return `
-            <div class="history-card shadow-sm p-3 mb-3 border-start border-4 border-primary">
-                <div class="d-flex justify-content-between mb-2">
-                    <div><span class="fw-bold text-primary">${q.id}</span><br><small class="text-muted">${q.tanggal}</small></div>
-                    <span class="badge ${statusClass} rounded-pill align-self-center" onclick="updateStatus('${q.id}', '${q.status}')" style="cursor:pointer">
-                        ${q.status} <i class="bi bi-arrow-repeat"></i>
-                    </span>
+            <div class="card border-0 shadow-sm p-3 mb-2 rounded-4">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-primary">${q.id}</span>
+                    <span class="badge bg-warning rounded-pill">${q.status}</span>
                 </div>
-                <div class="fw-bold text-dark mt-2">${q.perihal}</div>
-                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                    <small class="fw-bold text-muted">${p ? p.nama : q.email}</small>
-                    <div class="text-end">
-                        <div class="fw-bold text-success">Rp ${parseInt(q.total).toLocaleString()}</div>
-                        <button class="btn btn-sm btn-outline-primary rounded-pill mt-1 px-3" onclick="viewQuote('${q.id}')">Buka</button>
-                    </div>
+                <div class="fw-bold mt-1">${q.perihal}</div>
+                <div class="small text-muted">${p ? p.nama : q.email}</div>
+                <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-2">
+                    <div class="fw-bold text-success">Rp ${parseInt(q.total).toLocaleString()}</div>
+                    <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="viewQuote('${q.id}')">Lihat</button>
                 </div>
             </div>`;
         }).join('');
-    }
-
-    async function updateStatus(id, old) {
-        const { value: newStatus } = await Swal.fire({
-            title: 'Ubah Status',
-            input: 'select',
-            inputOptions: { 'Pending': 'Pending', 'Approved': 'Approved', 'Rejected': 'Rejected' },
-            inputValue: old,
-            showCancelButton: true
-        });
-        if (newStatus) {
-            Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
-            await fetch(CONFIG.GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'update', sheet: 'Penawaran', key: 'id', id: id, data: { status: newStatus } })
-            });
-            fetchQuoteHistory();
-            Swal.close();
-        }
     }
 
     function viewQuote(id) {
