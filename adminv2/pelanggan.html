@@ -141,7 +141,7 @@
             map = L.map('map').setView([-6.2000, 106.8166], 13); // Default Jakarta
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             
-            marker = L.marker([-6.2000, 106.8166], { draggable: true }).addTo(map);
+            marker = L.marker([-8.206274, 114.3797957], { draggable: true }).addTo(map);
 
             // Update Lat/Long saat marker digeser
             marker.on('dragend', function (e) {
@@ -261,8 +261,8 @@
                 document.getElementById('oldEmail').value = p.email;
 
                 // Update Map
-                const lat = parseFloat(p.lat) || -6.2000;
-                const lng = parseFloat(p.lang) || 106.8166;
+                const lat = parseFloat(p.lat) || -8.206274;
+                const lng = parseFloat(p.lang) || 114.3797957;
                 marker.setLatLng([lat, lng]);
                 map.setView([lat, lng], 15);
 
