@@ -75,9 +75,10 @@
                     </div>
                     <div id="cartList" class="my-2"></div>
                     <div class="bg-light p-3 rounded-4 mt-2">
-                        <div class="d-flex justify-content-between small"><span>Subtotal</span><span id="txtSubtotal">0</span></div>
-                        <div class="d-flex justify-content-between small text-danger"><span>Akomodasi</span><span id="txtAkomodasi">0</span></div>
-                        <div class="d-flex justify-content-between fw-bold mt-1"><span>TOTAL</span><span id="txtTotal">0</span></div>
+                        <div class="d-flex justify-content-between small"><span>Subtotal Jasa</span><span id="txtSubtotal">Rp 0</span></div>
+                        <div class="d-flex justify-content-between small text-danger"><span>Akomodasi</span><span id="txtAkomodasi">Rp 0</span></div>
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between fw-bold"><span>TOTAL</span><span id="txtTotal">Rp 0</span></div>
                     </div>
                     <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold mt-3 shadow" onclick="submitBooking()">
                         KONFIRMASI BOOKING
@@ -97,8 +98,9 @@
 <div class="modal fade" id="modalProgress" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-5 p-3">
-            <h5 class="fw-bold mb-3">Update Progress</h5>
+            <h5 class="fw-bold mb-3 text-center">Update Progress Kerja</h5>
             <input type="hidden" id="updateId">
+            <input type="hidden" id="updateIdNota">
             <div class="mb-3">
                 <label class="small fw-bold">STATUS PEKERJAAN</label>
                 <select id="updateStatus" class="form-select border-0 bg-light p-3 rounded-4">
@@ -112,13 +114,13 @@
             </div>
             <div class="mb-3">
                 <label class="small fw-bold">KETERANGAN TEKNISI</label>
-                <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4" rows="3" placeholder="Apa kendala atau info tambahannya?"></textarea>
+                <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4" rows="3" placeholder="Contoh: AC sudah dingin kembali, freon bocor di nepel."></textarea>
             </div>
             <div class="mb-3">
                 <label class="small fw-bold">NAMA TEKNISI</label>
-                <input type="text" id="updateTeknisi" class="form-control border-0 bg-light p-3 rounded-4" placeholder="Nama teknisi yang mengerjakan">
+                <input type="text" id="updateTeknisi" class="form-control border-0 bg-light p-3 rounded-4" placeholder="Input nama tim lapangan">
             </div>
-            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold" onclick="saveProgress()">SIMPAN PROGRESS</button>
+            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow" onclick="saveProgress()">SIMPAN PROGRESS</button>
         </div>
     </div>
 </div>
@@ -139,6 +141,7 @@
         await Promise.all([fetchPelanggan(), fetchHarga()]);
     });
 
+    // MAP LOGIC
     function initMapBooking() {
         mapB = L.map('mapBooking').setView([TOKO_LAT, TOKO_LNG], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapB);
@@ -162,7 +165,7 @@
         const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
         hargaData = await res.json();
         let opt = '<option value="">-- Pilih Jasa/Part --</option>';
-        hargaData.forEach(h => opt += `<option value="${h.Jasa}" data-price="${h.Harga}">${h.Jasa}</option>`);
+        hargaData.forEach(h => opt += `<option value="${h.Jasa}" data-price="${h.Harga}">${h.Jasa} (Rp ${parseInt(h.Harga).toLocaleString()})</option>`);
         document.getElementById('selectHarga').innerHTML = opt;
     }
 
@@ -216,10 +219,15 @@
         renderSummary();
     }
 
+    // CART LOGIC
     function addToCart() {
         const sel = document.getElementById('selectHarga');
         if(!sel.value) return;
-        const item = { item: sel.value, price: parseInt(sel.options[sel.selectedIndex].dataset.price), qty: parseInt(document.getElementById('qtyItem').value) };
+        const item = { 
+            item: sel.value, 
+            price: parseInt(sel.options[sel.selectedIndex].dataset.price), 
+            qty: parseInt(document.getElementById('qtyItem').value) 
+        };
         item.total = item.price * item.qty;
         cart.push(item);
         renderCart();
@@ -227,9 +235,9 @@
 
     function renderCart() {
         document.getElementById('cartList').innerHTML = cart.map((c, i) => `
-            <div class="cart-item d-flex justify-content-between">
-                <div><b>${c.item}</b><br><small>${c.qty} x ${c.price.toLocaleString()}</small></div>
-                <div class="text-end"><b>${c.total.toLocaleString()}</b><br><i class="bi bi-x-circle text-danger" onclick="cart.splice(${i},1);renderCart()"></i></div>
+            <div class="cart-item d-flex justify-content-between align-items-center">
+                <div><b>${c.item}</b><br><small class="text-muted">${c.qty} x Rp ${c.price.toLocaleString()}</small></div>
+                <div class="text-end"><b>Rp ${c.total.toLocaleString()}</b><br><i class="bi bi-trash3 text-danger" style="cursor:pointer" onclick="cart.splice(${i},1);renderCart()"></i></div>
             </div>`).join('');
         renderSummary();
     }
@@ -241,38 +249,71 @@
         document.getElementById('txtTotal').innerText = "Rp " + (sub + ako).toLocaleString();
     }
 
+    // SUBMIT DATA (BOOKING + NOTA)
     async function submitBooking() {
         const email = document.getElementById('selectPelanggan').value;
         const judul = document.getElementById('judulBooking').value;
         if(!email || !judul || cart.length === 0) return Swal.fire('Error', 'Data belum lengkap!', 'error');
 
         const now = new Date();
-        const idNota = "NT-" + now.getTime(); // Mengisi kolom J
-        const firstProgress = [{ status: 'Booking Dibuat', keterangan: 'Pesanan masuk sistem', tanggal: now.toLocaleDateString(), jam: now.toLocaleTimeString(), teknisi: '-' }];
+        const timestamp = now.getTime();
+        const idBooking = "BK-" + timestamp;
+        const idNota = "NT-" + timestamp;
 
-        const data = {
-            id: "BK-" + now.getTime(),
+        // Siapkan item JSON termasuk akomodasi untuk Nota
+        const akoVal = parseInt(document.getElementById('txtAkomodasi').innerText.replace(/\D/g,'')) || 0;
+        let itemsForNota = [...cart];
+        if(akoVal > 0) {
+            itemsForNota.push({ item: "Akomodasi / Transport", price: akoVal, qty: 1, total: akoVal });
+        }
+
+        const firstProgress = [{ 
+            status: 'Booking Dibuat', 
+            keterangan: 'Pekerjaan baru didaftarkan ke sistem.', 
+            tanggal: now.toLocaleDateString(), 
+            jam: now.toLocaleTimeString(), 
+            teknisi: '-' 
+        }];
+
+        const dataBooking = {
+            id: idBooking,
             email: email,
             judul: judul,
             tanggal: now.toISOString().split('T')[0],
             status: 'Pending',
-            progress_json: JSON.stringify(firstProgress), // Kolom F
+            progress_json: JSON.stringify(firstProgress),
             lat: document.getElementById('latB').value,
             lang: document.getElementById('lngB').value,
-            alamat: document.getElementById('alamatManual').value, // Kolom I
-            id_nota: idNota, // Kolom J
-            items_json: JSON.stringify(cart),
-            akomodasi: document.getElementById('txtAkomodasi').innerText.replace(/\D/g,''),
-            total_bayar: cart.reduce((s, i) => s + i.total, 0) + (parseInt(document.getElementById('txtAkomodasi').innerText.replace(/\D/g,'')) || 0)
+            alamat: document.getElementById('alamatManual').value,
+            id_nota: idNota,
+            total_bayar: itemsForNota.reduce((s, i) => s + i.total, 0)
         };
 
-        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-        await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Booking', data }) });
-        Swal.fire('Berhasil!', 'Booking Berhasil', 'success').then(() => location.reload());
+        const dataNota = {
+            id: idNota,
+            id_booking: idBooking,
+            tanggal: dataBooking.tanggal,
+            email: email,
+            items_json: JSON.stringify(itemsForNota),
+            total_akhir: dataBooking.total_bayar,
+            status_pembayaran: 'Belum Lunas'
+        };
+
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        
+        try {
+            // Insert Booking
+            await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Booking', data: dataBooking }) });
+            // Insert Nota
+            await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Nota', data: dataNota }) });
+            
+            Swal.fire('Berhasil!', 'Booking & Nota telah terbit.', 'success').then(() => location.reload());
+        } catch (e) {
+            Swal.fire('Gagal!', 'Kesalahan sistem saat simpan data.', 'error');
+        }
     }
 
-    // --- LOGIKA RIWAYAT ---
-
+    // HISTORY LOGIC
     async function fetchHistory() {
         const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Booking' }) });
         historyData = await res.json();
@@ -281,54 +322,58 @@
 
     function renderHistory() {
         const container = document.getElementById('historyList');
-        if(historyData.length === 0) { container.innerHTML = '<div class="text-center py-5">Belum ada riwayat.</div>'; return; }
+        if(historyData.length === 0) { container.innerHTML = '<div class="text-center py-5">Belum ada riwayat pekerjaan.</div>'; return; }
 
         container.innerHTML = historyData.reverse().map(h => {
             const progress = JSON.parse(h.progress_json || '[]');
+            const badgeClass = h.status.includes('Selesai') ? 'bg-success' : (h.status === 'Cancel' ? 'bg-danger' : 'bg-primary');
+            
             return `
             <div class="card history-card p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <span class="badge bg-primary mb-1">${h.status}</span>
+                        <span class="badge ${badgeClass} mb-1">${h.status}</span>
                         <h6 class="fw-bold mb-0">${h.judul}</h6>
                         <small class="text-muted">${h.email}</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-primary" onclick="openUpdateModal('${h.id}')">Update</button>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openUpdateModal('${h.id}', '${h.id_nota}')">Update</button>
                 </div>
-                <div class="bg-light p-2 rounded-3 small mb-3">
-                    <b>Detail Progress:</b>
-                    <div class="mt-2">
-                        ${progress.map(p => `
-                            <div class="step-item">
-                                <div class="fw-bold">${p.status}</div>
-                                <div class="text-muted" style="font-size:11px">${p.tanggal} ${p.jam} - Teknisi: ${p.teknisi}</div>
-                                <div>${p.keterangan}</div>
-                            </div>
-                        `).join('')}
-                    </div>
+                <div class="bg-light p-2 rounded-3 small mb-3" style="max-height: 200px; overflow-y: auto;">
+                    <b class="d-block mb-2">Progress Kerja:</b>
+                    ${progress.reverse().map(p => `
+                        <div class="step-item">
+                            <div class="fw-bold text-dark">${p.status}</div>
+                            <div class="text-muted" style="font-size:10px">${p.tanggal} ${p.jam} | Tim: ${p.teknisi}</div>
+                            <div class="mt-1">${p.keterangan}</div>
+                        </div>
+                    `).join('')}
                 </div>
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
                     <span class="fw-bold text-primary">Total: Rp ${parseInt(h.total_bayar).toLocaleString()}</span>
-                    <a href="nota.html?id=${h.id}" class="btn btn-sm btn-dark">Nota</a>
+                    <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-dark rounded-pill px-3">Lihat Nota</a>
                 </div>
             </div>`;
         }).join('');
     }
 
-    function openUpdateModal(id) {
+    function openUpdateModal(id, idNota) {
         document.getElementById('updateId').value = id;
+        document.getElementById('updateIdNota').value = idNota;
+        document.getElementById('updateKeterangan').value = '';
+        document.getElementById('updateTeknisi').value = '';
         new bootstrap.Modal(document.getElementById('modalProgress')).show();
     }
 
     async function saveProgress() {
         const id = document.getElementById('updateId').value;
+        const idNota = document.getElementById('updateIdNota').value;
         const item = historyData.find(x => x.id === id);
         let progress = JSON.parse(item.progress_json || '[]');
         
         const newStatus = document.getElementById('updateStatus').value;
         const newStep = {
             status: newStatus,
-            keterangan: document.getElementById('updateKeterangan').value,
+            keterangan: document.getElementById('updateKeterangan').value || 'Tanpa keterangan tambahan',
             tanggal: new Date().toLocaleDateString(),
             jam: new Date().toLocaleTimeString(),
             teknisi: document.getElementById('updateTeknisi').value || 'Unknown'
@@ -336,20 +381,34 @@
         
         progress.push(newStep);
         
-        Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
-        await fetch(CONFIG.GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'update',
-                sheet: 'Booking',
-                key: 'id',
-                id: id,
-                data: { status: newStatus, progress_json: JSON.stringify(progress) }
-            })
-        });
-        location.reload();
+        Swal.fire({ title: 'Menyimpan Progress...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        try {
+            // Update Sheet Booking
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'update', sheet: 'Booking', key: 'id', id: id,
+                    data: { status: newStatus, progress_json: JSON.stringify(progress) }
+                })
+            });
+
+            // LOGIKA OTOMATIS: Jika status "Selesai (Lunas)", update status di Sheet Nota juga.
+            if(newStatus === 'Selesai (Lunas)') {
+                await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'update', sheet: 'Nota', key: 'id', id: idNota,
+                        data: { status_pembayaran: 'Lunas' }
+                    })
+                });
+            }
+
+            Swal.fire('Berhasil!', 'Progress kerja diperbarui.', 'success').then(() => location.reload());
+        } catch (e) {
+            Swal.fire('Gagal!', 'Gagal memperbarui data.', 'error');
+        }
     }
 </script>
-
 </body>
 </html>
