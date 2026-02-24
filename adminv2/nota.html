@@ -14,14 +14,13 @@
         :root { --premium-blue: #007AFF; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
         
-        /* Layout Fixes */
-        #app { min-height: 100vh; padding-bottom: 100px; } /* Biar ga ketutup Bottom Nav */
+        #app { min-height: 100vh; padding-bottom: 100px; }
         
         .invoice-preview { background: #fff; padding: 25px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
         .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; font-size: 14px; border: 1px solid transparent; }
         .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; box-shadow: 0 4px 10px rgba(0,122,255,0.3); }
         
-        .nota-card { border-radius: 18px; border: none; transition: 0.3s; background: white; margin-bottom: 12px; transition: 0.3s; }
+        .nota-card { border-radius: 18px; border: none; transition: 0.3s; background: white; margin-bottom: 12px; }
         .nota-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
         
         .badge-lunas { background-color: #34C759; color: #fff; padding: 6px 12px; }
@@ -31,7 +30,6 @@
         .qty-btn { cursor: pointer; font-size: 1.2rem; transition: 0.2s; color: var(--premium-blue); }
         .qty-btn:active { transform: scale(0.8); }
 
-        /* Print Optimization */
         @media print {
             .d-print-none, .nav, .btn, .qty-control i, .input-group, .navbar, .bottom-nav { display: none !important; }
             .invoice-preview { box-shadow: none; padding: 0; border: none; }
@@ -157,7 +155,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/config.js"></script>
-<script src="js/layout.js"></script> <script>
+<script src="js/layout.js"></script> 
+<script>
     let currentCart = [];
     let pelangganData = [];
     let hargaData = [];
@@ -207,6 +206,7 @@
         if (item) document.getElementById('addPrice').value = item.harga || item.Harga;
     });
 
+    // --- BAGIAN YANG DIPERBAIKI ---
     async function loadNotaById(id) {
         Swal.fire({ title: 'Memuat Nota...', didOpen: () => Swal.showLoading() });
         try {
@@ -216,16 +216,33 @@
             
             if (data) {
                 document.getElementById('noNota').innerText = data.id;
-                document.getElementById('tglNota').value = data.tanggal;
+                
+                // Perbaikan format tanggal untuk input type="date"
+                if (data.tanggal) {
+                    const d = new Date(data.tanggal);
+                    if (!isNaN(d.getTime())) {
+                        const formattedDate = d.toISOString().split('T')[0];
+                        document.getElementById('tglNota').value = formattedDate;
+                    }
+                }
+
                 document.getElementById('selectPelangganNota').value = data.email;
                 updateInfoPelanggan();
                 currentCart = JSON.parse(data.items_json || '[]');
                 renderItems();
+                
+                // Pindah ke tab detail nota
+                const tabTrigger = document.querySelector('#tab-buat');
+                bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
+                
                 Swal.close();
-                // Switch tab ke detail
-                bootstrap.Tab.getInstance(document.getElementById('tab-buat')).show();
+            } else {
+                Swal.fire('Opps', 'Nota tidak ditemukan', 'warning');
             }
-        } catch(e) { Swal.fire('Error', 'Gagal ambil data', 'error'); }
+        } catch(e) { 
+            console.error(e);
+            Swal.fire('Error', 'Gagal ambil data', 'error'); 
+        }
     }
 
     function addItemManual() {
@@ -237,6 +254,7 @@
         renderItems();
         document.getElementById('addName').value = '';
         document.getElementById('addPrice').value = '';
+        document.getElementById('addQty').value = '1';
     }
 
     function renderItems() {
@@ -281,7 +299,7 @@
 
         if(!email || currentCart.length === 0) return Swal.fire('Data Belum Lengkap', 'Pilih pelanggan dan masukkan item jasa.', 'warning');
 
-        Swal.fire({ title: 'Menyimpan ke Database...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
         try {
             await fetch(CONFIG.GAS_URL, {
                 method: 'POST',
@@ -309,15 +327,23 @@
     function renderHistoryCards() {
         const search = document.getElementById('filterSearch').value.toLowerCase();
         const container = document.getElementById('historyNotaBody');
-        const filtered = notaHistory.filter(n => n.id.toLowerCase().includes(search) || n.email.toLowerCase().includes(search)).reverse();
+        const filtered = notaHistory.filter(n => 
+            n.id.toLowerCase().includes(search) || 
+            n.email.toLowerCase().includes(search)
+        ).reverse();
         
         container.innerHTML = filtered.map(n => {
             const p = pelangganData.find(x => x.email === n.email);
             const badge = n.status === 'Lunas' ? 'badge-lunas' : 'badge-belum';
+            
+            // Format tanggal untuk tampilan di kartu
+            let tglTampil = n.tanggal;
+            try { tglTampil = new Date(n.tanggal).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }); } catch(e){}
+
             return `
             <div class="nota-card shadow-sm p-3 mb-3 border-start border-5 ${n.status === 'Lunas' ? 'border-success' : 'border-warning'}">
                 <div class="d-flex justify-content-between">
-                    <div><span class="fw-bold text-primary">${n.id}</span><br><small class="text-muted">${n.tanggal}</small></div>
+                    <div><span class="fw-bold text-primary">${n.id}</span><br><small class="text-muted">${tglTampil}</small></div>
                     <span class="badge ${badge} rounded-pill align-self-center" onclick="updateStatusNota('${n.id}', '${n.status}')" style="cursor:pointer">
                         ${n.status} <i class="bi bi-arrow-repeat ms-1"></i>
                     </span>
@@ -338,7 +364,7 @@
 
     async function updateStatusNota(id, oldStatus) {
         const newStatus = oldStatus === 'Lunas' ? 'Belum Lunas' : 'Lunas';
-        Swal.fire({ title: 'Mengupdate Status...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Mengupdate...', didOpen: () => Swal.showLoading() });
         await fetch(CONFIG.GAS_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'update', sheet: 'Nota', key: 'id', id: id, data: { status: newStatus } })
