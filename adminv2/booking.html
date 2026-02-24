@@ -3,263 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Booking & Nota | Nanda Teknik</title>
+    <title>Sistem Pekerjaan | Nanda Teknik</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="css/styles.css">
     
     <style>
-        #map { height: 200px; border-radius: 15px; margin-bottom: 10px; z-index: 1; }
-        .card-premium { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: none; padding: 20px; margin-bottom: 15px; }
-        .item-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.9rem; }
+        :root { --premium-blue: #0056b3; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        #mapBooking { height: 200px; border-radius: 15px; margin-bottom: 10px; z-index: 1; border: 2px solid #eee; }
+        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; transition: 0.3s; }
+        .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; }
+        .history-card { border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
+        .step-item { border-left: 2px solid #0056b3; padding-left: 20px; position: relative; padding-bottom: 15px; margin-left: 10px; }
+        .step-item::before { content: ''; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; background: #0056b3; border-radius: 50%; border: 2px solid #fff; }
+        .step-item:last-child { border-left: 2px solid transparent; }
+        .cart-item { background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 5px solid var(--premium-blue); }
+        .section-title { font-weight: 800; color: #333; margin: 20px 0 10px 5px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .form-control, .form-select { border-radius: 10px; }
     </style>
 </head>
-<body class="bg-light pb-5">
+<body class="bg-light">
 
-    <div class="container py-4">
-        <h4 class="fw-bold mb-4"><i class="bi bi-calendar-check me-2 text-primary"></i>Booking & Estimasi</h4>
+<div id="app">
+    <div class="container py-3">
+        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="tab-input" data-bs-toggle="pill" data-bs-target="#content-input">
+                    <i class="bi bi-plus-circle me-1"></i> Input Baru
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="tab-riwayat" data-bs-toggle="pill" data-bs-target="#content-riwayat" onclick="fetchHistory()">
+                    <i class="bi bi-clock-history me-1"></i> Riwayat Progress
+                </button>
+            </li>
+        </ul>
 
-        <form id="formBooking">
-            <div class="card-premium">
-                <h6 class="fw-bold mb-3 small text-muted text-uppercase">Informasi Pengerjaan</h6>
-                <div class="mb-3">
-                    <label class="small fw-bold">Pilih Pelanggan</label>
-                    <select id="selectPelanggan" class="form-select border-0 bg-light" onchange="fillPelangganData()" required>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="content-input">
+                <div class="section-title">Informasi Pelanggan</div>
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+                    <select id="selectPelanggan" class="form-select border-0 bg-light mb-2 p-2" onchange="handlePelangganChange()">
                         <option value="">-- Pilih Pelanggan --</option>
                     </select>
+                    <input type="text" id="judulBooking" class="form-control border-0 bg-light mb-2" placeholder="Judul Pekerjaan (Contoh: Service AC)">
+                    <div class="bg-light p-2 rounded-3">
+                        <label class="small fw-bold text-muted mb-1">Rencana Tanggal Pengerjaan:</label>
+                        <input type="date" id="tglPekerjaan" class="form-control border-0 bg-white">
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Perihal / Judul Pekerjaan</label>
-                    <input type="text" name="judul" class="form-control border-0 bg-light" placeholder="Contoh: Service AC Ruang Tamu" required>
+
+                <div class="section-title">Lokasi & Alamat</div>
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+                    <div id="mapBooking"></div>
+                    <button class="btn btn-sm btn-dark w-100 rounded-pill mb-2 shadow-sm" onclick="getCurrentLocation()">
+                        <i class="bi bi-crosshair"></i> Sesuaikan Lokasi (GPS)
+                    </button>
+                    <textarea id="alamatManual" class="form-control form-control-sm border-0 bg-light mb-2" rows="2" placeholder="Detail Patokan/Alamat Pengerjaan"></textarea>
+                    <div class="row g-2">
+                        <div class="col-6"><input type="text" id="latB" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Lat"></div>
+                        <div class="col-6"><input type="text" id="lngB" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Lng"></div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="small fw-bold">Tanggal & Waktu</label>
-                    <input type="datetime-local" name="tanggal" id="tglInput" class="form-control border-0 bg-light" required>
+
+                <div class="section-title">Daftar Jasa & Part</div>
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+                    <div class="input-group mb-2">
+                        <span class="input-group-text bg-light border-0 small">Daftar</span>
+                        <select id="selectHarga" class="form-select border-0 bg-light"></select>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <input type="text" id="manualName" class="form-control border-0 bg-light" placeholder="Nama Jasa/Part Manual...">
+                        </div>
+                        <div class="col-5">
+                            <input type="number" id="manualPrice" class="form-control border-0 bg-light" placeholder="Harga Rp">
+                        </div>
+                        <div class="col-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0 small">Qty</span>
+                                <input type="number" id="qtyItem" class="form-control border-0 bg-light text-center" value="1">
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn btn-primary w-100" onclick="addToCart()"><i class="bi bi-plus-lg"></i></button>
+                        </div>
+                    </div>
+
+                    <div id="cartList" class="my-2"></div>
+                    
+                    <div class="bg-light p-3 rounded-4 mt-2">
+                        <div class="d-flex justify-content-between small"><span>Subtotal</span><span id="txtSubtotal">Rp 0</span></div>
+                        <div class="d-flex justify-content-between small text-danger"><span>Akomodasi (<b id="txtJarak">0 Km</b>)</span><span id="txtAkomodasi">Rp 0</span></div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold text-primary fs-5"><span>TOTAL</span><span id="txtTotal">Rp 0</span></div>
+                    </div>
+                    
+                    <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold mt-4 shadow-lg" onclick="submitBooking()">
+                        KONFIRMASI DAN SIMPAN
+                    </button>
                 </div>
             </div>
 
-            <div class="card-premium">
-                <h6 class="fw-bold mb-3 small text-muted text-uppercase">Lokasi & Jarak</h6>
-                <div id="map"></div>
-                <div class="row g-2">
-                    <div class="col-4"><input type="text" name="lat" id="latInput" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Lat"></div>
-                    <div class="col-4"><input type="text" name="lang" id="lngInput" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Lng"></div>
-                    <div class="col-4"><input type="text" id="jarakDisplay" class="form-control form-control-sm border-0 bg-primary text-white text-center" readonly value="0 KM"></div>
-                </div>
-                <input type="hidden" name="alamat" id="alamatInput">
-            </div>
-
-            <div class="card-premium">
-                <h6 class="fw-bold mb-3 small text-muted text-uppercase">Estimasi Jasa (Masuk Ke Nota)</h6>
-                <div class="row g-2 mb-2">
-                    <div class="col-12">
-                        <input type="text" id="inputJasa" class="form-control border-0 bg-light" placeholder="Jasa / Sparepart" list="listJasa">
-                        <datalist id="listJasa"></datalist>
-                    </div>
-                    <div class="col-5">
-                        <input type="number" id="inputHarga" class="form-control border-0 bg-light" placeholder="Harga">
-                    </div>
-                    <div class="col-3">
-                        <input type="number" id="inputQty" class="form-control border-0 bg-light" value="1" placeholder="Qty">
-                    </div>
-                    <div class="col-4">
-                        <button type="button" class="btn btn-primary w-100 fw-bold" onclick="addItem()">ADD</button>
-                    </div>
-                </div>
-
-                <div id="selectedItemsArea" class="mt-3"></div>
-                
-                <div class="mt-3 pt-3 border-top">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span class="small">Subtotal</span>
-                        <span id="subtotalDisplay">Rp 0</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-1 text-danger">
-                        <span class="small">Biaya Akomodasi</span>
-                        <span id="akomodasiDisplay">Rp 0</span>
-                    </div>
-                    <div class="d-flex justify-content-between fw-bold text-primary fs-5">
-                        <span>TOTAL NOTA</span>
-                        <span id="totalDisplay">Rp 0</span>
-                    </div>
+            <div class="tab-pane fade" id="content-riwayat">
+                <div id="historyList">
+                    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <div class="card-premium">
-                <h6 class="fw-bold mb-3 small text-muted text-uppercase">Status Pembayaran</h6>
-                <select id="statusNota" class="form-select border-0 bg-light fw-bold">
-                    <option value="Piutang">BELUM LUNAS (Piutang)</option>
-                    <option value="Lunas">LUNAS</option>
+<div class="modal fade" id="modalProgress" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-5 p-3">
+            <h5 class="fw-bold mb-3 text-center">Update Progress Kerja</h5>
+            <input type="hidden" id="updateId">
+            <input type="hidden" id="updateIdNota">
+            <div class="mb-3">
+                <label class="small fw-bold">UBAH STATUS</label>
+                <select id="updateStatus" class="form-select border-0 bg-light p-3 rounded-4">
+                    <option value="Menunggu Teknisi">Menunggu Teknisi</option>
+                    <option value="Proses Pengerjaan">Proses Pengerjaan</option>
+                    <option value="Menunggu Part">Menunggu Part</option>
+                    <option value="Selesai (Belum Lunas)">Selesai (Belum Lunas)</option>
+                    <option value="Selesai (Lunas)">Selesai (Lunas)</option>
+                    <option value="Cancel">Cancel</option>
                 </select>
             </div>
-
-            <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow">SIMPAN BOOKING & NOTA</button>
-        </form>
+            <div class="mb-3">
+                <label class="small fw-bold">CATATAN TEKNISI</label>
+                <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">NAMA TEKNISI</label>
+                <input type="text" id="updateTeknisi" class="form-control border-0 bg-light p-3 rounded-4">
+            </div>
+            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow" onclick="saveProgress()">UPDATE SEKARANG</button>
+        </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/config.js"></script>
 
-    <script>
-        let map, marker;
-        let pelangganData = [];
-        let listBelanja = [];
-        const BASECAMP = [-8.21, 114.36]; // Lokasi Toko Lo
-        const BIAYA_PER_KM = 2500; // Contoh biaya akomodasi per km
+<script>
+    let mapB, markerB, pelangganData = [], hargaData = [], cart = [], historyData = [], notaData = [];
+    const TOKO_LAT = -8.206274, TOKO_LNG = 114.3797957;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            initMap();
-            fetchPelanggan();
-            fetchMasterHarga();
-            document.getElementById('tglInput').value = new Date().toISOString().slice(0, 16);
+    document.addEventListener("DOMContentLoaded", async () => {
+        initMapBooking();
+        await Promise.all([fetchPelanggan(), fetchHarga()]);
+    });
+
+    function initMapBooking() {
+        mapB = L.map('mapBooking').setView([TOKO_LAT, TOKO_LNG], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapB);
+        markerB = L.marker([TOKO_LAT, TOKO_LNG], { draggable: true }).addTo(mapB);
+        markerB.on('dragend', async () => {
+            const pos = markerB.getLatLng();
+            updateBookingCoords(pos.lat, pos.lng);
+            await getAddressFromLatLng(pos.lat, pos.lng);
         });
+    }
 
-        function initMap() {
-            map = L.map('map').setView(BASECAMP, 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            marker = L.marker(BASECAMP, { draggable: true }).addTo(map);
+    async function getAddressFromLatLng(lat, lng) {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            if (data.display_name) document.getElementById('alamatManual').value = data.display_name;
+        } catch (e) { console.error("Gagal ambil alamat"); }
+    }
 
-            marker.on('dragend', () => {
-                const pos = marker.getLatLng();
-                updateLocation(pos.lat, pos.lng);
+    async function fetchPelanggan() {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
+        pelangganData = await res.json();
+        let opt = '<option value="">-- Pilih Pelanggan --</option>';
+        pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
+        document.getElementById('selectPelanggan').innerHTML = opt;
+    }
+
+    async function fetchHarga() {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
+        hargaData = await res.json();
+        let opt = '<option value="">-- Pilih Dari Daftar Harga --</option>';
+        hargaData.forEach(h => {
+            const n = h.nama || h.Jasa;
+            const p = h.harga || h.Harga;
+            opt += `<option value="${n}" data-price="${p}">${n}</option>`;
+        });
+        document.getElementById('selectHarga').innerHTML = opt;
+    }
+
+    // Sync dropdown ke input manual
+    document.getElementById('selectHarga').addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if(this.value) {
+            document.getElementById('manualName').value = this.value;
+            document.getElementById('manualPrice').value = opt.dataset.price;
+        }
+    });
+
+    function handlePelangganChange() {
+        const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
+        if (p) {
+            const lat = p.lat || p.latitude || TOKO_LAT;
+            const lng = p.lang || p.longitude || TOKO_LNG;
+            markerB.setLatLng([lat, lng]);
+            mapB.setView([lat, lng], 15);
+            updateBookingCoords(lat, lng);
+            document.getElementById('alamatManual').value = p.alamat || "";
+        }
+    }
+
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                markerB.setLatLng([lat, lng]);
+                mapB.setView([lat, lng], 16);
+                updateBookingCoords(lat, lng);
+                await getAddressFromLatLng(lat, lng);
             });
         }
+    }
 
-        function updateLocation(lat, lng) {
-            document.getElementById('latInput').value = lat.toFixed(6);
-            document.getElementById('lngInput').value = lng.toFixed(6);
+    function updateBookingCoords(lat, lng) {
+        document.getElementById('latB').value = lat;
+        document.getElementById('lngB').value = lng;
+        calculateDistance(lat, lng);
+    }
+
+    function calculateDistance(lat, lng) {
+        const R = 6371;
+        const dLat = (lat - TOKO_LAT) * Math.PI / 180;
+        const dLon = (lng - TOKO_LNG) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(TOKO_LAT * Math.PI/180) * Math.cos(lat * Math.PI/180) * Math.sin(dLon/2)**2;
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        document.getElementById('txtJarak').innerText = dist.toFixed(1) + " Km";
+        let akomodasi = dist > 7 ? Math.ceil(dist - 7) * 10000 : 0;
+        document.getElementById('txtAkomodasi').innerText = "Rp " + akomodasi.toLocaleString();
+        renderSummary();
+    }
+
+    function addToCart() {
+        const name = document.getElementById('manualName').value;
+        const price = parseInt(document.getElementById('manualPrice').value);
+        const qty = parseInt(document.getElementById('qtyItem').value) || 1;
+
+        if(!name || isNaN(price)) return Swal.fire('Error', 'Nama dan Harga wajib diisi!', 'warning');
+
+        cart.push({ item: name, price: price, qty: qty, total: price * qty });
+        
+        // Reset
+        document.getElementById('manualName').value = '';
+        document.getElementById('manualPrice').value = '';
+        document.getElementById('qtyItem').value = 1;
+        document.getElementById('selectHarga').value = '';
+        renderCart();
+    }
+
+    function renderCart() {
+        document.getElementById('cartList').innerHTML = cart.map((c, i) => `
+            <div class="cart-item d-flex justify-content-between align-items-center">
+                <div><b>${c.item}</b><br><small>${c.qty} x Rp ${c.price.toLocaleString()}</small></div>
+                <div class="text-end"><b>Rp ${c.total.toLocaleString()}</b><br><i class="bi bi-trash text-danger" onclick="cart.splice(${i},1);renderCart()" style="cursor:pointer"></i></div>
+            </div>`).join('');
+        renderSummary();
+    }
+
+    function renderSummary() {
+        const sub = cart.reduce((s, i) => s + i.total, 0);
+        const ako = parseInt(document.getElementById('txtAkomodasi').innerText.replace(/\D/g,'')) || 0;
+        document.getElementById('txtSubtotal').innerText = "Rp " + sub.toLocaleString();
+        document.getElementById('txtTotal').innerText = "Rp " + (sub + ako).toLocaleString();
+    }
+
+    async function submitBooking() {
+        const email = document.getElementById('selectPelanggan').value;
+        const judul = document.getElementById('judulBooking').value;
+        const tglKerja = document.getElementById('tglPekerjaan').value;
+        if(!email || !judul || !tglKerja || cart.length === 0) return Swal.fire('Error', 'Data belum lengkap!', 'error');
+
+        const now = new Date();
+        const idB = "BK-" + now.getTime();
+        const idN = "NT-" + now.getTime();
+        const akoVal = parseInt(document.getElementById('txtAkomodasi').innerText.replace(/\D/g,'')) || 0;
+        
+        let itemsNota = [...cart];
+        if(akoVal > 0) itemsNota.push({ item: "Akomodasi/Transport", price: akoVal, qty: 1, total: akoVal });
+
+        const dataBooking = {
+            id: idB, email: email, judul: judul, tanggal: tglKerja, status: 'Pending',
+            progress_json: JSON.stringify([{ status: 'Booking Dibuat', keterangan: 'Pesanan masuk', tanggal: now.toLocaleDateString(), jam: now.toLocaleTimeString(), teknisi: '-' }]),
+            lat: document.getElementById('latB').value, lang: document.getElementById('lngB').value,
+            alamat: document.getElementById('alamatManual').value, id_nota: idN
+        };
+
+        const dataNota = {
+            id: idN, tanggal: now.toISOString().split('T')[0], email: email,
+            items_json: JSON.stringify(itemsNota), total: itemsNota.reduce((s, i) => s + i.total, 0), status: 'Belum Lunas'
+        };
+
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+        try {
+            await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Booking', data: dataBooking }) });
+            await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Nota', data: dataNota }) });
+            Swal.fire('Berhasil!', 'Data telah disimpan', 'success').then(() => location.reload());
+        } catch (e) { Swal.fire('Gagal!', 'Terjadi kesalahan sistem', 'error'); }
+    }
+
+    async function fetchHistory() {
+        const container = document.getElementById('historyList');
+        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+        try {
+            const [resB, resN] = await Promise.all([
+                fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Booking' }) }),
+                fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) })
+            ]);
+            historyData = await resB.json();
+            notaData = await resN.json();
+            renderHistory();
+        } catch (e) { container.innerHTML = 'Gagal memuat riwayat.'; }
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('historyList');
+        if(!historyData.length) { container.innerHTML = '<div class="text-center py-5">Belum ada riwayat.</div>'; return; }
+
+        container.innerHTML = historyData.slice().reverse().map(h => {
+            const nota = notaData.find(n => n.id === h.id_nota);
+            let prog = [];
+            try { prog = JSON.parse(h.progress_json || '[]'); } catch(e) {}
             
-            // Itung jarak dari basecamp
-            const dist = map.distance(BASECAMP, [lat, lng]) / 1000;
-            document.getElementById('jarakDisplay').value = dist.toFixed(1) + " KM";
-            renderItems(); // Re-render buat update biaya akomodasi
-        }
+            return `
+            <div class="card history-card p-3 mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-primary rounded-pill">${h.status}</span>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openUpdateModal('${h.id}', '${h.id_nota}')">Update</button>
+                </div>
+                <h6 class="fw-bold mb-1">${h.judul}</h6>
+                <div class="small text-muted mb-1"><i class="bi bi-geo-alt"></i> ${h.alamat}</div>
+                <div class="small text-muted mb-3"><i class="bi bi-calendar-event"></i> ${h.tanggal}</div>
+                
+                <div class="bg-light p-3 rounded-4 mb-3" style="max-height: 150px; overflow-y: auto;">
+                    ${prog.slice().reverse().map(p => `
+                        <div class="step-item">
+                            <div class="fw-bold small" style="font-size:11px">${p.status}</div>
+                            <div class="text-muted" style="font-size:9px">${p.tanggal} ${p.jam} - ${p.teknisi}</div>
+                            <div class="small mt-1" style="font-size:11px">${p.keterangan || ''}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <span class="fw-bold text-primary">Rp ${parseInt(nota ? nota.total : 0).toLocaleString()}</span>
+                    <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-dark rounded-pill px-3">Buka Nota</a>
+                </div>
+            </div>`;
+        }).join('');
+    }
 
-        async function fetchPelanggan() {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
-            pelangganData = await res.json();
-            let opt = '<option value="">-- Pilih Pelanggan --</option>';
-            pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
-            document.getElementById('selectPelanggan').innerHTML = opt;
-        }
+    function openUpdateModal(id, idNota) {
+        document.getElementById('updateId').value = id;
+        document.getElementById('updateIdNota').value = idNota;
+        new bootstrap.Modal(document.getElementById('modalProgress')).show();
+    }
 
-        async function fetchMasterHarga() {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
-            window.masterHarga = await res.json();
-            let opt = '';
-            window.masterHarga.forEach(h => opt += `<option value="${h.nama || h.Jasa}" data-price="${h.harga || h.Harga}">`);
-            document.getElementById('listJasa').innerHTML = opt;
-        }
+    async function saveProgress() {
+        const id = document.getElementById('updateId').value;
+        const status = document.getElementById('updateStatus').value;
+        const item = historyData.find(x => x.id === id);
+        let prog = JSON.parse(item.progress_json || '[]');
 
-        document.getElementById('inputJasa').addEventListener('input', (e) => {
-            const selected = window.masterHarga.find(h => (h.nama || h.Jasa) === e.target.value);
-            if(selected) document.getElementById('inputHarga').value = selected.harga || selected.Harga;
+        prog.push({
+            status: status,
+            keterangan: document.getElementById('updateKeterangan').value,
+            tanggal: new Date().toLocaleDateString(),
+            jam: new Date().toLocaleTimeString(),
+            teknisi: document.getElementById('updateTeknisi').value || '-'
         });
 
-        function fillPelangganData() {
-            const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
-            if(p) {
-                document.getElementById('alamatInput').value = p.alamat;
-                if(p.lat && p.lang) {
-                    const pos = [p.lat, p.lang];
-                    marker.setLatLng(pos);
-                    map.setView(pos, 15);
-                    updateLocation(parseFloat(p.lat), parseFloat(p.lang));
-                }
-            }
-        }
+        Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
+        await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ 
+            action: 'update', sheet: 'Booking', key: 'id', id: id, data: { status: status, progress_json: JSON.stringify(prog) } 
+        }) });
 
-        function addItem() {
-            const nama = document.getElementById('inputJasa').value;
-            const harga = parseInt(document.getElementById('inputHarga').value);
-            const qty = parseInt(document.getElementById('inputQty').value);
-            if(!nama || isNaN(harga) || isNaN(qty)) return Swal.fire('Error', 'Lengkapi Nama, Harga & Qty', 'error');
-
-            listBelanja.push({ nama, harga, qty, total: harga * qty });
-            renderItems();
-            document.getElementById('inputJasa').value = '';
-            document.getElementById('inputHarga').value = '';
-            document.getElementById('inputQty').value = 1;
-        }
-
-        function renderItems() {
-            const area = document.getElementById('selectedItemsArea');
-            let subtotal = 0;
-            let html = '';
-            
-            listBelanja.forEach((it, i) => {
-                subtotal += it.total;
-                html += `<div class="item-row d-flex justify-content-between align-items-center">
-                    <div><b>${it.nama}</b><br><small>${it.qty} x Rp ${it.harga.toLocaleString()}</small></div>
-                    <div class="d-flex align-items-center"><b>Rp ${it.total.toLocaleString()}</b>
-                    <i class="bi bi-x-circle text-danger ms-2" style="cursor:pointer" onclick="removeItem(${i})"></i></div>
-                </div>`;
-            });
-            area.innerHTML = html;
-
-            // Hitung Akomodasi
-            const jarak = parseFloat(document.getElementById('jarakDisplay').value) || 0;
-            const akomodasi = jarak > 5 ? Math.round(jarak * BIAYA_PER_KM) : 0; // Free ongkir dibawah 5km
-            
-            const grandTotal = subtotal + akomodasi;
-            document.getElementById('subtotalDisplay').innerText = "Rp " + subtotal.toLocaleString();
-            document.getElementById('akomodasiDisplay').innerText = "Rp " + akomodasi.toLocaleString();
-            document.getElementById('totalDisplay').innerText = "Rp " + grandTotal.toLocaleString();
-        }
-
-        function removeItem(i) { listBelanja.splice(i, 1); renderItems(); }
-
-        document.getElementById('formBooking').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if(listBelanja.length === 0) return Swal.fire('Error', 'Tambahkan jasa estimasi!', 'warning');
-
-            const fd = new FormData(e.target);
-            const bookingId = "BOOK-" + Date.now().toString().slice(-6);
-            const notaId = "NOTA-" + Date.now().toString().slice(-6);
-            const email = document.getElementById('selectPelanggan').value;
-
-            // Final List dengan Akomodasi
-            let finalItems = [...listBelanja];
-            const akomodasiVal = parseInt(document.getElementById('akomodasiDisplay').innerText.replace(/\D/g,''));
-            if(akomodasiVal > 0) finalItems.push({ nama: "Biaya Akomodasi (Jarak)", harga: akomodasiVal, qty: 1, total: akomodasiVal });
-
-            const totalNota = finalItems.reduce((s, i) => s + i.total, 0);
-
-            Swal.fire({ title: 'Menyimpan Data...', didOpen: () => Swal.showLoading() });
-
-            try {
-                // 1. Simpan Ke Sheet Booking
-                await fetch(CONFIG.GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'insert', sheet: 'Booking',
-                        data: {
-                            id: bookingId, email: email, judul: fd.get('judul'), tanggal: fd.get('tanggal'),
-                            status: 'Pending', progress_json: '[]', lat: fd.get('lat'), lang: fd.get('lng'),
-                            alamat: fd.get('alamat'), id_nota: notaId
-                        }
-                    })
-                });
-
-                // 2. Simpan Ke Sheet Nota
-                await fetch(CONFIG.GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'insert', sheet: 'Nota',
-                        data: {
-                            id: notaId, tanggal: fd.get('tanggal').split('T')[0], email: email,
-                            items_json: JSON.stringify(finalItems), total: totalNota, 
-                            status: document.getElementById('statusNota').value
-                        }
-                    })
-                });
-
-                Swal.fire('Sukses!', 'Booking & Nota berhasil dibuat.', 'success').then(() => location.reload());
-            } catch (err) { Swal.fire('Gagal', err.message, 'error'); }
-        });
-    </script>
+        location.reload();
+    }
+</script>
 </body>
 </html>
