@@ -7,12 +7,12 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/styles.css"> 
     
     <style>
-        :root { --premium-blue: #007AFF; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; }
+        :root { --premium-blue: #007AFF; --soft-gray: #f2f2f7; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin-top: 60px; /* Jarak untuk sticky header layout.js */ }
         
+        /* Preview Styling */
         .quote-preview { 
             background: #fff; 
             padding: 40px; 
@@ -22,31 +22,37 @@
             position: relative;
         }
 
-        .header-nota { border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
-        .logo-box { background: #333; color: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; font-size: 24px; }
+        /* Tabel Abu-abu Custom */
+        .table-custom { border-collapse: separate; border-spacing: 0; width: 100%; }
+        .table-custom thead th { background-color: #636366 !important; color: white !important; padding: 12px; border: none; }
+        .table-custom tbody td { background-color: #f8f9fa; border-bottom: 1px solid #e5e5ea; padding: 12px; }
+        .table-custom tfoot td { background-color: #fff; padding: 15px 12px; }
+
+        .header-nota { border-bottom: 3px solid #333; padding-bottom: 20px; margin-bottom: 25px; }
         
-        .info-rekening {
-            border: 2px dashed #ccc;
+        /* S&K Styling */
+        .snk-box {
+            background: #fdfdfd;
+            border: 1px solid #e5e5ea;
             padding: 15px;
             border-radius: 12px;
-            display: inline-block;
+            font-size: 0.85rem;
             margin-top: 30px;
         }
 
-        .qty-control { display: flex; align-items: center; gap: 8px; justify-content: center; }
         .qty-btn { cursor: pointer; color: var(--premium-blue); font-size: 1.2rem; }
 
         @media print {
-            .d-print-none, #header-container, #nav-container, .nav-pills, .btn, .input-area { display: none !important; }
+            .d-print-none { display: none !important; }
             .quote-preview { box-shadow: none; border: none; padding: 0; width: 100%; }
+            body { background: white; margin-top: 0; }
         }
     </style>
 </head>
 <body class="pb-5">
 
-<div id="header-container" style="min-height:60px;"></div> 
-
 <div id="app" class="container py-3">
+    
     <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none">
         <li class="nav-item">
             <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
@@ -62,25 +68,25 @@
 
     <div class="tab-content">
         <div class="tab-pane fade show active" id="content-buat">
+            
             <div class="d-flex gap-2 mb-3 d-print-none">
-                <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold" onclick="savePenawaran()">
-                    <i class="bi bi-cloud-arrow-up"></i> SIMPAN
+                <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="savePenawaran()">
+                    <i class="bi bi-cloud-arrow-up me-1"></i> SIMPAN
                 </button>
-                <button class="btn btn-dark rounded-4 shadow-sm flex-fill fw-bold" onclick="downloadPDF()">
-                    <i class="bi bi-file-pdf"></i> DOWNLOAD PDF
+                <button class="btn btn-dark rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="downloadPDF()">
+                    <i class="bi bi-file-pdf me-1"></i> DOWNLOAD PDF
                 </button>
             </div>
 
             <div class="quote-preview mx-auto" id="printableQuote">
-                <div class="header-nota row align-items-center">
-                    <div class="col-2"><div class="logo-box">NT</div></div>
-                    <div class="col-10">
-                        <h3 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h3>
-                        <p class="small text-muted mb-0">
-                            Sukowidi Indah Residence, D05, Klatak, Banyuwangi<br>
-                            Email: nandateknik02@gmail.com | WhatsApp: 082331201148
-                        </p>
-                    </div>
+                
+                <div class="header-nota text-center">
+                    <img src="logo.png" alt="Logo" style="height: 70px; margin-bottom: 10px;" onerror="this.src='https://via.placeholder.com/70x70?text=NT'">
+                    <h3 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h3>
+                    <p class="small text-muted mb-0">
+                        Sukowidi Indah Residence, D05, Klatak, Banyuwangi<br>
+                        Email: nandateknik02@gmail.com | WhatsApp: 082331201148
+                    </p>
                 </div>
 
                 <div class="row mb-4">
@@ -94,24 +100,26 @@
                     </div>
                     <div class="col-5 text-end">
                         <h4 class="fw-bold text-primary">PENAWARAN HARGA</h4>
-                        <div id="idQuote" class="fw-bold">#OFFR-AUTO</div>
+                        <div id="idQuote" class="fw-bold">#OFFR-NEW</div>
                         <input type="date" id="tglQuote" class="form-control form-control-sm border-0 text-end fw-bold p-0">
                     </div>
                 </div>
 
                 <div class="mb-4 bg-light p-3 rounded-3 border-start border-4 border-primary">
-                    <input type="text" id="perihal" class="form-control border-0 bg-transparent fw-bold p-0 fs-6" placeholder="Perihal Pekerjaan...">
+                    <input type="text" id="perihal" class="form-control border-0 bg-transparent fw-bold p-0 fs-6" placeholder="Perihal Pekerjaan (Contoh: Pengadaan & Pasang AC)...">
                 </div>
 
-                <table class="table table-hover mt-4" id="tableItems">
-                    <thead class="table-dark">
+                <table class="table-custom mb-4">
+                    <thead>
                         <tr>
-                            <th class="py-3">Deskripsi Jasa / Barang</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-end">Total</th>
+                            <th>Deskripsi Jasa / Barang</th>
+                            <th class="text-center" width="100">Qty</th>
+                            <th class="text-end" width="150">Total</th>
                         </tr>
                     </thead>
-                    <tbody id="quoteBody"></tbody>
+                    <tbody id="quoteBody">
+                        <tr><td colspan="3" class="text-center py-4 text-muted">Belum ada item...</td></tr>
+                    </tbody>
                     <tfoot>
                         <tr class="fs-5">
                             <td colspan="2" class="text-end fw-bold py-4">GRAND TOTAL</td>
@@ -120,28 +128,31 @@
                     </tfoot>
                 </table>
 
-                <div class="info-rekening text-center">
-                    <div class="small fw-bold text-muted text-uppercase mb-1">Transfer Pembayaran:</div>
-                    <h5 class="fw-bold mb-0">BANK BCA</h5>
-                    <div class="fs-4 fw-bold text-primary">1801826011</div>
-                    <div class="small fw-bold">a/n NANDA TEKNIK</div>
+                <div class="snk-box">
+                    <div class="fw-bold text-uppercase mb-2 text-decoration-underline">Syarat & Ketentuan:</div>
+                    <ol class="ps-3 mb-0">
+                        <li>Harga sudah termasuk biaya material pendukung (kecuali disebutkan lain).</li>
+                        <li>Penawaran harga berlaku selama 14 hari sejak tanggal diterbitkan.</li>
+                        <li>Pembayaran dilakukan via transfer ke Rekening BCA (1801826011 a/n Nanda Teknik).</li>
+                        <li>Garansi pekerjaan berlaku sesuai kesepakatan item yang dikerjakan.</li>
+                    </ol>
                 </div>
 
                 <div class="row mt-5 text-center">
                     <div class="col-4">
                         <div class="small mb-5">Hormat Kami,</div>
-                        <div class="fw-bold">( Nanda Teknik )</div>
+                        <div class="fw-bold mt-4">( Nanda Teknik )</div>
                     </div>
                     <div class="col-4"></div>
                     <div class="col-4">
                         <div class="small mb-5">Disetujui Oleh,</div>
-                        <div class="fw-bold">( ............................ )</div>
+                        <div class="fw-bold mt-4" id="penerimaTtd">( ............................ )</div>
                     </div>
                 </div>
             </div>
 
             <div class="input-area mt-4 p-3 rounded-4 bg-white shadow-sm d-print-none">
-                <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle"></i> Tambah Item</h6>
+                <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-1 text-primary"></i> Tambah Item</h6>
                 <div class="row g-2">
                     <div class="col-12 col-md-5">
                         <input type="text" id="addName" class="form-control bg-light border-0" placeholder="Cari Jasa/Barang..." list="listHarga">
@@ -154,19 +165,17 @@
                         <input type="number" id="addQty" class="form-control bg-light border-0 text-center" value="1">
                     </div>
                     <div class="col-3 col-md-2">
-                        <button class="btn btn-primary w-100" onclick="addItem()"><i class="bi bi-plus"></i></button>
+                        <button class="btn btn-primary w-100 fw-bold" onclick="addItem()"><i class="bi bi-plus-lg"></i></button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="tab-pane fade" id="content-list">
-            <div id="historyQuoteBody"></div>
+            <div id="historyQuoteBody" class="p-2"></div>
         </div>
     </div>
 </div>
-
-<div id="nav-container"></div> 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -176,148 +185,59 @@
 <script src="js/layout.js"></script>
 
 <script>
-    let currentItems = [], pelangganData = [], hargaData = [], quoteHistory = [];
+    let currentItems = [], pelangganData = [], hargaData = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('tglQuote').valueAsDate = new Date();
         document.getElementById('idQuote').innerText = `OFFR-${Date.now().toString().slice(-6)}`;
-        await Promise.all([fetchPelanggan(), fetchHarga()]);
-        if(typeof renderLayout === "function") renderLayout();
+        
+        // PENTING: Panggil data
+        await fetchPelanggan();
+        await fetchHarga();
     });
 
-    // --- PDF GENERATOR FUNCTION ---
-    function downloadPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const idQ = document.getElementById('idQuote').innerText;
-
-        // 1. Header Design
-        doc.setFillColor(51, 51, 51);
-        doc.roundedRect(15, 15, 15, 15, 3, 3, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
-        doc.text("NT", 18, 25);
-
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.text("NANDA TEKNIK BANYUWANGI", 35, 20);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(100, 100, 100);
-        doc.text("Sukowidi Indah Residence, D05, Klatak, Banyuwangi", 35, 25);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 35, 29);
-
-        doc.setLineWidth(0.5);
-        doc.line(15, 35, 195, 35); // Garis pemisah
-
-        // 2. Info Penawaran
-        doc.setTextColor(0, 122, 255);
-        doc.setFontSize(14);
-        doc.text("PENAWARAN HARGA", 195, 45, { align: "right" });
-        
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text(`No: ${idQ}`, 195, 50, { align: "right" });
-        doc.text(`Tanggal: ${document.getElementById('tglQuote').value}`, 195, 55, { align: "right" });
-
-        doc.setFont("helvetica", "bold");
-        doc.text("Kepada Yth:", 15, 45);
-        doc.setFont("helvetica", "normal");
-        doc.text(document.getElementById('penerimaNama').innerText, 15, 50);
-        doc.setFontSize(9);
-        doc.text(document.getElementById('penerimaAlamat').innerText, 15, 55, { maxWidth: 80 });
-
-        // Perihal
-        doc.setFillColor(245, 245, 245);
-        doc.rect(15, 65, 180, 10, 'F');
-        doc.setFont("helvetica", "bold");
-        doc.text(`Perihal: ${document.getElementById('perihal').value || '-'}`, 18, 71);
-
-        // 3. Table Items
-        const body = currentItems.map(it => [
-            { content: `${it.item}\n(Rp ${it.price.toLocaleString()})`, styles: { halign: 'left' } },
-            { content: it.qty.toString(), styles: { halign: 'center' } },
-            { content: `Rp ${it.total.toLocaleString()}`, styles: { halign: 'right' } }
-        ]);
-
-        doc.autoTable({
-            startY: 80,
-            head: [['Deskripsi Jasa / Barang', 'Qty', 'Total']],
-            body: body,
-            theme: 'striped',
-            headStyles: { fillStyle: [51, 51, 51], fontSize: 10, halign: 'center' },
-            foot: [[{ content: 'GRAND TOTAL', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold' } }, 
-                   { content: document.getElementById('totalQuote').innerText, styles: { halign: 'right', fontStyle: 'bold', textColor: [0, 122, 255] } }]],
-            styles: { fontSize: 9, cellPadding: 4 }
-        });
-
-        // 4. Rekening & Tanda Tangan
-        let finalY = doc.lastAutoTable.finalY + 10;
-        
-        // Kotak Rekening
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineDashPattern([2, 2], 0);
-        doc.rect(15, finalY, 70, 25);
-        doc.setLineDashPattern([], 0);
-        doc.setFontSize(8);
-        doc.text("TRANSFER PEMBAYARAN:", 20, finalY + 5);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text("BANK BCA", 20, finalY + 11);
-        doc.setTextColor(0, 122, 255);
-        doc.setFontSize(12);
-        doc.text("1801826011", 20, finalY + 17);
-        doc.setTextColor(0,0,0);
-        doc.setFontSize(8);
-        doc.text("a/n NANDA TEKNIK", 20, finalY + 22);
-
-        // Tanda Tangan
-        let signY = finalY + 40;
-        doc.setFontSize(9);
-        doc.text("Hormat Kami,", 150, signY, { align: "center" });
-        doc.text("Disetujui Oleh,", 40, signY, { align: "center" });
-        doc.setFont("helvetica", "bold");
-        doc.text("( Nanda Teknik )", 150, signY + 25, { align: "center" });
-        doc.text("( ............................ )", 40, signY + 25, { align: "center" });
-
-        doc.save(`Penawaran_${idQ}.pdf`);
-    }
-
-    // --- EXISTING LOGIC ---
     async function fetchPelanggan() {
-        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
-        pelangganData = await res.json();
-        let opt = '<option value="">-- Pilih Pelanggan --</option>';
-        pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
-        document.getElementById('selectPelanggan').innerHTML = opt;
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
+            pelangganData = await res.json();
+            let opt = '<option value="">-- Pilih Pelanggan --</option>';
+            pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
+            document.getElementById('selectPelanggan').innerHTML = opt;
+        } catch (e) { console.error("Gagal load pelanggan", e); }
     }
 
     async function fetchHarga() {
-        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
-        hargaData = await res.json();
-        let listHtml = '';
-        hargaData.forEach(h => {
-            const n = h.nama || h.Jasa;
-            const p = h.harga || h.Harga;
-            listHtml += `<option value="${n}">Rp ${parseInt(p).toLocaleString()}</option>`;
-        });
-        document.getElementById('listHarga').innerHTML = listHtml;
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
+            hargaData = await res.json();
+            let listHtml = '';
+            // Fix penamaan field (menyesuaikan sheet Harga lo)
+            hargaData.forEach(h => {
+                const nama = h.nama || h.Jasa;
+                listHtml += `<option value="${nama}">`;
+            });
+            document.getElementById('listHarga').innerHTML = listHtml;
+        } catch (e) { console.error("Gagal load harga", e); }
     }
 
-    document.getElementById('addName').addEventListener('input', (e) => {
+    // Fix: Daftar harga otomatis muncul saat input nama barang dicocokkan
+    document.getElementById('addName').addEventListener('change', (e) => {
         const item = hargaData.find(x => (x.nama || x.Jasa) === e.target.value);
-        if (item) document.getElementById('addPrice').value = item.harga || item.Harga;
+        if (item) {
+            document.getElementById('addPrice').value = item.harga || item.Harga;
+        }
     });
 
     function addItem() {
         const n = document.getElementById('addName').value;
         const p = parseInt(document.getElementById('addPrice').value);
         const q = parseInt(document.getElementById('addQty').value) || 1;
-        if(!n || isNaN(p)) return;
+        if(!n || isNaN(p)) return Swal.fire('Oops', 'Pilih item & harga dulu!', 'warning');
+        
         currentItems.push({ item: n, price: p, qty: q, total: p * q });
         renderItems();
+        
+        // Reset form input
         document.getElementById('addName').value = '';
         document.getElementById('addPrice').value = '';
         document.getElementById('addQty').value = 1;
@@ -332,16 +252,16 @@
                 <tr>
                     <td><div class="fw-bold">${it.item}</div><div class="text-muted small">@ Rp ${it.price.toLocaleString()}</div></td>
                     <td class="text-center">
-                        <div class="qty-control d-print-none">
-                            <i class="bi bi-dash-circle qty-btn" onclick="updateQty(${i}, -1)"></i>
-                            <span class="fw-bold mx-2">${it.qty}</span>
-                            <i class="bi bi-plus-circle qty-btn" onclick="updateQty(${i}, 1)"></i>
+                        <div class="qty-control d-print-none d-flex align-items-center justify-content-center">
+                            <i class="bi bi-dash-circle qty-btn me-2" onclick="updateQty(${i}, -1)"></i>
+                            <span class="fw-bold">${it.qty}</span>
+                            <i class="bi bi-plus-circle qty-btn ms-2" onclick="updateQty(${i}, 1)"></i>
                         </div>
                     </td>
                     <td class="text-end fw-bold">Rp ${it.total.toLocaleString()}</td>
                 </tr>`;
         });
-        document.getElementById('quoteBody').innerHTML = html || '<tr><td colspan="3" class="text-center py-4 text-muted">Tambahkan item...</td></tr>';
+        document.getElementById('quoteBody').innerHTML = html || '<tr><td colspan="3" class="text-center py-4 text-muted">Belum ada item...</td></tr>';
         document.getElementById('totalQuote').innerText = "Rp " + total.toLocaleString();
     }
 
@@ -356,6 +276,80 @@
         const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
         document.getElementById('penerimaNama').innerText = p ? p.nama : '-';
         document.getElementById('penerimaAlamat').innerText = p ? (p.alamat || 'Alamat tidak tersedia') : 'Alamat belum dipilih';
+        document.getElementById('penerimaTtd').innerText = p ? `( ${p.nama} )` : '( ............................ )';
+    }
+
+    // PDF Generator yang disesuaikan desain baru
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const idQ = document.getElementById('idQuote').innerText;
+
+        // Header Logo Center
+        doc.addImage('logo.png', 'PNG', 90, 10, 30, 30); // Center logo
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("NANDA TEKNIK BANYUWANGI", 105, 45, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+        doc.text("Sukowidi Indah Residence, D05, Klatak, Banyuwangi", 105, 50, { align: 'center' });
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 105, 54, { align: 'center' });
+        doc.setDrawColor(50);
+        doc.setLineWidth(0.8);
+        doc.line(15, 58, 195, 58);
+
+        // Info
+        doc.setTextColor(0, 122, 255);
+        doc.setFontSize(14);
+        doc.text("PENAWARAN HARGA", 195, 70, { align: "right" });
+        doc.setTextColor(0);
+        doc.setFontSize(10);
+        doc.text(`No: ${idQ}`, 195, 75, { align: "right" });
+        doc.text(`Tanggal: ${document.getElementById('tglQuote').value}`, 195, 80, { align: "right" });
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Kepada Yth:", 15, 70);
+        doc.setFont("helvetica", "normal");
+        doc.text(document.getElementById('penerimaNama').innerText, 15, 75);
+        doc.setFontSize(8);
+        doc.text(document.getElementById('penerimaAlamat').innerText, 15, 80, { maxWidth: 80 });
+
+        // Table Abu-abu
+        const body = currentItems.map(it => [it.item + ` (@Rp ${it.price.toLocaleString()})`, it.qty, `Rp ${it.total.toLocaleString()}`]);
+        doc.autoTable({
+            startY: 90,
+            head: [['Deskripsi Jasa / Barang', 'Qty', 'Total']],
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [99, 99, 102], halign: 'center' },
+            bodyStyles: { fillColor: [248, 249, 250] },
+            foot: [[{content: 'GRAND TOTAL', colSpan: 2, styles: {halign: 'right', fontStyle: 'bold'}}, 
+                   {content: document.getElementById('totalQuote').innerText, styles: {halign: 'right', fontStyle: 'bold', textColor: [0, 122, 255]}}]],
+        });
+
+        // S&K
+        let finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold"); doc.text("SYARAT & KETENTUAN:", 15, finalY);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+        const snk = [
+            "1. Harga sudah termasuk biaya material pendukung (kecuali disebutkan lain).",
+            "2. Penawaran harga berlaku selama 14 hari sejak tanggal diterbitkan.",
+            "3. Pembayaran dilakukan via transfer ke Rekening BCA (1801826011 a/n Nanda Teknik).",
+            "4. Garansi pekerjaan berlaku sesuai kesepakatan item yang dikerjakan."
+        ];
+        doc.text(snk, 15, finalY + 5);
+
+        // TTD
+        let signY = finalY + 35;
+        doc.setFontSize(9);
+        doc.text("Hormat Kami,", 165, signY, {align: "center"});
+        doc.text("Disetujui Oleh,", 40, signY, {align: "center"});
+        doc.setFont("helvetica", "bold");
+        doc.text("( Nanda Teknik )", 165, signY + 20, {align: "center"});
+        doc.text(`( ${document.getElementById('penerimaNama').innerText} )`, 40, signY + 20, {align: "center"});
+
+        doc.save(`Penawaran_${idQ}.pdf`);
     }
 
     async function savePenawaran() {
@@ -365,14 +359,16 @@
         if(!email || !perihal || currentItems.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
 
         Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-        await fetch(CONFIG.GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'insert', sheet: 'Penawaran',
-                data: { id: id, tanggal: document.getElementById('tglQuote').value, email: email, items_json: JSON.stringify(currentItems), total: currentItems.reduce((s, i) => s + i.total, 0), status: 'Pending', perihal: perihal }
-            })
-        });
-        Swal.fire('Berhasil!', 'Simpan sukses', 'success').then(() => location.reload());
+        try {
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'insert', sheet: 'Penawaran',
+                    data: { id: id, tanggal: document.getElementById('tglQuote').value, email: email, items_json: JSON.stringify(currentItems), total: currentItems.reduce((s, i) => s + i.total, 0), status: 'Pending', perihal: perihal }
+                })
+            });
+            Swal.fire('Berhasil!', 'Simpan sukses', 'success').then(() => location.reload());
+        } catch(e) { Swal.fire('Error', 'Gagal simpan!', 'error'); }
     }
 </script>
 </body>
