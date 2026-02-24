@@ -247,7 +247,7 @@
         if(data) generatePDF(data);
     }
 
-  function generatePDF(data) {
+function generatePDF(data) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
@@ -258,7 +258,6 @@
         console.error("Logo ora ketemu.");
     }
 
-    // Teks Header
     doc.setFontSize(18); doc.setFont("helvetica", "bold");
     doc.setTextColor(40, 40, 40);
     doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
@@ -288,7 +287,6 @@
     doc.setFont("helvetica", "normal");
     doc.text("Kepada Yth:", 130, 60);
     doc.setFont("helvetica", "bold");
-    // GANTI EMAIL DADI NAMA PELANGGAN
     const namaPelanggan = data.nama || data.pelanggan || '-'; 
     const splitNama = doc.splitTextToSize(namaPelanggan, 60);
     doc.text(splitNama, 130, 65);
@@ -314,80 +312,50 @@
         head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
         body: tableBody, 
         theme: 'grid', 
-        headStyles: { 
-            fillColor: [80, 80, 80], 
-            textColor: [255, 255, 255],
-            halign: 'center',
-            fontSize: 9,
-            valign: 'middle'
-        },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 12 }, // NO wis tak omborne dadi 12 ben ra tumpuk
-            1: { halign: 'left' },
-            2: { halign: 'center', cellWidth: 15 },
-            3: { halign: 'right', cellWidth: 35 },
-            4: { halign: 'right', cellWidth: 35 }
-        },
-        styles: { fontSize: 9, cellPadding: 3, lineColor: [200, 200, 200] }
+        headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255], halign: 'center', fontSize: 9 },
+        columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right', cellWidth: 35 }, 4: { halign: 'right', cellWidth: 35 } },
+        styles: { fontSize: 9, cellPadding: 3 }
     });
 
-    // --- 5. TOTAL & PENUTUP ---
-    const finalY = doc.lastAutoTable.finalY + 10;
+    // --- 5. TOTAL & SYARAT KETENTUAN ---
+    let currentY = doc.lastAutoTable.finalY + 10;
     
+    // Box Total
     doc.setFillColor(240, 240, 240);
-    doc.rect(130, finalY - 5, 65, 10, 'F');
+    doc.rect(130, currentY - 5, 65, 10, 'F');
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
-    
+    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, currentY, { align: "right" });
+
+    currentY += 15;
+
+    // --- BOX SYARAT & KETENTUAN (Garis Putus-putus) ---
+    doc.setLineDash([2, 2], 0); // Efek garis putus-putus
+    doc.setDrawColor(150, 150, 150);
+    doc.rect(15, currentY, 180, 28); // Kotak pembungkus
+    doc.setLineDash([]); // Balikne dadi garis normal
+
+    doc.setFontSize(8); doc.setFont("helvetica", "bold");
+    doc.text("Syarat & Ketentuan:", 20, currentY + 5);
     doc.setFont("helvetica", "normal");
+    doc.text("1. Harga di atas sudah termasuk biaya jasa dan instalasi (kecuali ada keterangan lain).", 20, currentY + 10);
+    doc.text("2. Pembayaran Down Payment (DP) minimal 50% setelah penawaran disetujui.", 20, currentY + 14);
+    doc.text("3. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai.", 20, currentY + 18);
+    doc.text("4. Penawaran harga ini berlaku selama 14 hari sejak tanggal diterbitkan.", 20, currentY + 22);
+
+    // --- 6. PENUTUP & TANDA TANGAN ---
+    currentY += 40;
     doc.setFontSize(9);
     const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik. Atas perhatiannya kami ucapkan terima kasih.";
-    const splitPenutup = doc.splitTextToSize(penutup, 180);
-    doc.text(splitPenutup, 15, finalY + 15);
+    doc.text(doc.splitTextToSize(penutup, 180), 15, currentY - 5);
 
-    // --- 6. TANDA TANGAN ---
-    const ttdY = finalY + 40;
     const tglSekarang = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-    
-    doc.text(`Banyuwangi, ${tglSekarang}`, 145, ttdY);
-    doc.text("Hormat Kami,", 145, ttdY + 5);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text("NANDA KRISBIANTO", 145, ttdY + 30);
-    doc.setFont("helvetica", "normal");
-    doc.text("( Owner Nanda Teknik )", 145, ttdY + 35);
-
-    doc.save(`Penawaran_${data.id}.pdf`);
-}
-
-    // --- 5. TOTAL & PENUTUP ---
-    const finalY = doc.lastAutoTable.finalY + 10;
-    
-    // Box Total (Abu-abu Enom)
-    doc.setFillColor(240, 240, 240);
-    doc.rect(130, finalY - 5, 65, 10, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, finalY, { align: "right" });
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik. Atas perhatiannya kami ucapkan terima kasih.";
-    const splitPenutup = doc.splitTextToSize(penutup, 180);
-    doc.text(splitPenutup, 15, finalY + 15);
-
-    // --- 6. TANDA TANGAN ---
-    const ttdY = finalY + 35;
-    const tglSekarang = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-    
-    doc.text(`Banyuwangi, ${tglSekarang}`, 145, ttdY);
-    doc.text("Hormat Kami,", 145, ttdY + 5);
+    doc.text(`Banyuwangi, ${tglSekarang}`, 145, currentY + 10);
+    doc.text("Hormat Kami,", 145, currentY + 15);
     
     doc.setFont("helvetica", "bold");
-    doc.text("NANDA KRISBIANTO", 145, ttdY + 30);
+    doc.text("NANDA KRISBIANTO", 145, currentY + 40);
     doc.setFont("helvetica", "normal");
-    doc.text("( Owner Nanda Teknik )", 145, ttdY + 35);
+    doc.text("( Owner Nanda Teknik )", 145, currentY + 45);
 
     doc.save(`Penawaran_${data.id}.pdf`);
 }
