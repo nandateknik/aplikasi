@@ -10,19 +10,19 @@
     <link rel="stylesheet" href="css/styles.css">
     
     <style>
-        :root { --premium-blue: #0d6efd; }
+        :root { --premium-blue: #007AFF; }
         .invoice-preview { background: #fff; padding: 20px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; }
+        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; font-size: 14px; }
         .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; }
-        .table-preview th { background: #f8f9fa; text-transform: uppercase; font-size: 11px; color: #666; }
         
-        /* Card style untuk riwayat nota */
-        .nota-card { border-radius: 18px; transition: 0.2s; }
-        .nota-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important; }
-        
-        /* Floating action custom (opsional jika ingin tambah manual) */
+        .nota-card { border-radius: 18px; border: none; transition: 0.2s; background: white; margin-bottom: 12px; }
         .badge-lunas { background-color: #34C759; color: #fff; }
         .badge-belum { background-color: #FF9500; color: #fff; }
+        
+        /* Style untuk qty editor */
+        .qty-control { display: flex; align-items: center; gap: 10px; justify-content: center; }
+        .qty-btn { cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+        .qty-btn:active { transform: scale(0.8); }
     </style>
 </head>
 <body class="bg-light pb-5">
@@ -30,108 +30,93 @@
 <div id="app">
     <div class="container py-3">
         
-        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 mx-1" id="notaTab" role="tablist">
+        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4" id="notaTab" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
-                    <i class="bi bi-file-earmark-plus me-1"></i> Buat Nota
+                    <i class="bi bi-pencil-square me-1"></i> Buat Nota
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="tab-list" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchNotaHistory()">
-                    <i class="bi bi-collection me-1"></i> Riwayat
+                    <i class="bi bi-clock-history me-1"></i> Riwayat
                 </button>
             </li>
         </ul>
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="content-buat">
-                
-                <div class="d-flex gap-2 mb-3 mx-1 overflow-auto pb-2" style="white-space: nowrap;">
-                    <button class="btn btn-primary rounded-pill shadow-sm flex-fill fw-bold" onclick="saveNota()">
-                        <i class="bi bi-cloud-arrow-up me-1"></i> Simpan
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="saveNota()">
+                        <i class="bi bi-cloud-check me-1"></i> SIMPAN
                     </button>
-                    <button class="btn btn-danger rounded-pill shadow-sm flex-fill fw-bold" onclick="generatePDF()">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-                    </button>
-                    <button class="btn btn-success rounded-pill shadow-sm flex-fill fw-bold" onclick="shareWA()">
-                        <i class="bi bi-whatsapp me-1"></i> WA
+                    <button class="btn btn-outline-danger rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="generatePDF()">
+                        <i class="bi bi-file-pdf"></i> PDF
                     </button>
                 </div>
 
-                <div class="invoice-preview mx-1" id="printableArea">
+                <div class="invoice-preview" id="printableArea">
                     <div class="row mb-3">
                         <div class="col-7">
-                            <h5 class="fw-bold text-primary mb-2">NOTA TAGIHAN</h5>
-                            <div class="text-muted small" style="font-size: 10px;">KEPADA:</div>
-                            <select id="selectPelangganNota" class="form-select border-0 bg-light fw-bold mb-1 p-2" onchange="updateInfoPelanggan()" style="box-shadow: none; border-radius: 12px; font-size: 14px;">
-                                <option value="">- Pilih Pelanggan -</option>
+                            <h6 class="fw-bold text-primary mb-1">NANDA TEKNIK</h6>
+                            <select id="selectPelangganNota" class="form-select border-0 bg-light fw-bold small mb-1 rounded-3" onchange="updateInfoPelanggan()">
+                                <option value="">Pilih Pelanggan</option>
                             </select>
-                            <div id="penerimaAlamat" class="small text-muted ps-2" style="font-size: 11px;">-</div>
+                            <div id="penerimaAlamat" class="text-muted" style="font-size: 11px; line-height: 1.2;">-</div>
                         </div>
                         <div class="col-5 text-end">
-                            <div class="mt-1">
-                                <div class="text-muted" style="font-size: 10px;">NO. NOTA:</div>
-                                <div id="noNota" class="fw-bold text-dark" style="font-size: 13px;">#AUTO</div>
-                                <div class="text-muted mt-2" style="font-size: 10px;">TANGGAL:</div>
-                                <input type="date" id="tglNota" class="form-control form-control-sm border-0 bg-light text-end p-1 mt-1" style="box-shadow: none; border-radius: 8px; font-size: 12px;">
-                            </div>
+                            <div id="noNota" class="fw-bold small">#AUTO</div>
+                            <input type="date" id="tglNota" class="form-control form-control-sm border-0 bg-light text-end p-0 mt-1 small">
                         </div>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-preview mt-2 align-middle">
-                            <thead>
+                        <table class="table align-middle" style="font-size: 13px;">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Item Pekerjaan</th>
+                                    <th>Pekerjaan</th>
                                     <th class="text-center">Qty</th>
                                     <th class="text-end">Total</th>
                                 </tr>
                             </thead>
-                            <tbody id="itemNotaBody" style="font-size: 13px;">
-                            </tbody>
+                            <tbody id="itemNotaBody"></tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="2" class="text-end text-muted small">Subtotal</td>
-                                    <td id="subtotalNota" class="text-end fw-bold small">Rp 0</td>
-                                </tr>
-                                <tr class="table-primary">
-                                    <td colspan="2" class="text-end fw-bold text-primary">TOTAL AKHIR</td>
+                                    <td colspan="2" class="text-end fw-bold">TOTAL AKHIR</td>
                                     <td id="totalNota" class="text-end fw-bold text-primary">Rp 0</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
 
-                    <div class="mt-4 p-3 rounded-4 bg-light d-print-none" style="border: 1px dashed #ccc;">
-                        <h6 class="fw-bold mb-2 small text-muted"><i class="bi bi-plus-circle me-1"></i>Tambah Item</h6>
+                    <div class="mt-3 p-3 rounded-4 bg-light d-print-none">
                         <div class="row g-2">
-                            <div class="col-12"><input type="text" id="addName" class="form-control form-control-sm border-0 shadow-sm rounded-3" placeholder="Nama Jasa/Part"></div>
-                            <div class="col-6"><input type="number" id="addPrice" class="form-control form-control-sm border-0 shadow-sm rounded-3" placeholder="Harga Satuan"></div>
-                            <div class="col-3"><input type="number" id="addQty" class="form-control form-control-sm border-0 shadow-sm rounded-3" value="1" placeholder="Qty"></div>
-                            <div class="col-3"><button class="btn btn-dark btn-sm w-100 rounded-3 shadow-sm" onclick="addItemManual()">Add</button></div>
+                            <div class="col-12">
+                                <input type="text" id="addName" class="form-control border-0 rounded-3 shadow-sm" placeholder="Ketik Jasa / Nama Barang..." list="listHarga">
+                                <datalist id="listHarga"></datalist>
+                            </div>
+                            <div class="col-6">
+                                <input type="number" id="addPrice" class="form-control border-0 rounded-3 shadow-sm" placeholder="Harga">
+                            </div>
+                            <div class="col-3">
+                                <input type="number" id="addQty" class="form-control border-0 rounded-3 shadow-sm" value="1">
+                            </div>
+                            <div class="col-3">
+                                <button class="btn btn-dark w-100 rounded-3" onclick="addItemManual()"><i class="bi bi-plus-lg"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="tab-pane fade" id="content-list">
-                
-                <div class="px-1 mb-3">
-                    <div class="input-group bg-white rounded-4 shadow-sm p-1" style="border: 0.5px solid rgba(0,0,0,0.05);">
-                        <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="filterSearch" class="form-control border-0 ps-0 shadow-none" placeholder="Cari nota, pelanggan..." onkeyup="filterNota()">
-                        <input type="date" id="filterTgl" class="form-control border-0 border-start shadow-none text-muted" style="max-width: 130px; font-size: 12px;" onchange="filterNota()">
-                    </div>
+                <div class="input-group bg-white rounded-4 shadow-sm mb-3 p-1">
+                    <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="filterSearch" class="form-control border-0 shadow-none" placeholder="Cari nota..." onkeyup="renderHistoryCards()">
                 </div>
-
-                <div id="loadingNota" class="text-center py-5" style="display: none;">
-                    <div class="spinner-border text-primary spinner-border-sm"></div>
-                    <p class="small text-muted mt-2">Menarik data nota...</p>
+                <div id="loadingNota" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border text-primary"></div>
                 </div>
-
-                <div id="historyNotaBody" class="px-1">
-                    </div>
-
+                <div id="historyNotaBody"></div>
             </div>
         </div>
     </div>
@@ -144,38 +129,41 @@
 
 <script src="js/config.js"></script>
 <script src="js/layout.js"></script>
-<script src="js/template-dokumen.js"></script>
 
 <script>
-    const { jsPDF } = window.jspdf;
     let currentCart = [];
     let pelangganData = [];
+    let hargaData = [];
     let notaHistory = [];
-    let filteredHistory = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('tglNota').valueAsDate = new Date();
-        document.getElementById('noNota').innerText = `INV-${Date.now().toString().slice(-6)}`; // Auto ID
+        document.getElementById('noNota').innerText = `INV-${Date.now().toString().slice(-6)}`;
         await fetchPelanggan();
-        loadDataFromParams();
+        await fetchHarga();
     });
 
-    // --- LOGIC PELANGGAN & ITEM ---
     async function fetchPelanggan() {
-        try {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
-            pelangganData = await res.json();
-            let opt = '<option value="">- Pilih Pelanggan -</option>';
-            pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
-            document.getElementById('selectPelangganNota').innerHTML = opt;
-        } catch(e) { console.log("Gagal muat pelanggan"); }
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
+        pelangganData = await res.json();
+        let opt = '<option value="">Pilih Pelanggan</option>';
+        pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
+        document.getElementById('selectPelangganNota').innerHTML = opt;
     }
 
-    function updateInfoPelanggan() {
-        const email = document.getElementById('selectPelangganNota').value;
-        const p = pelangganData.find(x => x.email === email);
-        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : "-";
+    async function fetchHarga() {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
+        hargaData = await res.json();
+        let listHtml = '';
+        hargaData.forEach(h => listHtml += `<option value="${h.nama}">Rp ${h.harga}</option>`);
+        document.getElementById('listHarga').innerHTML = listHtml;
     }
+
+    // Auto-fill harga pas pilih item dari list
+    document.getElementById('addName').addEventListener('input', function(e) {
+        const item = hargaData.find(x => x.nama === e.target.value);
+        if (item) document.getElementById('addPrice').value = item.harga;
+    });
 
     function renderItems() {
         let html = '';
@@ -185,19 +173,31 @@
             html += `
                 <tr>
                     <td>
-                        <div class="fw-bold text-dark">${item.item}</div>
-                        <div class="text-muted d-print-none" style="font-size: 10px;">
-                            Rp ${parseInt(item.price).toLocaleString()} 
-                            <span class="text-danger ms-2" onclick="deleteItem(${i})" style="cursor:pointer;"><i class="bi bi-trash"></i> Hapus</span>
+                        <div class="fw-bold">${item.item}</div>
+                        <div class="text-muted" style="font-size:10px">Rp ${parseInt(item.price).toLocaleString()}</div>
+                    </td>
+                    <td class="text-center">
+                        <div class="qty-control d-print-none">
+                            <i class="bi bi-dash-circle text-danger qty-btn" onclick="updateQty(${i}, -1)"></i>
+                            <span class="fw-bold">${item.qty}</span>
+                            <i class="bi bi-plus-circle text-primary qty-btn" onclick="updateQty(${i}, 1)"></i>
                         </div>
                     </td>
-                    <td class="text-center">${item.qty}</td>
                     <td class="text-end fw-bold">Rp ${parseInt(item.total).toLocaleString()}</td>
                 </tr>`;
         });
         document.getElementById('itemNotaBody').innerHTML = html;
-        document.getElementById('subtotalNota').innerText = "Rp " + total.toLocaleString();
         document.getElementById('totalNota').innerText = "Rp " + total.toLocaleString();
+    }
+
+    function updateQty(index, delta) {
+        currentCart[index].qty += delta;
+        if (currentCart[index].qty <= 0) {
+            currentCart.splice(index, 1);
+        } else {
+            currentCart[index].total = currentCart[index].qty * currentCart[index].price;
+        }
+        renderItems();
     }
 
     function addItemManual() {
@@ -205,186 +205,82 @@
         const p = parseInt(document.getElementById('addPrice').value);
         const q = parseInt(document.getElementById('addQty').value);
         if(!n || isNaN(p)) return;
+        
         currentCart.push({ item: n, price: p, qty: q, total: p * q });
         renderItems();
         document.getElementById('addName').value = '';
         document.getElementById('addPrice').value = '';
     }
 
-    function deleteItem(i) {
-        currentCart.splice(i, 1);
-        renderItems();
-    }
-
-    // --- FIX: FUNGSI SIMPAN NOTA (Kolom E & Status Tersimpan) ---
     async function saveNota() {
         const id = document.getElementById('noNota').innerText;
         const tgl = document.getElementById('tglNota').value;
         const email = document.getElementById('selectPelangganNota').value;
-        const total = currentCart.reduce((sum, item) => sum + item.total, 0);
+        const totalVal = currentCart.reduce((sum, item) => sum + item.total, 0);
 
-        if(!email || currentCart.length === 0) {
-            return Swal.fire('Oops!', 'Pilih pelanggan dan isi item dulu Bro!', 'warning');
-        }
+        if(!email || currentCart.length === 0) return Swal.fire('Error', 'Data belum lengkap!', 'error');
 
-        Swal.fire({ title: 'Menyimpan Nota...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
         try {
             await fetch(CONFIG.GAS_URL, {
                 method: 'POST',
                 body: JSON.stringify({
-                    action: 'insert',
-                    sheet: 'Nota',
-                    key: 'id',
-                    id: id,
-                    data: {
-                        id: id,
-                        tanggal: tgl,
-                        email: email,
-                        items_json: JSON.stringify(currentCart),
-                        total_akhir: total, // FIX: Mengisi kolom E (Total)
-                        status_pembayaran: 'Belum Lunas'
-                    }
+                    action: 'insert', sheet: 'Nota', key: 'id', id: id,
+                    data: { id: id, tanggal: tgl, email: email, items_json: JSON.stringify(currentCart), total: totalVal, status: 'Belum Lunas' }
                 })
             });
-            Swal.fire('Berhasil!', 'Nota sukses disimpan ke Database.', 'success');
-        } catch (err) {
-            Swal.fire('Gagal', 'Terjadi kesalahan: ' + err.message, 'error');
-        }
+            Swal.fire('Berhasil!', 'Nota tersimpan ke database.', 'success');
+        } catch (e) { Swal.fire('Gagal', e.message, 'error'); }
     }
 
-    // --- FIX: RIWAYAT NOTA DENGAN CARD STYLE ---
     async function fetchNotaHistory() {
         const container = document.getElementById('historyNotaBody');
-        const loading = document.getElementById('loadingNota');
+        document.getElementById('loadingNota').style.display = 'block';
         container.innerHTML = '';
-        loading.style.display = 'block';
-        
         try {
             const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
             notaHistory = await res.json();
-            filteredHistory = [...notaHistory].reverse();
             renderHistoryCards();
-        } catch (e) {
-            container.innerHTML = '<div class="alert alert-danger small">Gagal menarik data riwayat nota.</div>';
-        } finally {
-            loading.style.display = 'none';
-        }
-    }
-
-    function filterNota() {
-        const tgl = document.getElementById('filterTgl').value;
-        const search = document.getElementById('filterSearch').value.toLowerCase();
-        
-        filteredHistory = notaHistory.filter(n => {
-            const matchTgl = tgl ? n.tanggal === tgl : true;
-            const matchSearch = n.email.toLowerCase().includes(search) || n.id.toLowerCase().includes(search);
-            return matchTgl && matchSearch;
-        }).reverse();
-        
-        renderHistoryCards();
+        } catch (e) { container.innerHTML = 'Gagal muat data.'; }
+        document.getElementById('loadingNota').style.display = 'none';
     }
 
     function renderHistoryCards() {
+        const search = document.getElementById('filterSearch').value.toLowerCase();
         const container = document.getElementById('historyNotaBody');
         
-        if (filteredHistory.length === 0) {
-            container.innerHTML = '<div class="text-center py-5 text-muted small">Tidak ada data nota.</div>';
-            return;
-        }
-
-        container.innerHTML = filteredHistory.map(n => {
-            const badgeClass = n.status_pembayaran === 'Lunas' ? 'badge-lunas' : 'badge-belum';
-            // Cari nama pelanggan
+        const filtered = notaHistory.filter(n => n.id.toLowerCase().includes(search) || n.email.toLowerCase().includes(search)).reverse();
+        
+        container.innerHTML = filtered.map(n => {
             const p = pelangganData.find(x => x.email === n.email);
-            const namaPelanggan = p ? p.nama : n.email;
-            
+            const badge = n.status === 'Lunas' ? 'badge-lunas' : 'badge-belum';
             return `
-            <div class="nota-card shadow-sm p-3 mb-3 bg-white border-0">
-                <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
-                    <div>
-                        <div class="fw-bold text-primary" style="font-size: 14px;">${n.id}</div>
-                        <div class="text-muted" style="font-size: 11px;"><i class="bi bi-calendar3 me-1"></i>${n.tanggal}</div>
-                    </div>
-                    <span class="badge ${badgeClass} rounded-pill shadow-sm" style="font-size: 10px; cursor: pointer;" onclick="updateStatusNota('${n.id}', '${n.status_pembayaran}')">
-                        ${n.status_pembayaran} <i class="bi bi-arrow-repeat ms-1"></i>
+            <div class="nota-card shadow-sm p-3">
+                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                    <div><span class="fw-bold text-primary">${n.id}</span><br><small class="text-muted">${n.tanggal}</small></div>
+                    <span class="badge ${badge} rounded-pill align-self-center" onclick="updateStatus('${n.id}', '${n.status}')" style="cursor:pointer">
+                        ${n.status} <i class="bi bi-arrow-repeat"></i>
                     </span>
                 </div>
-                
                 <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="fw-bold text-dark" style="font-size: 13px;">${namaPelanggan}</div>
-                        <div class="text-success fw-bold mt-1" style="font-size: 14px;">Rp ${parseInt(n.total_akhir || 0).toLocaleString()}</div>
-                    </div>
-                    
+                    <div><div class="fw-bold">${p ? p.nama : n.email}</div><div class="text-success fw-bold">Rp ${parseInt(n.total || 0).toLocaleString()}</div></div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-light text-primary rounded-circle btn-sm shadow-sm" onclick="viewNota('${n.id}')" title="Lihat/Edit">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-light text-danger rounded-circle btn-sm shadow-sm" onclick="deleteNota('${n.id}')" title="Hapus">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <button class="btn btn-light text-primary rounded-circle btn-sm shadow-sm" onclick="viewNota('${n.id}')"><i class="bi bi-eye"></i></button>
                     </div>
                 </div>
             </div>`;
         }).join('');
     }
 
-    // --- FIX: FUNGSI UPDATE STATUS ---
-    async function updateStatusNota(id, currentStatus) {
-        const newStatus = currentStatus === 'Lunas' ? 'Belum Lunas' : 'Lunas';
-        
-        const confirm = await Swal.fire({
-            title: 'Ubah Status?',
-            text: `Ubah status nota menjadi ${newStatus}?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Ubah',
-            cancelButtonText: 'Batal'
+    async function updateStatus(id, oldStatus) {
+        const newStatus = oldStatus === 'Lunas' ? 'Belum Lunas' : 'Lunas';
+        Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
+        await fetch(CONFIG.GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'update', sheet: 'Nota', key: 'id', id: id, data: { status: newStatus } })
         });
-
-        if (confirm.isConfirmed) {
-            Swal.fire({ title: 'Mengupdate...', didOpen: () => Swal.showLoading() });
-            try {
-                await fetch(CONFIG.GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'update',
-                        sheet: 'Nota',
-                        key: 'id',
-                        id: id,
-                        data: { status_pembayaran: newStatus }
-                    })
-                });
-                Swal.fire('Berhasil!', 'Status pembayaran diperbarui.', 'success');
-                fetchNotaHistory(); // Reload list
-            } catch (err) {
-                Swal.fire('Gagal', err.message, 'error');
-            }
-        }
-    }
-
-    async function deleteNota(id) {
-        const confirm = await Swal.fire({
-            title: 'Hapus Nota?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus'
-        });
-
-        if (confirm.isConfirmed) {
-            Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() });
-            try {
-                await fetch(CONFIG.GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete', sheet: 'Nota', key: 'id', id: id })
-                });
-                Swal.fire('Terhapus!', '', 'success');
-                fetchNotaHistory();
-            } catch (err) {
-                Swal.fire('Gagal', err.message, 'error');
-            }
-        }
+        Swal.close();
+        fetchNotaHistory();
     }
 
     function viewNota(id) {
@@ -393,60 +289,28 @@
             document.getElementById('noNota').innerText = n.id;
             document.getElementById('tglNota').value = n.tanggal;
             document.getElementById('selectPelangganNota').value = n.email;
-            updateInfoPelanggan();
-            currentCart = JSON.parse(n.items_json || '[]');
+            currentCart = JSON.parse(n.items_json);
             renderItems();
-            
-            // Pindah tab
-            const tab = new bootstrap.Tab(document.getElementById('tab-buat'));
-            tab.show();
+            new bootstrap.Tab(document.getElementById('tab-buat')).show();
         }
     }
 
-    // --- PDF & WA ---
+    function updateInfoPelanggan() {
+        const p = pelangganData.find(x => x.email === document.getElementById('selectPelangganNota').value);
+        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : '-';
+    }
+
     async function generatePDF() {
+        const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const noNota = document.getElementById('noNota').innerText;
-        const email = document.getElementById('selectPelangganNota').value;
-        const p = pelangganData.find(x => x.email === email);
-        if(!email) return Swal.fire('Error', 'Pilih pelanggan dulu!', 'error');
-
-        window.docTemplate.header(doc, "NOTA TAGIHAN", noNota);
-        doc.setFontSize(10);
-        doc.text("KEPADA: " + (p ? p.nama : email), 14, 55);
-        
+        doc.text("NOTA NANDA TEKNIK", 14, 20);
         doc.autoTable({
-            startY: 65,
-            head: [['Pekerjaan', 'Qty', 'Total']],
-            body: currentCart.map(i => [i.item, i.qty, i.total.toLocaleString()]),
-            theme: 'grid',
-            headStyles: { fillColor: [13, 110, 253] },
-            foot: [['', 'TOTAL', document.getElementById('totalNota').innerText]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+            startY: 30,
+            head: [['Item', 'Qty', 'Total']],
+            body: currentCart.map(i => [i.item, i.qty, i.total.toLocaleString()])
         });
-        
-        window.docTemplate.footer(doc);
-        doc.save(`Nota-${noNota}.pdf`);
-    }
-
-    function shareWA() {
-        const email = document.getElementById('selectPelangganNota').value;
-        const p = pelangganData.find(x => x.email === email);
-        if(!p) return;
-        const total = document.getElementById('totalNota').innerText;
-        const text = `Halo Bapak/Ibu ${p.nama}, berikut ringkasan nota dari Nanda Teknik sebesar ${total}. Silakan cek dokumen yang kami kirimkan. Terima kasih.`;
-        window.open(`https://wa.me/${p.wa}?text=${encodeURIComponent(text)}`, '_blank');
-    }
-
-    // --- AUTO LOAD DARI URL (Jika buka dari Booking) ---
-    function loadDataFromParams() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const bookingId = urlParams.get('id');
-        if (bookingId) {
-            // Jika butuh logic auto-fill dari Booking, taruh di sini (sama kayak sebelumnya)
-        }
+        doc.save(`Nota-${document.getElementById('noNota').innerText}.pdf`);
     }
 </script>
-
 </body>
 </html>
