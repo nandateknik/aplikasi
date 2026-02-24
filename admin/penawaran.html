@@ -170,7 +170,7 @@
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const r = await res.json();
             if (r.success) { 
-                allData = r.data; 
+                allData = r.data.reverse(); 
                 renderDisplay(); 
             }
         } catch(e) { console.error("Gagal memuat data"); }
