@@ -2,211 +2,338 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Penawaran | Nanda Teknik</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penawaran Harga | Nanda Teknik</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/styles.css">
     
     <style>
-        .quote-box {
-            background: #fff;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-            max-width: 850px;
-            margin: auto;
+        :root { --premium-blue: #007AFF; }
+        body { font-family: 'Segoe UI', sans-serif; }
+        .quote-preview { background: #fff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; font-size: 14px; }
+        .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; }
+        
+        .history-card { border-radius: 18px; border: none; background: white; margin-bottom: 12px; transition: 0.3s; }
+        .history-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important; }
+        
+        .badge-pending { background-color: #FF9500; color: #fff; }
+        .badge-approved { background-color: #34C759; color: #fff; }
+        .badge-rejected { background-color: #FF3B30; color: #fff; }
+        
+        .qty-control { display: flex; align-items: center; gap: 8px; justify-content: center; }
+        .qty-btn { cursor: pointer; font-size: 1.1rem; color: var(--premium-blue); }
+
+        @media print {
+            .d-print-none, .nav, .btn, .input-area { display: none !important; }
+            .quote-preview { box-shadow: none; padding: 0; border: none; }
+            body { background: white; }
         }
-        .input-group-custom {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        .btn-premium {
-            border-radius: 12px;
-            padding: 12px 25px;
-            font-weight: 700;
-            transition: all 0.3s;
-        }
-        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body class="bg-light pb-5">
 
-<div class="container py-4">
-    <div class="no-print d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
-        <button class="btn btn-light rounded-3" onclick="history.back()"><i class="bi bi-arrow-left"></i></button>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-premium shadow-sm" onclick="generateQuotationPDF()">
-                <i class="bi bi-file-earmark-pdf-fill me-2"></i>Download Penawaran
-            </button>
-        </div>
-    </div>
+<div id="app">
+    <div class="container py-3">
+        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none" id="quoteTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
+                    <i class="bi bi-file-earmark-plus me-1"></i> Buat Penawaran
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="tab-list" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchQuoteHistory()">
+                    <i class="bi bi-archive me-1"></i> Arsip Penawaran
+                </button>
+            </li>
+        </ul>
 
-    <div class="quote-box">
-        <div class="mb-4">
-            <h3 class="fw-800 text-dark mb-1">SURAT PENAWARAN HARGA</h3>
-            <p class="text-muted small">Nomor: <span id="dispNo">PH/NT/${new Date().getFullYear()}/001</span></p>
-        </div>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="content-buat">
+                <div class="d-flex gap-2 mb-3 d-print-none">
+                    <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="savePenawaran()">
+                        <i class="bi bi-send-check me-1"></i> SIMPAN PENAWARAN
+                    </button>
+                    <button class="btn btn-outline-dark rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="window.print()">
+                        <i class="bi bi-printer"></i> PRINT / PDF
+                    </button>
+                </div>
 
-        <div class="row mb-5">
-            <div class="col-md-6">
-                <label class="small fw-bold text-primary">KEPADA YTH:</label>
-                <input type="text" id="custName" class="form-control border-0 bg-light p-2 mb-2" placeholder="Nama Calon Pelanggan/Perusahaan">
-                <textarea id="custAddr" class="form-control border-0 bg-light p-2" rows="2" placeholder="Alamat Lokasi"></textarea>
+                <div class="quote-preview">
+                    <div class="row mb-4">
+                        <div class="col-8">
+                            <h4 class="fw-bold text-primary mb-0">NANDA TEKNIK</h4>
+                            <p class="small text-muted">Jasa Service, Maintenance & Sparepart Elektronik</p>
+                            
+                            <div class="mt-4">
+                                <label class="small fw-bold text-muted d-print-none">Kepada Yth:</label>
+                                <select id="selectPelanggan" class="form-select border-0 bg-light fw-bold mb-1 rounded-3" onchange="updateInfoPelanggan()">
+                                    <option value="">-- Pilih Pelanggan --</option>
+                                </select>
+                                <div id="penerimaAlamat" class="small text-muted" style="max-width: 250px;">-</div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div id="idQuote" class="fw-bold text-dark">#OFFER-AUTO</div>
+                            <input type="date" id="tglQuote" class="form-control form-control-sm border-0 bg-light text-end fw-bold shadow-none mt-2">
+                        </div>
+                    </div>
+
+                    <div class="mb-4 bg-light p-3 rounded-3">
+                        <label class="small fw-bold text-muted d-print-none text-uppercase">Perihal Pekerjaan:</label>
+                        <input type="text" id="perihal" class="form-control border-0 bg-transparent fw-bold p-0 fs-6" placeholder="Contoh: Pengadaan Unit AC & Pemasangan">
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr class="small text-uppercase">
+                                    <th class="py-3">Deskripsi Jasa / Barang</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Total Harga</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quoteBody">
+                                </tbody>
+                            <tfoot>
+                                <tr class="fs-5">
+                                    <td colspan="2" class="text-end fw-bold py-4">ESTIMASI TOTAL</td>
+                                    <td id="totalQuote" class="text-end fw-bold text-primary py-4">Rp 0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="input-area mt-4 p-3 rounded-4 bg-light d-print-none border-dashed border-2">
+                        <h6 class="fw-bold mb-3 small text-muted"><i class="bi bi-plus-circle me-1"></i> TAMBAH ITEM PENAWARAN</h6>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-5">
+                                <input type="text" id="addName" class="form-control border-0 rounded-3 shadow-sm" placeholder="Nama Jasa / Barang..." list="listHarga">
+                                <datalist id="listHarga"></datalist>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <input type="number" id="addPrice" class="form-control border-0 rounded-3 shadow-sm" placeholder="Harga (Rp)">
+                            </div>
+                            <div class="col-3 col-md-2">
+                                <input type="number" id="addQty" class="form-control border-0 rounded-3 shadow-sm text-center" value="1">
+                            </div>
+                            <div class="col-3 col-md-2">
+                                <button class="btn btn-primary w-100 rounded-3" onclick="addItem()"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 small text-muted">
+                        <p class="mb-1 fw-bold text-dark">Syarat & Ketentuan:</p>
+                        <ol class="ps-3">
+                            <li>Harga penawaran berlaku selama 14 hari kerja.</li>
+                            <li>Pembayaran dapat dilakukan setelah pengerjaan selesai / sesuai kesepakatan.</li>
+                        </ol>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 text-md-end">
-                <label class="small fw-bold text-primary">TANGGAL:</label>
-                <input type="date" id="quoteDate" class="form-control border-0 bg-light p-2 text-md-end">
+
+            <div class="tab-pane fade" id="content-list">
+                <div class="input-group bg-white rounded-4 shadow-sm mb-3 p-1">
+                    <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="filterSearch" class="form-control border-0 shadow-none" placeholder="Cari penawaran atau pelanggan..." onkeyup="renderQuoteCards()">
+                </div>
+                <div id="loadingQuote" class="text-center py-5" style="display:none;">
+                    <div class="spinner-border text-primary"></div>
+                </div>
+                <div id="historyQuoteBody"></div>
             </div>
-        </div>
-
-        <div class="mb-4">
-            <p>Dengan hormat,<br>Bersama ini kami sampaikan rincian estimasi biaya untuk pekerjaan/pengadaan sebagai berikut:</p>
-        </div>
-
-        <table class="table table-bordered align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th width="50%">Deskripsi Pekerjaan/Material</th>
-                    <th class="text-center">Qty</th>
-                    <th class="text-end">Harga Satuan</th>
-                    <th class="text-end">Total</th>
-                    <th class="text-center no-print">#</th>
-                </tr>
-            </thead>
-            <tbody id="quoteBody">
-                </tbody>
-            <tfoot class="table-light fw-bold">
-                <tr>
-                    <td colspan="3" class="text-end">GRAND TOTAL ESTIMASI</td>
-                    <td class="text-end text-primary" id="dispTotal">Rp 0</td>
-                    <td class="no-print"></td>
-                </tr>
-            </tfoot>
-        </table>
-
-        <div class="input-group-custom no-print">
-            <h6 class="fw-bold mb-3"><i class="bi bi-plus-square-fill me-2"></i>Tambah Item Penawaran</h6>
-            <div class="row g-2">
-                <div class="col-md-5">
-                    <input type="text" id="itemName" class="form-control border-0" placeholder="Nama Jasa / Part">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" id="itemPrice" class="form-control border-0" placeholder="Harga">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" id="itemQty" class="form-control border-0" value="1">
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-dark w-100 rounded-3" onclick="addItemToQuote()">Tambah</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-5">
-            <p class="small text-muted">* Penawaran ini berlaku selama 14 hari kerja.<br>* Harga sudah termasuk pajak (jika ada) dan biaya jasa teknisi.</p>
         </div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/config.js"></script>
-<script src="js/template-dokumen.js"></script>
 
 <script>
-    const { jsPDF } = window.jspdf;
-    let items = [];
+    let currentItems = [];
+    let pelangganData = [];
+    let hargaData = [];
+    let quoteHistory = [];
 
-    // Set default tanggal hari ini
-    document.getElementById('quoteDate').valueAsDate = new Date();
+    document.addEventListener("DOMContentLoaded", async () => {
+        document.getElementById('tglQuote').valueAsDate = new Date();
+        document.getElementById('idQuote').innerText = `OFFR-${Date.now().toString().slice(-6)}`;
+        await Promise.all([fetchPelanggan(), fetchHarga()]);
+    });
 
-    function addItemToQuote() {
-        const name = document.getElementById('itemName').value;
-        const price = parseInt(document.getElementById('itemPrice').value);
-        const qty = parseInt(document.getElementById('itemQty').value);
-
-        if(!name || !price) return;
-
-        items.push({ name, price, qty, total: price * qty });
-        renderTable();
-        
-        // Clear input
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemPrice').value = '';
+    async function fetchPelanggan() {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
+        pelangganData = await res.json();
+        let opt = '<option value="">-- Pilih Pelanggan --</option>';
+        pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
+        document.getElementById('selectPelanggan').innerHTML = opt;
     }
 
-    function renderTable() {
+    async function fetchHarga() {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
+        hargaData = await res.json();
+        let listHtml = '';
+        hargaData.forEach(h => {
+            const n = h.nama || h.Nama || h.Jasa;
+            const p = h.harga || h.Harga;
+            listHtml += `<option value="${n}">Rp ${parseInt(p).toLocaleString()}</option>`;
+        });
+        document.getElementById('listHarga').innerHTML = listHtml;
+    }
+
+    // Auto-price fill
+    document.getElementById('addName').addEventListener('input', (e) => {
+        const item = hargaData.find(x => (x.nama || x.Nama || x.Jasa) === e.target.value);
+        if (item) document.getElementById('addPrice').value = item.harga || item.Harga;
+    });
+
+    function addItem() {
+        const n = document.getElementById('addName').value;
+        const p = parseInt(document.getElementById('addPrice').value);
+        const q = parseInt(document.getElementById('addQty').value);
+        if(!n || isNaN(p)) return;
+        
+        currentItems.push({ item: n, price: p, qty: q, total: p * q });
+        renderItems();
+        document.getElementById('addName').value = '';
+        document.getElementById('addPrice').value = '';
+    }
+
+    function renderItems() {
         let html = '';
-        let grandTotal = 0;
-        items.forEach((item, i) => {
-            grandTotal += item.total;
+        let total = 0;
+        currentItems.forEach((it, i) => {
+            total += it.total;
             html += `
                 <tr>
-                    <td>${item.name}</td>
-                    <td class="text-center">${item.qty}</td>
-                    <td class="text-end">Rp ${item.price.toLocaleString()}</td>
-                    <td class="text-end">Rp ${item.total.toLocaleString()}</td>
-                    <td class="text-center no-print">
-                        <i class="bi bi-trash text-danger pointer" onclick="items.splice(${i},1);renderTable()"></i>
+                    <td>
+                        <div class="fw-bold">${it.item}</div>
+                        <div class="text-muted small">@ Rp ${it.price.toLocaleString()}</div>
                     </td>
-                </tr>
-            `;
+                    <td class="text-center">
+                        <div class="qty-control d-print-none">
+                            <i class="bi bi-dash-circle qty-btn" onclick="updateQty(${i}, -1)"></i>
+                            <span class="fw-bold">${it.qty}</span>
+                            <i class="bi bi-plus-circle qty-btn" onclick="updateQty(${i}, 1)"></i>
+                        </div>
+                        <span class="d-none d-print-block">${it.qty}</span>
+                    </td>
+                    <td class="text-end fw-bold">Rp ${it.total.toLocaleString()}</td>
+                </tr>`;
         });
-        document.getElementById('quoteBody').innerHTML = html;
-        document.getElementById('dispTotal').innerText = "Rp " + grandTotal.toLocaleString();
+        document.getElementById('quoteBody').innerHTML = html || '<tr><td colspan="3" class="text-center py-4 text-muted small">Belum ada item ditambahkan</td></tr>';
+        document.getElementById('totalQuote').innerText = "Rp " + total.toLocaleString();
     }
 
-    async function generateQuotationPDF() {
-        const doc = new jsPDF();
-        const noDoc = document.getElementById('dispNo').innerText;
-        const custName = document.getElementById('custName').value || "Pelanggan Terhormat";
-        const custAddr = document.getElementById('custAddr').value || "-";
-        const tgl = document.getElementById('quoteDate').value;
+    function updateQty(i, delta) {
+        currentItems[i].qty += delta;
+        if (currentItems[i].qty <= 0) currentItems.splice(i, 1);
+        else currentItems[i].total = currentItems[i].qty * currentItems[i].price;
+        renderItems();
+    }
 
-        // 1. Pakai Header dari template-dokumen.js
-        window.docTemplate.header(doc, "PENAWARAN HARGA", noDoc);
+    function updateInfoPelanggan() {
+        const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
+        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : '-';
+    }
 
-        // 2. Info Pelanggan
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.text("KEPADA YTH:", 14, 55);
-        doc.setFont("helvetica", "normal");
-        doc.text(custName, 14, 60);
-        doc.text(custAddr, 14, 65, { maxWidth: 80 });
-        doc.text("Tanggal: " + tgl, 196, 60, { align: "right" });
+    async function savePenawaran() {
+        const id = document.getElementById('idQuote').innerText;
+        const perihal = document.getElementById('perihal').value;
+        const email = document.getElementById('selectPelanggan').value;
+        const totalVal = currentItems.reduce((s, i) => s + i.total, 0);
 
-        // 3. Kata Pengantar
-        doc.text("Bersama ini kami lampirkan estimasi biaya pekerjaan AC:", 14, 80);
+        if(!email || !perihal || currentItems.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
 
-        // 4. Tabel
-        const tableData = items.map(i => [i.name, i.qty, i.price.toLocaleString(), i.total.toLocaleString()]);
-        doc.autoTable({
-            startY: 85,
-            head: [['Deskripsi Pekerjaan/Material', 'Qty', 'Harga Satuan', 'Total']],
-            body: tableData,
-            theme: 'striped',
-            headStyles: { fillColor: [40, 40, 40] },
-            foot: [['', '', 'GRAND TOTAL', document.getElementById('dispTotal').innerText]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+        try {
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'insert', sheet: 'Penawaran',
+                    data: { 
+                        id: id, tanggal: document.getElementById('tglQuote').value, email: email, 
+                        items_json: JSON.stringify(currentItems), total: totalVal, status: 'Pending', perihal: perihal 
+                    }
+                })
+            });
+            Swal.fire('Berhasil!', 'Penawaran telah disimpan.', 'success').then(() => location.reload());
+        } catch (e) { Swal.fire('Gagal', 'Terjadi kesalahan sistem', 'error'); }
+    }
+
+    async function fetchQuoteHistory() {
+        document.getElementById('loadingQuote').style.display = 'block';
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Penawaran' }) });
+            quoteHistory = await res.json();
+            renderQuoteCards();
+        } catch (e) { console.error(e); }
+        document.getElementById('loadingQuote').style.display = 'none';
+    }
+
+    function renderQuoteCards() {
+        const search = document.getElementById('filterSearch').value.toLowerCase();
+        const container = document.getElementById('historyQuoteBody');
+        const filtered = quoteHistory.filter(q => q.id.toLowerCase().includes(search) || q.email.toLowerCase().includes(search)).reverse();
+        
+        container.innerHTML = filtered.map(q => {
+            const p = pelangganData.find(x => x.email === q.email);
+            const statusClass = `badge-${q.status.toLowerCase()}`;
+            return `
+            <div class="history-card shadow-sm p-3 mb-3 border-start border-4 border-primary">
+                <div class="d-flex justify-content-between mb-2">
+                    <div><span class="fw-bold text-primary">${q.id}</span><br><small class="text-muted">${q.tanggal}</small></div>
+                    <span class="badge ${statusClass} rounded-pill align-self-center" onclick="updateStatus('${q.id}', '${q.status}')" style="cursor:pointer">
+                        ${q.status} <i class="bi bi-arrow-repeat"></i>
+                    </span>
+                </div>
+                <div class="fw-bold text-dark mt-2">${q.perihal}</div>
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                    <small class="fw-bold text-muted">${p ? p.nama : q.email}</small>
+                    <div class="text-end">
+                        <div class="fw-bold text-success">Rp ${parseInt(q.total).toLocaleString()}</div>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill mt-1 px-3" onclick="viewQuote('${q.id}')">Buka</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function updateStatus(id, old) {
+        const { value: newStatus } = await Swal.fire({
+            title: 'Ubah Status',
+            input: 'select',
+            inputOptions: { 'Pending': 'Pending', 'Approved': 'Approved', 'Rejected': 'Rejected' },
+            inputValue: old,
+            showCancelButton: true
         });
+        if (newStatus) {
+            Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'update', sheet: 'Penawaran', key: 'id', id: id, data: { status: newStatus } })
+            });
+            fetchQuoteHistory();
+            Swal.close();
+        }
+    }
 
-        // 5. Syarat & Ketentuan (Sederhana)
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(9);
-        doc.text("Catatan:", 14, finalY);
-        doc.text("- Harga tidak mengikat, sewaktu-waktu dapat berubah.", 14, finalY + 5);
-        doc.text("- Konfirmasi pekerjaan minimal 1 hari sebelumnya.", 14, finalY + 10);
-
-        // 6. Pakai Footer dari template-dokumen.js
-        window.docTemplate.footer(doc);
-
-        doc.save(`Penawaran-${custName}.pdf`);
+    function viewQuote(id) {
+        const q = quoteHistory.find(x => x.id === id);
+        if(q) {
+            document.getElementById('idQuote').innerText = q.id;
+            document.getElementById('perihal').value = q.perihal;
+            document.getElementById('tglQuote').value = q.tanggal;
+            document.getElementById('selectPelanggan').value = q.email;
+            updateInfoPelanggan();
+            currentItems = JSON.parse(q.items_json);
+            renderItems();
+            new bootstrap.Tab(document.getElementById('tab-buat')).show();
+        }
     }
 </script>
-
 </body>
 </html>
