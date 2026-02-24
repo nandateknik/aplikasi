@@ -29,8 +29,8 @@
         .section-title { font-weight: 800; color: #333; margin: 20px 0 10px 5px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
         .cart-item { background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 5px solid var(--premium-blue); }
         
-        /* Fix for potential header issues */
-        #header-container { width: 100%; }
+        /* Header Fix */
+        #header-container { width: 100%; min-height: 60px; }
     </style>
 </head>
 <body class="bg-light">
@@ -58,7 +58,7 @@
                 <select id="selectPelanggan" class="form-select border-0 bg-light mb-2" onchange="handlePelangganChange()">
                     <option value="">-- Pilih Pelanggan --</option>
                 </select>
-                <input type="text" id="judulBooking" class="form-control border-0 bg-light mb-2" placeholder="Judul Pekerjaan (Contoh: Service AC)">
+                <input type="text" id="judulBooking" class="form-control border-0 bg-light mb-2" placeholder="Judul Pekerjaan">
                 <input type="date" id="tglPekerjaan" class="form-control border-0 bg-light">
             </div>
 
@@ -75,27 +75,20 @@
 
             <div class="section-title">Pilih Jasa / Part</div>
             <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
-                <label class="small text-muted mb-1">Ambil dari Daftar Harga:</label>
                 <select id="selectHarga" class="form-select border-0 bg-light mb-3" onchange="addFromMaster()">
-                    <option value="">-- Pilih Jasa/Part --</option>
+                    <option value="">-- Pilih Dari Daftar --</option>
                 </select>
 
                 <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <input type="text" id="manualName" class="form-control border-0 bg-light" placeholder="Nama Jasa/Part">
-                    </div>
-                    <div class="col-5">
-                        <input type="number" id="manualPrice" class="form-control border-0 bg-light" placeholder="Harga">
-                    </div>
+                    <div class="col-12"><input type="text" id="manualName" class="form-control border-0 bg-light" placeholder="Nama Jasa/Part"></div>
+                    <div class="col-5"><input type="number" id="manualPrice" class="form-control border-0 bg-light" placeholder="Harga"></div>
                     <div class="col-4">
                         <div class="input-group">
                             <span class="input-group-text border-0 bg-light small" style="font-size: 0.7rem;">Qty</span>
                             <input type="number" id="qtyItem" class="form-control border-0 bg-light text-center" value="1">
                         </div>
                     </div>
-                    <div class="col-3">
-                        <button class="btn btn-primary w-100" onclick="addToCart()"><i class="bi bi-plus-lg"></i></button>
-                    </div>
+                    <div class="col-3"><button class="btn btn-primary w-100" onclick="addToCart()"><i class="bi bi-plus-lg"></i></button></div>
                 </div>
 
                 <div id="cartList"></div>
@@ -162,7 +155,7 @@
             hargaData.forEach(h => {
                 let nama = h.nama || h.Jasa;
                 let harga = h.harga || h.Harga;
-                opt += `<option value="${nama}" data-price="${harga}">${nama} (Rp ${parseInt(harga).toLocaleString()})</option>`;
+                opt += `<option value="${nama}" data-price="${harga}">${nama}</option>`;
             });
             document.getElementById('selectHarga').innerHTML = opt;
         } catch (e) { console.error(e); }
@@ -183,10 +176,16 @@
         const qty = parseInt(document.getElementById('qtyItem').value) || 1;
         if(!name || isNaN(price)) return Swal.fire('Error', 'Lengkapi Nama & Harga', 'error');
 
-        cart.push({ item: name, price: price, qty: qty, total: price * qty });
-        renderCart();
+        // LOGIC GABUNG ITEM SAMA
+        const existingIndex = cart.findIndex(item => item.item === name);
+        if (existingIndex > -1) {
+            cart[existingIndex].qty += qty;
+            cart[existingIndex].total = cart[existingIndex].qty * cart[existingIndex].price;
+        } else {
+            cart.push({ item: name, price: price, qty: qty, total: price * qty });
+        }
         
-        // Reset form
+        renderCart();
         document.getElementById('manualName').value = '';
         document.getElementById('manualPrice').value = '';
         document.getElementById('qtyItem').value = 1;
@@ -231,8 +230,7 @@
         container.innerHTML = historyData.slice().reverse().map((h, index) => {
             const nota = notaData.find(n => n.id === h.id_nota);
             const prog = JSON.parse(h.progress_json || '[]');
-            
-            let bColor = "bg-warning text-dark"; // Default Pending
+            let bColor = "bg-warning text-dark"; 
             if(h.status.includes("Selesai")) bColor = "bg-success text-white";
             if(h.status.includes("Proses")) bColor = "bg-primary text-white";
 
@@ -249,12 +247,11 @@
                         <div class="fw-bold text-primary">Rp ${parseInt(nota ? nota.total : 0).toLocaleString()} <i class="bi bi-chevron-down ms-1"></i></div>
                     </div>
                 </div>
-
                 <div id="collapse${index}" class="collapse">
                     <div class="timeline-container">
                         <div class="d-flex gap-2 mb-3">
-                            <button class="btn btn-sm btn-primary flex-fill rounded-pill py-2" onclick="openUpdateModal('${h.id}')">Update Status</button>
-                            <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-outline-dark flex-fill rounded-pill py-2">Buka Nota</a>
+                            <button class="btn btn-sm btn-primary flex-fill rounded-pill py-2" onclick="openUpdateModal('${h.id}')">Update</button>
+                            <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-outline-dark flex-fill rounded-pill py-2">Nota</a>
                         </div>
                         ${prog.slice().reverse().map(p => `
                             <div class="timeline-item">
@@ -270,7 +267,6 @@
         }).join('');
     }
 
-    // --- OTHER LOGIC ---
     function openUpdateModal(id) {
         document.getElementById('updateId').value = id;
         new bootstrap.Modal(document.getElementById('modalProgress')).show();
@@ -281,7 +277,6 @@
         const status = document.getElementById('updateStatus').value;
         const item = historyData.find(x => x.id === id);
         let prog = JSON.parse(item.progress_json || '[]');
-        
         prog.push({ 
             status: status, 
             keterangan: document.getElementById('updateKeterangan').value, 
@@ -289,7 +284,6 @@
             jam: new Date().toLocaleTimeString(), 
             teknisi: document.getElementById('updateTeknisi').value || '-' 
         });
-
         Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
         await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ 
             action: 'update', sheet: 'Booking', key: 'id', id: id, 
