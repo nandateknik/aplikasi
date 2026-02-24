@@ -35,7 +35,7 @@ const CONFIG = {
 // --- REGISTRASI SERVICE WORKER (PWA) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('assets/sw.js')
             .then(reg => console.log('PWA: Service Worker aktif neng scope:', reg.scope))
             .catch(err => console.error('PWA: Gagal registrasi SW:', err));
     });
