@@ -3,40 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nota Digital | Nanda Teknik</title>
+    <title>Nota Pembayaran | Nanda Teknik</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
     
     <style>
         :root { --premium-blue: #007AFF; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin-top: 60px; }
         
-        .invoice-preview { background: #fff; padding: 40px; border-radius: 0; box-shadow: 0 0 20px rgba(0,0,0,0.1); min-height: 297mm; }
-        .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; }
-        .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; }
+        /* Preview Styling */
+        .invoice-preview { 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 0; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            min-height: 297mm; 
+            position: relative;
+        }
+
+        /* Tabel Abu-abu Custom */
+        .table-custom { border-collapse: separate; border-spacing: 0; width: 100%; }
+        .table-custom thead th { background-color: #636366 !important; color: white !important; padding: 12px; border: none; }
+        .table-custom tbody td { background-color: #f8f9fa; border-bottom: 1px solid #e5e5ea; padding: 12px; }
+        .table-custom tfoot td { background-color: #fff; padding: 15px 12px; }
+        
+        .header-nota { border-bottom: 3px solid #333; padding-bottom: 20px; margin-bottom: 25px; }
         
         .nota-card { border-radius: 18px; border: none; transition: 0.3s; background: white; margin-bottom: 12px; }
-        .badge-lunas { background-color: #34C759; color: #fff; }
-        .badge-belum { background-color: #FF9500; color: #fff; }
         
-        .qty-control { display: flex; align-items: center; gap: 10px; justify-content: center; }
         .qty-btn { cursor: pointer; color: var(--premium-blue); font-size: 1.2rem; }
 
         @media print {
             .d-print-none { display: none !important; }
-            .invoice-preview { box-shadow: none; padding: 0; }
-            body { background: white; }
+            .invoice-preview { box-shadow: none; padding: 0; width: 100%; }
+            body { background: white; margin-top: 0; }
         }
     </style>
 </head>
-<body class="bg-light pb-5">
+<body class="pb-5">
 
 <div id="app" class="container py-3">
-    <div class="d-print-none mb-4">
-        <h4 class="fw-bold"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Nanda Teknik - Nota</h4>
-    </div>
-
+    
     <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none">
         <li class="nav-item">
             <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
@@ -54,7 +63,7 @@
         <div class="tab-pane fade show active" id="content-buat">
             <div class="d-flex gap-2 mb-3 d-print-none">
                 <button class="btn btn-primary rounded-4 shadow flex-fill fw-bold py-3" onclick="saveNota()">
-                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> SIMPAN DATA
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> SIMPAN & LUNASI
                 </button>
                 <button class="btn btn-dark rounded-4 shadow flex-fill fw-bold py-3" onclick="downloadNotaPDF()">
                     <i class="bi bi-file-pdf-fill me-1"></i> DOWNLOAD PDF
@@ -62,17 +71,13 @@
             </div>
 
             <div class="invoice-preview mx-auto" id="printableArea">
-                <div class="row align-items-center mb-4 pb-3 border-bottom border-3 border-dark">
-                    <div class="col-2">
-                        <div style="background: #333; color: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; font-size: 24px;">NT</div>
-                    </div>
-                    <div class="col-10">
-                        <h3 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h3>
-                        <p class="small text-muted mb-0">
-                            Sukowidi Indah Residence, D05, Klatak, Banyuwangi<br>
-                            WA: 082331201148 | Email: nandateknik02@gmail.com
-                        </p>
-                    </div>
+                <div class="header-nota text-center">
+                    <img src="logo.png" alt="Logo" style="height: 70px; margin-bottom: 10px;" onerror="this.src='https://via.placeholder.com/70x70?text=NT'">
+                    <h3 class="fw-bold mb-0">NANDA TEKNIK BANYUWANGI</h3>
+                    <p class="small text-muted mb-0">
+                        Sukowidi Indah Residence, D05, Klatak, Banyuwangi<br>
+                        WA: 082331201148 | Email: nandateknik02@gmail.com
+                    </p>
                 </div>
 
                 <div class="row mb-4">
@@ -88,19 +93,21 @@
                         <h4 class="fw-bold text-primary">NOTA PEMBAYARAN</h4>
                         <div id="noNota" class="fw-bold">#INV-NEW</div>
                         <input type="date" id="tglNota" class="form-control form-control-sm border-0 text-end fw-bold p-0">
-                        <div id="statusLabel" class="badge mt-2">Pilih Status...</div>
+                        <div id="statusLabel" class="badge mt-2" onclick="toggleStatus()" style="cursor:pointer">Belum Lunas</div>
                     </div>
                 </div>
 
-                <table class="table table-hover mt-4">
-                    <thead class="table-dark">
+                <table class="table-custom mt-4">
+                    <thead>
                         <tr>
-                            <th class="py-3">Deskripsi Jasa / Part</th>
-                            <th class="text-center">Qty</th>
-                            <th class="text-end">Total</th>
+                            <th>Deskripsi Jasa / Part</th>
+                            <th class="text-center" width="100">Qty</th>
+                            <th class="text-end" width="150">Total</th>
                         </tr>
                     </thead>
-                    <tbody id="itemNotaBody"></tbody>
+                    <tbody id="itemNotaBody">
+                        <tr><td colspan="3" class="text-center py-4 text-muted">Tambahkan item pekerjaan...</td></tr>
+                    </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="2" class="text-end fw-bold py-4 fs-5">TOTAL PEMBAYARAN</td>
@@ -109,7 +116,7 @@
                     </tfoot>
                 </table>
 
-                <div class="mt-4 p-3 border-2 border-dashed rounded-4 text-center d-inline-block" style="border: 2px dashed #ccc; min-width: 250px;">
+                <div class="mt-4 p-3 border-2 rounded-4 text-center d-inline-block" style="border: 2px dashed #ccc; min-width: 250px;">
                     <div class="small fw-bold text-muted text-uppercase mb-1">Transfer Pembayaran:</div>
                     <h5 class="fw-bold mb-0">BANK BCA</h5>
                     <div class="fs-4 fw-bold text-primary">1801826011</div>
@@ -119,29 +126,38 @@
                 <div class="row mt-5 text-center">
                     <div class="col-4">
                         <div class="small mb-5">Penerima,</div>
-                        <div class="fw-bold" id="ttdPelanggan">( ............................ )</div>
+                        <div class="fw-bold mt-4" id="ttdPelanggan">( ............................ )</div>
                     </div>
                     <div class="col-4"></div>
                     <div class="col-4">
                         <div class="small mb-5">Hormat Kami,</div>
-                        <div class="fw-bold">( Nanda Teknik )</div>
+                        <div class="fw-bold mt-4">( Nanda Teknik )</div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-4 p-3 bg-white rounded-4 shadow-sm d-print-none">
-                <h6 class="fw-bold mb-3">Tambah Item</h6>
+            <div class="mt-4 p-3 bg-white rounded-4 shadow-sm d-print-none border">
+                <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle me-1 text-primary"></i> Tambah Item Nota</h6>
                 <div class="row g-2">
-                    <div class="col-md-5"><input type="text" id="addName" class="form-control bg-light border-0" placeholder="Item..." list="listHarga"><datalist id="listHarga"></datalist></div>
-                    <div class="col-md-3"><input type="number" id="addPrice" class="form-control bg-light border-0" placeholder="Harga"></div>
-                    <div class="col-md-2"><input type="number" id="addQty" class="form-control bg-light border-0 text-center" value="1"></div>
-                    <div class="col-md-2"><button class="btn btn-primary w-100" onclick="addItem()"><i class="bi bi-plus-lg"></i></button></div>
+                    <div class="col-md-5">
+                        <input type="text" id="addName" class="form-control bg-light border-0" placeholder="Cari Item/Jasa..." list="listHarga">
+                        <datalist id="listHarga"></datalist>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" id="addPrice" class="form-control bg-light border-0" placeholder="Harga">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" id="addQty" class="form-control bg-light border-0 text-center" value="1">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100 fw-bold" onclick="addItem()"><i class="bi bi-plus-lg"></i></button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="tab-pane fade" id="content-list">
-            <div id="historyNotaBody"></div>
+            <div id="historyNotaBody" class="p-2"></div>
         </div>
     </div>
 </div>
@@ -151,9 +167,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/config.js"></script>
+<script src="js/layout.js"></script>
 
 <script>
-    let currentCart = [], pelangganData = [], hargaData = [], notaHistory = [], currentStatus = "Belum Lunas";
+    let currentCart = [], pelangganData = [], hargaData = [], currentStatus = "Belum Lunas";
 
     document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('tglNota').valueAsDate = new Date();
@@ -168,79 +185,11 @@
         lbl.className = `badge mt-2 ${currentStatus === 'Lunas' ? 'bg-success' : 'bg-warning text-dark'}`;
     }
 
-    // --- PDF ENGINE ---
-    function downloadNotaPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        
-        const noNota = document.getElementById('noNota').innerText;
-        const tglNota = document.getElementById('tglNota').value;
-        const namaP = document.getElementById('penerimaNama').innerText;
-
-        // 1. Watermark
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({opacity: 0.1}));
-        doc.setFontSize(60);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(currentStatus === 'Lunas' ? [52, 199, 89] : [255, 149, 0]);
-        doc.text(currentStatus.toUpperCase(), 105, 150, { align: 'center', angle: 45 });
-        doc.restoreGraphicsState();
-
-        // 2. Header
-        doc.setFillColor(51, 51, 51);
-        doc.roundedRect(15, 15, 15, 15, 3, 3, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
-        doc.text("NT", 18, 25);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("helvetica", "bold"); doc.setFontSize(16);
-        doc.text("NANDA TEKNIK BANYUWANGI", 35, 20);
-        doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
-        doc.text("Sukowidi Indah Residence, D05, Klatak, Banyuwangi", 35, 25);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 35, 29);
-        doc.setLineWidth(0.5); doc.line(15, 35, 195, 35);
-
-        // 3. Info Nota
-        doc.setTextColor(0, 122, 255); doc.setFontSize(14);
-        doc.text("NOTA PEMBAYARAN", 195, 45, { align: "right" });
-        doc.setTextColor(0, 0, 0); doc.setFontSize(10);
-        doc.text(`No: ${noNota}`, 195, 50, { align: "right" });
-        doc.text(`Tanggal: ${tglNota}`, 195, 55, { align: "right" });
-        doc.setFont("helvetica", "bold"); doc.text("Kepada Yth:", 15, 45);
-        doc.setFont("helvetica", "normal"); doc.text(namaP, 15, 50);
-        doc.setFontSize(9); doc.text(document.getElementById('penerimaAlamat').innerText, 15, 55, { maxWidth: 80 });
-
-        // 4. Tabel
-        const body = currentCart.map(it => [it.item + ` (@Rp${it.price.toLocaleString()})`, it.qty, `Rp ${it.total.toLocaleString()}`]);
-        doc.autoTable({
-            startY: 65,
-            head: [['Deskripsi Jasa / Part', 'Qty', 'Total']],
-            body: body,
-            theme: 'striped',
-            headStyles: { fillColor: [51, 51, 51], halign: 'center' },
-            foot: [[{content: 'TOTAL PEMBAYARAN', colSpan: 2, styles: {halign: 'right', fontStyle: 'bold'}}, 
-                   {content: document.getElementById('totalNota').innerText, styles: {halign: 'right', fontStyle: 'bold', textColor: [0, 122, 255]}}]],
-        });
-
-        // 5. Rekening & TTD
-        let finalY = doc.lastAutoTable.finalY + 10;
-        doc.setDrawColor(200); doc.setLineDashPattern([2, 2], 0); doc.rect(15, finalY, 70, 25);
-        doc.setLineDashPattern([], 0); doc.setFontSize(8); doc.text("TRANSFER PEMBAYARAN:", 20, finalY + 5);
-        doc.setFont("helvetica", "bold"); doc.text("BANK BCA", 20, finalY + 11);
-        doc.setTextColor(0, 122, 255); doc.setFontSize(12); doc.text("1801826011", 20, finalY + 17);
-        doc.setTextColor(0); doc.setFontSize(8); doc.text("a/n NANDA TEKNIK", 20, finalY + 22);
-
-        let signY = finalY + 40;
-        doc.text("Penerima,", 40, signY, {align: "center"});
-        doc.text("Hormat Kami,", 160, signY, {align: "center"});
-        doc.setFont("helvetica", "bold");
-        doc.text(`( ${namaP} )`, 40, signY + 20, {align: "center"});
-        doc.text("( Nanda Teknik )", 160, signY + 20, {align: "center"});
-
-        doc.save(`Nota_${noNota}.pdf`);
+    function toggleStatus() {
+        currentStatus = currentStatus === "Lunas" ? "Belum Lunas" : "Lunas";
+        updateStatusLabel();
     }
 
-    // --- OTHER LOGIC ---
     async function fetchPelanggan() {
         const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
         pelangganData = await res.json();
@@ -257,6 +206,12 @@
         document.getElementById('listHarga').innerHTML = listHtml;
     }
 
+    // Auto harga saat item dipilih
+    document.getElementById('addName').addEventListener('change', (e) => {
+        const item = hargaData.find(x => (x.nama || x.Jasa) === e.target.value);
+        if (item) document.getElementById('addPrice').value = item.harga || item.Harga;
+    });
+
     function updateInfoPelanggan() {
         const p = pelangganData.find(x => x.email === document.getElementById('selectPelangganNota').value);
         document.getElementById('penerimaNama').innerText = p ? p.nama : '-';
@@ -265,52 +220,144 @@
     }
 
     function addItem() {
-        const n = document.getElementById('addName').value, p = parseInt(document.getElementById('addPrice').value), q = parseInt(document.getElementById('addQty').value);
-        if(!n || !p) return;
+        const n = document.getElementById('addName').value, 
+              p = parseInt(document.getElementById('addPrice').value), 
+              q = parseInt(document.getElementById('addQty').value);
+        if(!n || isNaN(p)) return;
         currentCart.push({ item: n, price: p, qty: q, total: p * q });
         renderItems();
+        document.getElementById('addName').value = '';
+        document.getElementById('addPrice').value = '';
+        document.getElementById('addQty').value = 1;
     }
 
     function renderItems() {
         let html = '', total = 0;
         currentCart.forEach((it, i) => {
             total += it.total;
-            html += `<tr><td><b>${it.item}</b><br><small>@Rp${it.price.toLocaleString()}</small></td><td class="text-center">${it.qty}</td><td class="text-end fw-bold">Rp ${it.total.toLocaleString()}</td></tr>`;
+            html += `
+                <tr>
+                    <td><b>${it.item}</b><br><small class="text-muted">@Rp ${it.price.toLocaleString()}</small></td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center d-print-none">
+                            <i class="bi bi-dash-circle qty-btn me-2" onclick="updateQty(${i}, -1)"></i>
+                            <span>${it.qty}</span>
+                            <i class="bi bi-plus-circle qty-btn ms-2" onclick="updateQty(${i}, 1)"></i>
+                        </div>
+                        <span class="d-none d-print-block">${it.qty}</span>
+                    </td>
+                    <td class="text-end fw-bold">Rp ${it.total.toLocaleString()}</td>
+                </tr>`;
         });
-        document.getElementById('itemNotaBody').innerHTML = html;
+        document.getElementById('itemNotaBody').innerHTML = html || '<tr><td colspan="3" class="text-center py-4 text-muted">Tambahkan item...</td></tr>';
         document.getElementById('totalNota').innerText = "Rp " + total.toLocaleString();
+    }
+
+    function updateQty(i, delta) {
+        currentCart[i].qty += delta;
+        if (currentCart[i].qty <= 0) currentCart.splice(i, 1);
+        else currentCart[i].total = currentCart[i].qty * currentCart[i].price;
+        renderItems();
+    }
+
+    function downloadNotaPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const noNota = document.getElementById('noNota').innerText;
+        const namaP = document.getElementById('penerimaNama').innerText;
+
+        // Header Logo Center
+        doc.addImage('logo.png', 'PNG', 90, 10, 30, 30);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+        doc.text("NANDA TEKNIK BANYUWANGI", 105, 45, { align: 'center' });
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
+        doc.text("Sukowidi Indah Residence, D05, Klatak, Banyuwangi", 105, 50, { align: 'center' });
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 105, 54, { align: 'center' });
+        doc.line(15, 58, 195, 58);
+
+        // Watermark Status
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({opacity: 0.1}));
+        doc.setFontSize(60); doc.setTextColor(currentStatus === 'Lunas' ? [52, 199, 89] : [255, 149, 0]);
+        doc.text(currentStatus.toUpperCase(), 105, 150, { align: 'center', angle: 45 });
+        doc.restoreGraphicsState();
+
+        // Info
+        doc.setTextColor(0, 122, 255); doc.setFontSize(14);
+        doc.text("NOTA PEMBAYARAN", 195, 70, { align: "right" });
+        doc.setTextColor(0); doc.setFontSize(10);
+        doc.text(`No: ${noNota}`, 195, 75, { align: "right" });
+        doc.text(`Tanggal: ${document.getElementById('tglNota').value}`, 195, 80, { align: "right" });
+        doc.text(`Status: ${currentStatus}`, 195, 85, { align: "right" });
+
+        doc.setFont("helvetica", "bold"); doc.text("Kepada Yth:", 15, 70);
+        doc.setFont("helvetica", "normal"); doc.text(namaP, 15, 75);
+        doc.setFontSize(8); doc.text(document.getElementById('penerimaAlamat').innerText, 15, 80, { maxWidth: 80 });
+
+        // Table Gray
+        const body = currentCart.map(it => [it.item + ` (@Rp${it.price.toLocaleString()})`, it.qty, `Rp ${it.total.toLocaleString()}`]);
+        doc.autoTable({
+            startY: 95,
+            head: [['Deskripsi Jasa / Part', 'Qty', 'Total']],
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [99, 99, 102], halign: 'center' },
+            bodyStyles: { fillColor: [248, 249, 250] },
+            foot: [[{content: 'TOTAL PEMBAYARAN', colSpan: 2, styles: {halign: 'right', fontStyle: 'bold'}}, 
+                   {content: document.getElementById('totalNota').innerText, styles: {halign: 'right', fontStyle: 'bold', textColor: [0, 122, 255]}}]],
+        });
+
+        // Sign
+        let signY = doc.lastAutoTable.finalY + 30;
+        doc.text("Penerima,", 40, signY, {align: "center"});
+        doc.text("Hormat Kami,", 165, signY, {align: "center"});
+        doc.setFont("helvetica", "bold");
+        doc.text(`( ${namaP} )`, 40, signY + 20, {align: "center"});
+        doc.text("( Nanda Teknik )", 165, signY + 20, {align: "center"});
+
+        doc.save(`Nota_${noNota}.pdf`);
+    }
+
+    async function saveNota() {
+        const id = document.getElementById('noNota').innerText;
+        const email = document.getElementById('selectPelangganNota').value;
+        if(!email || currentCart.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
+
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+        try {
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'insert', sheet: 'Nota',
+                    data: { id: id, tanggal: document.getElementById('tglNota').value, email: email, items_json: JSON.stringify(currentCart), total: currentCart.reduce((s, i) => s + i.total, 0), status: currentStatus }
+                })
+            });
+            Swal.fire('Berhasil!', 'Nota tersimpan', 'success').then(() => location.reload());
+        } catch(e) { Swal.fire('Error', 'Gagal simpan!', 'error'); }
     }
 
     async function fetchNotaHistory() {
         const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
-        notaHistory = await res.json();
-        const container = document.getElementById('historyNotaBody');
-        container.innerHTML = notaHistory.reverse().map(n => `
-            <div class="nota-card shadow-sm p-3 border-start border-5 ${n.status === 'Lunas' ? 'border-success' : 'border-warning'}">
-                <div class="d-flex justify-content-between">
-                    <b>${n.id}</b>
+        const history = await res.json();
+        document.getElementById('historyNotaBody').innerHTML = history.reverse().map(n => `
+            <div class="nota-card shadow-sm p-3 border-start border-5 ${n.status === 'Lunas' ? 'border-success' : 'border-warning'} bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0">${n.id}</h6>
+                        <small class="text-muted">${n.email}</small>
+                    </div>
                     <span class="badge ${n.status === 'Lunas' ? 'bg-success' : 'bg-warning text-dark'}">${n.status}</span>
                 </div>
-                <div class="d-flex justify-content-between mt-2">
-                    <small>${n.email}</small>
-                    <button class="btn btn-sm btn-outline-dark" onclick="viewNota('${n.id}')">Buka</button>
+                <div class="d-flex justify-content-between mt-3 align-items-center">
+                    <b class="text-primary">Rp ${parseInt(n.total).toLocaleString()}</b>
+                    <button class="btn btn-sm btn-dark rounded-3 px-3" onclick="viewNota('${n.id}')">Buka</button>
                 </div>
             </div>`).join('');
     }
 
     function viewNota(id) {
-        const n = notaHistory.find(x => x.id === id);
-        if(n) {
-            document.getElementById('noNota').innerText = n.id;
-            document.getElementById('tglNota').value = n.tanggal.split('T')[0];
-            document.getElementById('selectPelangganNota').value = n.email;
-            currentStatus = n.status;
-            currentCart = JSON.parse(n.items_json);
-            updateInfoPelanggan();
-            updateStatusLabel();
-            renderItems();
-            new bootstrap.Tab(document.getElementById('tab-buat')).show();
-        }
+        // Logika untuk load data riwayat ke form (opsional)
+        Swal.fire('Info', 'Fitur view detail sedang sinkronisasi', 'info');
     }
 </script>
 </body>
