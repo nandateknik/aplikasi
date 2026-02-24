@@ -12,24 +12,25 @@
 
     <style>
         :root { --premium-blue: #0056b3; }
-        /* Map styling agar presisi */
+        
+        /* Map styling */
         #mapBooking { height: 200px; border-radius: 15px; margin-bottom: 10px; z-index: 1; border: 2px solid #eee; width: 100%; }
         
-        /* Riwayat Card Modern */
+        /* Riwayat Card Accordion */
         .booking-card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #fff; margin-bottom: 15px; overflow: hidden; }
         .booking-header { padding: 15px; cursor: pointer; background: #fff; border-bottom: 1px solid #f8f9fa; }
         
-        /* Progress Timeline */
-        .timeline-container { padding: 15px; background: #fafafa; }
+        .timeline-container { padding: 15px; background: #fafafa; border-top: 1px solid #eee; }
         .timeline-item { border-left: 2px solid var(--premium-blue); padding-left: 15px; position: relative; padding-bottom: 15px; }
-        .timeline-item::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; background: var(--premium-blue); border-radius: 50%; }
+        .timeline-item::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; background: var(--premium-blue); border-radius: 50%; border: 2px solid #fff; }
         .timeline-item:last-child { border-left: 2px solid transparent; }
 
-        /* Badge Status */
-        .status-badge { font-size: 0.7rem; padding: 5px 10px; border-radius: 50px; font-weight: bold; text-transform: uppercase; }
-        
+        .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 50px; font-weight: bold; text-transform: uppercase; }
         .section-title { font-weight: 800; color: #333; margin: 20px 0 10px 5px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
         .cart-item { background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 8px; border-left: 5px solid var(--premium-blue); }
+        
+        /* Fix for potential header issues */
+        #header-container { width: 100%; }
     </style>
 </head>
 <body class="bg-light">
@@ -37,7 +38,7 @@
 <div id="header-container"></div> 
 
 <div id="app" class="container py-3 mb-5">
-    <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4" id="pills-tab" role="tablist">
+    <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4" id="pills-tab">
         <li class="nav-item">
             <button class="nav-link active rounded-4" data-bs-toggle="pill" data-bs-target="#content-input">
                 <i class="bi bi-plus-circle me-1"></i> Input Baru
@@ -45,23 +46,23 @@
         </li>
         <li class="nav-item">
             <button class="nav-link rounded-4" data-bs-toggle="pill" data-bs-target="#content-riwayat" onclick="fetchHistory()">
-                <i class="bi bi-clock-history me-1"></i> Riwayat
+                <i class="bi bi-clock-history me-1"></i> Riwayat Progress
             </button>
         </li>
     </ul>
 
     <div class="tab-content">
         <div class="tab-pane fade show active" id="content-input">
-            <div class="section-title">Informasi Pelanggan</div>
+            <div class="section-title">Data Pelanggan</div>
             <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
                 <select id="selectPelanggan" class="form-select border-0 bg-light mb-2" onchange="handlePelangganChange()">
                     <option value="">-- Pilih Pelanggan --</option>
                 </select>
-                <input type="text" id="judulBooking" class="form-control border-0 bg-light mb-2" placeholder="Judul Pekerjaan">
+                <input type="text" id="judulBooking" class="form-control border-0 bg-light mb-2" placeholder="Judul Pekerjaan (Contoh: Service AC)">
                 <input type="date" id="tglPekerjaan" class="form-control border-0 bg-light">
             </div>
 
-            <div class="section-title">Lokasi</div>
+            <div class="section-title">Lokasi & Alamat</div>
             <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
                 <div id="mapBooking"></div>
                 <button class="btn btn-sm btn-dark w-100 rounded-pill mb-2" onclick="getCurrentLocation()">GPS Sesuaikan Lokasi</button>
@@ -72,22 +73,29 @@
                 </div>
             </div>
 
-            <div class="section-title">Daftar Jasa & Part</div>
+            <div class="section-title">Pilih Jasa / Part</div>
             <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
-                <div class="mb-3">
-                    <label class="small text-muted mb-1">Pilih dari Master Data:</label>
-                    <select id="selectHarga" class="form-select border-0 bg-light" onchange="addFromMaster()">
-                        <option value="">-- Klik untuk mencari --</option>
-                    </select>
-                </div>
-
-                <div class="text-center mb-3"><span class="badge bg-secondary opacity-50">ATAU INPUT MANUAL</span></div>
+                <label class="small text-muted mb-1">Ambil dari Daftar Harga:</label>
+                <select id="selectHarga" class="form-select border-0 bg-light mb-3" onchange="addFromMaster()">
+                    <option value="">-- Pilih Jasa/Part --</option>
+                </select>
 
                 <div class="row g-2 mb-3">
-                    <div class="col-12"><input type="text" id="manualName" class="form-control border-0 bg-light" placeholder="Nama Jasa/Barang Manual"></div>
-                    <div class="col-5"><input type="number" id="manualPrice" class="form-control border-0 bg-light" placeholder="Harga"></div>
-                    <div class="col-4"><input type="number" id="qtyItem" class="form-control border-0 bg-light text-center" value="1"></div>
-                    <div class="col-3"><button class="btn btn-primary w-100" onclick="addToCart()"><i class="bi bi-plus-lg"></i></button></div>
+                    <div class="col-12">
+                        <input type="text" id="manualName" class="form-control border-0 bg-light" placeholder="Nama Jasa/Part">
+                    </div>
+                    <div class="col-5">
+                        <input type="number" id="manualPrice" class="form-control border-0 bg-light" placeholder="Harga">
+                    </div>
+                    <div class="col-4">
+                        <div class="input-group">
+                            <span class="input-group-text border-0 bg-light small" style="font-size: 0.7rem;">Qty</span>
+                            <input type="number" id="qtyItem" class="form-control border-0 bg-light text-center" value="1">
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <button class="btn btn-primary w-100" onclick="addToCart()"><i class="bi bi-plus-lg"></i></button>
+                    </div>
                 </div>
 
                 <div id="cartList"></div>
@@ -99,7 +107,7 @@
                     <div class="d-flex justify-content-between fw-bold text-primary fs-5"><span>TOTAL</span><span id="txtTotal">Rp 0</span></div>
                 </div>
                 
-                <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold mt-4" onclick="submitBooking()">SIMPAN BOOKING</button>
+                <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold mt-4 shadow" onclick="submitBooking()">SIMPAN BOOKING</button>
             </div>
         </div>
 
@@ -111,10 +119,10 @@
 
 <div id="nav-container"></div> 
 
-<div class="modal fade" id="modalProgress" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalProgress" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-5 p-3">
-            <h5 class="fw-bold mb-3 text-center">Update Progress</h5>
+            <h5 class="fw-bold mb-3 text-center">Update Progress Lapangan</h5>
             <input type="hidden" id="updateId">
             <select id="updateStatus" class="form-select border-0 bg-light p-3 rounded-4 mb-3">
                 <option value="Menunggu Teknisi">Menunggu Teknisi</option>
@@ -122,9 +130,9 @@
                 <option value="Selesai (Lunas)">Selesai (Lunas)</option>
                 <option value="Cancel">Cancel</option>
             </select>
-            <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4 mb-3" placeholder="Catatan..."></textarea>
+            <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4 mb-3" placeholder="Apa yang dikerjakan hari ini?"></textarea>
             <input type="text" id="updateTeknisi" class="form-control border-0 bg-light p-3 rounded-4 mb-3" placeholder="Nama Teknisi">
-            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold" onclick="saveProgress()">SIMPAN UPDATE</button>
+            <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow" onclick="saveProgress()">SIMPAN UPDATE</button>
         </div>
     </div>
 </div>
@@ -145,46 +153,44 @@
         if(typeof renderLayout === "function") renderLayout(); 
     });
 
-    // --- DAFTAR HARGA LOGIC ---
+    // --- LOGIC KERANJANG ---
     async function fetchHarga() {
         try {
             const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
             hargaData = await res.json();
-            let opt = '<option value="">-- Cari Jasa/Part --</option>';
+            let opt = '<option value="">-- Pilih Dari Master Data --</option>';
             hargaData.forEach(h => {
                 let nama = h.nama || h.Jasa;
                 let harga = h.harga || h.Harga;
-                opt += `<option value="${nama}" data-price="${harga}">${nama} - Rp ${parseInt(harga).toLocaleString()}</option>`;
+                opt += `<option value="${nama}" data-price="${harga}">${nama} (Rp ${parseInt(harga).toLocaleString()})</option>`;
             });
             document.getElementById('selectHarga').innerHTML = opt;
-        } catch (e) { console.error("Gagal load harga", e); }
+        } catch (e) { console.error(e); }
     }
 
     function addFromMaster() {
         const sel = document.getElementById('selectHarga');
         const opt = sel.options[sel.selectedIndex];
         if(!sel.value) return;
-
-        cart.push({
-            item: sel.value,
-            price: parseInt(opt.dataset.price),
-            qty: 1,
-            total: parseInt(opt.dataset.price)
-        });
-        renderCart();
-        sel.selectedIndex = 0; // Reset
+        document.getElementById('manualName').value = sel.value;
+        document.getElementById('manualPrice').value = opt.dataset.price;
+        document.getElementById('qtyItem').focus();
     }
 
     function addToCart() {
         const name = document.getElementById('manualName').value;
         const price = parseInt(document.getElementById('manualPrice').value);
         const qty = parseInt(document.getElementById('qtyItem').value) || 1;
-        if(!name || isNaN(price)) return;
-        
+        if(!name || isNaN(price)) return Swal.fire('Error', 'Lengkapi Nama & Harga', 'error');
+
         cart.push({ item: name, price: price, qty: qty, total: price * qty });
         renderCart();
+        
+        // Reset form
         document.getElementById('manualName').value = '';
         document.getElementById('manualPrice').value = '';
+        document.getElementById('qtyItem').value = 1;
+        document.getElementById('selectHarga').selectedIndex = 0;
     }
 
     function renderCart() {
@@ -193,18 +199,21 @@
                 <div><b>${c.item}</b><br><small>${c.qty} x Rp ${c.price.toLocaleString()}</small></div>
                 <div class="text-end">
                     <b>Rp ${c.total.toLocaleString()}</b><br>
-                    <i class="bi bi-trash text-danger" onclick="removeFromCart(${i})"></i>
+                    <i class="bi bi-trash text-danger" onclick="cart.splice(${i},1);renderCart()"></i>
                 </div>
             </div>`).join('');
         renderSummary();
     }
 
-    function removeFromCart(i) {
-        cart.splice(i, 1);
-        renderCart();
+    function renderSummary() {
+        const sub = cart.reduce((s, i) => s + i.total, 0);
+        const akoText = document.getElementById('txtAkomodasi').innerText;
+        const ako = parseInt(akoText.replace(/\D/g,'')) || 0;
+        document.getElementById('txtSubtotal').innerText = "Rp " + sub.toLocaleString();
+        document.getElementById('txtTotal').innerText = "Rp " + (sub + ako).toLocaleString();
     }
 
-    // --- RIWAYAT LOGIC ---
+    // --- LOGIC RIWAYAT ---
     async function fetchHistory() {
         const container = document.getElementById('historyList');
         container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
@@ -223,38 +232,36 @@
             const nota = notaData.find(n => n.id === h.id_nota);
             const prog = JSON.parse(h.progress_json || '[]');
             
-            // Warna Badge
-            let badgeColor = "bg-warning text-dark";
-            if(h.status.includes("Selesai")) badgeColor = "bg-success text-white";
-            if(h.status.includes("Proses")) badgeColor = "bg-primary text-white";
+            let bColor = "bg-warning text-dark"; // Default Pending
+            if(h.status.includes("Selesai")) bColor = "bg-success text-white";
+            if(h.status.includes("Proses")) bColor = "bg-primary text-white";
 
             return `
             <div class="booking-card">
                 <div class="booking-header" data-bs-toggle="collapse" data-bs-target="#collapse${index}">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="status-badge ${badgeColor}">${h.status}</span>
-                        <small class="text-muted">${h.tanggal}</small>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="status-badge ${bColor}">${h.status}</span>
+                        <small class="text-muted" style="font-size:10px">${h.id}</small>
                     </div>
                     <h6 class="fw-bold mb-1">${h.judul}</h6>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="fw-bold text-primary">Rp ${parseInt(nota ? nota.total : 0).toLocaleString()}</span>
-                        <i class="bi bi-chevron-down"></i>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">${h.tanggal}</span>
+                        <div class="fw-bold text-primary">Rp ${parseInt(nota ? nota.total : 0).toLocaleString()} <i class="bi bi-chevron-down ms-1"></i></div>
                     </div>
                 </div>
 
                 <div id="collapse${index}" class="collapse">
                     <div class="timeline-container">
                         <div class="d-flex gap-2 mb-3">
-                            <button class="btn btn-sm btn-primary flex-fill rounded-pill" onclick="openUpdateModal('${h.id}')">Update</button>
-                            <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-outline-dark flex-fill rounded-pill">Nota</a>
+                            <button class="btn btn-sm btn-primary flex-fill rounded-pill py-2" onclick="openUpdateModal('${h.id}')">Update Status</button>
+                            <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-outline-dark flex-fill rounded-pill py-2">Buka Nota</a>
                         </div>
-                        <div class="small fw-bold mb-2">Progress Lapangan:</div>
                         ${prog.slice().reverse().map(p => `
                             <div class="timeline-item">
                                 <div class="fw-bold" style="font-size:0.8rem">${p.status}</div>
                                 <div class="text-muted" style="font-size:0.7rem">${p.tanggal} - ${p.jam}</div>
-                                <div class="small mt-1 text-secondary italic">"${p.keterangan || '-'}"</div>
-                                <div class="small fw-bold text-dark" style="font-size:0.7rem">Teknisi: ${p.teknisi}</div>
+                                <div class="small mt-1 text-secondary">"${p.keterangan || '-'}"</div>
+                                <div class="small fw-bold" style="font-size:0.7rem">Teknisi: ${p.teknisi}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -263,7 +270,7 @@
         }).join('');
     }
 
-    // --- FUNCTIONS LAINNYA ---
+    // --- OTHER LOGIC ---
     function openUpdateModal(id) {
         document.getElementById('updateId').value = id;
         new bootstrap.Modal(document.getElementById('modalProgress')).show();
@@ -337,13 +344,6 @@
         let akomodasi = dist > 7 ? Math.ceil(dist - 7) * 10000 : 0;
         document.getElementById('txtAkomodasi').innerText = "Rp " + akomodasi.toLocaleString();
         renderSummary();
-    }
-
-    function renderSummary() {
-        const sub = cart.reduce((s, i) => s + i.total, 0);
-        const ako = parseInt(document.getElementById('txtAkomodasi').innerText.replace(/\D/g,'')) || 0;
-        document.getElementById('txtSubtotal').innerText = "Rp " + sub.toLocaleString();
-        document.getElementById('txtTotal').innerText = "Rp " + (sub + ako).toLocaleString();
     }
 
     async function submitBooking() {
