@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Penawaran | Nanda Teknik</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        .quote-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            max-width: 850px;
+            margin: auto;
+        }
+        .input-group-custom {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .btn-premium {
+            border-radius: 12px;
+            padding: 12px 25px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-light pb-5">
+
+<div class="container py-4">
+    <div class="no-print d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
+        <button class="btn btn-light rounded-3" onclick="history.back()"><i class="bi bi-arrow-left"></i></button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-premium shadow-sm" onclick="generateQuotationPDF()">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>Download Penawaran
+            </button>
+        </div>
+    </div>
+
+    <div class="quote-box">
+        <div class="mb-4">
+            <h3 class="fw-800 text-dark mb-1">SURAT PENAWARAN HARGA</h3>
+            <p class="text-muted small">Nomor: <span id="dispNo">PH/NT/${new Date().getFullYear()}/001</span></p>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <label class="small fw-bold text-primary">KEPADA YTH:</label>
+                <input type="text" id="custName" class="form-control border-0 bg-light p-2 mb-2" placeholder="Nama Calon Pelanggan/Perusahaan">
+                <textarea id="custAddr" class="form-control border-0 bg-light p-2" rows="2" placeholder="Alamat Lokasi"></textarea>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <label class="small fw-bold text-primary">TANGGAL:</label>
+                <input type="date" id="quoteDate" class="form-control border-0 bg-light p-2 text-md-end">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <p>Dengan hormat,<br>Bersama ini kami sampaikan rincian estimasi biaya untuk pekerjaan/pengadaan sebagai berikut:</p>
+        </div>
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th width="50%">Deskripsi Pekerjaan/Material</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Harga Satuan</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center no-print">#</th>
+                </tr>
+            </thead>
+            <tbody id="quoteBody">
+                </tbody>
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="3" class="text-end">GRAND TOTAL ESTIMASI</td>
+                    <td class="text-end text-primary" id="dispTotal">Rp 0</td>
+                    <td class="no-print"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="input-group-custom no-print">
+            <h6 class="fw-bold mb-3"><i class="bi bi-plus-square-fill me-2"></i>Tambah Item Penawaran</h6>
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <input type="text" id="itemName" class="form-control border-0" placeholder="Nama Jasa / Part">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" id="itemPrice" class="form-control border-0" placeholder="Harga">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" id="itemQty" class="form-control border-0" value="1">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-dark w-100 rounded-3" onclick="addItemToQuote()">Tambah</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <p class="small text-muted">* Penawaran ini berlaku selama 14 hari kerja.<br>* Harga sudah termasuk pajak (jika ada) dan biaya jasa teknisi.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/template-dokumen.js"></script>
+
+<script>
+    const { jsPDF } = window.jspdf;
+    let items = [];
+
+    // Set default tanggal hari ini
+    document.getElementById('quoteDate').valueAsDate = new Date();
+
+    function addItemToQuote() {
+        const name = document.getElementById('itemName').value;
+        const price = parseInt(document.getElementById('itemPrice').value);
+        const qty = parseInt(document.getElementById('itemQty').value);
+
+        if(!name || !price) return;
+
+        items.push({ name, price, qty, total: price * qty });
+        renderTable();
+        
+        // Clear input
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemPrice').value = '';
+    }
+
+    function renderTable() {
+        let html = '';
+        let grandTotal = 0;
+        items.forEach((item, i) => {
+            grandTotal += item.total;
+            html += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td class="text-center">${item.qty}</td>
+                    <td class="text-end">Rp ${item.price.toLocaleString()}</td>
+                    <td class="text-end">Rp ${item.total.toLocaleString()}</td>
+                    <td class="text-center no-print">
+                        <i class="bi bi-trash text-danger pointer" onclick="items.splice(${i},1);renderTable()"></i>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('quoteBody').innerHTML = html;
+        document.getElementById('dispTotal').innerText = "Rp " + grandTotal.toLocaleString();
+    }
+
+    async function generateQuotationPDF() {
+        const doc = new jsPDF();
+        const noDoc = document.getElementById('dispNo').innerText;
+        const custName = document.getElementById('custName').value || "Pelanggan Terhormat";
+        const custAddr = document.getElementById('custAddr').value || "-";
+        const tgl = document.getElementById('quoteDate').value;
+
+        // 1. Pakai Header dari template-dokumen.js
+        window.docTemplate.header(doc, "PENAWARAN HARGA", noDoc);
+
+        // 2. Info Pelanggan
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("KEPADA YTH:", 14, 55);
+        doc.setFont("helvetica", "normal");
+        doc.text(custName, 14, 60);
+        doc.text(custAddr, 14, 65, { maxWidth: 80 });
+        doc.text("Tanggal: " + tgl, 196, 60, { align: "right" });
+
+        // 3. Kata Pengantar
+        doc.text("Bersama ini kami lampirkan estimasi biaya pekerjaan AC:", 14, 80);
+
+        // 4. Tabel
+        const tableData = items.map(i => [i.name, i.qty, i.price.toLocaleString(), i.total.toLocaleString()]);
+        doc.autoTable({
+            startY: 85,
+            head: [['Deskripsi Pekerjaan/Material', 'Qty', 'Harga Satuan', 'Total']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [40, 40, 40] },
+            foot: [['', '', 'GRAND TOTAL', document.getElementById('dispTotal').innerText]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+        });
+
+        // 5. Syarat & Ketentuan (Sederhana)
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(9);
+        doc.text("Catatan:", 14, finalY);
+        doc.text("- Harga tidak mengikat, sewaktu-waktu dapat berubah.", 14, finalY + 5);
+        doc.text("- Konfirmasi pekerjaan minimal 1 hari sebelumnya.", 14, finalY + 10);
+
+        // 6. Pakai Footer dari template-dokumen.js
+        window.docTemplate.footer(doc);
+
+        doc.save(`Penawaran-${custName}.pdf`);
+    }
+</script>
+
+</body>
+</html>
