@@ -7,20 +7,15 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/styles.css">
     
     <style>
         :root { --premium-blue: #007AFF; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin-top: 60px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; }
         
         /* Preview Styling */
         .invoice-preview { 
-            background: #fff; 
-            padding: 40px; 
-            border-radius: 0; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
-            min-height: 297mm; 
-            position: relative;
+            background: #fff; padding: 40px; border-radius: 0; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); min-height: 297mm; position: relative;
         }
 
         /* Tabel Abu-abu Custom */
@@ -30,9 +25,7 @@
         .table-custom tfoot td { background-color: #fff; padding: 15px 12px; }
         
         .header-nota { border-bottom: 3px solid #333; padding-bottom: 20px; margin-bottom: 25px; }
-        
         .nota-card { border-radius: 18px; border: none; transition: 0.3s; background: white; margin-bottom: 12px; }
-        
         .qty-btn { cursor: pointer; color: var(--premium-blue); font-size: 1.2rem; }
 
         @media print {
@@ -44,16 +37,16 @@
 </head>
 <body class="pb-5">
 
-<div id="app" class="container py-3">
+<div id="app">
     
-    <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none">
+    <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none border">
         <li class="nav-item">
-            <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
+            <button class="nav-link active" id="tab-buat-trigger" data-bs-toggle="pill" data-bs-target="#content-buat">
                 <i class="bi bi-pencil-square me-1"></i> Detail Nota
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="tab-list" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchNotaHistory()">
+            <button class="nav-link" id="tab-list-trigger" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchNotaHistory()">
                 <i class="bi bi-clock-history me-1"></i> Riwayat
             </button>
         </li>
@@ -63,7 +56,7 @@
         <div class="tab-pane fade show active" id="content-buat">
             <div class="d-flex gap-2 mb-3 d-print-none">
                 <button class="btn btn-primary rounded-4 shadow flex-fill fw-bold py-3" onclick="saveNota()">
-                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> SIMPAN & LUNASI
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> SIMPAN DATA
                 </button>
                 <button class="btn btn-dark rounded-4 shadow flex-fill fw-bold py-3" onclick="downloadNotaPDF()">
                     <i class="bi bi-file-pdf-fill me-1"></i> DOWNLOAD PDF
@@ -80,7 +73,7 @@
                     </p>
                 </div>
 
-                <div class="row mb-4">
+                <div class="row mb-4 text-dark">
                     <div class="col-7">
                         <label class="small fw-bold text-muted text-uppercase d-print-none">Kepada Yth:</label>
                         <select id="selectPelangganNota" class="form-select border-0 bg-light fw-bold p-0 d-print-none" onchange="updateInfoPelanggan()">
@@ -97,7 +90,7 @@
                     </div>
                 </div>
 
-                <table class="table-custom mt-4">
+                <table class="table-custom mt-4 text-dark">
                     <thead>
                         <tr>
                             <th>Deskripsi Jasa / Part</th>
@@ -118,12 +111,12 @@
 
                 <div class="mt-4 p-3 border-2 rounded-4 text-center d-inline-block" style="border: 2px dashed #ccc; min-width: 250px;">
                     <div class="small fw-bold text-muted text-uppercase mb-1">Transfer Pembayaran:</div>
-                    <h5 class="fw-bold mb-0">BANK BCA</h5>
+                    <h5 class="fw-bold mb-0 text-dark">BANK BCA</h5>
                     <div class="fs-4 fw-bold text-primary">1801826011</div>
-                    <div class="small fw-bold">a/n NANDA TEKNIK</div>
+                    <div class="small fw-bold text-dark">a/n NANDA TEKNIK</div>
                 </div>
 
-                <div class="row mt-5 text-center">
+                <div class="row mt-5 text-center text-dark">
                     <div class="col-4">
                         <div class="small mb-5">Penerima,</div>
                         <div class="fw-bold mt-4" id="ttdPelanggan">( ............................ )</div>
@@ -157,7 +150,8 @@
         </div>
 
         <div class="tab-pane fade" id="content-list">
-            <div id="historyNotaBody" class="p-2"></div>
+            <div id="historyNotaBody" class="p-2">
+                </div>
         </div>
     </div>
 </div>
@@ -170,15 +164,25 @@
 <script src="js/layout.js"></script>
 
 <script>
-    let currentCart = [], pelangganData = [], hargaData = [], currentStatus = "Belum Lunas";
+    let currentCart = [], pelangganData = [], hargaData = [], notaHistory = [], currentStatus = "Belum Lunas";
 
     document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('tglNota').valueAsDate = new Date();
         document.getElementById('noNota').innerText = `INV-${Date.now().toString().slice(-6)}`;
         updateStatusLabel();
+        
+        // Load data awal
         await Promise.all([fetchPelanggan(), fetchHarga()]);
+        
+        // Cek jika ada ID di URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const notaId = urlParams.get('id');
+        if(notaId) {
+            loadNotaById(notaId);
+        }
     });
 
+    // --- FUNGSI CORE ---
     function updateStatusLabel() {
         const lbl = document.getElementById('statusLabel');
         lbl.innerText = currentStatus;
@@ -206,7 +210,6 @@
         document.getElementById('listHarga').innerHTML = listHtml;
     }
 
-    // Auto harga saat item dipilih
     document.getElementById('addName').addEventListener('change', (e) => {
         const item = hargaData.find(x => (x.nama || x.Jasa) === e.target.value);
         if (item) document.getElementById('addPrice').value = item.harga || item.Harga;
@@ -219,6 +222,7 @@
         document.getElementById('ttdPelanggan').innerText = p ? `( ${p.nama} )` : '( ............................ )';
     }
 
+    // --- ITEM MANAGEMENT ---
     function addItem() {
         const n = document.getElementById('addName').value, 
               p = parseInt(document.getElementById('addPrice').value), 
@@ -228,7 +232,6 @@
         renderItems();
         document.getElementById('addName').value = '';
         document.getElementById('addPrice').value = '';
-        document.getElementById('addQty').value = 1;
     }
 
     function renderItems() {
@@ -258,6 +261,25 @@
         if (currentCart[i].qty <= 0) currentCart.splice(i, 1);
         else currentCart[i].total = currentCart[i].qty * currentCart[i].price;
         renderItems();
+    }
+
+    // --- SAVE & PDF ---
+    async function saveNota() {
+        const id = document.getElementById('noNota').innerText;
+        const email = document.getElementById('selectPelangganNota').value;
+        if(!email || currentCart.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
+
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        try {
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'insert', sheet: 'Nota',
+                    data: { id: id, tanggal: document.getElementById('tglNota').value, email: email, items_json: JSON.stringify(currentCart), total: currentCart.reduce((s, i) => s + i.total, 0), status: currentStatus }
+                })
+            });
+            Swal.fire('Berhasil!', 'Nota tersimpan', 'success').then(() => location.reload());
+        } catch(e) { Swal.fire('Error', 'Gagal simpan!', 'error'); }
     }
 
     function downloadNotaPDF() {
@@ -294,7 +316,6 @@
         doc.setFont("helvetica", "normal"); doc.text(namaP, 15, 75);
         doc.setFontSize(8); doc.text(document.getElementById('penerimaAlamat').innerText, 15, 80, { maxWidth: 80 });
 
-        // Table Gray
         const body = currentCart.map(it => [it.item + ` (@Rp${it.price.toLocaleString()})`, it.qty, `Rp ${it.total.toLocaleString()}`]);
         doc.autoTable({
             startY: 95,
@@ -307,7 +328,6 @@
                    {content: document.getElementById('totalNota').innerText, styles: {halign: 'right', fontStyle: 'bold', textColor: [0, 122, 255]}}]],
         });
 
-        // Sign
         let signY = doc.lastAutoTable.finalY + 30;
         doc.text("Penerima,", 40, signY, {align: "center"});
         doc.text("Hormat Kami,", 165, signY, {align: "center"});
@@ -318,46 +338,71 @@
         doc.save(`Nota_${noNota}.pdf`);
     }
 
-    async function saveNota() {
-        const id = document.getElementById('noNota').innerText;
-        const email = document.getElementById('selectPelangganNota').value;
-        if(!email || currentCart.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
-
-        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-        try {
-            await fetch(CONFIG.GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'insert', sheet: 'Nota',
-                    data: { id: id, tanggal: document.getElementById('tglNota').value, email: email, items_json: JSON.stringify(currentCart), total: currentCart.reduce((s, i) => s + i.total, 0), status: currentStatus }
-                })
-            });
-            Swal.fire('Berhasil!', 'Nota tersimpan', 'success').then(() => location.reload());
-        } catch(e) { Swal.fire('Error', 'Gagal simpan!', 'error'); }
-    }
-
+    // --- RIWAYAT & GET BY URL ---
     async function fetchNotaHistory() {
-        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
-        const history = await res.json();
-        document.getElementById('historyNotaBody').innerHTML = history.reverse().map(n => `
-            <div class="nota-card shadow-sm p-3 border-start border-5 ${n.status === 'Lunas' ? 'border-success' : 'border-warning'} bg-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="fw-bold mb-0">${n.id}</h6>
-                        <small class="text-muted">${n.email}</small>
+        const container = document.getElementById('historyNotaBody');
+        container.innerHTML = '<div class="text-center p-4 text-muted">Sedang memuat riwayat...</div>';
+        
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
+            notaHistory = await res.json();
+            container.innerHTML = notaHistory.slice().reverse().map(n => `
+                <div class="nota-card shadow-sm p-3 border-start border-5 ${n.status === 'Lunas' ? 'border-success' : 'border-warning'} bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-0">${n.id}</h6>
+                            <small class="text-muted">${n.email}</small>
+                        </div>
+                        <span class="badge ${n.status === 'Lunas' ? 'bg-success' : 'bg-warning text-dark'}">${n.status}</span>
                     </div>
-                    <span class="badge ${n.status === 'Lunas' ? 'bg-success' : 'bg-warning text-dark'}">${n.status}</span>
-                </div>
-                <div class="d-flex justify-content-between mt-3 align-items-center">
-                    <b class="text-primary">Rp ${parseInt(n.total).toLocaleString()}</b>
-                    <button class="btn btn-sm btn-dark rounded-3 px-3" onclick="viewNota('${n.id}')">Buka</button>
-                </div>
-            </div>`).join('');
+                    <div class="d-flex justify-content-between mt-3 align-items-center">
+                        <b class="text-primary">Rp ${parseInt(n.total).toLocaleString()}</b>
+                        <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="viewNota('${n.id}')">Buka</button>
+                    </div>
+                </div>`).join('');
+        } catch(e) { container.innerHTML = '<div class="alert alert-danger">Gagal memuat riwayat</div>'; }
     }
 
     function viewNota(id) {
-        // Logika untuk load data riwayat ke form (opsional)
-        Swal.fire('Info', 'Fitur view detail sedang sinkronisasi', 'info');
+        const n = notaHistory.find(x => x.id === id);
+        if(!n) return;
+
+        // Isi Form
+        document.getElementById('noNota').innerText = n.id;
+        document.getElementById('tglNota').value = n.tanggal.split('T')[0];
+        document.getElementById('selectPelangganNota').value = n.email;
+        currentStatus = n.status;
+        currentCart = JSON.parse(n.items_json || "[]");
+        
+        // Update UI
+        updateInfoPelanggan();
+        updateStatusLabel();
+        renderItems();
+        
+        // Pindah URL (History State)
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?id=' + id;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+
+        // Pindah Tab
+        const tabTrigger = document.querySelector('#tab-buat-trigger');
+        const tab = new bootstrap.Tab(tabTrigger);
+        tab.show();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function loadNotaById(id) {
+        Swal.fire({ title: 'Memuat Nota...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
+            notaHistory = await res.json();
+            const n = notaHistory.find(x => x.id === id);
+            if(n) {
+                viewNota(id);
+                Swal.close();
+            } else {
+                Swal.fire('Error', 'ID Nota tidak ditemukan', 'error');
+            }
+        } catch(e) { Swal.fire('Error', 'Gagal memuat data', 'error'); }
     }
 </script>
 </body>
