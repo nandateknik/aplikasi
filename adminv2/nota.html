@@ -2,142 +2,217 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Manajemen Nota | Service App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nota Digital | Nanda Teknik</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        .invoice-preview {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            max-width: 800px;
+            margin: auto;
+        }
+        .btn-action { border-radius: 12px; padding: 10px 20px; font-weight: 600; transition: 0.3s; }
+        .table-preview th { background: #f8f9fa; text-transform: uppercase; font-size: 12px; }
+    </style>
 </head>
-<body class="bg-light">
+<body class="bg-light pb-5">
 
-<div id="app">
-    <div class="container-fluid py-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0">Daftar Nota Pembayaran</h5>
-                <div class="d-flex gap-2">
-                    <input type="text" id="searchNota" class="form-control form-control-sm" placeholder="Cari No Nota..." onkeyup="loadNota()">
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button class="btn btn-light btn-action shadow-sm" onclick="history.back()">
+            <i class="bi bi-chevron-left"></i> Kembali
+        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-action shadow" onclick="generatePDF()">
+                <i class="bi bi-file-earmark-pdf"></i> Simpan PDF
+            </button>
+            <button class="btn btn-success btn-action shadow" onclick="shareWA()">
+                <i class="bi bi-whatsapp"></i> Kirim WA
+            </button>
+        </div>
+    </div>
+
+    <div class="invoice-preview">
+        <div class="row mb-4">
+            <div class="col-7">
+                <h4 class="fw-800 text-primary mb-3">NOTA TAGIHAN</h4>
+                <div class="text-muted small">KEPADA:</div>
+                <div id="penerimaNama" class="fw-bold fs-5">-</div>
+                <div id="penerimaAlamat" class="small">-</div>
+            </div>
+            <div class="col-5 text-end">
+                <div class="mt-4">
+                    <div class="small"><b>No:</b> <span id="noNota">#</span></div>
+                    <div class="small"><b>Tanggal:</b> <span id="tglNota">-</span></div>
                 </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>No. Nota</th>
-                                <th>Tanggal</th>
-                                <th>Pelanggan</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th class="text-end">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="notaTableBody"></tbody>
-                    </table>
-                </div>
+        </div>
+
+        <table class="table table-preview mt-4">
+            <thead>
+                <tr>
+                    <th>Deskripsi Layanan</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Harga</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody id="itemNotaBody"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-end fw-bold">Subtotal</td>
+                    <td id="subtotalNota" class="text-end fw-bold">Rp 0</td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-end text-muted">Transport/Akomodasi</td>
+                    <td id="akomodasiNota" class="text-end text-muted">Rp 0</td>
+                </tr>
+                <tr class="table-primary" style="font-size: 1.1rem;">
+                    <td colspan="3" class="text-end fw-800">TOTAL AKHIR</td>
+                    <td id="totalNota" class="text-end fw-800">Rp 0</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-5 p-3 border rounded-4 bg-light shadow-sm">
+            <h6 class="fw-bold mb-3 small text-uppercase">Tambah Item Manual (Jika Ada)</h6>
+            <div class="row g-2">
+                <div class="col-md-5"><input type="text" id="addName" class="form-control form-control-sm" placeholder="Nama Item"></div>
+                <div class="col-md-2"><input type="number" id="addPrice" class="form-control form-control-sm" placeholder="Harga"></div>
+                <div class="col-md-2"><input type="number" id="addQty" class="form-control form-control-sm" value="1"></div>
+                <div class="col-md-3"><button class="btn btn-dark btn-sm w-100" onclick="addItemManual()">Tambah Item</button></div>
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 <script src="js/config.js"></script>
-<script src="js/layout.js"></script>
 <script src="js/template-dokumen.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", loadNota);
+    const { jsPDF } = window.jspdf;
+    let currentCart = [];
+    let currentAkomodasi = 0;
+    let pelangganInfo = { nama: "-", alamat: "-" };
 
-    async function loadNota() {
-        const res = await fetch(CONFIG.GAS_URL, { 
-            method: 'POST', 
-            body: JSON.stringify({ action: 'read', sheet: 'Nota' }) 
-        });
-        const data = await res.json();
-        let html = '';
-        data.reverse().forEach(n => {
-            html += `
-            <tr>
-                <td class="fw-bold text-primary">#${n.id}</td>
-                <td>${n.tanggal}</td>
-                <td>${n.email}</td>
-                <td>Rp ${parseInt(n.total).toLocaleString()}</td>
-                <td><span class="badge ${n.status === 'Lunas' ? 'bg-success' : 'bg-warning'}">${n.status}</span></td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-danger" onclick="generatePDF('${n.id}')">
-                        <i class="bi bi-file-earmark-pdf"></i> PDF
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary" onclick="kirimEmail('${n.id}')">
-                        <i class="bi bi-envelope"></i>
-                    </button>
-                </td>
-            </tr>`;
-        });
-        document.getElementById('notaTableBody').innerHTML = html;
+    document.addEventListener("DOMContentLoaded", () => {
+        loadDataFromParams();
+    });
+
+    function loadDataFromParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = urlParams.get('id');
+        
+        // Cek data di localStorage (disimpan sesaat setelah submit di booking.html)
+        const lastData = JSON.parse(localStorage.getItem('last_booking'));
+        
+        if (lastData) {
+            document.getElementById('noNota').innerText = lastData.id || bookingId;
+            document.getElementById('tglNota').innerText = lastData.tanggal;
+            document.getElementById('penerimaNama').innerText = lastData.email;
+            
+            currentCart = JSON.parse(lastData.items_json);
+            currentAkomodasi = parseInt(lastData.akomodasi);
+            renderItems();
+        }
     }
 
-    async function generatePDF(notaId) {
-        Swal.fire({ title: 'Mempersiapkan PDF...', didOpen: () => Swal.showLoading() });
-
-        // 1. Ambil detail nota dari GAS
-        const res = await fetch(CONFIG.GAS_URL, { 
-            method: 'POST', 
-            body: JSON.stringify({ action: 'read', sheet: 'Nota', search: notaId }) 
+    function renderItems() {
+        let html = '';
+        let subtotal = 0;
+        currentCart.forEach((item, i) => {
+            subtotal += item.total;
+            html += `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${item.item}</div>
+                        <span class="text-danger pointer small" onclick="deleteItem(${i})"><i class="bi bi-trash"></i> Hapus</span>
+                    </td>
+                    <td class="text-center">${item.qty}</td>
+                    <td class="text-end">Rp ${item.price.toLocaleString()}</td>
+                    <td class="text-end">Rp ${item.total.toLocaleString()}</td>
+                </tr>`;
         });
-        const allData = await res.json();
-        const n = allData.find(x => x.id == notaId);
+        document.getElementById('itemNotaBody').innerHTML = html;
+        document.getElementById('subtotalNota').innerText = "Rp " + subtotal.toLocaleString();
+        document.getElementById('akomodasiNota').innerText = "Rp " + currentAkomodasi.toLocaleString();
+        document.getElementById('totalNota').innerText = "Rp " + (subtotal + currentAkomodasi).toLocaleString();
+    }
 
-        if (!n) return Swal.fire("Error", "Data tidak ditemukan", "error");
+    function addItemManual() {
+        const n = document.getElementById('addName').value;
+        const p = parseInt(document.getElementById('addPrice').value);
+        const q = parseInt(document.getElementById('addQty').value);
+        if(!n || !p) return;
+        currentCart.push({ item: n, price: p, qty: q, total: p * q });
+        renderItems();
+        document.getElementById('addName').value = '';
+        document.getElementById('addPrice').value = '';
+    }
 
-        const { jsPDF } = window.jspdf;
+    function deleteItem(i) {
+        currentCart.splice(i, 1);
+        renderItems();
+    }
+
+    async function generatePDF() {
         const doc = new jsPDF();
+        const noNota = document.getElementById('noNota').innerText;
+        const tgl = document.getElementById('tglNota').innerText;
+        const nama = document.getElementById('penerimaNama').innerText;
 
-        // 2. Gunakan Template Header
-        window.docTemplate.header(doc, "NOTA PEMBAYARAN", n.id);
+        // 1. Panggil Header dari template-dokumen.js
+        window.docTemplate.header(doc, "NOTA TAGIHAN", noNota);
 
-        // 3. Info Pelanggan
+        // 2. Info Pelanggan
         doc.setFontSize(10);
-        doc.text("Ditujukan Kepada:", 14, 55);
+        doc.text("KEPADA:", 14, 55);
         doc.setFont("helvetica", "bold");
-        doc.text(n.email, 14, 60); // Bisa di-lookup ke data pelanggan jika perlu nama lengkap
+        doc.text(nama, 14, 60);
         doc.setFont("helvetica", "normal");
-        doc.text("Tanggal Terbit: " + n.tanggal, 196, 60, { align: "right" });
+        doc.text("Tanggal: " + tgl, 196, 60, { align: "right" });
 
-        // 4. Tabel Item (Parsing items_json)
-        const items = JSON.parse(n.items_json);
-        const tableRows = items.map(it => [
-            it.item,
-            it.qty,
-            "Rp " + parseInt(it.price).toLocaleString(),
-            "Rp " + parseInt(it.total).toLocaleString()
-        ]);
-
-        // Tambahkan baris Akomodasi jika ada
-        if (n.akomodasi && n.akomodasi > 0) {
-            tableRows.push(["Biaya Akomodasi (Transport)", "1", "Rp " + parseInt(n.akomodasi).toLocaleString(), "Rp " + parseInt(n.akomodasi).toLocaleString()]);
-        }
-
+        // 3. Tabel Item (AutoTable)
+        const tableBody = currentCart.map(i => [i.item, i.qty, i.price.toLocaleString(), i.total.toLocaleString()]);
+        
         doc.autoTable({
             startY: 70,
-            head: [['Deskripsi Jasa/Part', 'Qty', 'Harga Satuan', 'Subtotal']],
-            body: tableRows,
-            theme: 'striped',
-            headStyles: { fillGray: [40, 40, 40] }
+            head: [['Deskripsi Layanan', 'Qty', 'Harga', 'Total']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [13, 110, 253] }, // Premium Blue
+            foot: [
+                ['', '', 'Subtotal', 'Rp ' + document.getElementById('subtotalNota').innerText],
+                ['', '', 'Transport', 'Rp ' + document.getElementById('akomodasiNota').innerText],
+                ['', '', 'TOTAL AKHIR', document.getElementById('totalNota').innerText]
+            ],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
         });
 
-        // 5. Total Akhir
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("TOTAL PEMBAYARAN:", 130, finalY);
-        doc.text("Rp " + parseInt(n.total).toLocaleString(), 196, finalY, { align: "right" });
-
-        // 6. Footer & Save
+        // 4. Panggil Footer dari template-dokumen.js
         window.docTemplate.footer(doc);
-        
-        doc.save(`Nota_${n.id}.pdf`);
-        Swal.close();
+
+        // Simpan
+        doc.save(`Nota-${noNota}-${nama}.pdf`);
+    }
+
+    function shareWA() {
+        const nama = document.getElementById('penerimaNama').innerText;
+        const total = document.getElementById('totalNota').innerText;
+        const text = `Halo Pak/Bu ${nama}, berikut rincian nota dari Nanda Teknik sebesar ${total}. File PDF menyusul. Terima kasih!`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 </script>
+
 </body>
 </html>
