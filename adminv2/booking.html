@@ -40,7 +40,7 @@
             </li>
         </ul>
 
-        <div class="tab-content" id="pills-tabContent">
+        <div class="tab-content">
             <div class="tab-pane fade show active" id="content-input">
                 <div class="section-title">Informasi Pelanggan</div>
                 <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
@@ -57,16 +57,16 @@
                 <div class="section-title">Lokasi & Alamat</div>
                 <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
                     <div id="locNotice" class="alert alert-warning py-2 small mb-2 d-none">
-                        <i class="bi bi-exclamation-triangle"></i> Lokasi geser dari alamat rumah pelanggan!
+                        <i class="bi bi-exclamation-triangle"></i> Lokasi geser dari alamat rumah!
                     </div>
                     <div id="mapBooking"></div>
                     <button class="btn btn-sm btn-dark w-100 rounded-pill mb-2 shadow-sm" onclick="getCurrentLocation()">
                         <i class="bi bi-crosshair"></i> Sesuaikan Lokasi (GPS)
                     </button>
-                    <input type="text" id="alamatManual" class="form-control form-control-sm border-0 bg-light mb-2" placeholder="Detail Patokan/Alamat Pengerjaan">
+                    <textarea id="alamatManual" class="form-control form-control-sm border-0 bg-light mb-2" rows="2" placeholder="Detail Patokan/Alamat Pengerjaan"></textarea>
                     <div class="row g-2">
-                        <div class="col-6"><input type="text" id="latB" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Latitude"></div>
-                        <div class="col-6"><input type="text" id="lngB" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Longitude"></div>
+                        <div class="col-6"><input type="text" id="latB" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Lat"></div>
+                        <div class="col-6"><input type="text" id="lngB" class="form-control form-control-sm border-0 bg-light text-center" readonly placeholder="Lng"></div>
                     </div>
                 </div>
 
@@ -76,16 +76,6 @@
                         <select id="selectHarga" class="form-select border-0 bg-light"></select>
                         <input type="number" id="qtyItem" class="form-control border-0 bg-light text-center" value="1" style="max-width: 65px;">
                         <button class="btn btn-primary" onclick="addToCart()"><i class="bi bi-plus-lg"></i></button>
-                    </div>
-
-                    <div class="p-2 border rounded-4 mb-3">
-                        <label class="small fw-bold text-muted mb-1">Item Manual (Luar List):</label>
-                        <div class="row g-2">
-                            <div class="col-12"><input type="text" id="manualName" class="form-control form-control-sm border-0 bg-light" placeholder="Nama Barang/Jasa"></div>
-                            <div class="col-5"><input type="number" id="manualPrice" class="form-control form-control-sm border-0 bg-light" placeholder="Harga"></div>
-                            <div class="col-3"><input type="number" id="manualQty" class="form-control form-control-sm border-0 bg-light text-center" value="1"></div>
-                            <div class="col-4"><button class="btn btn-sm btn-secondary w-100 px-0" onclick="addManualToCart()">Tambah</button></div>
-                        </div>
                     </div>
 
                     <div id="cartList" class="my-2"></div>
@@ -105,7 +95,7 @@
 
             <div class="tab-pane fade" id="content-riwayat">
                 <div id="historyList">
-                    <div id="spinnerRiwayat" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+                    <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
                 </div>
             </div>
         </div>
@@ -131,11 +121,11 @@
             </div>
             <div class="mb-3">
                 <label class="small fw-bold">CATATAN TEKNISI</label>
-                <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4" rows="3" placeholder="Info pengerjaan atau kendala..."></textarea>
+                <textarea id="updateKeterangan" class="form-control border-0 bg-light p-3 rounded-4" rows="3"></textarea>
             </div>
             <div class="mb-3">
                 <label class="small fw-bold">NAMA TEKNISI</label>
-                <input type="text" id="updateTeknisi" class="form-control border-0 bg-light p-3 rounded-4" placeholder="Nama tim lapangan">
+                <input type="text" id="updateTeknisi" class="form-control border-0 bg-light p-3 rounded-4">
             </div>
             <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow" onclick="saveProgress()">UPDATE SEKARANG</button>
         </div>
@@ -149,7 +139,7 @@
 <script src="js/layout.js"></script>
 
 <script>
-    let mapB, markerB, pelangganData = [], hargaData = [], cart = [], historyData = [];
+    let mapB, markerB, pelangganData = [], hargaData = [], cart = [], historyData = [], notaData = [];
     const TOKO_LAT = -8.206274, TOKO_LNG = 114.3797957;
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -161,43 +151,47 @@
         mapB = L.map('mapBooking').setView([TOKO_LAT, TOKO_LNG], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapB);
         markerB = L.marker([TOKO_LAT, TOKO_LNG], { draggable: true }).addTo(mapB);
-        markerB.on('dragend', () => {
+        markerB.on('dragend', async () => {
             const pos = markerB.getLatLng();
             updateBookingCoords(pos.lat, pos.lng);
-            checkLocMismatch(pos.lat, pos.lng);
+            await getAddressFromLatLng(pos.lat, pos.lng);
         });
     }
 
-    async function fetchPelanggan() {
+    // --- FITUR ALAMAT OTOMATIS (REVERSE GEOCODE) ---
+    async function getAddressFromLatLng(lat, lng) {
         try {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
-            pelangganData = await res.json();
-            let opt = '<option value="">-- Pilih Pelanggan --</option>';
-            pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
-            document.getElementById('selectPelanggan').innerHTML = opt;
-        } catch(e) { console.error("Gagal muat pelanggan"); }
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            if (data.display_name) document.getElementById('alamatManual').value = data.display_name;
+        } catch (e) { console.error("Gagal ambil alamat"); }
+    }
+
+    async function fetchPelanggan() {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
+        pelangganData = await res.json();
+        let opt = '<option value="">-- Pilih Pelanggan --</option>';
+        pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
+        document.getElementById('selectPelanggan').innerHTML = opt;
     }
 
     async function fetchHarga() {
-        try {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
-            hargaData = await res.json();
-            let opt = '<option value="">-- Pilih Jasa/Part --</option>';
-            // Gunakan h.nama atau h.Jasa sesuai kolom sheet Harga lo
-            hargaData.forEach(h => {
-                const nama = h.nama || h.Jasa;
-                const harga = h.harga || h.Harga;
-                opt += `<option value="${nama}" data-price="${harga}">${nama}</option>`;
-            });
-            document.getElementById('selectHarga').innerHTML = opt;
-        } catch(e) { console.error("Gagal muat harga"); }
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
+        hargaData = await res.json();
+        let opt = '<option value="">-- Pilih Jasa/Part --</option>';
+        hargaData.forEach(h => {
+            const n = h.nama || h.Jasa;
+            const p = h.harga || h.Harga;
+            opt += `<option value="${n}" data-price="${p}">${n}</option>`;
+        });
+        document.getElementById('selectHarga').innerHTML = opt;
     }
 
     function handlePelangganChange() {
         const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
         if (p) {
-            const lat = parseFloat(p.lat || p.latitude);
-            const lng = parseFloat(p.lang || p.longitude);
+            const lat = p.lat || p.latitude;
+            const lng = p.lang || p.longitude;
             markerB.setLatLng([lat, lng]);
             mapB.setView([lat, lng], 15);
             updateBookingCoords(lat, lng);
@@ -207,27 +201,13 @@
 
     function getCurrentLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
+            navigator.geolocation.getCurrentPosition(async pos => {
                 const lat = pos.coords.latitude, lng = pos.coords.longitude;
                 markerB.setLatLng([lat, lng]);
                 mapB.setView([lat, lng], 16);
                 updateBookingCoords(lat, lng);
-                checkLocMismatch(lat, lng);
+                await getAddressFromLatLng(lat, lng);
             });
-        }
-    }
-
-    function checkLocMismatch(lat, lng) {
-        const p = pelangganData.find(x => x.email === document.getElementById('selectPelanggan').value);
-        const notice = document.getElementById('locNotice');
-        if(p) {
-            const pLat = parseFloat(p.lat || p.latitude);
-            const pLng = parseFloat(p.lang || p.longitude);
-            if(Math.abs(pLat - lat) > 0.001 || Math.abs(pLng - lng) > 0.001) {
-                notice.classList.remove('d-none');
-            } else {
-                notice.classList.add('d-none');
-            }
         }
     }
 
@@ -262,17 +242,6 @@
         renderCart();
     }
 
-    function addManualToCart() {
-        const name = document.getElementById('manualName').value;
-        const price = parseInt(document.getElementById('manualPrice').value);
-        const qty = parseInt(document.getElementById('manualQty').value) || 1;
-        if (!name || isNaN(price)) return Swal.fire('Error', 'Isi Nama & Harga!', 'error');
-        cart.push({ item: name, price: price, qty: qty, total: price * qty });
-        document.getElementById('manualName').value = '';
-        document.getElementById('manualPrice').value = '';
-        renderCart();
-    }
-
     function renderCart() {
         document.getElementById('cartList').innerHTML = cart.map((c, i) => `
             <div class="cart-item d-flex justify-content-between align-items-center">
@@ -293,7 +262,7 @@
         const email = document.getElementById('selectPelanggan').value;
         const judul = document.getElementById('judulBooking').value;
         const tglKerja = document.getElementById('tglPekerjaan').value;
-        if(!email || !judul || !tglKerja || cart.length === 0) return Swal.fire('Error', 'Data Belum Lengkap!', 'error');
+        if(!email || !judul || !tglKerja || cart.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'error');
 
         const now = new Date();
         const idB = "BK-" + now.getTime();
@@ -304,80 +273,74 @@
         if(akoVal > 0) itemsNota.push({ item: "Akomodasi/Transport", price: akoVal, qty: 1, total: akoVal });
         const finalTotal = itemsNota.reduce((s, i) => s + i.total, 0);
 
-        const firstProg = [{ status: 'Booking Dibuat', keterangan: 'Pesanan masuk sistem', tanggal: now.toLocaleDateString(), jam: now.toLocaleTimeString(), teknisi: '-' }];
-
-        // DATA UNTUK SHEET BOOKING (Sesuai kolom lo)
         const dataBooking = {
             id: idB, email: email, judul: judul, tanggal: tglKerja, status: 'Pending',
-            progress_json: JSON.stringify(firstProg),
+            progress_json: JSON.stringify([{ status: 'Booking Dibuat', keterangan: 'Pesanan masuk', tanggal: now.toLocaleDateString(), jam: now.toLocaleTimeString(), teknisi: '-' }]),
             lat: document.getElementById('latB').value, lang: document.getElementById('lngB').value,
-            alamat: document.getElementById('alamatManual').value, id_nota: idN,
-            total: finalTotal // Integrasi kolom Total ke Booking
+            alamat: document.getElementById('alamatManual').value, id_nota: idN
         };
 
-        // DATA UNTUK SHEET NOTA (A=id, B=tanggal, C=email, D=items_json, E=total, F=status)
         const dataNota = {
             id: idN, tanggal: now.toISOString().split('T')[0], email: email,
-            items_json: JSON.stringify(itemsNota), 
-            total: finalTotal, // Kolom E
-            status: 'Belum Lunas' // Kolom F
+            items_json: JSON.stringify(itemsNota), total: finalTotal, status: 'Belum Lunas'
         };
 
-        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
         try {
             await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Booking', data: dataBooking }) });
             await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'insert', sheet: 'Nota', data: dataNota }) });
-            Swal.fire('Berhasil!', 'Booking & Nota Tersimpan!', 'success').then(() => location.reload());
-        } catch (e) { Swal.fire('Gagal!', 'Error Simpan Data', 'error'); }
+            Swal.fire('Berhasil!', 'Data tersimpan!', 'success').then(() => location.reload());
+        } catch (e) { Swal.fire('Gagal!', 'Cek koneksi!', 'error'); }
     }
 
+    // --- AMBIL DATA DARI DUA SHEET SEKALIGUS ---
     async function fetchHistory() {
         const container = document.getElementById('historyList');
         try {
-            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Booking' }) });
-            const data = await res.json();
-            historyData = Array.isArray(data) ? data : [];
+            const [resB, resN] = await Promise.all([
+                fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Booking' }) }),
+                fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) })
+            ]);
+            historyData = await resB.json();
+            notaData = await resN.json();
             renderHistory();
-        } catch (e) { 
-            container.innerHTML = '<div class="alert alert-danger">Gagal memuat riwayat.</div>';
-        }
+        } catch (e) { container.innerHTML = 'Error load data.'; }
     }
 
     function renderHistory() {
         const container = document.getElementById('historyList');
-        if(historyData.length === 0) { 
-            container.innerHTML = '<div class="text-center py-5">Belum ada riwayat booking.</div>'; 
-            return; 
-        }
+        if(!historyData.length) { container.innerHTML = '<div class="text-center py-5">Kosong.</div>'; return; }
 
         container.innerHTML = historyData.slice().reverse().map(h => {
-            let prog = [];
-            try { prog = JSON.parse(h.progress_json || '[]'); } catch(e) { prog = []; }
+            // CARI TOTAL DARI SHEET NOTA BERDASARKAN id_nota
+            const notaTerkait = notaData.find(n => n.id === h.id_nota);
+            const nominal = notaTerkait ? notaTerkait.total : 0;
             
-            const currentStatus = h.status || 'Pending';
-            const badgeClass = currentStatus.includes('Selesai') ? 'bg-success' : (currentStatus === 'Cancel' ? 'bg-danger' : 'bg-primary');
-
+            let prog = [];
+            try { prog = JSON.parse(h.progress_json || '[]'); } catch(e) {}
+            
             return `
             <div class="card history-card p-3 shadow-sm border-0 mb-3">
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="badge ${badgeClass} rounded-pill">${currentStatus}</span>
+                    <span class="badge bg-primary rounded-pill">${h.status}</span>
                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openUpdateModal('${h.id}', '${h.id_nota}')">Update</button>
                 </div>
                 <h6 class="fw-bold mb-1">${h.judul}</h6>
+                <div class="small text-muted mb-1 text-truncate"><i class="bi bi-geo-alt"></i> ${h.alamat}</div>
                 <div class="small text-muted mb-3"><i class="bi bi-calendar-event"></i> Rencana: ${h.tanggal}</div>
                 
-                <div class="bg-light p-3 rounded-4 mb-3" style="max-height: 200px; overflow-y: auto;">
+                <div class="bg-light p-3 rounded-4 mb-3" style="max-height: 150px; overflow-y: auto;">
                     ${prog.slice().reverse().map(p => `
                         <div class="step-item">
-                            <div class="fw-bold small">${p.status}</div>
-                            <div class="text-muted" style="font-size:10px;">${p.tanggal} ${p.jam} | Oleh: ${p.teknisi}</div>
-                            <div class="small mt-1">${p.keterangan || ''}</div>
+                            <div class="fw-bold small" style="font-size:11px">${p.status}</div>
+                            <div class="text-muted" style="font-size:9px">${p.tanggal} ${p.jam}</div>
+                            <div class="small mt-1" style="font-size:11px">${p.keterangan || ''}</div>
                         </div>
                     `).join('')}
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                    <span class="fw-bold text-primary">Rp ${parseInt(h.total || 0).toLocaleString()}</span>
+                    <span class="fw-bold text-primary">Rp ${parseInt(nominal).toLocaleString()}</span>
                     <a href="nota.html?id=${h.id_nota}" class="btn btn-sm btn-dark rounded-pill px-3">Buka Nota</a>
                 </div>
             </div>`;
@@ -395,9 +358,7 @@
         const idN = document.getElementById('updateIdNota').value;
         const status = document.getElementById('updateStatus').value;
         const item = historyData.find(x => x.id === id);
-        
-        let prog = [];
-        try { prog = JSON.parse(item.progress_json || '[]'); } catch(e) { prog = []; }
+        let prog = JSON.parse(item.progress_json || '[]');
 
         prog.push({
             status: status,
@@ -408,26 +369,17 @@
         });
 
         Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
-        
-        // Update di Sheet Booking
         await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ 
-            action: 'update', sheet: 'Booking', key: 'id', id: id, 
-            data: { status: status, progress_json: JSON.stringify(prog) } 
+            action: 'update', sheet: 'Booking', key: 'id', id: id, data: { status: status, progress_json: JSON.stringify(prog) } 
         }) });
 
-        // Jika status Lunas, update status di Sheet Nota (Kolom F)
-        if(status === 'Selesai (Lunas)') {
+        // Update status di Sheet Nota jika Lunas
+        if(status.includes('Lunas')) {
+            const sNota = status.includes('Belum Lunas') ? 'Belum Lunas' : 'Lunas';
             await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ 
-                action: 'update', sheet: 'Nota', key: 'id', id: idN, 
-                data: { status: 'Lunas' } 
-            }) });
-        } else if(status === 'Selesai (Belum Lunas)') {
-            await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ 
-                action: 'update', sheet: 'Nota', key: 'id', id: idN, 
-                data: { status: 'Belum Lunas' } 
+                action: 'update', sheet: 'Nota', key: 'id', id: idN, data: { status: sNota } 
             }) });
         }
-        
         location.reload();
     }
 </script>
