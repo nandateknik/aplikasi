@@ -2,117 +2,122 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Pelanggan | Service App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pelanggan | Nanda Teknik</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
-        #map { height: 300px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #dee2e6; }
-        .card { border-radius: 15px; border: none; }
-        .badge-personal { background-color: #e0f2fe; color: #0369a1; }
-        .badge-instansi { background-color: #fef3c7; color: #92400e; }
-        .search-box { border-radius: 10px; padding-left: 40px; }
-        .search-icon { position: absolute; left: 15px; top: 10px; color: #adb5bd; }
+    <link rel="stylesheet" href="css/styles.css"> <style>
+        /* Tambahan CSS khusus Leaflet agar tidak merusak layout */
+        #map { 
+            height: 250px; 
+            border-radius: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid #dee2e6; 
+            z-index: 1; /* Supaya gak numpuk sama bottom nav */
+        }
+        .leaflet-control-geocoder { z-index: 1001 !important; }
+        
+        /* Badge Custom */
+        .badge-personal { background-color: #007AFF; color: #fff; }
+        .badge-instansi { background-color: #5856D6; color: #fff; }
+        
+        /* Floating Button Custom */
+        .fab-add {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: var(--premium-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.4);
+            border: none;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
 
     <div id="app">
-        <div class="container-fluid">
-            <div class="row mb-4 align-items-center">
-                <div class="col">
-                    <h3 class="fw-bold mb-0">Manajemen Pelanggan</h3>
-                    <p class="text-muted">Pisahkan data Personal & Instansi dengan presisi lokasi.</p>
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-primary px-4 shadow-sm" onclick="showAddModal()">
-                        <i class="bi bi-person-plus-fill me-2"></i>Tambah Pelanggan
-                    </button>
-                </div>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body p-0">
-                    <div class="p-3 border-bottom position-relative">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" id="searchInput" class="form-control search-box w-25" placeholder="Cari..." onkeyup="loadData()">
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-4">Kategori</th>
-                                    <th>Nama & Email</th>
-                                    <th>WhatsApp</th>
-                                    <th>Alamat</th>
-                                    <th class="text-end pe-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="px-3 mb-3">
+            <div class="input-group bg-white rounded-4 shadow-sm p-1" style="border: 0.5px solid rgba(0,0,0,0.05);">
+                <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-0 ps-0 shadow-none" placeholder="Cari pelanggan..." onkeyup="loadData()">
             </div>
         </div>
+
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary spinner-border-sm"></div>
+            <p class="small text-muted mt-2">Menarik data...</p>
+        </div>
+        
+        <div id="renderArea" class="px-3">
+            </div>
+
+        <button class="fab-add" onclick="showAddModal()">
+            <i class="bi bi-plus-lg fs-4"></i>
+        </button>
     </div>
 
     <div class="modal fade" id="modalPelanggan" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content shadow-lg" style="border-radius: 20px;">
+        <div class="modal-dialog modal-fullscreen-sm-down modal-lg modal-dialog-centered">
+            <div class="modal-content border-0" style="border-radius: 25px;">
                 <form id="formPelanggan">
                     <div class="modal-header border-0 pt-4 px-4">
                         <h5 class="fw-bold" id="modalTitle">Data Pelanggan</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body px-4">
+                    <div class="modal-body px-4 pb-4">
                         <input type="hidden" id="oldEmail">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Kategori</label>
-                                    <select name="kategori" class="form-select" id="kategori">
+                                    <label class="form-label fw-bold small text-muted">KATEGORI</label>
+                                    <select name="kategori" class="form-select border-0 bg-light rounded-3">
                                         <option value="Personal">Personal</option>
                                         <option value="Instansi">Instansi / Perusahaan</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Nama Lengkap / Instansi</label>
-                                    <input type="text" name="nama" class="form-control" placeholder="Nama..." required>
+                                    <label class="form-label fw-bold small text-muted">NAMA LENGKAP</label>
+                                    <input type="text" name="nama" class="form-control border-0 bg-light rounded-3" placeholder="Masukkan nama..." required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Email</label>
-                                    <input type="email" name="email" class="form-control" required>
+                                    <label class="form-label fw-bold small text-muted">EMAIL (ID)</label>
+                                    <input type="email" name="email" class="form-control border-0 bg-light rounded-3" placeholder="email@contoh.com" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">WhatsApp</label>
-                                    <input type="number" name="wa" class="form-control" required>
+                                    <label class="form-label fw-bold small text-muted">WHATSAPP</label>
+                                    <input type="number" name="wa" class="form-control border-0 bg-light rounded-3" placeholder="62812..." required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Alamat Lengkap</label>
-                                    <textarea name="alamat" id="alamatInput" class="form-control" rows="3"></textarea>
+                                    <label class="form-label fw-bold small text-muted">ALAMAT</label>
+                                    <textarea name="alamat" id="alamatInput" class="form-control border-0 bg-light rounded-3" rows="2" placeholder="Alamat lengkap..."></textarea>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Pilih Lokasi di Maps</label>
+                                <label class="form-label fw-bold small text-muted">LOKASI MAPS</label>
                                 <div id="map"></div>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <input type="text" name="lat" id="latInput" class="form-control form-control-sm" placeholder="Lat" readonly>
+                                        <input type="text" name="lat" id="latInput" class="form-control form-control-sm border-0 bg-light" placeholder="Lat" readonly>
                                     </div>
                                     <div class="col-6">
-                                        <input type="text" name="lang" id="langInput" class="form-control form-control-sm" placeholder="Long" readonly>
+                                        <input type="text" name="lang" id="langInput" class="form-control form-control-sm border-0 bg-light" placeholder="Long" readonly>
                                     </div>
                                 </div>
-                                <p class="text-muted small mt-2"><i class="bi bi-info-circle"></i> Gunakan kotak pencarian di dalam maps atau geser pin.</p>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 pb-4 px-4">
-                        <button type="submit" class="btn btn-primary w-100 py-2 shadow">Simpan Data Pelanggan</button>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow-sm">Simpan Data</button>
                     </div>
                 </form>
             </div>
@@ -123,6 +128,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
     <script src="js/config.js"></script>
     <script src="js/layout.js"></script>
 
@@ -136,38 +142,32 @@
             loadData();
         });
 
-        // FUNGSI INIT MAPS
         function initMap() {
-            map = L.map('map').setView([-6.2000, 106.8166], 13); // Default Jakarta
+            map = L.map('map').setView([-8.206274, 114.3797957], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            
             marker = L.marker([-8.206274, 114.3797957], { draggable: true }).addTo(map);
 
-            // Update Lat/Long saat marker digeser
             marker.on('dragend', function (e) {
                 let pos = marker.getLatLng();
                 updateCoords(pos.lat, pos.lng);
             });
 
-            // Klik pada map pindahkan marker
             map.on('click', function (e) {
                 marker.setLatLng(e.latlng);
                 updateCoords(e.latlng.lat, e.latlng.lng);
             });
 
-            // Tambahkan Pencarian di Maps
             geocoder = L.Control.geocoder({
                 defaultMarkGeocode: false,
-                placeholder: "Cari Nama Jalan/Gedung...",
+                placeholder: "Cari alamat...",
                 position: "topleft"
             })
             .on('markgeocode', function(e) {
-                let bbox = e.geocode.bbox;
                 let center = e.geocode.center;
-                map.fitBounds(bbox);
+                map.setView(center, 16);
                 marker.setLatLng(center);
                 updateCoords(center.lat, center.lng);
-                document.getElementById('alamatInput').value = e.geocode.name; // Isi alamat otomatis
+                document.getElementById('alamatInput').value = e.geocode.name;
             })
             .addTo(map);
         }
@@ -177,41 +177,56 @@
             document.getElementById('langInput').value = lng.toFixed(6);
         }
 
-        // --- CRUD LOGIC (Sama seperti sebelumnya dengan sedikit penyesuaian kolom) ---
-
+        // --- FUNGSI LOAD DATA (MODERN STYLE) ---
         async function loadData() {
             const search = document.getElementById('searchInput').value;
-            const res = await fetch(CONFIG.GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'read', sheet: 'Pelanggan', search: search })
-            });
-            const data = await res.json();
-            let html = '';
-            data.forEach(p => {
-                const katBadge = p.kategori === 'Instansi' ? 'badge-instansi' : 'badge-personal';
-                html += `
-                <tr>
-                    <td class="ps-4"><span class="badge ${katBadge}">${p.kategori || 'Personal'}</span></td>
-                    <td>
-                        <div class="fw-bold text-dark">${p.nama}</div>
-                        <div class="small text-muted">${p.email}</div>
-                    </td>
-                    <td><a href="https://wa.me/${p.wa}" target="_blank" class="text-success text-decoration-none"><i class="bi bi-whatsapp me-1"></i>${p.wa}</a></td>
-                    <td><small class="text-muted d-block text-truncate" style="max-width:200px">${p.alamat}</small></td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-light border" onclick="editData('${p.email}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-light border text-danger" onclick="deleteData('${p.email}')"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`;
-            });
-            document.getElementById('tableBody').innerHTML = html;
+            const area = document.getElementById('renderArea');
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                // Trik CORS: Tanpa header Content-Type
+                const res = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'read', sheet: 'Pelanggan', search: search })
+                });
+                const data = await res.json();
+                
+                let html = '';
+                if(data.length === 0) {
+                    html = '<div class="text-center py-5 text-muted small">Tidak ada data ditemukan.</div>';
+                } else {
+                    data.reverse().forEach(p => {
+                        const katClass = p.kategori === 'Instansi' ? 'badge-instansi' : 'badge-personal';
+                        html += `
+                        <div class="customer-card shadow-sm p-3 mb-3 bg-white border-0" style="border-radius:18px;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div onclick="editData('${p.email}')" style="cursor:pointer; flex:1;">
+                                    <div class="fw-bold text-dark mb-0">${p.nama}</div>
+                                    <div class="text-muted small mb-2" style="font-size:11px;">${p.email}</div>
+                                    <span class="badge ${katClass} rounded-pill px-3" style="font-size:9px;">${p.kategori ? p.kategori.toUpperCase() : 'PERSONAL'}</span>
+                                    <div class="mt-2 small text-truncate text-muted" style="max-width:200px;"><i class="bi bi-geo-alt me-1"></i>${p.alamat || '-'}</div>
+                                </div>
+                                <div class="d-flex flex-column gap-2">
+                                    <a href="https://wa.me/${p.wa}" class="btn btn-light rounded-circle text-success btn-sm shadow-sm"><i class="bi bi-whatsapp"></i></a>
+                                    <button onclick="deleteData('${p.email}')" class="btn btn-light rounded-circle text-danger btn-sm shadow-sm"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                }
+                area.innerHTML = html;
+            } catch (err) {
+                area.innerHTML = `<div class="alert alert-danger mx-3 small">Gagal memuat: ${err.message}</div>`;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
         }
 
         function showAddModal() {
+            document.getElementById('modalTitle').innerText = "Tambah Pelanggan Baru";
             document.getElementById('formPelanggan').reset();
             document.getElementById('oldEmail').value = '';
             pelangganModal.show();
-            // Refresh Map agar tidak abu-abu (Leaflet butuh refresh jika ditaruh di modal)
             setTimeout(() => map.invalidateSize(), 500);
         }
 
@@ -219,56 +234,87 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const dataObj = Object.fromEntries(formData.entries());
-            dataObj.is_active = "TRUE";
-            dataObj.tanggal = new Date().toISOString().split('T')[0];
+            const oldEmail = document.getElementById('oldEmail').value;
 
-            Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
-            await fetch(CONFIG.GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: document.getElementById('oldEmail').value ? 'update' : 'insert',
-                    sheet: 'Pelanggan',
-                    key: 'email',
-                    id: document.getElementById('oldEmail').value || dataObj.email,
-                    data: dataObj
-                })
-            });
-            
-            pelangganModal.hide();
-            Swal.fire('Berhasil', 'Data pelanggan telah diperbarui', 'success');
-            loadData();
+            try {
+                await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: oldEmail ? 'update' : 'insert',
+                        sheet: 'Pelanggan',
+                        key: 'email',
+                        id: oldEmail || dataObj.email,
+                        data: dataObj
+                    })
+                });
+                
+                pelangganModal.hide();
+                Swal.fire('Berhasil!', 'Data tersimpan.', 'success');
+                loadData();
+            } catch (err) {
+                Swal.fire('Gagal!', err.message, 'error');
+            }
         });
 
-        // Edit Data
         async function editData(email) {
-            Swal.fire({ title: 'Mengambil data...', didOpen: () => Swal.showLoading() });
-            const res = await fetch(CONFIG.GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'read', sheet: 'Pelanggan', search: email })
+            document.getElementById('modalTitle').innerText = "Edit Pelanggan";
+            Swal.fire({ title: 'Tunggu...', didOpen: () => Swal.showLoading() });
+            
+            try {
+                const res = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'read', sheet: 'Pelanggan', search: email })
+                });
+                const data = await res.json();
+                const p = data.find(item => item.email === email);
+                
+                if (p) {
+                    const form = document.getElementById('formPelanggan');
+                    form.kategori.value = p.kategori || 'Personal';
+                    form.nama.value = p.nama;
+                    form.email.value = p.email;
+                    form.wa.value = p.wa;
+                    form.alamat.value = p.alamat || '';
+                    form.lat.value = p.lat || '';
+                    form.lang.value = p.lang || '';
+                    document.getElementById('oldEmail').value = p.email;
+
+                    const lat = parseFloat(p.lat) || -8.206274;
+                    const lng = parseFloat(p.lang) || 114.3797957;
+                    marker.setLatLng([lat, lng]);
+                    map.setView([lat, lng], 15);
+
+                    Swal.close();
+                    pelangganModal.show();
+                    setTimeout(() => map.invalidateSize(), 500);
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal ambil data', 'error');
+            }
+        }
+
+        async function deleteData(email) {
+            const confirm = await Swal.fire({
+                title: 'Hapus data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus'
             });
-            const data = await res.json();
-            const p = data.find(item => item.email === email);
-            if (p) {
-                const form = document.getElementById('formPelanggan');
-                form.kategori.value = p.kategori;
-                form.nama.value = p.nama;
-                form.email.value = p.email;
-                form.wa.value = p.wa;
-                form.alamat.value = p.alamat;
-                form.lat.value = p.lat;
-                form.lang.value = p.lang;
-                document.getElementById('oldEmail').value = p.email;
 
-                // Update Map
-                const lat = parseFloat(p.lat) || -8.206274;
-                const lng = parseFloat(p.lang) || 114.3797957;
-                marker.setLatLng([lat, lng]);
-                map.setView([lat, lng], 15);
-
-                Swal.close();
-                pelangganModal.show();
-                setTimeout(() => map.invalidateSize(), 500);
+            if (confirm.isConfirmed) {
+                Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() });
+                try {
+                    await fetch(CONFIG.GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'delete', sheet: 'Pelanggan', key: 'email', id: email })
+                    });
+                    Swal.fire('Terhapus!', '', 'success');
+                    loadData();
+                } catch (err) {
+                    Swal.fire('Gagal!', err.message, 'error');
+                }
             }
         }
     </script>
