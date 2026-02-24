@@ -7,11 +7,11 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/styles.css">
     
     <style>
         :root { --premium-blue: #007AFF; }
-        .invoice-preview { background: #fff; padding: 20px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .invoice-preview { background: #fff; padding: 25px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
         .nav-pills .nav-link { border-radius: 12px; font-weight: 600; color: #666; font-size: 14px; }
         .nav-pills .nav-link.active { background-color: var(--premium-blue); color: white; }
         
@@ -19,88 +19,105 @@
         .badge-lunas { background-color: #34C759; color: #fff; }
         .badge-belum { background-color: #FF9500; color: #fff; }
         
-        /* Style untuk qty editor */
         .qty-control { display: flex; align-items: center; gap: 10px; justify-content: center; }
         .qty-btn { cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
         .qty-btn:active { transform: scale(0.8); }
+
+        /* Print Optimization */
+        @media print {
+            .d-print-none, .nav, .btn, .qty-control i { display: none !important; }
+            .invoice-preview { box-shadow: none; padding: 0; }
+            body { background: white; }
+        }
     </style>
 </head>
 <body class="bg-light pb-5">
 
 <div id="app">
     <div class="container py-3">
-        
-        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4" id="notaTab" role="tablist">
+        <ul class="nav nav-pills nav-fill bg-white p-1 rounded-4 shadow-sm mb-4 d-print-none" id="notaTab" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="tab-buat" data-bs-toggle="pill" data-bs-target="#content-buat">
-                    <i class="bi bi-pencil-square me-1"></i> Buat Nota
+                    <i class="bi bi-pencil-square me-1"></i> Detail Nota
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="tab-list" data-bs-toggle="pill" data-bs-target="#content-list" onclick="fetchNotaHistory()">
-                    <i class="bi bi-clock-history me-1"></i> Riwayat
+                    <i class="bi bi-clock-history me-1"></i> Semua Nota
                 </button>
             </li>
         </ul>
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="content-buat">
-                <div class="d-flex gap-2 mb-3">
+                <div class="d-flex gap-2 mb-3 d-print-none">
                     <button class="btn btn-primary rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="saveNota()">
-                        <i class="bi bi-cloud-check me-1"></i> SIMPAN
+                        <i class="bi bi-cloud-check me-1"></i> SIMPAN & UPDATE
                     </button>
-                    <button class="btn btn-outline-danger rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="generatePDF()">
-                        <i class="bi bi-file-pdf"></i> PDF
+                    <button class="btn btn-outline-danger rounded-4 shadow-sm flex-fill fw-bold py-2" onclick="window.print()">
+                        <i class="bi bi-printer"></i> CETAK
                     </button>
                 </div>
 
                 <div class="invoice-preview" id="printableArea">
-                    <div class="row mb-3">
+                    <div class="row mb-4">
                         <div class="col-7">
-                            <h6 class="fw-bold text-primary mb-1">NANDA TEKNIK</h6>
-                            <select id="selectPelangganNota" class="form-select border-0 bg-light fw-bold small mb-1 rounded-3" onchange="updateInfoPelanggan()">
-                                <option value="">Pilih Pelanggan</option>
+                            <h5 class="fw-bold text-primary mb-1">NANDA TEKNIK</h5>
+                            <p class="small text-muted mb-3" style="font-size: 10px;">Spesialis Pendingin & Elektronik</p>
+                            
+                            <label class="small fw-bold text-muted d-print-none">Penerima:</label>
+                            <select id="selectPelangganNota" class="form-select border-0 bg-light fw-bold mb-1 rounded-3" onchange="updateInfoPelanggan()">
+                                <option value="">-- Pilih Pelanggan --</option>
                             </select>
-                            <div id="penerimaAlamat" class="text-muted" style="font-size: 11px; line-height: 1.2;">-</div>
+                            <div id="penerimaAlamat" class="text-muted" style="font-size: 11px; line-height: 1.4; max-width: 200px;">-</div>
                         </div>
                         <div class="col-5 text-end">
-                            <div id="noNota" class="fw-bold small">#AUTO</div>
-                            <input type="date" id="tglNota" class="form-control form-control-sm border-0 bg-light text-end p-0 mt-1 small">
+                            <div class="small text-muted text-uppercase">Nomor Nota</div>
+                            <div id="noNota" class="fw-bold text-dark fs-5">#NEW</div>
+                            <div class="mt-2">
+                                <label class="small fw-bold text-muted d-print-none">Tanggal:</label>
+                                <input type="date" id="tglNota" class="form-control form-control-sm border-0 bg-light text-end p-0 shadow-none fw-bold">
+                            </div>
                         </div>
                     </div>
 
                     <div class="table-responsive">
                         <table class="table align-middle" style="font-size: 13px;">
-                            <thead class="table-light">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Pekerjaan</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-end">Total</th>
+                                    <th class="py-3">Deskripsi Pekerjaan / Part</th>
+                                    <th class="text-center py-3">Qty</th>
+                                    <th class="text-end py-3">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody id="itemNotaBody"></tbody>
+                            <tbody id="itemNotaBody">
+                                </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="2" class="text-end fw-bold">TOTAL AKHIR</td>
-                                    <td id="totalNota" class="text-end fw-bold text-primary">Rp 0</td>
+                                    <td colspan="2" class="text-end fw-bold py-3">TOTAL AKHIR</td>
+                                    <td id="totalNota" class="text-end fw-bold text-primary py-3 fs-5">Rp 0</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
 
-                    <div class="mt-3 p-3 rounded-4 bg-light d-print-none">
+                    <div class="mt-4 p-3 rounded-4 bg-light d-print-none shadow-sm border">
+                        <h6 class="fw-bold mb-3 small text-muted text-uppercase">Tambah Jasa / Sparepart Manual</h6>
                         <div class="row g-2">
-                            <div class="col-12">
-                                <input type="text" id="addName" class="form-control border-0 rounded-3 shadow-sm" placeholder="Ketik Jasa / Nama Barang..." list="listHarga">
+                            <div class="col-12 col-md-5">
+                                <input type="text" id="addName" class="form-control border-0 rounded-3" placeholder="Ketik Jasa / Nama Barang..." list="listHarga">
                                 <datalist id="listHarga"></datalist>
                             </div>
-                            <div class="col-6">
-                                <input type="number" id="addPrice" class="form-control border-0 rounded-3 shadow-sm" placeholder="Harga">
+                            <div class="col-6 col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text border-0 bg-white small">Rp</span>
+                                    <input type="number" id="addPrice" class="form-control border-0 rounded-3" placeholder="Harga">
+                                </div>
                             </div>
-                            <div class="col-3">
-                                <input type="number" id="addQty" class="form-control border-0 rounded-3 shadow-sm" value="1">
+                            <div class="col-3 col-md-2">
+                                <input type="number" id="addQty" class="form-control border-0 rounded-3 text-center" value="1">
                             </div>
-                            <div class="col-3">
+                            <div class="col-3 col-md-2">
                                 <button class="btn btn-dark w-100 rounded-3" onclick="addItemManual()"><i class="bi bi-plus-lg"></i></button>
                             </div>
                         </div>
@@ -111,10 +128,11 @@
             <div class="tab-pane fade" id="content-list">
                 <div class="input-group bg-white rounded-4 shadow-sm mb-3 p-1">
                     <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                    <input type="text" id="filterSearch" class="form-control border-0 shadow-none" placeholder="Cari nota..." onkeyup="renderHistoryCards()">
+                    <input type="text" id="filterSearch" class="form-control border-0 shadow-none" placeholder="Cari ID Nota atau Email..." onkeyup="renderHistoryCards()">
                 </div>
-                <div id="loadingNota" class="text-center py-4" style="display:none;">
+                <div id="loadingNota" class="text-center py-5" style="display:none;">
                     <div class="spinner-border text-primary"></div>
+                    <p class="small text-muted mt-2">Menarik data dari server...</p>
                 </div>
                 <div id="historyNotaBody"></div>
             </div>
@@ -124,11 +142,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
 <script src="js/config.js"></script>
-<script src="js/layout.js"></script>
 
 <script>
     let currentCart = [];
@@ -137,33 +151,93 @@
     let notaHistory = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
+        // 1. Set Default Date
         document.getElementById('tglNota').valueAsDate = new Date();
-        document.getElementById('noNota').innerText = `INV-${Date.now().toString().slice(-6)}`;
-        await fetchPelanggan();
-        await fetchHarga();
+        
+        // 2. Fetch Base Data
+        await Promise.all([fetchPelanggan(), fetchHarga()]);
+        
+        // 3. Cek URL Parameter (?id=NT-xxxx)
+        const urlParams = new URLSearchParams(window.location.search);
+        const notaIdParam = urlParams.get('id');
+        
+        if (notaIdParam) {
+            loadNotaById(notaIdParam);
+        } else {
+            document.getElementById('noNota').innerText = `INV-${Date.now().toString().slice(-6)}`;
+        }
     });
 
     async function fetchPelanggan() {
-        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
-        pelangganData = await res.json();
-        let opt = '<option value="">Pilih Pelanggan</option>';
-        pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama}</option>`);
-        document.getElementById('selectPelangganNota').innerHTML = opt;
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Pelanggan' }) });
+            pelangganData = await res.json();
+            let opt = '<option value="">-- Pilih Pelanggan --</option>';
+            pelangganData.forEach(p => opt += `<option value="${p.email}">${p.nama} (${p.email})</option>`);
+            document.getElementById('selectPelangganNota').innerHTML = opt;
+        } catch(e) { console.error("Gagal load pelanggan"); }
     }
 
     async function fetchHarga() {
-        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
-        hargaData = await res.json();
-        let listHtml = '';
-        hargaData.forEach(h => listHtml += `<option value="${h.nama}">Rp ${h.harga}</option>`);
-        document.getElementById('listHarga').innerHTML = listHtml;
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Harga' }) });
+            hargaData = await res.json();
+            let listHtml = '';
+            // Fix Case Sensitivity (nama/Nama, harga/Harga)
+            hargaData.forEach(h => {
+                const n = h.nama || h.Nama || h.Jasa;
+                const p = h.harga || h.Harga;
+                listHtml += `<option value="${n}">Rp ${parseInt(p).toLocaleString()}</option>`;
+            });
+            document.getElementById('listHarga').innerHTML = listHtml;
+        } catch(e) { console.error("Gagal load harga"); }
     }
 
-    // Auto-fill harga pas pilih item dari list
+    // Auto-fill harga pas ketik di manual input
     document.getElementById('addName').addEventListener('input', function(e) {
-        const item = hargaData.find(x => x.nama === e.target.value);
-        if (item) document.getElementById('addPrice').value = item.harga;
+        const val = e.target.value;
+        const item = hargaData.find(x => (x.nama || x.Nama || x.Jasa) === val);
+        if (item) {
+            document.getElementById('addPrice').value = item.harga || item.Harga;
+        }
     });
+
+    async function loadNotaById(id) {
+        Swal.fire({ title: 'Memuat Nota...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        try {
+            const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
+            const allNota = await res.json();
+            const data = allNota.find(n => n.id === id);
+            
+            if (data) {
+                document.getElementById('noNota').innerText = data.id;
+                document.getElementById('tglNota').value = data.tanggal;
+                document.getElementById('selectPelangganNota').value = data.email;
+                updateInfoPelanggan();
+                currentCart = JSON.parse(data.items_json || '[]');
+                renderItems();
+                Swal.close();
+            } else {
+                Swal.fire('Gagal', 'ID Nota tidak ditemukan', 'error');
+            }
+        } catch(e) { Swal.fire('Error', 'Gagal koneksi server', 'error'); }
+    }
+
+    function addItemManual() {
+        const n = document.getElementById('addName').value;
+        const p = parseInt(document.getElementById('addPrice').value);
+        const q = parseInt(document.getElementById('addQty').value);
+        
+        if(!n || isNaN(p)) return Swal.fire('Opps', 'Nama & Harga harus diisi', 'warning');
+        
+        currentCart.push({ item: n, price: p, qty: q, total: p * q });
+        renderItems();
+        
+        // Reset input
+        document.getElementById('addName').value = '';
+        document.getElementById('addPrice').value = '';
+        document.getElementById('addQty').value = '1';
+    }
 
     function renderItems() {
         let html = '';
@@ -172,20 +246,24 @@
             total += item.total;
             html += `
                 <tr>
-                    <td>
-                        <div class="fw-bold">${item.item}</div>
-                        <div class="text-muted" style="font-size:10px">Rp ${parseInt(item.price).toLocaleString()}</div>
+                    <td class="py-3">
+                        <div class="fw-bold text-dark">${item.item}</div>
+                        <div class="text-muted small">@ Rp ${parseInt(item.price).toLocaleString()}</div>
                     </td>
                     <td class="text-center">
                         <div class="qty-control d-print-none">
-                            <i class="bi bi-dash-circle text-danger qty-btn" onclick="updateQty(${i}, -1)"></i>
-                            <span class="fw-bold">${item.qty}</span>
-                            <i class="bi bi-plus-circle text-primary qty-btn" onclick="updateQty(${i}, 1)"></i>
+                            <i class="bi bi-dash-square text-danger qty-btn" onclick="updateQty(${i}, -1)"></i>
+                            <span class="fw-bold" style="min-width: 20px">${item.qty}</span>
+                            <i class="bi bi-plus-square text-primary qty-btn" onclick="updateQty(${i}, 1)"></i>
                         </div>
+                        <span class="d-none d-print-block">${item.qty}</span>
                     </td>
                     <td class="text-end fw-bold">Rp ${parseInt(item.total).toLocaleString()}</td>
                 </tr>`;
         });
+        
+        if(currentCart.length === 0) html = '<tr><td colspan="3" class="text-center py-4 text-muted small">Belum ada item. Tambahkan di bawah.</td></tr>';
+        
         document.getElementById('itemNotaBody').innerHTML = html;
         document.getElementById('totalNota').innerText = "Rp " + total.toLocaleString();
     }
@@ -200,37 +278,30 @@
         renderItems();
     }
 
-    function addItemManual() {
-        const n = document.getElementById('addName').value;
-        const p = parseInt(document.getElementById('addPrice').value);
-        const q = parseInt(document.getElementById('addQty').value);
-        if(!n || isNaN(p)) return;
-        
-        currentCart.push({ item: n, price: p, qty: q, total: p * q });
-        renderItems();
-        document.getElementById('addName').value = '';
-        document.getElementById('addPrice').value = '';
-    }
-
     async function saveNota() {
         const id = document.getElementById('noNota').innerText;
         const tgl = document.getElementById('tglNota').value;
         const email = document.getElementById('selectPelangganNota').value;
         const totalVal = currentCart.reduce((sum, item) => sum + item.total, 0);
 
-        if(!email || currentCart.length === 0) return Swal.fire('Error', 'Data belum lengkap!', 'error');
+        if(!email || currentCart.length === 0) return Swal.fire('Error', 'Data pelanggan & item wajib ada!', 'error');
 
         Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+        
         try {
-            await fetch(CONFIG.GAS_URL, {
+            // Kita pakai "update" dengan key "id". 
+            // Jika ID baru (INV-xxx), server GAS kamu harus support handling 'update or insert' 
+            // atau kamu bisa ganti action-nya jadi 'insert'.
+            const response = await fetch(CONFIG.GAS_URL, {
                 method: 'POST',
                 body: JSON.stringify({
-                    action: 'insert', sheet: 'Nota', key: 'id', id: id,
+                    action: 'insert', // Gunakan insert untuk data baru, atau kembangkan GAS-mu agar bisa Upsert
+                    sheet: 'Nota',
                     data: { id: id, tanggal: tgl, email: email, items_json: JSON.stringify(currentCart), total: totalVal, status: 'Belum Lunas' }
                 })
             });
-            Swal.fire('Berhasil!', 'Nota tersimpan ke database.', 'success');
-        } catch (e) { Swal.fire('Gagal', e.message, 'error'); }
+            Swal.fire('Berhasil!', 'Nota telah sinkron dengan Database.', 'success');
+        } catch (e) { Swal.fire('Gagal', 'Cek koneksi internet', 'error'); }
     }
 
     async function fetchNotaHistory() {
@@ -241,40 +312,43 @@
             const res = await fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) });
             notaHistory = await res.json();
             renderHistoryCards();
-        } catch (e) { container.innerHTML = 'Gagal muat data.'; }
+        } catch (e) { container.innerHTML = '<p class="text-center py-5">Gagal muat riwayat nota.</p>'; }
         document.getElementById('loadingNota').style.display = 'none';
     }
 
     function renderHistoryCards() {
         const search = document.getElementById('filterSearch').value.toLowerCase();
         const container = document.getElementById('historyNotaBody');
-        
         const filtered = notaHistory.filter(n => n.id.toLowerCase().includes(search) || n.email.toLowerCase().includes(search)).reverse();
         
         container.innerHTML = filtered.map(n => {
             const p = pelangganData.find(x => x.email === n.email);
             const badge = n.status === 'Lunas' ? 'badge-lunas' : 'badge-belum';
             return `
-            <div class="nota-card shadow-sm p-3">
-                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+            <div class="nota-card shadow-sm p-3 border-start border-4 ${n.status === 'Lunas' ? 'border-success' : 'border-warning'}">
+                <div class="d-flex justify-content-between mb-2">
                     <div><span class="fw-bold text-primary">${n.id}</span><br><small class="text-muted">${n.tanggal}</small></div>
-                    <span class="badge ${badge} rounded-pill align-self-center" onclick="updateStatus('${n.id}', '${n.status}')" style="cursor:pointer">
+                    <span class="badge ${badge} rounded-pill align-self-center" onclick="updateStatusNota('${n.id}', '${n.status}')" style="cursor:pointer">
                         ${n.status} <i class="bi bi-arrow-repeat"></i>
                     </span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <div><div class="fw-bold">${p ? p.nama : n.email}</div><div class="text-success fw-bold">Rp ${parseInt(n.total || 0).toLocaleString()}</div></div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-light text-primary rounded-circle btn-sm shadow-sm" onclick="viewNota('${n.id}')"><i class="bi bi-eye"></i></button>
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                    <div>
+                        <div class="fw-bold small text-uppercase text-muted" style="font-size:10px">Pelanggan</div>
+                        <div class="fw-bold">${p ? p.nama : n.email}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-dark">Rp ${parseInt(n.total || 0).toLocaleString()}</div>
+                        <button class="btn btn-sm btn-primary rounded-pill mt-1" onclick="loadNotaById('${n.id}')">Buka Nota</button>
                     </div>
                 </div>
             </div>`;
         }).join('');
     }
 
-    async function updateStatus(id, oldStatus) {
+    async function updateStatusNota(id, oldStatus) {
         const newStatus = oldStatus === 'Lunas' ? 'Belum Lunas' : 'Lunas';
-        Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Mengubah Status...', didOpen: () => Swal.showLoading() });
         await fetch(CONFIG.GAS_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'update', sheet: 'Nota', key: 'id', id: id, data: { status: newStatus } })
@@ -283,33 +357,10 @@
         fetchNotaHistory();
     }
 
-    function viewNota(id) {
-        const n = notaHistory.find(x => x.id === id);
-        if(n) {
-            document.getElementById('noNota').innerText = n.id;
-            document.getElementById('tglNota').value = n.tanggal;
-            document.getElementById('selectPelangganNota').value = n.email;
-            currentCart = JSON.parse(n.items_json);
-            renderItems();
-            new bootstrap.Tab(document.getElementById('tab-buat')).show();
-        }
-    }
-
     function updateInfoPelanggan() {
-        const p = pelangganData.find(x => x.email === document.getElementById('selectPelangganNota').value);
-        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : '-';
-    }
-
-    async function generatePDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text("NOTA NANDA TEKNIK", 14, 20);
-        doc.autoTable({
-            startY: 30,
-            head: [['Item', 'Qty', 'Total']],
-            body: currentCart.map(i => [i.item, i.qty, i.total.toLocaleString()])
-        });
-        doc.save(`Nota-${document.getElementById('noNota').innerText}.pdf`);
+        const email = document.getElementById('selectPelangganNota').value;
+        const p = pelangganData.find(x => x.email === email);
+        document.getElementById('penerimaAlamat').innerText = p ? p.alamat : '- Pilih pelanggan untuk melihat alamat -';
     }
 </script>
 </body>
