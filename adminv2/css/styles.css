@@ -77,3 +77,45 @@ body {
     border: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
+
+/* Bottom Nav Styling */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    z-index: 1030;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #8E8E93;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 11px;
+    width: 20%;
+}
+
+.nav-item i {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+}
+
+.nav-item.active {
+    color: #007AFF; /* Biru iOS */
+}
+
+/* Offcanvas Rounded */
+.rounded-top-4 {
+    border-radius: 20px 20px 0 0 !important;
+}
+
+/* Header Sticky */
+header.sticky-top {
+    z-index: 1020;
+}
