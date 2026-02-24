@@ -2,131 +2,168 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Laba Rugi | Service App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laba Rugi | Nanda Teknik</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        .card-stat { border-radius: 20px; border: none; transition: 0.3s; }
+        .card-stat:hover { transform: translateY(-5px); }
+        .bg-gradient-primary { background: linear-gradient(45deg, #0d6efd, #0099ff); }
+        .bg-gradient-success { background: linear-gradient(45deg, #198754, #20c997); }
+        .bg-gradient-danger { background: linear-gradient(45deg, #dc3545, #fd7e14); }
+        .table-custom { border-radius: 15px; overflow: hidden; background: white; }
+    </style>
 </head>
 <body class="bg-light">
+
 <div id="app">
     <div class="container-fluid py-4">
+        <h4 class="fw-800 mb-4 text-dark">Laporan Keuangan</h4>
+
+        <div class="card card-stat shadow-sm mb-4">
+            <div class="card-body d-flex gap-3 align-items-end">
+                <div>
+                    <label class="small fw-bold mb-1">Dari Tanggal</label>
+                    <input type="date" id="dateFrom" class="form-control form-control-sm border-0 bg-light">
+                </div>
+                <div>
+                    <label class="small fw-bold mb-1">Sampai Tanggal</label>
+                    <input type="date" id="dateTo" class="form-control form-control-sm border-0 bg-light">
+                </div>
+                <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="fetchLaporan()">
+                    <i class="bi bi-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card card-stat bg-gradient-success text-white shadow">
                     <div class="card-body">
-                        <h6>Total Pendapatan (Nota)</h6>
-                        <h3 id="txtPendapatan">Rp 0</h3>
+                        <h6 class="small text-uppercase opacity-75">Total Pendapatan</h6>
+                        <h2 class="fw-800 mb-0" id="statPendapatan">Rp 0</h2>
+                        <i class="bi bi-arrow-up-right position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm bg-danger text-white">
+                <div class="card card-stat bg-gradient-danger text-white shadow">
                     <div class="card-body">
-                        <h6>Total Pengeluaran</h6>
-                        <h3 id="txtPengeluaran">Rp 0</h3>
+                        <h6 class="small text-uppercase opacity-75">Total Pengeluaran</h6>
+                        <h2 class="fw-800 mb-0" id="statPengeluaran">Rp 0</h2>
+                        <i class="bi bi-arrow-down-left position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card card-stat bg-gradient-primary text-white shadow">
                     <div class="card-body">
-                        <h6>Laba Bersih</h6>
-                        <h3 id="txtLaba">Rp 0</h3>
+                        <h6 class="small text-uppercase opacity-75">Laba Bersih</h6>
+                        <h2 class="fw-800 mb-0" id="statLaba">Rp 0</h2>
+                        <i class="bi bi-wallet2 position-absolute top-0 end-0 m-3 fs-1 opacity-25"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white d-flex justify-content-between">
-                <h5 class="fw-bold mb-0">Input Pengeluaran Baru</h5>
-            </div>
+        <div class="card card-stat shadow-sm">
             <div class="card-body">
-                <form id="formPengeluaran" class="row g-3">
-                    <div class="col-md-3">
-                        <input type="date" name="Tanggal" class="form-control" required>
-                    </div>
-                    <div class="col-md-3">
-                        <select name="Kategori" class="form-select">
-                            <option value="Sparepart">Sparepart</option>
-                            <option value="Bensin">Bensin/Transport</option>
-                            <option value="Alat">Pembelian Alat</option>
-                            <option value="Lainnya">Lain-lain</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" name="Nominal" class="form-control" placeholder="Nominal Rp" required>
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-dark w-100">Catat Pengeluaran</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <canvas id="labaChart" style="max-height: 300px;"></canvas>
+                <h6 class="fw-bold mb-3">Rincian Transaksi Masuk</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Keterangan / Judul</th>
+                                <th>Pelanggan</th>
+                                <th class="text-end">Nominal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="config.js"></script>
-<script src="layout.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/config.js"></script>
+<script src="js/layout.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", loadLaporan);
+    document.addEventListener("DOMContentLoaded", () => {
+        // Set default filter bulan ini
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        document.getElementById('dateFrom').value = firstDay;
+        document.getElementById('dateTo').value = lastDay;
 
-    async function loadLaporan() {
-        // Ambil Data Nota & Pengeluaran secara paralel
-        const [resNota, resKeluar] = await Promise.all([
-            fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Nota' }) }),
-            fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'read', sheet: 'Labarugi' }) })
-        ]);
-
-        const notaData = await resNota.json();
-        const pengeluaranData = await resKeluar.json();
-
-        const totalMasuk = notaData.reduce((sum, n) => sum + (parseInt(n.total) || 0), 0);
-        const totalKeluar = pengeluaranData.reduce((sum, p) => sum + (parseInt(p.Nominal) || 0), 0);
-
-        document.getElementById('txtPendapatan').innerText = "Rp " + totalMasuk.toLocaleString();
-        document.getElementById('txtPengeluaran').innerText = "Rp " + totalKeluar.toLocaleString();
-        document.getElementById('txtLaba').innerText = "Rp " + (totalMasuk - totalKeluar).toLocaleString();
-        
-        initChart(totalMasuk, totalKeluar);
-    }
-
-    function initChart(masuk, keluar) {
-        const ctx = document.getElementById('labaChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Pendapatan', 'Pengeluaran'],
-                datasets: [{
-                    label: 'Rupiah',
-                    data: [masuk, keluar],
-                    backgroundColor: ['#0d6efd', '#dc3545']
-                }]
-            }
-        });
-    }
-
-    document.getElementById('formPengeluaran').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        data.Status = "Selesai";
-
-        await fetch(CONFIG.GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'insert', sheet: 'Labarugi', data: data })
-        });
-        
-        Swal.fire('Berhasil', 'Pengeluaran dicatat', 'success').then(() => location.reload());
+        fetchLaporan();
     });
+
+    async function fetchLaporan() {
+        Swal.fire({ title: 'Menghitung...', didOpen: () => Swal.showLoading() });
+        
+        try {
+            // Kita ambil data dari sheet 'Booking' (sebagai sumber pendapatan)
+            const res = await fetch(CONFIG.GAS_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'read', sheet: 'Booking' }) 
+            });
+            const data = await res.json();
+            
+            processData(data);
+            Swal.close();
+        } catch (e) {
+            Swal.fire('Error', 'Gagal memuat data keuangan', 'error');
+        }
+    }
+
+    function processData(data) {
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        
+        let totalPendapatan = 0;
+        let html = '';
+
+        // Filter data berdasarkan tanggal dan status 'Done' (Asumsi transaksi cair kalau sudah Done)
+        const filtered = data.filter(item => {
+            return item.tanggal >= from && item.tanggal <= to;
+        });
+
+        filtered.forEach(item => {
+            const nominal = parseInt(item.total_bayar) || 0;
+            totalPendapatan += nominal;
+            
+            html += `
+                <tr>
+                    <td><span class="badge bg-light text-dark fw-normal">${item.tanggal}</span></td>
+                    <td class="fw-bold text-dark">${item.judul}</td>
+                    <td><small class="text-muted">${item.email}</small></td>
+                    <td class="text-end fw-bold">Rp ${nominal.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+
+        // Update UI
+        document.getElementById('tableBody').innerHTML = html || '<tr><td colspan="4" class="text-center py-4 text-muted">Tidak ada transaksi di periode ini</td></tr>';
+        document.getElementById('statPendapatan').innerText = "Rp " + totalPendapatan.toLocaleString();
+        
+        // Simulasi pengeluaran (Lo bisa buatkan sheet 'Pengeluaran' nanti)
+        let totalPengeluaran = 0; 
+        document.getElementById('statPengeluaran').innerText = "Rp " + totalPengeluaran.toLocaleString();
+        
+        let labaBersih = totalPendapatan - totalPengeluaran;
+        document.getElementById('statLaba').innerText = "Rp " + labaBersih.toLocaleString();
+    }
 </script>
+
 </body>
 </html>
