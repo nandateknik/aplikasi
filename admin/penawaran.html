@@ -252,53 +252,34 @@ function generatePDF(data) {
     const doc = new jsPDF();
     
     // --- 1. HEADER DENGAN LOGO ---
-  const pageWidth = doc.internal.pageSize.getWidth(); // 210 (A4)
-    const centerX = pageWidth / 2;
-
-    // --- KONFIGURASI HEADER ---
-    const logoWidth = 23; 
-    const gap = 5; // Jarak antarane logo lan teks
-    const textBlockWidth = 100; // Kira-kira amba blok tulisanmu
-    const totalHeaderWidth = logoWidth + gap + textBlockWidth;
-    
-    // Titik awal X supaya blok Logo + Teks pas neng tengah
-    const startX = (pageWidth - totalHeaderWidth) / 2; 
-
-    // 1. Gambar Logo
+// --- 1. HEADER DENGAN LOGO ---
     try { 
-        doc.addImage('logo-none-text.png', 'PNG', startX, 12, logoWidth, logoWidth); 
+        doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
     } catch (e) { 
         console.error("Logo ora ketemu.");
     }
 
-    // 2. Tulisan neng samping logo (startX + logoWidth + gap)
-    const textStartX = startX + logoWidth + gap;
-
+    doc.setFontSize(18); doc.setFont("helvetica", "bold");
     doc.setTextColor(40, 40, 40);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("NANDA TEKNIK BANYUWANGI", textStartX, 20);
+    doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
     
-    doc.setFontSize(9); 
-    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
     doc.setTextColor(100); 
-    doc.text("Software, Network & Electrical Engineering", textStartX, 26);
-    
+    doc.text("Software, Network & Electrical Engineering", 45, 26);
     doc.setFontSize(8);
-    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", textStartX, 31);
-    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", textStartX, 35);
-    doc.text("Website : www.nandateknik.com", textStartX, 39);
+    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
     
-    // 3. Garis Pemisah (Line) - Tetep full saka kiwa nengen
     doc.setDrawColor(80, 80, 80);
     doc.setLineWidth(0.5);
-    doc.line(15, 45, 195, 45);
+    doc.line(15, 40, 195, 40);
 
-    // --- INFO PENAWARAN (Pindah mrene supaya ora tumpuk) ---
+    // --- 2. INFO SURAT ---
     doc.setTextColor(0); 
     doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("PENAWARAN HARGA", centerX, 55, { align: "center" });
+    doc.text("PENAWARAN HARGA", 105, 50, { align: "center" });
 
+    
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
     doc.text(`No. Penawaran : #${data.id}`, 15, 60);
     doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
@@ -413,10 +394,12 @@ function generatePDF(data) {
     }
 
     function selectPelanggan(n, e) {
-        document.getElementById('form-email').value = e;
-        document.getElementById('search-pelanggan').value = n;
-        document.getElementById('search-results').style.display = 'none';
-    }
+    document.getElementById('form-email').value = e;
+    document.getElementById('search-pelanggan').value = n; // Iki jeneng sing diketik
+    // Tambahake baris iki supaya 'nama' melu kegowo pas submit
+    document.getElementById('search-pelanggan').dataset.nama = n; 
+    document.getElementById('search-results').style.display = 'none';
+}
 
     function showAddModal() {
         document.getElementById('formPenawaran').reset();
@@ -447,6 +430,7 @@ function generatePDF(data) {
         const payload = {
             action: id ? 'updatePenawaran' : 'createPenawaran',
             id: id,
+            nama: document.getElementById('search-pelanggan').value, // TAMBAHIKI SAM!
             email: document.getElementById('form-email').value,
             perihal: document.getElementById('form-perihal').value,
             items: Array.from(document.querySelectorAll('.item-row')).map(r => ({
