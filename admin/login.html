@@ -38,7 +38,7 @@
 <script>
     // Langsung cek session nek wis login
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = 'admin/admin-pekerjaan.html';
+        window.location.href = 'index.html';
     }
 
     function handleLogin() {
@@ -55,7 +55,7 @@
         if (user === USER_BENER && pass === PASS_BENER) {
             localStorage.setItem('isLoggedIn', 'true');
             // Pastikan alamat file iki bener yo Mas!
-            window.location.href = 'admin-pekerjaan.html'; 
+            window.location.href = 'index.html'; 
         } else {
             error.style.display = 'block';
             document.getElementById('passInput').value = "";
