@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manajemen Teknisi | Nanda Teknik</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        .tech-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            border: none;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .tech-avatar {
+            width: 60px;
+            height: 60px;
+            background: var(--premium-blue);
+            color: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .badge-status {
+            font-size: 10px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .fab-add {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: var(--premium-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,122,255,0.3);
+            border: none;
+            z-index: 99;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div id="app">
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+            <div>
+                <h4 class="fw-800 mb-0">Tim Teknisi</h4>
+                <p class="text-muted small">Kelola ketersediaan teknisi lo</p>
+            </div>
+            <div class="bg-white p-2 rounded-3 shadow-sm">
+                <i class="bi bi-people-fill text-primary"></i> <span id="countTech" class="fw-bold">0</span>
+            </div>
+        </div>
+
+        <div class="px-2 mb-4">
+            <div class="input-group bg-white rounded-4 shadow-sm p-1">
+                <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchTech" class="form-control border-0 shadow-none" placeholder="Cari teknisi..." onkeyup="renderTechList()">
+            </div>
+        </div>
+
+        <div id="techContainer" class="row g-3 px-2">
+            </div>
+    </div>
+
+    <button class="fab-add" onclick="showAddModal()">
+        <i class="bi bi-person-plus-fill fs-3"></i>
+    </button>
+</div>
+
+<div class="modal fade" id="modalTech" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-5">
+            <form id="formTech">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold">Data Teknisi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <input type="hidden" id="techId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">NAMA LENGKAP</label>
+                        <input type="text" name="nama" class="form-control border-0 bg-light p-3 rounded-4" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">NO. WHATSAPP</label>
+                        <input type="number" name="wa" class="form-control border-0 bg-light p-3 rounded-4" placeholder="62812..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">SPESIALISASI</label>
+                        <input type="text" name="spesialis" class="form-control border-0 bg-light p-3 rounded-4" placeholder="Contoh: AC Inverter, Cuci Besar">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">STATUS</label>
+                        <select name="status" class="form-select border-0 bg-light p-3 rounded-4">
+                            <option value="Aktif">Aktif / Tersedia</option>
+                            <option value="Sibuk">Sedang Bertugas</option>
+                            <option value="Libur">Libur</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 fw-bold shadow">Simpan Teknisi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/layout.js"></script>
+
+<script>
+    let allTech = [];
+    let modalTech;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        modalTech = new bootstrap.Modal(document.getElementById('modalTech'));
+        fetchTech();
+    });
+
+    async function fetchTech() {
+        Swal.fire({ title: 'Memuat Tim...', didOpen: () => Swal.showLoading() });
+        try {
+            const res = await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'read', sheet: 'Teknisi' })
+            });
+            allTech = await res.json();
+            renderTechList();
+            Swal.close();
+        } catch (e) {
+            Swal.fire('Error', 'Gagal ambil data teknisi', 'error');
+        }
+    }
+
+    function renderTechList() {
+        const query = document.getElementById('searchTech').value.toLowerCase();
+        const container = document.getElementById('techContainer');
+        const filtered = allTech.filter(t => t.nama.toLowerCase().includes(query));
+        
+        document.getElementById('countTech').innerText = filtered.length;
+        
+        let html = '';
+        filtered.forEach(t => {
+            const statusColor = t.status === 'Aktif' ? 'bg-success' : (t.status === 'Sibuk' ? 'bg-warning' : 'bg-danger');
+            const initial = t.nama.charAt(0).toUpperCase();
+            
+            html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="tech-card p-3 d-flex align-items-center gap-3">
+                    <div class="tech-avatar">${initial}</div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold mb-0">${t.nama}</h6>
+                            <span class="badge-status ${statusColor} text-white">${t.status}</span>
+                        </div>
+                        <p class="text-muted small mb-2">${t.spesialis || 'Umum'}</p>
+                        <div class="d-flex gap-2">
+                            <a href="https://wa.me/${t.wa}" class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-success" target="_blank">
+                                <i class="bi bi-whatsapp"></i> Chat
+                            </a>
+                            <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold" onclick="editTech('${t.id}')">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = html || '<div class="text-center py-5 text-muted">Belum ada data teknisi.</div>';
+    }
+
+    function showAddModal() {
+        document.getElementById('formTech').reset();
+        document.getElementById('techId').value = '';
+        modalTech.show();
+    }
+
+    function editTech(id) {
+        const t = allTech.find(x => x.id == id);
+        if(!t) return;
+        
+        document.getElementById('techId').value = t.id;
+        const form = document.getElementById('formTech');
+        form.nama.value = t.nama;
+        form.wa.value = t.wa;
+        form.spesialis.value = t.spesialis;
+        form.status.value = t.status;
+        modalTech.show();
+    }
+
+    document.getElementById('formTech').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        const id = document.getElementById('techId').value;
+        
+        if(!id) data.id = "T-" + Date.now();
+        
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+        try {
+            await fetch(CONFIG.GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: id ? 'update' : 'insert',
+                    sheet: 'Teknisi',
+                    key: 'id',
+                    id: id || data.id,
+                    data: data
+                })
+            });
+            modalTech.hide();
+            fetchTech();
+            Swal.fire('Berhasil!', 'Data tim diperbarui.', 'success');
+        } catch (e) {
+            Swal.fire('Gagal!', 'Cek koneksi atau sistem.', 'error');
+        }
+    });
+</script>
+
+</body>
+</html>
