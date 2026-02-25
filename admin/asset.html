@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Checklist Aset | Nanda Teknik</title>
+    <title>Checklist Aset Pro | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -24,12 +23,12 @@
 <div class="container mt-4">
     <div class="card card-form animate__animated animate__fadeIn">
         <div class="card-body p-4">
-            <h5 class="fw-bold mb-4"><i class="fas fa-clipboard-check me-2 text-primary"></i> Checklist Maintenance Aset</h5>
+            <h5 class="fw-bold mb-4 text-primary"><i class="fas fa-file-invoice me-2"></i> Maintenance & Checklist Report</h5>
             
             <form id="formAset">
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-md-6">
-                        <label class="form-label">Pilih Pelanggan</label>
+                        <label class="form-label">Pelanggan (Data Utama)</label>
                         <select class="form-select border-0 bg-light" id="idPelanggan" required>
                             <option value="">-- Pilih Pelanggan --</option>
                         </select>
@@ -42,7 +41,6 @@
                             <option value="AC">AC (Air Conditioner)</option>
                             <option value="Mesin Cuci">Mesin Cuci</option>
                             <option value="Listrik">Listrik / Panel</option>
-                            <div class="dropdown-divider"></div>
                             <option value="Laptop">Laptop / PC</option>
                             <option value="Genset">Genset</option>
                             <option value="UPS">UPS</option>
@@ -52,25 +50,22 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label">Nama / Brand / Seri Aset</label>
-                        <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Daikin Inverter 1PK / Hikvision 8Ch" required>
+                        <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Daikin Inverter 1PK" required>
                     </div>
                 </div>
 
-                <hr class="opacity-50">
-
                 <div id="checklistSection" style="display:none;">
-                    <label class="form-label mb-3 text-uppercase small tracking-wider text-muted">Poin Pemeriksaan</label>
-                    <div id="checklistContainer" class="checklist-group mb-4">
-                        </div>
+                    <label class="form-label mb-3 text-muted small fw-bold text-uppercase">Point-Point Pemeriksaan</label>
+                    <div id="checklistContainer" class="checklist-group mb-4"></div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label">Catatan Tambahan & Rekomendasi</label>
-                    <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis kondisi detail aset..."></textarea>
+                    <label class="form-label">Catatan & Rekomendasi Teknik</label>
+                    <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis diagnosa atau saran perbaikan..."></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-save w-100 shadow-sm">
-                    <i class="fas fa-save me-2"></i> SIMPAN RIWAYAT ASET
+                <button type="submit" class="btn btn-save w-100">
+                    <i class="fas fa-save me-2"></i> SIMPAN & DOWNLOAD PDF
                 </button>
             </form>
         </div>
@@ -79,6 +74,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 <script src="assets/config.js"></script>
 <script src="assets/layout.js"></script>
 
@@ -102,39 +100,34 @@
 
     async function loadPelanggan() {
         try {
+            // Ambil data seko URL UTAMA
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`);
             const json = await res.json();
             const select = document.getElementById('idPelanggan');
             json.data.forEach(p => {
                 let opt = document.createElement('option');
-                opt.value = p.id || p.nama; // prioritaskan ID
+                opt.value = p.id || p.nama;
                 opt.text = p.nama;
                 opt.setAttribute('data-nama', p.nama);
                 select.appendChild(opt);
             });
-        } catch (e) {
-            console.error("Gagal load pelanggan", e);
-        }
+        } catch (e) { console.error("Gagal load pelanggan", e); }
     }
 
     function renderChecklist() {
         const tipe = document.getElementById('tipeAset').value;
         const container = document.getElementById('checklistContainer');
         const section = document.getElementById('checklistSection');
-        
         container.innerHTML = "";
         if (!tipe) { section.style.display = 'none'; return; }
-        
         section.style.display = 'block';
         const items = masterChecklist[tipe] || masterChecklist["Elektronik Lain"];
-        
         items.forEach(item => {
             const div = document.createElement('div');
             div.className = 'form-check mb-3';
             div.innerHTML = `
-                <input class="form-check-input" type="checkbox" value="${item}" id="chk_${item.replace(/\s/g,'')}">
+                <input class="form-check-input" type="checkbox" value="${item}" id="chk_${item.replace(/\s/g,'')}" checked>
                 <label class="form-check-label fw-bold" for="chk_${item.replace(/\s/g,'')}">${item}</label>
-                <div class="text-muted small">Centang jika kondisi OK / Normal</div>
             `;
             container.appendChild(div);
         });
@@ -142,46 +135,113 @@
 
     document.getElementById('formAset').onsubmit = async (e) => {
         e.preventDefault();
-        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Proses...', text: 'Menyimpan data & Membuat PDF', didOpen: () => Swal.showLoading() });
 
         const tipe = document.getElementById('tipeAset').value;
         const selPel = document.getElementById('idPelanggan');
         const namaPel = selPel.options[selPel.selectedIndex].getAttribute('data-nama');
+        const brand = document.getElementById('brandAset').value;
+        const catatan = document.getElementById('catatan').value;
         
-        let hasilCek = {};
+        let checklistData = [];
         masterChecklist[tipe].forEach(item => {
             const isOk = document.getElementById(`chk_${item.replace(/\s/g,'')}`).checked;
-            hasilCek[item] = isOk ? "OK" : "PROBLEM";
+            checklistData.push({ point: item, status: isOk ? "NORMAL / OK" : "PROBLEM" });
         });
 
         const payload = {
-            action: 'saveChecklist',
-            data: {
-                idPelanggan: selPel.value,
-                namaPelanggan: namaPel,
-                tipeAset: tipe,
-                brandAset: document.getElementById('brandAset').value,
-                checklist: hasilCek,
-                catatan: document.getElementById('catatan').value,
-                teknisi: "Admin Nanda Teknik"
-            }
+            idPelanggan: selPel.value,
+            namaPelanggan: namaPel,
+            tipeAset: tipe,
+            brandAset: brand,
+            checklist: checklistData.map(c => `${c.point}: ${c.status}`).join(" | "),
+            catatan: catatan,
+            teknisi: "Admin Nanda Teknik"
         };
 
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
+            // KIRIM NANG ASSET_APP_URL
+            const res = await fetch(CONFIG.ASSET_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
             const r = await res.json();
+
             if (r.success) {
-                Swal.fire('Berhasil!', 'Riwayat aset wis tersimpan Sam.', 'success');
+                generatePDF(namaPel, tipe, brand, checklistData, catatan);
+                Swal.fire('Berhasil!', 'Riwayat Aset Tersimpan & PDF Berhasil Dibuat', 'success');
                 document.getElementById('formAset').reset();
                 document.getElementById('checklistSection').style.display = 'none';
             }
         } catch (err) {
-            Swal.fire('Error', 'Gagal kirim data', 'error');
+            Swal.fire('Error', 'Gagal koneksi ke server Asset', 'error');
         }
     };
+
+    function generatePDF(pelanggan, tipe, brand, checklist, catatan) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const date = new Date().toLocaleString('id-ID');
+
+        // --- 1. HEADER DENGAN LOGO ---
+    try { 
+        doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
+    } catch (e) { 
+        console.error("Logo ora ketemu.");
+    }
+
+    doc.setFontSize(18); doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+    
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.setTextColor(100); 
+    doc.text("Software, Network & Electrical Engineering", 45, 26);
+    doc.setFontSize(8);
+    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
+    
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.5);
+    doc.line(15, 40, 195, 40);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("Laporan Hasil Maintenance & Pemeriksaan Aset", 105, 27, { align: "center" });
+        doc.line(15, 32, 195, 32);
+
+        // Info
+        doc.setTextColor(0);
+        doc.setFont(undefined, 'bold');
+        doc.text("Informasi Pelanggan:", 15, 42);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Nama: ${pelanggan}`, 15, 48);
+        doc.text(`Tanggal: ${date}`, 15, 54);
+        doc.text(`Aset: ${tipe} (${brand})`, 15, 60);
+
+        // Table Checklist
+        const body = checklist.map((c, index) => [index + 1, c.point, c.status]);
+        doc.autoTable({
+            startY: 70,
+            head: [['No', 'Point Pemeriksaan', 'Status Akhir']],
+            body: body,
+            headStyles: { fillColor: [67, 56, 202] },
+            theme: 'striped'
+        });
+
+        // Catatan
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFont(undefined, 'bold');
+        doc.text("Catatan / Rekomendasi Teknik:", 15, finalY);
+        doc.setFont(undefined, 'normal');
+        doc.text(doc.splitTextToSize(catatan || "-", 170), 15, finalY + 7);
+
+        // Footer
+        doc.setFontSize(9);
+        doc.text("Dicetak otomatis oleh System Nanda Teknik", 105, 285, { align: "center" });
+
+        doc.save(`Report_${pelanggan}_${tipe}.pdf`);
+    }
 </script>
 </body>
 </html>
