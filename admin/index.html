@@ -68,16 +68,16 @@
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-card animate__animated animate__fadeIn">
-                <div class="stat-icon bg-light-red"><i class="fas fa-file-invoice"></i></div>
-                <small class="text-muted">Belum Lunas</small>
-                <h4 class="fw-bold mb-0 text-danger" id="stat-unpaid">0</h4>
+                <div class="stat-icon bg-light-blue"><i class="fas fa-paper-plane"></i></div>
+                <small class="text-muted">Quote Sent</small>
+                <h4 class="fw-bold mb-0" id="stat-sent">0</h4>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-card animate__animated animate__fadeIn">
-                <div class="stat-icon bg-light-green"><i class="fas fa-wallet"></i></div>
-                <small class="text-muted">Saldo (Bulan Ini)</small>
-                <h5 class="fw-bold mb-0" id="stat-saldo" style="font-size: 0.85rem;">Rp 0</h5>
+                <div class="stat-icon bg-light-green"><i class="fas fa-check-double"></i></div>
+                <small class="text-muted">Quote Approved</small>
+                <h4 class="fw-bold mb-0 text-success" id="stat-approved">0</h4>
             </div>
         </div>
     </div>
@@ -108,7 +108,7 @@
 
 <script>
     let map, markerLayer;
-    let dataJob = [], dataPelanggan = [], dataKas = [];
+    let dataJob = [], dataPelanggan = [], dataKas = [], dataPenawaran = [];
 
     const now = new Date();
     const curMonth = now.getMonth();
@@ -130,11 +130,12 @@
     async function initDashboard() {
         Swal.fire({ title: 'Sinkronisasi...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
         try {
-            const [resJob, resPel, resKas] = await Promise.all([
+            const [resJob, resPel, resKas,resQuote] = await Promise.all([
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`).then(r => r.json()),
                 fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`).then(r => r.json()),
                 // Ngambil data LabaRugi nggo ngetung kas sesuai logic Laba Rugi
-                fetch(`${CONFIG.WEB_APP_URL}`, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) }).then(r => r.json())
+                fetch(`${CONFIG.WEB_APP_URL}`, { method: 'POST', body: JSON.stringify({ action: 'getLabaRugi' }) }).then(r => r.json()),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`).then(r => r.json())
             ]);
 
             dataJob = resJob.data || [];
@@ -161,6 +162,12 @@
         const unpaid = dataJob.filter(j => (j.status_nota || '').toLowerCase() === 'belum bayar').length;
         document.getElementById('stat-unpaid').innerText = unpaid;
 
+        // Digawe lowercase ben aman senajan neng Sheets nulis "sent" utawa "Sent"
+        const sentCount = dataPenawaran.filter(q => (q.status || '').toLowerCase() === 'sent').length;
+        const approvedCount = dataPenawaran.filter(q => (q.status || '').toLowerCase() === 'approved').length;
+        document.getElementById('stat-sent').innerText = sentCount;
+        document.getElementById('stat-approved').innerText = approvedCount;
+        
         // LOGIC KAS (PERSIS LABA RUGI)
         let masuk = 0, keluar = 0;
         dataKas.forEach(r => {
