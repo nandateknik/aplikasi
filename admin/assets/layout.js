@@ -77,6 +77,9 @@ const headerTemplate = `
                 <li><a class="dropdown-item py-2 small" href="harga.html"><i class="fas fa-tag me-2 text-primary"></i> Master Harga</a></li>
                 <li><a class="dropdown-item py-2 small" href="penawaran.html"><i class="fas fa-file-contract me-2 text-primary"></i> Penawaran</a></li>
                 <li><a class="dropdown-item py-2 small" href="esign.html"><i class="fas fa-signature me-2 text-primary"></i> E-Signature</a></li>
+                <li><a class="dropdown-item py-2 small" href="asset.html"><i class="fas fa-book me-2 text-primary"></i> Asset</a></li>
+                <li><a class="dropdown-item py-2 small" href="asset-riwayat.html"><i class="fas fa-check me-2 text-primary"></i> Riwayat Asset</a></li>
+                
             </ul>
         </div>
     </nav>`;
