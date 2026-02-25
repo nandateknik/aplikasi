@@ -179,69 +179,114 @@
     };
 
     function generatePDF(pelanggan, tipe, brand, checklist, catatan) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const date = new Date().toLocaleString('id-ID');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const date = new Date().toLocaleString('id-ID');
 
-        // --- 1. HEADER DENGAN LOGO ---
+    // --- 1. HEADER (KOP SURAT) ---
     try { 
-        doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
+        // Gunakan Path lengkap utawa Base64 nek logo ra metu
+        doc.addImage('assets/logo-none-text.png', 'PNG', 15, 12, 22, 22); 
     } catch (e) { 
-        console.error("Logo ora ketemu.");
+        console.error("Logo ora ketemu, lanjut teks wae.");
     }
 
-    doc.setFontSize(18); doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+    // Nama Perusahaan
+    doc.setFontSize(16); doc.setFont("helvetica", "bold");
+    doc.setTextColor(45, 55, 72); // Dark Slate Grey
+    doc.text("NANDA TEKNIK BANYUWANGI", 42, 18);
     
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    // Slogan & Alamat
+    doc.setFontSize(8); doc.setFont("helvetica", "normal");
     doc.setTextColor(100); 
-    doc.text("Software, Network & Electrical Engineering", 45, 26);
-    doc.setFontSize(8);
-    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
+    doc.text("Software, Network & Electrical Engineering", 42, 23);
+    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 42, 27);
+    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website: www.nandateknik.com", 42, 31);
     
-    doc.setDrawColor(80, 80, 80);
+    // Garis Kop
+    doc.setDrawColor(200);
     doc.setLineWidth(0.5);
-    doc.line(15, 40, 195, 40);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("Laporan Hasil Maintenance & Pemeriksaan Aset", 105, 27, { align: "center" });
-        doc.line(15, 32, 195, 32);
+    doc.line(15, 38, 195, 38);
 
-        // Info
-        doc.setTextColor(0);
-        doc.setFont(undefined, 'bold');
-        doc.text("Informasi Pelanggan:", 15, 42);
-        doc.setFont(undefined, 'normal');
-        doc.text(`Nama: ${pelanggan}`, 15, 48);
-        doc.text(`Tanggal: ${date}`, 15, 54);
-        doc.text(`Aset: ${tipe} (${brand})`, 15, 60);
+    // --- 2. JUDUL LAPORAN ---
+    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 41, 59);
+    doc.text("ASSET MAINTENANCE REPORT", 105, 48, { align: "center" });
 
-        // Table Checklist
-        const body = checklist.map((c, index) => [index + 1, c.point, c.status]);
-        doc.autoTable({
-            startY: 70,
-            head: [['No', 'Point Pemeriksaan', 'Status Akhir']],
-            body: body,
-            headStyles: { fillColor: [67, 56, 202] },
-            theme: 'striped'
-        });
+    // --- 3. INFO PELANGGAN (BOX STYLE) ---
+    doc.setFillColor(248, 250, 252); // Light Grey Background
+    doc.rect(15, 53, 180, 25, 'F');
+    
+    doc.setFontSize(9); doc.setFont("helvetica", "bold");
+    doc.text("PELANGGAN:", 20, 60);
+    doc.text("TANGGAL:", 110, 60);
+    doc.text("UNIT ASET:", 20, 70);
+    doc.text("BRAND/TYPE:", 110, 70);
 
-        // Catatan
-        const finalY = doc.lastAutoTable.finalY + 15;
-        doc.setFont(undefined, 'bold');
-        doc.text("Catatan / Rekomendasi Teknik:", 15, finalY);
-        doc.setFont(undefined, 'normal');
-        doc.text(doc.splitTextToSize(catatan || "-", 170), 15, finalY + 7);
+    doc.setFont("helvetica", "normal");
+    doc.text(pelanggan.toUpperCase(), 45, 60);
+    doc.text(date, 135, 60);
+    doc.text(tipe, 45, 70);
+    doc.text(brand, 135, 70);
 
-        // Footer
-        doc.setFontSize(9);
-        doc.text("Dicetak otomatis oleh System Nanda Teknik", 105, 285, { align: "center" });
+    // --- 4. TABLE CHECKLIST (PROFESSIONAL GREY THEME) ---
+    const body = checklist.map((c, index) => [
+        { content: index + 1, styles: { halign: 'center' } }, 
+        c.point, 
+        { content: c.status, styles: { halign: 'center', fontStyle: 'bold', textColor: c.status === 'OK' ? [21, 128, 61] : [220, 38, 38] } }
+    ]);
 
-        doc.save(`Report_${pelanggan}_${tipe}.pdf`);
-    }
+    doc.autoTable({
+        startY: 85,
+        head: [['NO', 'PARAMETER PEMERIKSAAN', 'KONDISI / STATUS']],
+        body: body,
+        theme: 'grid',
+        headStyles: { 
+            fillColor: [71, 85, 105], // Slate Blue Grey
+            fontSize: 9, 
+            halign: 'center' 
+        },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+            0: { cellWidth: 12 },
+            2: { cellWidth: 40 }
+        }
+    });
+
+    // --- 5. CATATAN / REKOMENDASI ---
+    let finalY = doc.lastAutoTable.finalY + 10;
+    
+    // Cek yen wis meh ganti halaman
+    if (finalY > 230) { doc.addPage(); finalY = 20; }
+
+    doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text("CATATAN & REKOMENDASI TEKNIK:", 15, finalY);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const splitCatatan = doc.splitTextToSize(catatan || "Unit dalam kondisi baik, tidak ada temuan kritikal.", 175);
+    doc.text(splitCatatan, 15, finalY + 6);
+
+    // --- 6. SIGNATURE AREA ---
+    const sigY = finalY + 30;
+    doc.setFontSize(9);
+    doc.text("Hormat Kami,", 25, sigY);
+    doc.text("Teknisi Lapangan,", 25, sigY + 5);
+    doc.line(20, sigY + 30, 60, sigY + 30); // Garis Tanda Tangan 1
+    doc.text("Nanda Teknik", 32, sigY + 34);
+
+    doc.text("Penerima / Pelanggan,", 150, sigY);
+    doc.line(145, sigY + 30, 185, sigY + 30); // Garis Tanda Tangan 2
+    doc.text(pelanggan, 155, sigY + 34, { align: "left" });
+
+    // --- 7. FOOTER ---
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`Generated by NandaTeknik-System | ${date} | Page 1`, 105, 288, { align: "center" });
+
+    // Download
+    doc.save(`Report_${pelanggan.replace(/\s+/g, '_')}_${tipe}.pdf`);
+}
 </script>
 </body>
 </html>
