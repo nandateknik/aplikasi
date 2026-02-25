@@ -1,1 +1,187 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Checklist Aset | Nanda Teknik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="assets/layout.css">
+    
+    <style>
+        body { background: #f4f7fe !important; padding-bottom: 100px !important; }
+        .card-form { background: white; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .checklist-group { background: #f8f9fa; border-radius: 12px; padding: 15px; border-left: 5px solid #4338ca; }
+        .btn-save { background: #4338ca; color: white; border-radius: 12px; padding: 12px; font-weight: bold; border: none; transition: 0.3s; }
+        .btn-save:hover { background: #3730a3; transform: translateY(-2px); }
+        .form-label { font-weight: 600; color: #374151; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="card card-form animate__animated animate__fadeIn">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-4"><i class="fas fa-clipboard-check me-2 text-primary"></i> Checklist Maintenance Aset</h5>
+            
+            <form id="formAset">
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Pilih Pelanggan</label>
+                        <select class="form-select border-0 bg-light" id="idPelanggan" required>
+                            <option value="">-- Pilih Pelanggan --</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Tipe Aset</label>
+                        <select class="form-select border-0 bg-light fw-bold text-primary" id="tipeAset" onchange="renderChecklist()" required>
+                            <option value="">-- Pilih Jenis Aset --</option>
+                            <option value="CCTV">CCTV</option>
+                            <option value="AC">AC (Air Conditioner)</option>
+                            <option value="Mesin Cuci">Mesin Cuci</option>
+                            <option value="Listrik">Listrik / Panel</option>
+                            <div class="dropdown-divider"></div>
+                            <option value="Laptop">Laptop / PC</option>
+                            <option value="Genset">Genset</option>
+                            <option value="UPS">UPS</option>
+                            <option value="PABX">PABX</option>
+                            <option value="Elektronik Lain">Elektronik Liyane</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Nama / Brand / Seri Aset</label>
+                        <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Daikin Inverter 1PK / Hikvision 8Ch" required>
+                    </div>
+                </div>
+
+                <hr class="opacity-50">
+
+                <div id="checklistSection" style="display:none;">
+                    <label class="form-label mb-3 text-uppercase small tracking-wider text-muted">Poin Pemeriksaan</label>
+                    <div id="checklistContainer" class="checklist-group mb-4">
+                        </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Catatan Tambahan & Rekomendasi</label>
+                    <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis kondisi detail aset..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-save w-100 shadow-sm">
+                    <i class="fas fa-save me-2"></i> SIMPAN RIWAYAT ASET
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/config.js"></script>
+<script src="assets/layout.js"></script>
+
+<script>
+    const masterChecklist = {
+        "CCTV": ["Kesehatan HDD/Record", "Kualitas Gambar/Fokus", "Koneksi Online HP", "Power Supply/Adaptor", "Posisi & Bracket"],
+        "AC": ["Tekanan Freon", "Amper Kompresor", "Kebersihan Evap/Kondensor", "Suhu Output", "Drainase/Pembuangan"],
+        "Mesin Cuci": ["Getaran & Suara Drum", "Solenoid Inlet Banyu", "Pulsator/Putaran", "Modul/Panel Kontrol", "Pompa Buang"],
+        "Listrik": ["Kekencangan Baut MCB", "Grounding System", "Isolasi Kabel", "Keseimbangan Beban", "Kondisi Panel"],
+        "Laptop": ["Suhu & Pasta Thermal", "Health Storage (SSD/HDD)", "Kondisi Baterai", "Engsel & Keyboard"],
+        "Genset": ["Level Oli Mesin", "Air Radiator", "Voltase Aki", "Filter Solar/Udara", "Output Voltase"],
+        "UPS": ["Backup Time Test", "Kondisi Baterai", "Kipas Pendingin"],
+        "PABX": ["Jalur Extension", "Koneksi MDF", "Power Supply Unit"],
+        "Elektronik Lain": ["Kondisi Fisik", "Fungsi Utama", "Power Cord/Kabel", "Kebersihan Internal"]
+    };
+
+    window.onload = async () => {
+        if (typeof renderLayout === "function") renderLayout();
+        await loadPelanggan();
+    };
+
+    async function loadPelanggan() {
+        try {
+            const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`);
+            const json = await res.json();
+            const select = document.getElementById('idPelanggan');
+            json.data.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p.id || p.nama; // prioritaskan ID
+                opt.text = p.nama;
+                opt.setAttribute('data-nama', p.nama);
+                select.appendChild(opt);
+            });
+        } catch (e) {
+            console.error("Gagal load pelanggan", e);
+        }
+    }
+
+    function renderChecklist() {
+        const tipe = document.getElementById('tipeAset').value;
+        const container = document.getElementById('checklistContainer');
+        const section = document.getElementById('checklistSection');
+        
+        container.innerHTML = "";
+        if (!tipe) { section.style.display = 'none'; return; }
+        
+        section.style.display = 'block';
+        const items = masterChecklist[tipe] || masterChecklist["Elektronik Lain"];
+        
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'form-check mb-3';
+            div.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="${item}" id="chk_${item.replace(/\s/g,'')}">
+                <label class="form-check-label fw-bold" for="chk_${item.replace(/\s/g,'')}">${item}</label>
+                <div class="text-muted small">Centang jika kondisi OK / Normal</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    document.getElementById('formAset').onsubmit = async (e) => {
+        e.preventDefault();
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+        const tipe = document.getElementById('tipeAset').value;
+        const selPel = document.getElementById('idPelanggan');
+        const namaPel = selPel.options[selPel.selectedIndex].getAttribute('data-nama');
+        
+        let hasilCek = {};
+        masterChecklist[tipe].forEach(item => {
+            const isOk = document.getElementById(`chk_${item.replace(/\s/g,'')}`).checked;
+            hasilCek[item] = isOk ? "OK" : "PROBLEM";
+        });
+
+        const payload = {
+            action: 'saveChecklist',
+            data: {
+                idPelanggan: selPel.value,
+                namaPelanggan: namaPel,
+                tipeAset: tipe,
+                brandAset: document.getElementById('brandAset').value,
+                checklist: hasilCek,
+                catatan: document.getElementById('catatan').value,
+                teknisi: "Admin Nanda Teknik"
+            }
+        };
+
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const r = await res.json();
+            if (r.success) {
+                Swal.fire('Berhasil!', 'Riwayat aset wis tersimpan Sam.', 'success');
+                document.getElementById('formAset').reset();
+                document.getElementById('checklistSection').style.display = 'none';
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Gagal kirim data', 'error');
+        }
+    };
+</script>
+</body>
+</html>
