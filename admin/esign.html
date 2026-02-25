@@ -12,127 +12,138 @@
     <link rel="stylesheet" href="assets/layout.css">
     
     <style>
-        :root { --p-blue: #0052d4; }
+        :root { --p-blue: #4338ca; } /* Sesuaike karo werna primary smean */
         
         body { 
-            background-color: #f4f7fe; 
+            background-color: #f4f7fe !important; 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            /* Jarak dhuwur dadi 0 mergo wis ono banner biru seko layout.js */
-            padding-top: 0 !important; 
-            padding-bottom: 110px; 
+            padding-bottom: 110px !important; /* Spasi nggo navbar ngisor */
         }
 
-        /* Toolbar dipres ben munggah */
+        /* Ben Toolbar ora tabrakan karo banner biru seko layout.js */
+        .main-content-wrapper {
+            margin-top: -30px;
+            position: relative;
+            z-index: 99;
+        }
+
         .toolbar { 
             background: white; 
-            padding: 10px 15px; 
+            padding: 12px; 
             border-radius: 15px; 
-            margin-bottom: 15px; 
             display: flex; 
             gap: 8px; 
             flex-wrap: wrap;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            /* Iki sing nggarai munggah mas */
-            margin-top: -20px; 
-            position: relative;
-            z-index: 900;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: none;
+            margin-bottom: 20px;
         }
         
-        .btn-tool { border-radius: 10px; font-weight: 600; padding: 6px 12px; font-size: 0.8rem; border: none; }
+        .btn-tool { border-radius: 12px; font-weight: 600; padding: 10px 18px; font-size: 0.85rem; border: none; }
+        .btn-save-pro { background: #4338ca; color: white; }
+        .btn-save-pro:hover { background: #3730a3; color: white; }
 
         .editor-container { 
-            background: #525659; 
+            background: #475569; /* Slate grey ben eksklusif */
             border-radius: 20px; 
-            padding: 15px; 
-            min-height: 450px; 
+            padding: 20px; 
+            min-height: 500px; 
             position: relative; 
             overflow: auto; 
             display: flex; 
             justify-content: center;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.2);
         }
         
         #pdf-canvas-wrapper { 
             position: relative; 
             background: white; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3); 
         }
         
         .draggable-asset {
             position: absolute;
             cursor: move;
             border: 2px dashed transparent;
-            width: 100px;
+            width: 110px;
             z-index: 100;
             touch-action: none;
         }
-        .draggable-asset:hover { border-color: var(--p-blue); background: rgba(0, 82, 212, 0.1); }
+        .draggable-asset:hover { border: 2px dashed var(--p-blue); background: rgba(67, 56, 202, 0.05); }
         .draggable-asset img { width: 100%; pointer-events: none; }
         
         .btn-del-asset {
             position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #ff4757;
-            color: white;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 10px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 2px solid white;
-            z-index: 110;
+            top: -12px; right: -12px;
+            background: #ef4444; color: white;
+            border-radius: 50%; width: 26px; height: 26px;
+            font-size: 11px; display: none; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid white; z-index: 110;
         }
         .draggable-asset:hover .btn-del-asset { display: flex; }
 
-        /* Custom scrollbar */
-        .editor-container::-webkit-scrollbar { width: 6px; height: 6px; }
-        .editor-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        #pad { border: 2px dashed #e2e8f0; background: #fff; border-radius: 15px; width: 100%; touch-action: none; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid">
+<div class="container mt-4 main-content-wrapper">
     <div class="row justify-content-center">
         <div class="col-lg-10">
             
-            <div class="toolbar shadow-sm">
+            <div class="toolbar animate__animated animate__fadeInDown">
                 <input type="file" id="pdf-upload" accept="application/pdf" hidden onchange="loadPDF(event)">
-                <button class="btn btn-primary btn-tool" onclick="document.getElementById('pdf-upload').click()">
-                    <i class="fas fa-file-upload me-1"></i> Buka PDF
-                </button>
-                <button class="btn btn-light btn-tool" onclick="addAsset('ttd')">
-                    <i class="fas fa-pen-nib me-1"></i> TTD
-                </button>
-                <button class="btn btn-light btn-tool" onclick="addAsset('stempel')">
-                    <i class="fas fa-stamp me-1"></i> Stempel
+                <button class="btn btn-light btn-tool" onclick="document.getElementById('pdf-upload').click()">
+                    <i class="fas fa-file-pdf text-danger me-2"></i> Buka PDF
                 </button>
                 
+                <button class="btn btn-light btn-tool" data-bs-toggle="modal" data-bs-target="#modalTTD">
+                    <i class="fas fa-signature text-primary me-2"></i> TTD Manual
+                </button>
+                
+                <button class="btn btn-light btn-tool" onclick="addAsset('stempel')">
+                    <i class="fas fa-stamp text-warning me-2"></i> Stempel
+                </button>
+
                 <div class="ms-auto">
-                    <button class="btn btn-success btn-tool" onclick="exportPDF()">
-                        <i class="fas fa-save me-1"></i> Simpan
+                    <button class="btn btn-save-pro btn-tool shadow-sm" onclick="exportPDF()">
+                        <i class="fas fa-file-export me-2"></i> SIMPAN PDF
                     </button>
                 </div>
             </div>
 
-            <div class="editor-container shadow-sm" id="editor">
+            <div class="editor-container shadow-sm animate__animated animate__fadeIn" id="editor">
                 <div id="pdf-canvas-wrapper">
                     <canvas id="pdf-render"></canvas>
                 </div>
             </div>
-            
-            <div class="mt-3 text-center">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle me-1"></i> Geser & atur ukuran TTD/Stempel neng dhuwur PDF.
-                </small>
+
+            <div class="text-center mt-3">
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Klik 'TTD Manual' kanggo corat-coret langsung neng kene.</small>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="modalTTD" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 25px; border: none;">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h6 class="fw-bold mb-0">Tanda Tangan Digital</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <canvas id="pad" width="450" height="250"></canvas>
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-light w-50 fw-bold py-2" style="border-radius: 12px;" onclick="clearPad()">RESET</button>
+                    <button class="btn btn-primary w-50 fw-bold py-2" style="border-radius: 12px;" onclick="savePad()">GUNAKAN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -142,27 +153,27 @@
 <script src="assets/layout.js"></script>
 
 <script>
+    // Inisialisasi PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
     let pdfDoc = null;
     let pdfBytes = null;
     let scale = 1.5; 
 
+    // Panggil renderLayout seko layout.js smean
+    window.onload = () => { if(typeof renderLayout === 'function') renderLayout(); };
+
     async function loadPDF(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
-        Swal.fire({ title: 'Loading PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+        Swal.fire({ title: 'Loading PDF...', didOpen: () => Swal.showLoading() });
         const reader = new FileReader();
         reader.onload = async function() {
-            try {
-                pdfBytes = new Uint8Array(this.result);
-                const loadingTask = pdfjsLib.getDocument({data: pdfBytes});
-                pdfDoc = await loadingTask.promise;
-                await renderPage(1);
-                Swal.close();
-            } catch (err) {
-                Swal.fire('Error', 'File gagal dibuka.', 'error');
-            }
+            pdfBytes = new Uint8Array(this.result);
+            const loadingTask = pdfjsLib.getDocument({data: pdfBytes});
+            pdfDoc = await loadingTask.promise;
+            await renderPage(1);
+            Swal.close();
         };
         reader.readAsArrayBuffer(file);
     }
@@ -181,7 +192,7 @@
         document.querySelectorAll('.draggable-asset').forEach(a => a.remove());
     }
 
-    function addAsset(type) {
+    function addAsset(type, customSrc = null) {
         if (!pdfDoc) return Swal.fire('Eitss!', 'Upload PDF-ne dhisik mas!', 'warning');
         const id = 'asset-' + Date.now();
         const wrapper = document.getElementById('pdf-canvas-wrapper');
@@ -189,9 +200,8 @@
         div.className = 'draggable-asset';
         div.id = id;
         
-        const imgSrc = type === 'ttd' 
-            ? 'ttd.png' 
-            : 'stempel.png';
+        let imgSrc = (type === 'stempel') ? 'assets/stempel.png' : 'assets/ttd.png';
+        if (type === 'manual') imgSrc = customSrc;
         
         div.innerHTML = `
             <button class="btn-del-asset" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
@@ -234,9 +244,34 @@
             });
     }
 
+    // --- SIGN PAD ---
+    const canvasPad = document.getElementById('pad');
+    const ctxPad = canvasPad.getContext('2d');
+    let drawing = false;
+    ctxPad.lineWidth = 3; ctxPad.lineCap = 'round'; ctxPad.strokeStyle = '#000';
+
+    function getPos(e) {
+        const rect = canvasPad.getBoundingClientRect();
+        return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top };
+    }
+    canvasPad.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctxPad.beginPath(); ctxPad.moveTo(p.x, p.y); });
+    canvasPad.addEventListener('mousemove', (e) => { if(!drawing) return; const p = getPos(e); ctxPad.lineTo(p.x, p.y); ctxPad.stroke(); });
+    window.addEventListener('mouseup', () => drawing = false);
+    canvasPad.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; const p = getPos(e); ctxPad.beginPath(); ctxPad.moveTo(p.x, p.y); });
+    canvasPad.addEventListener('touchmove', (e) => { e.preventDefault(); if(!drawing) return; const p = getPos(e); ctxPad.lineTo(p.x, p.y); ctxPad.stroke(); });
+
+    function clearPad() { ctxPad.clearRect(0, 0, canvasPad.width, canvasPad.height); }
+    function savePad() {
+        const dataURL = canvasPad.toDataURL('image/png');
+        addAsset('manual', dataURL);
+        bootstrap.Modal.getInstance(document.getElementById('modalTTD')).hide();
+        clearPad();
+    }
+
+    // --- EXPORT ---
     async function exportPDF() {
         if (!pdfBytes) return;
-        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Menyimpan PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
             const { PDFDocument } = PDFLib;
             const loadedPdf = await PDFDocument.load(pdfBytes);
@@ -247,19 +282,17 @@
 
             for (let asset of assets) {
                 const imgEl = asset.querySelector('img');
-                const imgResp = await fetch(imgEl.src, { mode: 'cors' });
-                const imgArrayBuffer = await imgResp.arrayBuffer();
-                const image = await loadedPdf.embedPng(imgArrayBuffer);
-
+                const imgBuffer = await fetch(imgEl.src).then(res => res.arrayBuffer());
+                const image = await loadedPdf.embedPng(imgBuffer);
                 const x = parseFloat(asset.getAttribute('data-x')) || 0;
                 const y = parseFloat(asset.getAttribute('data-y')) || 0;
-                const assetWidth = asset.offsetWidth;
-                const assetHeight = asset.offsetHeight;
+                const assetW = asset.offsetWidth;
+                const assetH = asset.offsetHeight;
 
                 const pdfX = (x * width) / canvasEl.width;
-                const pdfY = height - ((y + assetHeight) * height) / canvasEl.height;
-                const pdfW = (assetWidth * width) / canvasEl.width;
-                const pdfH = (assetHeight * height) / canvasEl.height;
+                const pdfY = height - ((y + assetH) * height) / canvasEl.height;
+                const pdfW = (assetW * width) / canvasEl.width;
+                const pdfH = (assetH * height) / canvasEl.height;
 
                 firstPage.drawImage(image, { x: pdfX, y: pdfY, width: pdfW, height: pdfH });
             }
@@ -272,9 +305,7 @@
             a.download = "Signed_NandaTeknik.pdf";
             a.click();
             Swal.fire('Berhasil!', 'PDF wis didownload.', 'success');
-        } catch (err) {
-            Swal.fire('Gagal', 'Cek koneksi internet nggo narik gambar.', 'error');
-        }
+        } catch (err) { Swal.fire('Error', 'Gagal nyimpen PDF.', 'error'); }
     }
 </script>
 
