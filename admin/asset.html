@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist Aset Pro | Nanda Teknik</title>
+    <title>Asset Management Pro | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -11,63 +11,121 @@
     
     <style>
         body { background: #f4f7fe !important; padding-bottom: 100px !important; }
-        .card-form { background: white; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .card-custom { background: white; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
+        
+        /* Tab Styling */
+        .nav-pills .nav-link { border-radius: 12px; color: #64748b; font-weight: 600; padding: 10px 20px; border: 1px solid transparent; transition: 0.3s; }
+        .nav-pills .nav-link.active { background-color: #4338ca; color: white; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3); }
+        .nav-pills .nav-link:not(.active):hover { background: #e2e8f0; }
+        
         .checklist-group { background: #f8f9fa; border-radius: 12px; padding: 15px; border-left: 5px solid #4338ca; }
         .btn-save { background: #4338ca; color: white; border-radius: 12px; padding: 12px; font-weight: bold; border: none; transition: 0.3s; }
         .btn-save:hover { background: #3730a3; transform: translateY(-2px); }
+        
         .form-label { font-weight: 600; color: #374151; font-size: 0.9rem; }
+
+        /* Riwayat Table Styling */
+        .table-custom thead { background: #f1f5f9; }
+        .table-custom th { font-size: 0.75rem; text-transform: uppercase; color: #64748b; border: none; padding: 15px; }
+        .table-custom td { padding: 15px; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; }
+        .badge-status { border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container mt-4">
-    <div class="card card-form animate__animated animate__fadeIn">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-4 text-primary"><i class="fas fa-file-invoice me-2"></i> Maintenance & Checklist Report</h5>
-            
-            <form id="formAset">
-                <div class="row g-3 mb-4">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Pelanggan (Data Utama)</label>
-                        <select class="form-select border-0 bg-light" id="idPelanggan" required>
-                            <option value="">-- Pilih Pelanggan --</option>
-                        </select>
+    <div class="d-flex justify-content-center mb-4">
+        <ul class="nav nav-pills bg-white p-2 rounded-4 shadow-sm" id="assetTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="input-tab" data-bs-toggle="pill" data-bs-target="#pills-input"><i class="fas fa-edit me-2"></i>Checklist Baru</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#pills-history" onclick="loadHistory()"><i class="fas fa-history me-2"></i>Riwayat Aset</button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active" id="pills-input">
+            <div class="card card-custom animate__animated animate__fadeIn">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="fas fa-file-invoice me-2"></i> Maintenance & Checklist Report</h5>
+                    
+                    <form id="formAset">
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Pelanggan (Data Utama)</label>
+                                <select class="form-select border-0 bg-light" id="idPelanggan" required>
+                                    <option value="">-- Pilih Pelanggan --</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Tipe Aset</label>
+                                <select class="form-select border-0 bg-light fw-bold text-primary" id="tipeAset" onchange="renderChecklist()" required>
+                                    <option value="">-- Pilih Jenis Aset --</option>
+                                    <option value="CCTV">CCTV</option>
+                                    <option value="AC">AC (Air Conditioner)</option>
+                                    <option value="Mesin Cuci">Mesin Cuci</option>
+                                    <option value="Listrik">Listrik / Panel</option>
+                                    <option value="Laptop">Laptop / PC</option>
+                                    <option value="Genset">Genset</option>
+                                    <option value="UPS">UPS</option>
+                                    <option value="PABX">PABX</option>
+                                    <option value="Elektronik Lain">Elektronik Liyane</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Nama / Brand / Seri Aset</label>
+                                <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Daikin Inverter 1PK" required>
+                            </div>
+                        </div>
+
+                        <div id="checklistSection" style="display:none;">
+                            <label class="form-label mb-3 text-muted small fw-bold text-uppercase">Point-Point Pemeriksaan</label>
+                            <div id="checklistContainer" class="checklist-group mb-4"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Catatan & Rekomendasi Teknik</label>
+                            <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis diagnosa atau saran perbaikan..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-save w-100">
+                            <i class="fas fa-save me-2"></i> SIMPAN & DOWNLOAD PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-history">
+            <div class="card card-custom animate__animated animate__fadeIn">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold text-primary mb-0"><i class="fas fa-history-mirror me-2"></i> Riwayat Maintenance</h5>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="loadHistory()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh Data
+                        </button>
                     </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Tipe Aset</label>
-                        <select class="form-select border-0 bg-light fw-bold text-primary" id="tipeAset" onchange="renderChecklist()" required>
-                            <option value="">-- Pilih Jenis Aset --</option>
-                            <option value="CCTV">CCTV</option>
-                            <option value="AC">AC (Air Conditioner)</option>
-                            <option value="Mesin Cuci">Mesin Cuci</option>
-                            <option value="Listrik">Listrik / Panel</option>
-                            <option value="Laptop">Laptop / PC</option>
-                            <option value="Genset">Genset</option>
-                            <option value="UPS">UPS</option>
-                            <option value="PABX">PABX</option>
-                            <option value="Elektronik Lain">Elektronik Liyane</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Nama / Brand / Seri Aset</label>
-                        <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Daikin Inverter 1PK" required>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Pelanggan</th>
+                                    <th>Unit Aset</th>
+                                    <th>Status Checklist</th>
+                                    <th>Teknisi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr><td colspan="5" class="text-center py-5 text-muted">Memuat data riwayat...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-
-                <div id="checklistSection" style="display:none;">
-                    <label class="form-label mb-3 text-muted small fw-bold text-uppercase">Point-Point Pemeriksaan</label>
-                    <div id="checklistContainer" class="checklist-group mb-4"></div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label">Catatan & Rekomendasi Teknik</label>
-                    <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis diagnosa atau saran perbaikan..."></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-save w-100">
-                    <i class="fas fa-save me-2"></i> SIMPAN & DOWNLOAD PDF
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -100,7 +158,6 @@
 
     async function loadPelanggan() {
         try {
-            // Ambil data seko URL UTAMA
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`);
             const json = await res.json();
             const select = document.getElementById('idPelanggan');
@@ -133,20 +190,57 @@
         });
     }
 
+    // --- TAB 2: LOAD HISTORY LOGIC ---
+    async function loadHistory() {
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div><br><small class="mt-2 d-block">Narik data seko server...</small></td></tr>';
+        
+        try {
+            // Memanggil sheet Aset_History (sesuaikan jeneng sheet neng GAS)
+            const res = await fetch(`${CONFIG.ASSET_APP_URL}?action=read&sheet=Aset_History`);
+            const json = await res.json();
+            
+            tbody.innerHTML = "";
+            if(!json.data || json.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Durung ono riwayat servis sing tersimpan.</td></tr>';
+                return;
+            }
+
+            // Reverse ben sing paling anyar neng dhuwur
+            json.data.reverse().forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-muted" style="font-size:0.8rem">${item.Tanggal ? new Date(item.Tanggal).toLocaleDateString('id-ID') : '-'}</td>
+                    <td class="fw-bold text-dark">${item.Nama_Pelanggan || item.namaPelanggan}</td>
+                    <td>
+                        <span class="badge bg-primary-subtle text-primary mb-1">${item.Tipe_Aset || item.tipeAset}</span><br>
+                        <small class="text-muted">${item.Brand_Seri || item.brandAset}</small>
+                    </td>
+                    <td><div style="max-width:200px; font-size:0.75rem; color:#64748b;" class="text-truncate">${item.Checklist_Detail || item.checklist}</div></td>
+                    <td><span class="badge bg-light text-dark border">${item.Teknisi || 'Admin'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) { 
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-danger">Gagal narik data. Cek CONFIG.ASSET_APP_URL.</td></tr>';
+        }
+    }
+
+    // --- FORM SUBMIT LOGIC ---
     document.getElementById('formAset').onsubmit = async (e) => {
         e.preventDefault();
-        Swal.fire({ title: 'Proses...', text: 'Menyimpan data & Membuat PDF', didOpen: () => Swal.showLoading() });
-
         const tipe = document.getElementById('tipeAset').value;
         const selPel = document.getElementById('idPelanggan');
         const namaPel = selPel.options[selPel.selectedIndex].getAttribute('data-nama');
         const brand = document.getElementById('brandAset').value;
         const catatan = document.getElementById('catatan').value;
         
+        Swal.fire({ title: 'Proses...', text: 'Menyimpan data & Membuat PDF', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
         let checklistData = [];
         masterChecklist[tipe].forEach(item => {
             const isOk = document.getElementById(`chk_${item.replace(/\s/g,'')}`).checked;
-            checklistData.push({ point: item, status: isOk ? "NORMAL / OK" : "PROBLEM" });
+            checklistData.push({ point: item, status: isOk ? "OK" : "PROBLEM" });
         });
 
         const payload = {
@@ -160,7 +254,6 @@
         };
 
         try {
-            // KIRIM NANG ASSET_APP_URL
             const res = await fetch(CONFIG.ASSET_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload)
@@ -178,115 +271,71 @@
         }
     };
 
+    // --- PDF GENERATOR (DESAIN SLATE GREY) ---
     function generatePDF(pelanggan, tipe, brand, checklist, catatan) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const date = new Date().toLocaleString('id-ID');
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const date = new Date().toLocaleString('id-ID');
 
-    // --- 1. HEADER (KOP SURAT) ---
-    try { 
-        // Gunakan Path lengkap utawa Base64 nek logo ra metu
-        doc.addImage('assets/logo-none-text.png', 'PNG', 15, 12, 22, 22); 
-    } catch (e) { 
-        console.error("Logo ora ketemu, lanjut teks wae.");
+        // Header (Kop Surat)
+        try { doc.addImage('assets/logo-none-text.png', 'PNG', 15, 12, 22, 22); } catch (e) {}
+        doc.setFontSize(16); doc.setFont("helvetica", "bold");
+        doc.setTextColor(45, 55, 72);
+        doc.text("NANDA TEKNIK BANYUWANGI", 42, 18);
+        doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 42, 23);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 42, 27);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 42, 31);
+        doc.setDrawColor(200); doc.line(15, 38, 195, 38);
+
+        // Judul
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 41, 59);
+        doc.text("ASSET MAINTENANCE REPORT", 105, 48, { align: "center" });
+
+        // Info Box
+        doc.setFillColor(248, 250, 252); doc.rect(15, 53, 180, 25, 'F');
+        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+        doc.text("PELANGGAN:", 20, 60); doc.text("TANGGAL:", 110, 60);
+        doc.text("UNIT ASET:", 20, 70); doc.text("BRAND/TYPE:", 110, 70);
+        doc.setFont("helvetica", "normal");
+        doc.text(pelanggan.toUpperCase(), 45, 60); doc.text(date, 135, 60);
+        doc.text(tipe, 45, 70); doc.text(brand, 135, 70);
+
+        // Table
+        const body = checklist.map((c, index) => [
+            { content: index + 1, styles: { halign: 'center' } }, 
+            c.point, 
+            { content: c.status, styles: { halign: 'center', fontStyle: 'bold', textColor: c.status === 'OK' ? [21, 128, 61] : [220, 38, 38] } }
+        ]);
+        doc.autoTable({
+            startY: 85,
+            head: [['NO', 'PARAMETER PEMERIKSAAN', 'KONDISI / STATUS']],
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [71, 85, 105], fontSize: 9, halign: 'center' },
+            styles: { fontSize: 9, cellPadding: 3 }
+        });
+
+        // Catatan
+        let finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10); doc.setFont("helvetica", "bold");
+        doc.text("CATATAN & REKOMENDASI TEKNIK:", 15, finalY);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+        const splitCatatan = doc.splitTextToSize(catatan || "Unit dalam kondisi baik.", 175);
+        doc.text(splitCatatan, 15, finalY + 6);
+
+        // Sign Area
+        const sigY = finalY + 30;
+        doc.text("Hormat Kami,", 25, sigY);
+        doc.text("Teknisi Lapangan,", 25, sigY + 5);
+        doc.line(20, sigY + 30, 60, sigY + 30);
+        doc.text("Nanda Teknik", 32, sigY + 34);
+        doc.text("Penerima / Pelanggan,", 150, sigY);
+        doc.line(145, sigY + 30, 185, sigY + 30);
+        doc.text(pelanggan, 155, sigY + 34, { align: "left" });
+
+        doc.save(`Report_${pelanggan.replace(/\s+/g, '_')}_${tipe}.pdf`);
     }
-
-    // Nama Perusahaan
-    doc.setFontSize(16); doc.setFont("helvetica", "bold");
-    doc.setTextColor(45, 55, 72); // Dark Slate Grey
-    doc.text("NANDA TEKNIK BANYUWANGI", 42, 18);
-    
-    // Slogan & Alamat
-    doc.setFontSize(8); doc.setFont("helvetica", "normal");
-    doc.setTextColor(100); 
-    doc.text("Software, Network & Electrical Engineering", 42, 23);
-    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 42, 27);
-    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website: www.nandateknik.com", 42, 31);
-    
-    // Garis Kop
-    doc.setDrawColor(200);
-    doc.setLineWidth(0.5);
-    doc.line(15, 38, 195, 38);
-
-    // --- 2. JUDUL LAPORAN ---
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 41, 59);
-    doc.text("ASSET MAINTENANCE REPORT", 105, 48, { align: "center" });
-
-    // --- 3. INFO PELANGGAN (BOX STYLE) ---
-    doc.setFillColor(248, 250, 252); // Light Grey Background
-    doc.rect(15, 53, 180, 25, 'F');
-    
-    doc.setFontSize(9); doc.setFont("helvetica", "bold");
-    doc.text("PELANGGAN:", 20, 60);
-    doc.text("TANGGAL:", 110, 60);
-    doc.text("UNIT ASET:", 20, 70);
-    doc.text("BRAND/TYPE:", 110, 70);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(pelanggan.toUpperCase(), 45, 60);
-    doc.text(date, 135, 60);
-    doc.text(tipe, 45, 70);
-    doc.text(brand, 135, 70);
-
-    // --- 4. TABLE CHECKLIST (PROFESSIONAL GREY THEME) ---
-    const body = checklist.map((c, index) => [
-        { content: index + 1, styles: { halign: 'center' } }, 
-        c.point, 
-        { content: c.status, styles: { halign: 'center', fontStyle: 'bold', textColor: c.status === 'OK' ? [21, 128, 61] : [220, 38, 38] } }
-    ]);
-
-    doc.autoTable({
-        startY: 85,
-        head: [['NO', 'PARAMETER PEMERIKSAAN', 'KONDISI / STATUS']],
-        body: body,
-        theme: 'grid',
-        headStyles: { 
-            fillColor: [71, 85, 105], // Slate Blue Grey
-            fontSize: 9, 
-            halign: 'center' 
-        },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-            0: { cellWidth: 12 },
-            2: { cellWidth: 40 }
-        }
-    });
-
-    // --- 5. CATATAN / REKOMENDASI ---
-    let finalY = doc.lastAutoTable.finalY + 10;
-    
-    // Cek yen wis meh ganti halaman
-    if (finalY > 230) { doc.addPage(); finalY = 20; }
-
-    doc.setFontSize(10); doc.setFont("helvetica", "bold");
-    doc.text("CATATAN & REKOMENDASI TEKNIK:", 15, finalY);
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const splitCatatan = doc.splitTextToSize(catatan || "Unit dalam kondisi baik, tidak ada temuan kritikal.", 175);
-    doc.text(splitCatatan, 15, finalY + 6);
-
-    // --- 6. SIGNATURE AREA ---
-    const sigY = finalY + 30;
-    doc.setFontSize(9);
-    doc.text("Hormat Kami,", 25, sigY);
-    doc.text("Teknisi Lapangan,", 25, sigY + 5);
-    doc.line(20, sigY + 30, 60, sigY + 30); // Garis Tanda Tangan 1
-    doc.text("Nanda Teknik", 32, sigY + 34);
-
-    doc.text("Penerima / Pelanggan,", 150, sigY);
-    doc.line(145, sigY + 30, 185, sigY + 30); // Garis Tanda Tangan 2
-    doc.text(pelanggan, 155, sigY + 34, { align: "left" });
-
-    // --- 7. FOOTER ---
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`Generated by NandaTeknik-System | ${date} | Page 1`, 105, 288, { align: "center" });
-
-    // Download
-    doc.save(`Report_${pelanggan.replace(/\s+/g, '_')}_${tipe}.pdf`);
-}
 </script>
 </body>
 </html>
