@@ -3,244 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KasirPintar Mobile</title>
+    <title>KasirPintar Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
+        /* OPTIMASI PRINT THERMAL */
         @media print {
             body * { visibility: hidden; }
             #receipt-print, #receipt-print * { visibility: visible; }
-            #receipt-print { position: absolute; left: 0; top: 0; width: 58mm; display: block !important; padding: 0; margin: 0; }
+            #receipt-print { 
+                position: absolute; left: 0; top: 0; width: 58mm; 
+                display: block !important; padding: 0; margin: 0;
+                color: #000;
+            }
+            @page { margin: 0; size: auto; }
         }
 
         #receipt-print { 
             width: 58mm; 
             font-family: 'Courier New', monospace; 
-            font-size: 10px; 
-            line-height: 1.2;
+            font-size: 12px; /* Font size ideal thermal */
+            line-height: 1.1;
             padding: 2mm; 
             display: none; 
             background: white;
+            color: #000;
         }
         
-        .view-content { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Menghilangkan garis halus pada font di browser agar lebih hitam saat diprint */
+        #receipt-print * {
+            -webkit-font-smoothing: none;
+            font-weight: bold;
+        }
+
+        .view-content { animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 h-screen flex flex-col overflow-hidden">
 
-<!-- LOGIN SCREEN -->
 <div id="login-screen" class="fixed inset-0 bg-indigo-700 z-[100] flex items-center justify-center p-6">
     <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8">
         <div class="text-center mb-8">
-            <div class="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="shopping-bag" class="text-indigo-600 w-8 h-8"></i>
-            </div>
             <h2 class="text-2xl font-bold text-slate-800">KasirPintar</h2>
-            <p class="text-slate-500 text-sm">Silahkan masuk ke akun Anda</p>
+            <p class="text-slate-500 text-sm">Login: admin | pass: 123</p>
         </div>
         <form onsubmit="handleLogin(event)" class="space-y-4">
-            <input type="text" id="login-username" placeholder="Username" class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none" required>
-            <input type="password" id="login-password" placeholder="Password" class="w-full p-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none" required>
-            <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition">Masuk</button>
+            <input type="text" id="login-username" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-2xl outline-none" required>
+            <input type="password" id="login-password" placeholder="Password" class="w-full p-4 bg-slate-100 rounded-2xl outline-none" required>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold">Masuk</button>
         </form>
     </div>
 </div>
 
-<!-- HEADER -->
-<header id="main-header" class="bg-white border-b px-6 py-4 flex justify-between items-center shrink-0 hidden">
+<header id="main-header" class="bg-white border-b px-6 py-4 flex justify-between items-center hidden shrink-0">
     <div>
         <h1 id="page-title" class="text-xl font-bold text-indigo-700">Dashboard</h1>
-        <p id="user-info" class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">User: -</p>
+        <p id="user-info" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">User: -</p>
     </div>
-    <button onclick="handleLogout()" class="text-slate-400 hover:text-red-500 transition">
-        <i data-lucide="log-out" class="w-5 h-5"></i>
-    </button>
+    <button onclick="handleLogout()" class="text-slate-400"><i data-lucide="log-out" class="w-5 h-5"></i></button>
 </header>
 
-<!-- MAIN VIEWPORT -->
 <main id="main-content" class="flex-1 overflow-y-auto pb-32 hidden">
     
-    <!-- DASHBOARD -->
     <div id="view-dashboard" class="view-content p-6 space-y-6">
         <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-xs text-slate-400 mb-1">Omzet Hari Ini</p>
+            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                <p class="text-xs text-slate-400 mb-1">Hari Ini</p>
                 <h3 class="font-bold text-lg" id="dash-sales">Rp 0</h3>
             </div>
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-xs text-slate-400 mb-1">Laba Hari Ini</p>
+            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                <p class="text-xs text-slate-400 mb-1">Laba</p>
                 <h3 class="font-bold text-lg text-emerald-600" id="dash-profit">Rp 0</h3>
             </div>
         </div>
         
-        <!-- Low Stock Alert -->
         <div class="space-y-3">
-            <h4 class="font-bold px-1 flex items-center gap-2">
-                <i data-lucide="alert-triangle" class="text-amber-500 w-4 h-4"></i>
-                Peringatan Stok Habis
-            </h4>
-            <div id="dash-low-stock-list" class="space-y-2">
-                <!-- Low stock items injected here -->
-            </div>
-        </div>
-
-        <div class="space-y-3">
-            <h4 class="font-bold px-1">Menu Utama</h4>
+            <h4 class="font-bold px-1">Menu Cepat</h4>
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="switchView('kasir')" class="bg-white p-6 rounded-3xl border flex flex-col items-center gap-3 shadow-sm active:bg-slate-50">
-                    <div class="p-3 bg-blue-100 rounded-2xl text-blue-600"><i data-lucide="monitor"></i></div>
-                    <span class="text-sm font-bold">Buka Kasir</span>
+                <button onclick="switchView('kasir')" class="bg-indigo-600 text-white p-6 rounded-3xl flex flex-col items-center gap-2">
+                    <i data-lucide="shopping-cart"></i><span class="text-sm font-bold">Buka Kasir</span>
                 </button>
-                <button onclick="switchView('gudang')" class="bg-white p-6 rounded-3xl border flex flex-col items-center gap-3 shadow-sm active:bg-slate-50">
-                    <div class="p-3 bg-orange-100 rounded-2xl text-orange-600"><i data-lucide="box"></i></div>
-                    <span class="text-sm font-bold">Stok Gudang</span>
+                <button onclick="switchView('gudang')" class="bg-white border p-6 rounded-3xl flex flex-col items-center gap-2">
+                    <i data-lucide="box" class="text-orange-500"></i><span class="text-sm font-bold">Stok Barang</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- KASIR -->
     <div id="view-kasir" class="view-content hidden p-4 space-y-4">
-        <div class="sticky top-0 z-10 bg-slate-50 pb-2">
-            <input type="text" placeholder="Cari barang atau scan..." class="w-full p-4 bg-white rounded-2xl border-none shadow-md outline-none focus:ring-2 focus:ring-indigo-500" onkeyup="searchProduct(this.value)">
-        </div>
-        <div id="product-list" class="grid grid-cols-2 gap-3">
-            <!-- Dynamic items -->
-        </div>
+        <input type="text" placeholder="Cari barang..." class="w-full p-4 bg-white rounded-2xl shadow-sm outline-none" onkeyup="searchProduct(this.value)">
+        <div id="product-list" class="grid grid-cols-2 gap-3"></div>
     </div>
 
-    <!-- GUDANG -->
     <div id="view-gudang" class="view-content hidden p-4 space-y-4">
         <div class="flex justify-between items-center px-2">
-            <h2 class="font-bold text-lg text-slate-700">Manajemen Stok</h2>
-            <button onclick="openProductModal()" class="bg-indigo-600 text-white p-3 rounded-2xl shadow-lg shadow-indigo-200">
-                <i data-lucide="plus" class="w-6 h-6"></i>
-            </button>
+            <h2 class="font-bold text-lg">Inventory</h2>
+            <button onclick="openProductModal()" class="bg-indigo-600 text-white p-3 rounded-2xl"><i data-lucide="plus"></i></button>
         </div>
-        <div id="inventory-list" class="space-y-3">
-            <!-- Dynamic items -->
-        </div>
+        <div id="inventory-list" class="space-y-3"></div>
     </div>
 
-    <!-- LAPORAN -->
     <div id="view-laporan" class="view-content hidden p-4 space-y-4">
-        <div class="bg-indigo-700 text-white p-6 rounded-3xl shadow-xl mb-4">
-            <p class="text-xs opacity-70">Total Laba Keseluruhan</p>
-            <h2 class="text-2xl font-bold" id="total-profit-all">Rp 0</h2>
-        </div>
-        <h2 class="font-bold text-lg px-2">Laba per Transaksi</h2>
-        <div id="history-list" class="space-y-3">
-            <!-- Dynamic items -->
-        </div>
+        <h2 class="font-bold text-lg px-2">Riwayat Transaksi</h2>
+        <div id="history-list" class="space-y-3"></div>
     </div>
 
-    <!-- SETTINGS -->
-    <div id="view-settings" class="view-content hidden p-4 space-y-6">
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-            <h3 class="font-bold border-b pb-2">Identitas Toko</h3>
-            <div>
-                <label class="text-[10px] uppercase font-bold text-slate-400">Nama Toko</label>
-                <input type="text" id="set-name" class="w-full p-3 bg-slate-50 rounded-xl border mt-1">
-            </div>
-            <div>
-                <label class="text-[10px] uppercase font-bold text-slate-400">Alamat</label>
-                <input type="text" id="set-address" class="w-full p-3 bg-slate-50 rounded-xl border mt-1">
-            </div>
-            <div>
-                <label class="text-[10px] uppercase font-bold text-slate-400">No Telpon</label>
-                <input type="text" id="set-phone" class="w-full p-3 bg-slate-50 rounded-xl border mt-1">
-            </div>
-            <button onclick="saveShopSettings()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100">Simpan Profil</button>
-        </div>
-
-        <div id="admin-only-section" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 hidden">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold">Manajemen Staff</h3>
-                <button onclick="openUserModal()" class="text-indigo-600 text-xs font-bold bg-indigo-50 px-3 py-1 rounded-full">+ Baru</button>
-            </div>
-            <div id="user-list" class="space-y-3">
-                <!-- User list -->
-            </div>
+    <div id="view-settings" class="view-content hidden p-4 space-y-4">
+        <div class="bg-white p-6 rounded-3xl border space-y-4">
+            <h3 class="font-bold border-b pb-2">Profil Toko (Untuk Struk)</h3>
+            <input type="text" id="set-name" placeholder="Nama Toko" class="w-full p-3 bg-slate-50 border rounded-xl">
+            <input type="text" id="set-address" placeholder="Alamat" class="w-full p-3 bg-slate-50 border rounded-xl">
+            <input type="text" id="set-phone" placeholder="No Telpon" class="w-full p-3 bg-slate-50 border rounded-xl">
+            <button onclick="saveShopSettings()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold">Simpan</button>
         </div>
     </div>
 </main>
 
-<!-- BOTTOM NAVIGATION -->
-<nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-4 px-2 safe-area-bottom z-50 hidden shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-    <button onclick="switchView('dashboard')" class="nav-item flex flex-col items-center gap-1 text-indigo-600" id="nav-dashboard">
-        <i data-lucide="layout-grid" class="w-6 h-6"></i>
-        <span class="text-[10px] font-bold">Dashboard</span>
+<nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-4 hidden z-50">
+    <button onclick="switchView('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-indigo-600">
+        <i data-lucide="home" class="w-6 h-6"></i><span class="text-[10px] font-bold">Home</span>
     </button>
-    <button onclick="switchView('kasir')" class="nav-item flex flex-col items-center gap-1 text-slate-400" id="nav-kasir">
-        <i data-lucide="shopping-cart" class="w-6 h-6"></i>
-        <span class="text-[10px] font-bold">Kasir</span>
+    <button onclick="switchView('kasir')" id="nav-kasir" class="flex flex-col items-center gap-1 text-slate-400">
+        <i data-lucide="shopping-basket" class="w-6 h-6"></i><span class="text-[10px] font-bold">Kasir</span>
     </button>
-    <button onclick="switchView('gudang')" class="nav-item flex flex-col items-center gap-1 text-slate-400" id="nav-gudang">
-        <i data-lucide="package" class="w-6 h-6"></i>
-        <span class="text-[10px] font-bold">Gudang</span>
+    <button onclick="switchView('laporan')" id="nav-laporan" class="flex flex-col items-center gap-1 text-slate-400">
+        <i data-lucide="printer" class="w-6 h-6"></i><span class="text-[10px] font-bold">Riwayat</span>
     </button>
-    <button onclick="switchView('laporan')" class="nav-item flex flex-col items-center gap-1 text-slate-400" id="nav-laporan">
-        <i data-lucide="file-text" class="w-6 h-6"></i>
-        <span class="text-[10px] font-bold">Laporan</span>
-    </button>
-    <button onclick="switchView('settings')" class="nav-item flex flex-col items-center gap-1 text-slate-400" id="nav-settings">
-        <i data-lucide="settings" class="w-6 h-6"></i>
-        <span class="text-[10px] font-bold">Atur</span>
+    <button onclick="switchView('settings')" id="nav-settings" class="flex flex-col items-center gap-1 text-slate-400">
+        <i data-lucide="settings" class="w-6 h-6"></i><span class="text-[10px] font-bold">Toko</span>
     </button>
 </nav>
 
-<!-- KASIR FLOATING ACTION -->
-<div id="cart-bar" class="fixed bottom-24 left-4 right-4 bg-indigo-900 text-white p-4 rounded-3xl shadow-2xl flex justify-between items-center hidden z-50 transform translate-y-0 transition-all border border-indigo-500/50">
-    <div onclick="openCartModal()" class="flex items-center gap-3 cursor-pointer">
-        <div class="bg-indigo-500 p-2 rounded-xl relative">
-            <i data-lucide="shopping-basket" class="w-5 h-5"></i>
-            <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
-        </div>
-        <div>
-            <p class="text-[10px] opacity-70">Klik untuk detail</p>
-            <h4 id="cart-total-text" class="font-bold text-lg">Rp 0</h4>
-        </div>
+<div id="cart-bar" class="fixed bottom-24 left-4 right-4 bg-slate-900 text-white p-4 rounded-3xl flex justify-between items-center hidden z-50 shadow-2xl">
+    <div onclick="openCartModal()" class="flex items-center gap-3">
+        <div class="bg-indigo-600 p-2 rounded-xl"><i data-lucide="shopping-cart" class="w-5 h-5"></i></div>
+        <h4 id="cart-total-text" class="font-bold text-lg">Rp 0</h4>
     </div>
-    <button onclick="processCheckout()" class="bg-emerald-500 text-white px-6 py-3 rounded-2xl font-bold active:scale-95 transition shadow-lg shadow-emerald-900/20">Bayar (F9)</button>
+    <button onclick="processCheckout()" class="bg-emerald-500 px-6 py-3 rounded-2xl font-bold uppercase text-xs">Bayar</button>
 </div>
 
-<!-- MODAL SYSTEM -->
-<div id="modal-container" class="fixed inset-0 bg-slate-900/60 z-[200] hidden flex items-end md:items-center justify-center p-0 md:p-6 transition-all">
-    <div id="modal-content" class="bg-white w-full max-w-md rounded-t-[2.5rem] md:rounded-[2rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <!-- Content dynamic via JS -->
-    </div>
+<div id="modal-container" class="fixed inset-0 bg-slate-900/60 z-[200] hidden flex items-end md:items-center justify-center">
+    <div id="modal-content" class="bg-white w-full max-w-md rounded-t-[2.5rem] md:rounded-3xl p-8 max-h-[85vh] overflow-y-auto"></div>
 </div>
 
-<!-- RECEIPT FOR PRINT (58mm iware) -->
 <div id="receipt-print"></div>
 
 <script>
-    // --- DB SETUP ---
-    const db = new Dexie("KasirPintarMobileDB");
-    db.version(3).stores({
+    const db = new Dexie("KasirPintarDB_v2");
+    db.version(1).stores({
         users: '++id, username, password, role',
         products: '++id, name, buy_price, sell_price, stock',
-        transactions: '++id, date, total, profit, items',
+        transactions: '++id, date, total, profit',
         settings: 'key, value'
     });
 
-    // --- STATE ---
     let currentUser = null;
-    let currentView = 'dashboard';
     let cart = [];
 
-    // --- AUTH ---
-    async function initAuth() {
-        const count = await db.users.count();
-        if (count === 0) {
+    // Init User
+    async function init() {
+        if (await db.users.count() === 0) {
             await db.users.add({ username: 'admin', password: '123', role: 'admin' });
         }
+        lucide.createIcons();
     }
 
     async function handleLogin(e) {
@@ -251,109 +181,65 @@
         if (user) {
             currentUser = user;
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            document.getElementById('bottom-nav').classList.remove('hidden');
-            document.getElementById('user-info').innerText = `User: ${user.username} (${user.role})`;
-            if(user.role === 'admin') document.getElementById('admin-only-section').classList.remove('hidden');
+            ['main-header', 'main-content', 'bottom-nav'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            document.getElementById('user-info').innerText = `Staff: ${user.username}`;
             switchView('dashboard');
-        } else alert('Login gagal!');
+        } else alert('Salah password!');
     }
 
     function handleLogout() { location.reload(); }
 
-    // --- NAVIGATION ---
     function switchView(view) {
-        if(currentUser.role === 'kasir' && (view === 'gudang' || view === 'laporan')) return alert('Akses Terbatas!');
-        if(currentUser.role === 'gudang' && (view === 'kasir' || view === 'laporan')) return alert('Akses Terbatas!');
-
-        currentView = view;
         document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${view}`).classList.remove('hidden');
-        
-        const titles = { dashboard: 'Dashboard', kasir: 'Kasir', gudang: 'Stok Gudang', laporan: 'Laporan Laba Rugi', settings: 'Pengaturan' };
-        document.getElementById('page-title').innerText = titles[view];
-
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.replace('text-indigo-600', 'text-slate-400'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-indigo-600', 'text-slate-400'));
         document.getElementById(`nav-${view}`).classList.replace('text-slate-400', 'text-indigo-600');
-
-        if(view !== 'kasir') document.getElementById('cart-bar').classList.add('hidden');
-        else if(cart.length > 0) document.getElementById('cart-bar').classList.remove('hidden');
-
+        if(view === 'kasir' && cart.length > 0) document.getElementById('cart-bar').classList.remove('hidden');
+        else document.getElementById('cart-bar').classList.add('hidden');
         refreshData();
     }
 
-    // --- CORE LOGIC ---
     const formatIDR = (n) => "Rp " + Number(n).toLocaleString('id-ID');
 
     async function refreshData() {
-        const products = await db.products.toArray();
+        const prods = await db.products.toArray();
         const trxs = await db.transactions.toArray();
-        const today = new Date().toISOString().split('T')[0];
-        const todayTrx = trxs.filter(t => t.date.startsWith(today));
-
-        // Dashboard
-        document.getElementById('dash-sales').innerText = formatIDR(todayTrx.reduce((s,t) => s+t.total, 0));
-        document.getElementById('dash-profit').innerText = formatIDR(todayTrx.reduce((s,t) => s+t.profit, 0));
         
-        const lowStockItems = products.filter(p => p.stock < 5);
-        document.getElementById('dash-low-stock-list').innerHTML = lowStockItems.length > 0 
-            ? lowStockItems.map(p => `
-                <div class="bg-amber-50 border border-amber-100 p-3 rounded-2xl flex justify-between items-center">
-                    <span class="text-sm font-medium text-amber-900">${p.name}</span>
-                    <span class="bg-amber-500 text-white text-[10px] px-2 py-1 rounded-full font-bold">Sisa: ${p.stock}</span>
-                </div>
-            `).join('')
-            : `<p class="text-xs text-slate-400 italic px-2">Semua stok aman.</p>`;
+        // Dashboard
+        document.getElementById('dash-sales').innerText = formatIDR(trxs.reduce((s,t) => s+t.total, 0));
+        document.getElementById('dash-profit').innerText = formatIDR(trxs.reduce((s,t) => s+t.profit, 0));
 
-        // Inventory List
-        document.getElementById('inventory-list').innerHTML = products.map(p => `
-            <div class="bg-white p-4 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
-                <div>
-                    <h4 class="font-bold text-slate-800">${p.name}</h4>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-tighter">Beli: ${formatIDR(p.buy_price)} | Jual: ${formatIDR(p.sell_price)}</p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <p class="text-xs font-bold ${p.stock < 5 ? 'text-red-500' : 'text-slate-600'}">Stok: ${p.stock}</p>
-                    </div>
-                    <button onclick="openProductModal(${p.id})" class="p-2 bg-slate-50 rounded-xl text-slate-400"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+        // Inventory
+        document.getElementById('inventory-list').innerHTML = prods.map(p => `
+            <div class="bg-white p-4 rounded-3xl border flex justify-between items-center">
+                <div><h4 class="font-bold">${p.name}</h4><p class="text-[10px] text-slate-400">${formatIDR(p.sell_price)}</p></div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold ${p.stock < 5 ? 'text-red-500' : ''}">Stok: ${p.stock}</span>
+                    <button onclick="openProductModal(${p.id})" class="p-2 bg-slate-100 rounded-lg"><i data-lucide="edit" class="w-4 h-4"></i></button>
                 </div>
             </div>
         `).join('');
 
-        // Laporan
-        document.getElementById('total-profit-all').innerText = formatIDR(trxs.reduce((s,t) => s+t.profit, 0));
+        // History / Reprint
         document.getElementById('history-list').innerHTML = trxs.reverse().map(t => `
-            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-2">
-                <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase">
-                    <span>#TRX-${t.id} • ${new Date(t.date).toLocaleDateString()}</span>
-                    <span class="text-emerald-500">Laba: ${formatIDR(t.profit)}</span>
+            <div class="bg-white p-4 rounded-3xl border flex justify-between items-center">
+                <div>
+                    <h4 class="font-bold text-sm">#TRX-${t.id}</h4>
+                    <p class="text-[10px] text-slate-400">${new Date(t.date).toLocaleString()}</p>
+                    <p class="text-xs font-bold text-indigo-600">${formatIDR(t.total)}</p>
                 </div>
-                <div class="flex justify-between items-end">
-                    <div class="text-xs text-slate-600">${t.items.map(i => i.name).join(', ')}</div>
-                    <div class="font-bold text-lg">${formatIDR(t.total)}</div>
-                </div>
+                <button onclick="reprintTransaction(${t.id})" class="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold text-xs">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Cetak
+                </button>
             </div>
         `).join('');
 
-        // Settings Profil Toko
+        // Settings Load
         const sArr = await db.settings.toArray();
         const conf = sArr.reduce((a,c) => ({...a, [c.key]: c.value}), {});
         document.getElementById('set-name').value = conf.name || '';
         document.getElementById('set-address').value = conf.address || '';
         document.getElementById('set-phone').value = conf.phone || '';
-
-        // Staff List
-        if(currentUser.role === 'admin') {
-            const users = await db.users.toArray();
-            document.getElementById('user-list').innerHTML = users.map(u => `
-                <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
-                    <div><p class="font-bold text-sm">${u.username}</p><p class="text-[10px] uppercase text-indigo-500 font-bold">${u.role}</p></div>
-                    ${u.username !== 'admin' ? `<button onclick="deleteUser(${u.id})" class="text-red-500 text-xs font-bold">Hapus</button>` : ''}
-                </div>
-            `).join('');
-        }
 
         searchProduct("");
         lucide.createIcons();
@@ -362,270 +248,132 @@
     async function searchProduct(q) {
         const prods = await db.products.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).toArray();
         document.getElementById('product-list').innerHTML = prods.map(p => `
-            <div onclick="addToCart(${p.id})" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-1 active:scale-95 transition cursor-pointer">
-                <h4 class="font-bold text-sm truncate">${p.name}</h4>
-                <p class="text-xs text-indigo-600 font-bold">${formatIDR(p.sell_price)}</p>
-                <div class="flex justify-between items-center mt-2">
-                    <span class="text-[9px] text-slate-400">Stok: ${p.stock}</span>
-                    <div class="bg-indigo-50 p-1 rounded-lg text-indigo-600"><i data-lucide="plus" class="w-3 h-3"></i></div>
-                </div>
+            <div onclick="addToCart(${p.id})" class="bg-white p-4 rounded-3xl border active:scale-95 transition">
+                <h4 class="font-bold text-xs truncate">${p.name}</h4>
+                <p class="text-sm font-bold text-indigo-600">${formatIDR(p.sell_price)}</p>
+                <p class="text-[9px] text-slate-400 mt-2 font-bold">Stok: ${p.stock}</p>
             </div>
         `).join('');
-        lucide.createIcons();
     }
 
-    // --- CART SYSTEM ---
     async function addToCart(id) {
-        const prod = await db.products.get(id);
-        if (prod.stock <= 0) return alert('Stok Habis!');
-        
-        const existing = cart.find(c => c.id === id);
-        if (existing) {
-            if(existing.qty + 1 > prod.stock) return alert('Melebihi stok!');
-            existing.qty++;
-        } else {
-            cart.push({ ...prod, qty: 1 });
-        }
+        const p = await db.products.get(id);
+        if (p.stock <= 0) return alert('Stok Habis!');
+        const exists = cart.find(c => c.id === id);
+        if (exists) exists.qty++; else cart.push({...p, qty: 1});
         updateCartUI();
     }
 
     function updateCartUI() {
-        const total = cart.reduce((s, i) => s + (i.sell_price * i.qty), 0);
+        const total = cart.reduce((s,i) => s + (i.sell_price * i.qty), 0);
         document.getElementById('cart-total-text').innerText = formatIDR(total);
-        document.getElementById('cart-count').innerText = cart.reduce((s,i) => s + i.qty, 0);
-        
-        if (cart.length > 0) document.getElementById('cart-bar').classList.remove('hidden');
-        else document.getElementById('cart-bar').classList.add('hidden');
-    }
-
-    function openCartModal() {
-        document.getElementById('modal-container').classList.remove('hidden');
-        const modal = document.getElementById('modal-content');
-        modal.innerHTML = `
-            <h3 class="text-xl font-bold mb-6">Keranjang Belanja</h3>
-            <div class="space-y-4 mb-6">
-                ${cart.length === 0 ? '<p class="text-center text-slate-400 py-4">Keranjang kosong</p>' : 
-                  cart.map((item, idx) => `
-                    <div class="flex justify-between items-center border-b pb-3">
-                        <div class="flex-1">
-                            <h4 class="font-bold text-sm">${item.name}</h4>
-                            <p class="text-xs text-slate-400">${formatIDR(item.sell_price)} x ${item.qty}</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <button onclick="changeCartQty(${idx}, -1)" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">-</button>
-                            <span class="font-bold">${item.qty}</span>
-                            <button onclick="changeCartQty(${idx}, 1)" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">+</button>
-                        </div>
-                    </div>
-                  `).join('')
-                }
-            </div>
-            <button onclick="closeModal()" class="w-full bg-slate-100 py-4 rounded-2xl font-bold">Kembali Belanja</button>
-        `;
-    }
-
-    function changeCartQty(idx, delta) {
-        cart[idx].qty += delta;
-        if (cart[idx].qty <= 0) cart.splice(idx, 1);
-        updateCartUI();
-        openCartModal();
+        document.getElementById('cart-bar').classList.toggle('hidden', cart.length === 0);
     }
 
     async function processCheckout() {
-        if (cart.length === 0) return alert('Keranjang kosong!');
-        if (!confirm('Proses pembayaran sekarang?')) return;
-        
+        if (cart.length === 0) return;
         let total = 0, profit = 0;
-        const items = [];
-
         for (const i of cart) {
-            const prod = await db.products.get(i.id);
-            await db.products.update(i.id, { stock: prod.stock - i.qty });
+            const p = await db.products.get(i.id);
+            await db.products.update(i.id, { stock: p.stock - i.qty });
             total += i.sell_price * i.qty;
             profit += (i.sell_price - i.buy_price) * i.qty;
-            items.push({ name: i.name, price: i.sell_price, qty: i.qty });
         }
-
-        const trx = { date: new Date().toISOString(), total, profit, items };
-        const trxId = await db.transactions.add(trx);
-        trx.id = trxId;
-
-        await prepareReceipt(trx);
+        const trx = { date: new Date().toISOString(), total, profit, items: JSON.parse(JSON.stringify(cart)) };
+        const id = await db.transactions.add(trx);
+        trx.id = id;
+        
+        await doPrint(trx);
         cart = [];
         updateCartUI();
-        closeModal();
         refreshData();
-        window.print();
     }
 
-    async function prepareReceipt(trx) {
+    async function reprintTransaction(id) {
+        const trx = await db.transactions.get(id);
+        if (trx) await doPrint(trx);
+    }
+
+    async function doPrint(trx) {
         const s = await db.settings.toArray();
         const conf = s.reduce((a,c) => ({...a, [c.key]: c.value}), {});
-        const printer = document.getElementById('receipt-print');
+        const area = document.getElementById('receipt-print');
         
-        printer.innerHTML = `
-            <div style="text-align:center; margin-bottom: 5px;">
-                <h3 style="margin:0; font-size: 12px; text-transform: uppercase;">${conf.name || 'TOKO KAMI'}</h3>
-                <p style="margin:0; font-size: 8px;">${conf.address || '-'}</p>
-                <p style="margin:0; font-size: 8px;">Telp: ${conf.phone || '-'}</p>
-                <p style="margin: 5px 0; border-bottom: 1px dashed #000;"></p>
+        area.innerHTML = `
+            <div style="text-align:center; margin-bottom: 4px;">
+                <b style="font-size: 14px; text-transform: uppercase;">${conf.name || 'TOKO KITA'}</b><br>
+                <span style="font-size: 9px;">${conf.address || '-'}</span><br>
+                <span style="font-size: 9px;">Telp: ${conf.phone || '-'}</span>
             </div>
-            <div style="font-size: 8px; margin-bottom: 5px;">
-                Tgl: ${new Date(trx.date).toLocaleString('id-ID')} <br>
-                Nota: #TRX-${trx.id}
+            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
+            <div style="font-size: 9px;">
+                Nota: #TRX-${trx.id}<br>
+                Tgl : ${new Date(trx.date).toLocaleString('id-ID')}
             </div>
-            <div style="border-bottom: 1px dashed #000; margin-bottom: 5px;"></div>
+            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
             ${trx.items.map(i => `
-                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                <div style="display:flex; justify-content:space-between; font-size: 10px;">
                     <span style="flex:1;">${i.name}</span>
-                    <span style="width: 25px; text-align:center;">x${i.qty}</span>
-                    <span style="width: 45px; text-align:right;">${(i.price * i.qty).toLocaleString()}</span>
+                    <span style="width: 30px; text-align:right;">${i.qty}x</span>
+                    <span style="width: 65px; text-align:right;">${(i.price * i.qty).toLocaleString()}</span>
                 </div>
             `).join('')}
-            <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 11px;">
+            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 12px;">
                 <span>TOTAL</span>
                 <span>${trx.total.toLocaleString()}</span>
             </div>
-            <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
-            <div style="text-align:center; font-size: 8px; margin-top: 5px;">
-                Terima Kasih Telah Belanja!<br>
-                Barang yang sudah dibeli tidak<br>dapat ditukar kembali.
+            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
+            <div style="text-align:center; font-size: 9px; margin-top: 4px;">
+                Terima Kasih!<br>Selamat Belanja Kembali
             </div>
-        `;
+            <br><br><br> `;
+        window.print();
     }
 
-    // --- MODAL PRODUCT ---
+    // Modal Helper
     function openProductModal(id = null) {
         document.getElementById('modal-container').classList.remove('hidden');
-        const modal = document.getElementById('modal-content');
-        
-        if (id) {
-            db.products.get(id).then(p => {
-                renderProductForm(p);
-            });
-        } else {
-            renderProductForm({ name: '', buy_price: '', sell_price: '', stock: '' });
-        }
+        if(id) db.products.get(id).then(p => renderForm(p)); else renderForm({name:'', buy_price:'', sell_price:'', stock:''});
     }
 
-    function renderProductForm(p) {
-        const modal = document.getElementById('modal-content');
-        modal.innerHTML = `
-            <h3 class="text-xl font-bold mb-6">${p.id ? 'Edit Produk' : 'Tambah Produk Baru'}</h3>
+    function renderForm(p) {
+        document.getElementById('modal-content').innerHTML = `
+            <h3 class="text-xl font-bold mb-4">${p.id ? 'Edit' : 'Tambah'} Barang</h3>
             <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Nama Barang</label>
-                    <input type="text" id="m-prod-name" value="${p.name}" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="m-name" value="${p.name}" placeholder="Nama Barang" class="w-full p-4 bg-slate-50 border rounded-2xl">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="m-buy" value="${p.buy_price}" placeholder="Harga Beli" class="p-4 bg-slate-50 border rounded-2xl">
+                    <input type="number" id="m-sell" value="${p.sell_price}" placeholder="Harga Jual" class="p-4 bg-slate-50 border rounded-2xl">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Harga Beli</label>
-                        <input type="number" id="m-prod-buy" value="${p.buy_price}" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Harga Jual</label>
-                        <input type="number" id="m-prod-sell" value="${p.sell_price}" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Stok Saat Ini</label>
-                    <input type="number" id="m-prod-stock" value="${p.stock}" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none">
-                </div>
-                <div class="flex gap-2 pt-6">
-                    ${p.id ? `<button onclick="deleteProduct(${p.id})" class="p-4 bg-red-50 text-red-500 rounded-2xl"><i data-lucide="trash-2" class="w-6 h-6"></i></button>` : ''}
-                    <button onclick="closeModal()" class="flex-1 py-4 bg-slate-100 rounded-2xl font-bold">Batal</button>
-                    <button onclick="saveProduct(${p.id || 'null'})" class="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100">Simpan</button>
-                </div>
+                <input type="number" id="m-stock" value="${p.stock}" placeholder="Stok" class="w-full p-4 bg-slate-50 border rounded-2xl">
+                <button onclick="saveProduct(${p.id || null})" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold">Simpan Barang</button>
             </div>
         `;
-        lucide.createIcons();
     }
 
     async function saveProduct(id) {
-        const name = document.getElementById('m-prod-name').value;
-        const buy = parseFloat(document.getElementById('m-prod-buy').value);
-        const sell = parseFloat(document.getElementById('m-prod-sell').value);
-        const stock = parseInt(document.getElementById('m-prod-stock').value);
-
-        if (!name || isNaN(buy) || isNaN(sell) || isNaN(stock)) return alert('Lengkapi semua data!');
-
-        const data = { name, buy_price: buy, sell_price: sell, stock };
-        if (id) await db.products.update(id, data);
-        else await db.products.add(data);
-        
-        closeModal();
-        refreshData();
-    }
-
-    async function deleteProduct(id) {
-        if(confirm('Hapus produk ini secara permanen?')) {
-            await db.products.delete(id);
-            closeModal();
-            refreshData();
-        }
-    }
-
-    function openUserModal() {
-        document.getElementById('modal-container').classList.remove('hidden');
-        document.getElementById('modal-content').innerHTML = `
-            <h3 class="text-xl font-bold mb-6">Tambah Staff</h3>
-            <div class="space-y-4">
-                <input type="text" id="m-user-name" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-2xl outline-none">
-                <input type="password" id="m-user-pass" placeholder="Password" class="w-full p-4 bg-slate-100 rounded-2xl outline-none">
-                <select id="m-user-role" class="w-full p-4 bg-slate-100 rounded-2xl outline-none appearance-none">
-                    <option value="kasir">Kasir</option>
-                    <option value="gudang">Gudang</option>
-                    <option value="admin">Admin</option>
-                </select>
-                <div class="flex gap-2 pt-4">
-                    <button onclick="closeModal()" class="flex-1 py-4 bg-slate-100 rounded-2xl font-bold">Batal</button>
-                    <button onclick="saveUser()" class="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold">Simpan</button>
-                </div>
-            </div>
-        `;
-    }
-
-    async function saveUser() {
-        const u = document.getElementById('m-user-name').value;
-        const p = document.getElementById('m-user-pass').value;
-        const r = document.getElementById('m-user-role').value;
-        if(!u || !p) return alert('Lengkapi data!');
-        await db.users.add({ username: u, password: p, role: r });
+        const data = {
+            name: document.getElementById('m-name').value,
+            buy_price: parseFloat(document.getElementById('m-buy').value),
+            sell_price: parseFloat(document.getElementById('m-sell').value),
+            stock: parseInt(document.getElementById('m-stock').value)
+        };
+        if(id) await db.products.update(id, data); else await db.products.add(data);
         closeModal(); refreshData();
-    }
-
-    async function deleteUser(id) {
-        if(confirm('Hapus akun?')) { await db.users.delete(id); refreshData(); }
     }
 
     async function saveShopSettings() {
         await db.settings.put({ key: 'name', value: document.getElementById('set-name').value });
         await db.settings.put({ key: 'address', value: document.getElementById('set-address').value });
         await db.settings.put({ key: 'phone', value: document.getElementById('set-phone').value });
-        alert('Data toko diperbarui!');
-        refreshData();
+        alert('Toko Berhasil Diupdate!');
     }
 
     function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-
-    // --- INIT ---
-    window.onload = async () => {
-        await initAuth();
-        lucide.createIcons();
-    };
-
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'F9' && currentView === 'kasir') {
-            e.preventDefault();
-            processCheckout();
-        }
-    });
-
-    window.onclick = (e) => {
-        if(e.target == document.getElementById('modal-container')) closeModal();
-    }
+    window.onclick = (e) => { if(e.target.id == 'modal-container') closeModal(); }
+    
+    init();
 </script>
-
 </body>
 </html>
