@@ -3,44 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KasirPintar Pro</title>
+    <title>KasirPintar Bold Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* OPTIMASI PRINT THERMAL */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+
+        /* --- TRICK BOLD THERMAL PRINTER --- */
         @media print {
             body * { visibility: hidden; }
-            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print, #receipt-print * { 
+                visibility: visible; 
+                color: #000 !important;
+            }
             #receipt-print { 
                 position: absolute; left: 0; top: 0; width: 58mm; 
                 display: block !important; padding: 0; margin: 0;
-                color: #000;
             }
             @page { margin: 0; size: auto; }
         }
 
         #receipt-print { 
             width: 58mm; 
-            font-family: 'Courier New', monospace; 
-            font-size: 12px; /* Font size ideal thermal */
+            /* Menggunakan Arial karena lebih "gemuk" pixelnya daripada Courier */
+            font-family: Arial, Helvetica, sans-serif; 
+            font-size: 11px;
             line-height: 1.1;
-            padding: 2mm; 
-            display: none; 
             background: white;
-            color: #000;
-        }
-        
-        /* Menghilangkan garis halus pada font di browser agar lebih hitam saat diprint */
-        #receipt-print * {
-            -webkit-font-smoothing: none;
-            font-weight: bold;
+            padding: 5px;
         }
 
-        .view-content { animation: fadeIn 0.2s ease-in-out; }
+        /* TRICK: Membuat font ekstra hitam dengan text-shadow & stroke */
+        .bold-text {
+            font-weight: 900 !important;
+            -webkit-text-stroke: 0.4px black; /* Menambah ketebalan garis huruf */
+            text-shadow: 0.1px 0.1px 0 black; /* Trik agar printer membakar lebih lama */
+        }
+
+        .line-divider {
+            border-top: 1.5px solid black !important;
+            margin: 4px 0;
+        }
+
+        .view-content { animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -48,250 +55,165 @@
 
 <div id="login-screen" class="fixed inset-0 bg-indigo-700 z-[100] flex items-center justify-center p-6">
     <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-8">
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold text-slate-800">KasirPintar</h2>
-            <p class="text-slate-500 text-sm">Login: admin | pass: 123</p>
-        </div>
+        <h2 class="text-2xl font-bold mb-4">KasirPintar</h2>
         <form onsubmit="handleLogin(event)" class="space-y-4">
-            <input type="text" id="login-username" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-2xl outline-none" required>
-            <input type="password" id="login-password" placeholder="Password" class="w-full p-4 bg-slate-100 rounded-2xl outline-none" required>
+            <input type="text" id="login-username" placeholder="Admin" class="w-full p-4 bg-slate-100 rounded-2xl outline-none" required>
+            <input type="password" id="login-password" placeholder="123" class="w-full p-4 bg-slate-100 rounded-2xl outline-none" required>
             <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold">Masuk</button>
         </form>
     </div>
 </div>
 
-<header id="main-header" class="bg-white border-b px-6 py-4 flex justify-between items-center hidden shrink-0">
-    <div>
-        <h1 id="page-title" class="text-xl font-bold text-indigo-700">Dashboard</h1>
-        <p id="user-info" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">User: -</p>
-    </div>
-    <button onclick="handleLogout()" class="text-slate-400"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+<header id="main-header" class="bg-white border-b px-6 py-4 flex justify-between items-center hidden">
+    <h1 id="page-title" class="text-xl font-bold text-indigo-700">Dashboard</h1>
+    <button onclick="handleLogout()"><i data-lucide="log-out"></i></button>
 </header>
 
 <main id="main-content" class="flex-1 overflow-y-auto pb-32 hidden">
-    
     <div id="view-dashboard" class="view-content p-6 space-y-6">
         <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                <p class="text-xs text-slate-400 mb-1">Hari Ini</p>
-                <h3 class="font-bold text-lg" id="dash-sales">Rp 0</h3>
+            <div class="bg-white p-5 rounded-3xl border shadow-sm">
+                <p class="text-xs text-slate-400">Total Penjualan</p>
+                <h3 class="font-bold text-lg" id="dash-sales">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                <p class="text-xs text-slate-400 mb-1">Laba</p>
-                <h3 class="font-bold text-lg text-emerald-600" id="dash-profit">Rp 0</h3>
-            </div>
-        </div>
-        
-        <div class="space-y-3">
-            <h4 class="font-bold px-1">Menu Cepat</h4>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="switchView('kasir')" class="bg-indigo-600 text-white p-6 rounded-3xl flex flex-col items-center gap-2">
-                    <i data-lucide="shopping-cart"></i><span class="text-sm font-bold">Buka Kasir</span>
-                </button>
-                <button onclick="switchView('gudang')" class="bg-white border p-6 rounded-3xl flex flex-col items-center gap-2">
-                    <i data-lucide="box" class="text-orange-500"></i><span class="text-sm font-bold">Stok Barang</span>
-                </button>
-            </div>
+            <button onclick="switchView('kasir')" class="bg-indigo-600 text-white rounded-3xl font-bold">Buka Kasir</button>
         </div>
     </div>
 
     <div id="view-kasir" class="view-content hidden p-4 space-y-4">
-        <input type="text" placeholder="Cari barang..." class="w-full p-4 bg-white rounded-2xl shadow-sm outline-none" onkeyup="searchProduct(this.value)">
+        <input type="text" placeholder="Cari barang..." class="w-full p-4 bg-white rounded-2xl shadow-sm" onkeyup="searchProduct(this.value)">
         <div id="product-list" class="grid grid-cols-2 gap-3"></div>
     </div>
 
-    <div id="view-gudang" class="view-content hidden p-4 space-y-4">
-        <div class="flex justify-between items-center px-2">
-            <h2 class="font-bold text-lg">Inventory</h2>
-            <button onclick="openProductModal()" class="bg-indigo-600 text-white p-3 rounded-2xl"><i data-lucide="plus"></i></button>
-        </div>
-        <div id="inventory-list" class="space-y-3"></div>
-    </div>
-
     <div id="view-laporan" class="view-content hidden p-4 space-y-4">
-        <h2 class="font-bold text-lg px-2">Riwayat Transaksi</h2>
+        <h2 class="font-bold text-lg">Riwayat & Cetak Ulang</h2>
         <div id="history-list" class="space-y-3"></div>
     </div>
 
     <div id="view-settings" class="view-content hidden p-4 space-y-4">
-        <div class="bg-white p-6 rounded-3xl border space-y-4">
-            <h3 class="font-bold border-b pb-2">Profil Toko (Untuk Struk)</h3>
-            <input type="text" id="set-name" placeholder="Nama Toko" class="w-full p-3 bg-slate-50 border rounded-xl">
-            <input type="text" id="set-address" placeholder="Alamat" class="w-full p-3 bg-slate-50 border rounded-xl">
-            <input type="text" id="set-phone" placeholder="No Telpon" class="w-full p-3 bg-slate-50 border rounded-xl">
-            <button onclick="saveShopSettings()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold">Simpan</button>
+        <div class="bg-white p-6 rounded-3xl border space-y-3">
+            <input type="text" id="set-name" placeholder="Nama Toko" class="w-full p-3 border rounded-xl">
+            <input type="text" id="set-address" placeholder="Alamat" class="w-full p-3 border rounded-xl">
+            <input type="text" id="set-phone" placeholder="No Telp" class="w-full p-3 border rounded-xl">
+            <button onclick="saveShopSettings()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold">Simpan Info Toko</button>
         </div>
     </div>
 </main>
 
-<nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-4 hidden z-50">
-    <button onclick="switchView('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-indigo-600">
-        <i data-lucide="home" class="w-6 h-6"></i><span class="text-[10px] font-bold">Home</span>
-    </button>
-    <button onclick="switchView('kasir')" id="nav-kasir" class="flex flex-col items-center gap-1 text-slate-400">
-        <i data-lucide="shopping-basket" class="w-6 h-6"></i><span class="text-[10px] font-bold">Kasir</span>
-    </button>
-    <button onclick="switchView('laporan')" id="nav-laporan" class="flex flex-col items-center gap-1 text-slate-400">
-        <i data-lucide="printer" class="w-6 h-6"></i><span class="text-[10px] font-bold">Riwayat</span>
-    </button>
-    <button onclick="switchView('settings')" id="nav-settings" class="flex flex-col items-center gap-1 text-slate-400">
-        <i data-lucide="settings" class="w-6 h-6"></i><span class="text-[10px] font-bold">Toko</span>
-    </button>
+<nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-4 hidden">
+    <button onclick="switchView('dashboard')" id="nav-dashboard" class="text-indigo-600"><i data-lucide="home"></i></button>
+    <button onclick="switchView('kasir')" id="nav-kasir" class="text-slate-400"><i data-lucide="shopping-cart"></i></button>
+    <button onclick="switchView('laporan')" id="nav-laporan" class="text-slate-400"><i data-lucide="history"></i></button>
+    <button onclick="switchView('settings')" id="nav-settings" class="text-slate-400"><i data-lucide="settings"></i></button>
 </nav>
 
-<div id="cart-bar" class="fixed bottom-24 left-4 right-4 bg-slate-900 text-white p-4 rounded-3xl flex justify-between items-center hidden z-50 shadow-2xl">
-    <div onclick="openCartModal()" class="flex items-center gap-3">
-        <div class="bg-indigo-600 p-2 rounded-xl"><i data-lucide="shopping-cart" class="w-5 h-5"></i></div>
-        <h4 id="cart-total-text" class="font-bold text-lg">Rp 0</h4>
-    </div>
-    <button onclick="processCheckout()" class="bg-emerald-500 px-6 py-3 rounded-2xl font-bold uppercase text-xs">Bayar</button>
-</div>
-
-<div id="modal-container" class="fixed inset-0 bg-slate-900/60 z-[200] hidden flex items-end md:items-center justify-center">
-    <div id="modal-content" class="bg-white w-full max-w-md rounded-t-[2.5rem] md:rounded-3xl p-8 max-h-[85vh] overflow-y-auto"></div>
+<div id="cart-bar" class="fixed bottom-24 left-4 right-4 bg-slate-900 text-white p-4 rounded-3xl flex justify-between items-center hidden">
+    <h4 id="cart-total-text" class="font-bold">Rp 0</h4>
+    <button onclick="processCheckout()" class="bg-emerald-500 px-6 py-2 rounded-xl font-bold">BAYAR</button>
 </div>
 
 <div id="receipt-print"></div>
 
 <script>
-    const db = new Dexie("KasirPintarDB_v2");
+    const db = new Dexie("KasirBoldDB");
     db.version(1).stores({
-        users: '++id, username, password, role',
         products: '++id, name, buy_price, sell_price, stock',
         transactions: '++id, date, total, profit',
-        settings: 'key, value'
+        settings: 'key, value',
+        users: '++id, username, password'
     });
 
-    let currentUser = null;
     let cart = [];
 
-    // Init User
     async function init() {
-        if (await db.users.count() === 0) {
-            await db.users.add({ username: 'admin', password: '123', role: 'admin' });
-        }
+        if (await db.users.count() === 0) await db.users.add({username:'admin', password:'123'});
+        refreshData();
         lucide.createIcons();
     }
 
     async function handleLogin(e) {
         e.preventDefault();
-        const u = document.getElementById('login-username').value;
-        const p = document.getElementById('login-password').value;
-        const user = await db.users.where({ username: u, password: p }).first();
-        if (user) {
-            currentUser = user;
-            document.getElementById('login-screen').classList.add('hidden');
-            ['main-header', 'main-content', 'bottom-nav'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-            document.getElementById('user-info').innerText = `Staff: ${user.username}`;
-            switchView('dashboard');
-        } else alert('Salah password!');
+        document.getElementById('login-screen').classList.add('hidden');
+        ['main-header', 'main-content', 'bottom-nav'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+        switchView('dashboard');
     }
-
-    function handleLogout() { location.reload(); }
 
     function switchView(view) {
         document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${view}`).classList.remove('hidden');
         document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-indigo-600', 'text-slate-400'));
         document.getElementById(`nav-${view}`).classList.replace('text-slate-400', 'text-indigo-600');
-        if(view === 'kasir' && cart.length > 0) document.getElementById('cart-bar').classList.remove('hidden');
-        else document.getElementById('cart-bar').classList.add('hidden');
         refreshData();
     }
-
-    const formatIDR = (n) => "Rp " + Number(n).toLocaleString('id-ID');
 
     async function refreshData() {
         const prods = await db.products.toArray();
         const trxs = await db.transactions.toArray();
         
-        // Dashboard
-        document.getElementById('dash-sales').innerText = formatIDR(trxs.reduce((s,t) => s+t.total, 0));
-        document.getElementById('dash-profit').innerText = formatIDR(trxs.reduce((s,t) => s+t.profit, 0));
+        // Render Kasir
+        searchProduct("");
 
-        // Inventory
-        document.getElementById('inventory-list').innerHTML = prods.map(p => `
-            <div class="bg-white p-4 rounded-3xl border flex justify-between items-center">
-                <div><h4 class="font-bold">${p.name}</h4><p class="text-[10px] text-slate-400">${formatIDR(p.sell_price)}</p></div>
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold ${p.stock < 5 ? 'text-red-500' : ''}">Stok: ${p.stock}</span>
-                    <button onclick="openProductModal(${p.id})" class="p-2 bg-slate-100 rounded-lg"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                </div>
-            </div>
-        `).join('');
-
-        // History / Reprint
+        // Render Laporan & Reprint
         document.getElementById('history-list').innerHTML = trxs.reverse().map(t => `
-            <div class="bg-white p-4 rounded-3xl border flex justify-between items-center">
+            <div class="bg-white p-4 rounded-2xl border flex justify-between items-center">
                 <div>
-                    <h4 class="font-bold text-sm">#TRX-${t.id}</h4>
+                    <p class="font-bold">#TRX-${t.id}</p>
                     <p class="text-[10px] text-slate-400">${new Date(t.date).toLocaleString()}</p>
-                    <p class="text-xs font-bold text-indigo-600">${formatIDR(t.total)}</p>
                 </div>
-                <button onclick="reprintTransaction(${t.id})" class="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold text-xs">
-                    <i data-lucide="printer" class="w-4 h-4"></i> Cetak
+                <button onclick="reprint(${t.id})" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                    <i data-lucide="printer" class="w-3 h-3"></i> RE-PRINT
                 </button>
             </div>
         `).join('');
 
-        // Settings Load
-        const sArr = await db.settings.toArray();
-        const conf = sArr.reduce((a,c) => ({...a, [c.key]: c.value}), {});
-        document.getElementById('set-name').value = conf.name || '';
-        document.getElementById('set-address').value = conf.address || '';
-        document.getElementById('set-phone').value = conf.phone || '';
+        // Settings
+        const s = await db.settings.toArray();
+        const conf = s.reduce((a,c) => ({...a, [c.key]: c.value}), {});
+        if(conf.name) document.getElementById('set-name').value = conf.name;
 
-        searchProduct("");
         lucide.createIcons();
     }
 
     async function searchProduct(q) {
         const prods = await db.products.filter(p => p.name.toLowerCase().includes(q.toLowerCase())).toArray();
         document.getElementById('product-list').innerHTML = prods.map(p => `
-            <div onclick="addToCart(${p.id})" class="bg-white p-4 rounded-3xl border active:scale-95 transition">
+            <div onclick="addToCart(${p.id})" class="bg-white p-4 rounded-2xl border shadow-sm active:scale-95 transition">
                 <h4 class="font-bold text-xs truncate">${p.name}</h4>
-                <p class="text-sm font-bold text-indigo-600">${formatIDR(p.sell_price)}</p>
-                <p class="text-[9px] text-slate-400 mt-2 font-bold">Stok: ${p.stock}</p>
+                <p class="text-indigo-600 font-bold">Rp ${p.sell_price.toLocaleString()}</p>
             </div>
         `).join('');
     }
 
-    async function addToCart(id) {
-        const p = await db.products.get(id);
-        if (p.stock <= 0) return alert('Stok Habis!');
-        const exists = cart.find(c => c.id === id);
-        if (exists) exists.qty++; else cart.push({...p, qty: 1});
-        updateCartUI();
+    function addToCart(id) {
+        db.products.get(id).then(p => {
+            const exists = cart.find(c => c.id === id);
+            if (exists) exists.qty++; else cart.push({...p, qty: 1});
+            updateCart();
+        });
     }
 
-    function updateCartUI() {
+    function updateCart() {
         const total = cart.reduce((s,i) => s + (i.sell_price * i.qty), 0);
-        document.getElementById('cart-total-text').innerText = formatIDR(total);
+        document.getElementById('cart-total-text').innerText = "Total: Rp " + total.toLocaleString();
         document.getElementById('cart-bar').classList.toggle('hidden', cart.length === 0);
     }
 
     async function processCheckout() {
-        if (cart.length === 0) return;
         let total = 0, profit = 0;
-        for (const i of cart) {
-            const p = await db.products.get(i.id);
-            await db.products.update(i.id, { stock: p.stock - i.qty });
-            total += i.sell_price * i.qty;
+        cart.forEach(i => {
+            total += (i.sell_price * i.qty);
             profit += (i.sell_price - i.buy_price) * i.qty;
-        }
+        });
         const trx = { date: new Date().toISOString(), total, profit, items: JSON.parse(JSON.stringify(cart)) };
         const id = await db.transactions.add(trx);
         trx.id = id;
-        
-        await doPrint(trx);
-        cart = [];
-        updateCartUI();
-        refreshData();
+        doPrint(trx);
+        cart = []; updateCart(); refreshData();
     }
 
-    async function reprintTransaction(id) {
+    async function reprint(id) {
         const trx = await db.transactions.get(id);
-        if (trx) await doPrint(trx);
+        doPrint(trx);
     }
 
     async function doPrint(trx) {
@@ -300,79 +222,46 @@
         const area = document.getElementById('receipt-print');
         
         area.innerHTML = `
-            <div style="text-align:center; margin-bottom: 4px;">
-                <b style="font-size: 14px; text-transform: uppercase;">${conf.name || 'TOKO KITA'}</b><br>
-                <span style="font-size: 9px;">${conf.address || '-'}</span><br>
-                <span style="font-size: 9px;">Telp: ${conf.phone || '-'}</span>
+            <div style="text-align:center; margin-bottom: 8px;">
+                <div class="bold-text" style="font-size: 15px; margin-bottom: 2px;">${conf.name || 'TOKO SUKSES'}</div>
+                <div style="font-size: 10px;">${conf.address || 'Jl. Raya No. 123'}</div>
+                <div style="font-size: 10px;">Telp: ${conf.phone || '0812345678'}</div>
             </div>
-            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
-            <div style="font-size: 9px;">
-                Nota: #TRX-${trx.id}<br>
-                Tgl : ${new Date(trx.date).toLocaleString('id-ID')}
+            <div class="line-divider"></div>
+            <div style="font-size: 10px; margin-bottom: 5px;">
+                NO: #TRX-${trx.id}<br>
+                TGL: ${new Date(trx.date).toLocaleString('id-ID')}
             </div>
-            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
+            <div class="line-divider"></div>
             ${trx.items.map(i => `
-                <div style="display:flex; justify-content:space-between; font-size: 10px;">
-                    <span style="flex:1;">${i.name}</span>
-                    <span style="width: 30px; text-align:right;">${i.qty}x</span>
-                    <span style="width: 65px; text-align:right;">${(i.price * i.qty).toLocaleString()}</span>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 3px;">
+                    <div style="flex: 1; font-size: 11px;" class="bold-text">${i.name}</div>
+                    <div style="width: 30px; text-align: center; font-size: 11px;">${i.qty}</div>
+                    <div style="width: 70px; text-align: right; font-size: 11px;" class="bold-text">${(i.price || i.sell_price * i.qty).toLocaleString()}</div>
                 </div>
             `).join('')}
-            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 12px;">
+            <div class="line-divider"></div>
+            <div style="display:flex; justify-content:space-between; font-size: 14px; margin-top: 5px;" class="bold-text">
                 <span>TOTAL</span>
                 <span>${trx.total.toLocaleString()}</span>
             </div>
-            <div style="border-top: 1px dashed #000; margin: 4px 0;"></div>
-            <div style="text-align:center; font-size: 9px; margin-top: 4px;">
-                Terima Kasih!<br>Selamat Belanja Kembali
+            <div class="line-divider"></div>
+            <div style="text-align:center; font-size: 10px; margin-top: 10px;">
+                TERIMA KASIH ATAS KUNJUNGANNYA<br>
+                BARANG TIDAK DAPAT DITUKAR
             </div>
-            <br><br><br> `;
+            <div style="height: 50px;"></div> `;
         window.print();
     }
 
-    // Modal Helper
-    function openProductModal(id = null) {
-        document.getElementById('modal-container').classList.remove('hidden');
-        if(id) db.products.get(id).then(p => renderForm(p)); else renderForm({name:'', buy_price:'', sell_price:'', stock:''});
-    }
-
-    function renderForm(p) {
-        document.getElementById('modal-content').innerHTML = `
-            <h3 class="text-xl font-bold mb-4">${p.id ? 'Edit' : 'Tambah'} Barang</h3>
-            <div class="space-y-4">
-                <input type="text" id="m-name" value="${p.name}" placeholder="Nama Barang" class="w-full p-4 bg-slate-50 border rounded-2xl">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="m-buy" value="${p.buy_price}" placeholder="Harga Beli" class="p-4 bg-slate-50 border rounded-2xl">
-                    <input type="number" id="m-sell" value="${p.sell_price}" placeholder="Harga Jual" class="p-4 bg-slate-50 border rounded-2xl">
-                </div>
-                <input type="number" id="m-stock" value="${p.stock}" placeholder="Stok" class="w-full p-4 bg-slate-50 border rounded-2xl">
-                <button onclick="saveProduct(${p.id || null})" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold">Simpan Barang</button>
-            </div>
-        `;
-    }
-
-    async function saveProduct(id) {
-        const data = {
-            name: document.getElementById('m-name').value,
-            buy_price: parseFloat(document.getElementById('m-buy').value),
-            sell_price: parseFloat(document.getElementById('m-sell').value),
-            stock: parseInt(document.getElementById('m-stock').value)
-        };
-        if(id) await db.products.update(id, data); else await db.products.add(data);
-        closeModal(); refreshData();
-    }
-
     async function saveShopSettings() {
-        await db.settings.put({ key: 'name', value: document.getElementById('set-name').value });
-        await db.settings.put({ key: 'address', value: document.getElementById('set-address').value });
-        await db.settings.put({ key: 'phone', value: document.getElementById('set-phone').value });
-        alert('Toko Berhasil Diupdate!');
+        await db.settings.put({key:'name', value: document.getElementById('set-name').value});
+        await db.settings.put({key:'address', value: document.getElementById('set-address').value});
+        await db.settings.put({key:'phone', value: document.getElementById('set-phone').value});
+        alert("Profil Toko Disimpan!");
     }
 
-    function closeModal() { document.getElementById('modal-container').classList.add('hidden'); }
-    window.onclick = (e) => { if(e.target.id == 'modal-container') closeModal(); }
-    
+    function handleLogout() { location.reload(); }
     init();
 </script>
 </body>
