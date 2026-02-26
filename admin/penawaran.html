@@ -161,29 +161,52 @@
 
     window.onload = () => { 
         if(typeof initLayout === 'function') initLayout();
-        loadPenawaran(); 
-        fetchPelanggan(); 
+        loadDataSakti(); // Gabungan load penawaran & pelanggan
     };
 
-    async function loadPenawaran() {
+    // FUNGSI SAKTI: Load data Penawaran sekaligus sinkron jeneng seko Sheet Pelanggan
+    async function loadDataSakti() {
+        const container = document.getElementById('cards-container');
+        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><br><small>Sinkronisasi Data...</small></div>';
+        
         try {
-            const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
-            const r = await res.json();
-            if (r.success) { 
-                allData = r.data.reverse(); 
+            // 1. Ambil data Pelanggan dhisik nggo mapping
+            const resP = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getAllPelanggan' }) 
+            });
+            const rP = await resP.json();
+            if(rP.success) listPelanggan = rP.data;
+
+            // Gawe "Kamus" Pelanggan { email: nama }
+            const mapPelanggan = {};
+            listPelanggan.forEach(p => {
+                // p[0] = Nama (Kolom A), p[1] = Email (Kolom B)
+                if(p[1]) mapPelanggan[p[1].toLowerCase()] = p[0];
+            });
+
+            // 2. Ambil data Penawaran
+            const resQ = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
+            const rQ = await resQ.json();
+            
+            if (rQ.success) { 
+                // Inject jeneng asli seko kamus pelanggan dadi properti 'nama_asli'
+                allData = rQ.data.reverse().map(row => {
+                    const mail = (row.email || "").toLowerCase();
+                    return {
+                        ...row,
+                        nama_asli: mapPelanggan[mail] || row.nama || row.email // fallback nek ra ketemu
+                    };
+                });
                 renderDisplay(); 
             }
-        } catch(e) { console.error("Gagal memuat data"); }
+        } catch(e) { 
+            console.error("Gagal sinkronisasi", e);
+            container.innerHTML = '<div class="alert alert-danger">Gagal memuat data. Cek koneksi internet/GAS.</div>';
+        }
     }
 
-    async function fetchPelanggan() {
-        try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
-            const r = await res.json();
-            if(r.success) listPelanggan = r.data;
-        } catch(e) {}
-    }
-
+    // Render List Penawaran neng Card
     function renderDisplay(filteredData = null) {
         const dataToRender = filteredData || allData;
         const container = document.getElementById('cards-container');
@@ -207,7 +230,8 @@
                         <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
                         <div class="card-perihal">${row.perihal || 'Tanpa Perihal'}</div>
                         <div class="card-client mt-1">
-                            <i class="fas fa-user-circle"></i> ${row.email}
+                            <i class="fas fa-user-circle text-primary me-1"></i> 
+                            <span class="fw-bold text-dark">${row.nama_asli}</span>
                         </div>
                     </div>
                     <span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span>
@@ -247,122 +271,85 @@
         if(data) generatePDF(data);
     }
 
-function generatePDF(data) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // --- 1. HEADER DENGAN LOGO ---
-// --- 1. HEADER DENGAN LOGO ---
-    try { 
-        doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
-    } catch (e) { 
-        console.error("Logo ora ketemu.");
+    // PDF GENERATOR (FIXED NAMA DARI DATABASE)
+    function generatePDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // 1. Header & Logo
+        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
+
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
+        doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+        
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
+        
+        doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.5);
+        doc.line(15, 40, 195, 40);
+
+        // 2. Info Surat
+        doc.setTextColor(0); 
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("PENAWARAN HARGA", 105, 50, { align: "center" });
+        
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Penawaran : #${data.id}`, 15, 60);
+        doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Perihal        : ${data.perihal || 'Penawaran Pekerjaan'}`, 15, 70);
+        
+        doc.setFont("helvetica", "normal");
+        doc.text("Kepada Yth:", 130, 60);
+        doc.setFont("helvetica", "bold");
+        
+        // AMBIL NAMA ASLI (BUKAN EMAIL)
+        const namaPelanggan = data.nama_asli || '-'; 
+        const splitNama = doc.splitTextToSize(namaPelanggan.toUpperCase(), 60);
+        doc.text(splitNama, 130, 65);
+
+        // 3. Konten & Tabel
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+        doc.text("Bersama surat ini, kami Nanda Teknik Banyuwangi menyampaikan rincian penawaran harga sebagai berikut:", 15, 82);
+
+        const tableBody = data.items_json.map((item, index) => [
+            index + 1, item.nama, item.qty,
+            `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
+            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+        ]);
+
+        doc.autoTable({
+            startY: 88, 
+            head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
+            body: tableBody, 
+            theme: 'grid', 
+            headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255], halign: 'center', fontSize: 9 },
+            columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right', cellWidth: 35 }, 4: { halign: 'right', cellWidth: 35 } },
+            styles: { fontSize: 9, cellPadding: 3 }
+        });
+
+        // 4. Total & Tanda Tangan
+        let currentY = doc.lastAutoTable.finalY + 10;
+        doc.setFillColor(240, 240, 240); doc.rect(130, currentY - 5, 65, 10, 'F');
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, currentY, { align: "right" });
+
+        currentY += 20;
+        doc.text(`Banyuwangi, ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 145, currentY);
+        doc.text("Hormat Kami,", 145, currentY + 5);
+        doc.text("NANDA KRISBIANTO", 145, currentY + 30);
+        doc.setFont("helvetica", "normal");
+        doc.text("( Owner Nanda Teknik )", 145, currentY + 35);
+
+        doc.save(`Penawaran_${data.id}_${namaPelanggan.replace(/\s+/g, '_')}.pdf`);
     }
 
-    doc.setFontSize(18); doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-    
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.setTextColor(100); 
-    doc.text("Software, Network & Electrical Engineering", 45, 26);
-    doc.setFontSize(8);
-    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
-    
-    doc.setDrawColor(80, 80, 80);
-    doc.setLineWidth(0.5);
-    doc.line(15, 40, 195, 40);
-
-    // --- 2. INFO SURAT ---
-    doc.setTextColor(0); 
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("PENAWARAN HARGA", 105, 50, { align: "center" });
-
-    
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.text(`No. Penawaran : #${data.id}`, 15, 60);
-    doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Perihal        : ${data.perihal || 'Penawaran Pekerjaan'}`, 15, 70);
-    
-    doc.setFont("helvetica", "normal");
-    doc.text("Kepada Yth:", 130, 60);
-    doc.setFont("helvetica", "bold");
-    const namaPelanggan = data.nama || data.pelanggan || '-'; 
-    const splitNama = doc.splitTextToSize(namaPelanggan, 60);
-    doc.text(splitNama, 130, 65);
-
-    // --- 3. KALIMAT PEMBUKA ---
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const pembuka = "Bersama surat ini, kami Nanda Teknik Banyuwangi bermaksud menyampaikan rincian penawaran harga untuk kebutuhan sebagai berikut:";
-    const splitPembuka = doc.splitTextToSize(pembuka, 180);
-    doc.text(splitPembuka, 15, 82);
-
-    // --- 4. TABLE ITEMS ---
-    const tableBody = data.items_json.map((item, index) => [
-        index + 1, 
-        item.nama, 
-        item.qty,
-        `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
-        `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
-    ]);
-
-    doc.autoTable({
-        startY: 88, 
-        head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
-        body: tableBody, 
-        theme: 'grid', 
-        headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255], halign: 'center', fontSize: 9 },
-        columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right', cellWidth: 35 }, 4: { halign: 'right', cellWidth: 35 } },
-        styles: { fontSize: 9, cellPadding: 3 }
-    });
-
-    // --- 5. TOTAL & SYARAT KETENTUAN ---
-    let currentY = doc.lastAutoTable.finalY + 10;
-    
-    // Box Total
-    doc.setFillColor(240, 240, 240);
-    doc.rect(130, currentY - 5, 65, 10, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, currentY, { align: "right" });
-
-    currentY += 15;
-
-    // --- BOX SYARAT & KETENTUAN (Garis Putus-putus) ---
-    doc.setLineDash([2, 2], 0); // Efek garis putus-putus
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(15, currentY, 180, 28); // Kotak pembungkus
-    doc.setLineDash([]); // Balikne dadi garis normal
-
-    doc.setFontSize(8); doc.setFont("helvetica", "bold");
-    doc.text("Syarat & Ketentuan:", 20, currentY + 5);
-    doc.setFont("helvetica", "normal");
-    doc.text("1. Harga di atas sudah termasuk biaya jasa dan instalasi (kecuali ada keterangan lain).", 20, currentY + 10);
-    doc.text("2. Pembayaran Down Payment (DP) minimal 50% setelah penawaran disetujui.", 20, currentY + 14);
-    doc.text("3. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai.", 20, currentY + 18);
-    doc.text("4. Penawaran harga ini berlaku selama 14 hari sejak tanggal diterbitkan.", 20, currentY + 22);
-
-    // --- 6. PENUTUP & TANDA TANGAN ---
-    currentY += 40;
-    doc.setFontSize(9);
-    const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik. Atas perhatiannya kami ucapkan terima kasih.";
-    doc.text(doc.splitTextToSize(penutup, 180), 15, currentY - 5);
-
-    const tglSekarang = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-    doc.text(`Banyuwangi, ${tglSekarang}`, 145, currentY + 10);
-    doc.text("Hormat Kami,", 145, currentY + 15);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text("NANDA KRISBIANTO", 145, currentY + 40);
-    doc.setFont("helvetica", "normal");
-    doc.text("( Owner Nanda Teknik )", 145, currentY + 45);
-
-    doc.save(`Penawaran_${data.id}.pdf`);
-}
-
-    // --- FORM & CRUD FUNCTIONS ---
+    // --- FORM LOGIC ---
     function addItemRow(n='', h=0, q=1) {
         const div = document.createElement('div');
         div.className = 'row g-2 mb-2 item-row animate__animated animate__fadeInDown';
@@ -394,12 +381,10 @@ function generatePDF(data) {
     }
 
     function selectPelanggan(n, e) {
-    document.getElementById('form-email').value = e;
-    document.getElementById('search-pelanggan').value = n; // Iki jeneng sing diketik
-    // Tambahake baris iki supaya 'nama' melu kegowo pas submit
-    document.getElementById('search-pelanggan').dataset.nama = n; 
-    document.getElementById('search-results').style.display = 'none';
-}
+        document.getElementById('form-email').value = e;
+        document.getElementById('search-pelanggan').value = n;
+        document.getElementById('search-results').style.display = 'none';
+    }
 
     function showAddModal() {
         document.getElementById('formPenawaran').reset();
@@ -415,7 +400,7 @@ function generatePDF(data) {
         if(!d) return;
         document.getElementById('edit-id').value = d.id;
         document.getElementById('form-email').value = d.email;
-        document.getElementById('search-pelanggan').value = d.email;
+        document.getElementById('search-pelanggan').value = d.nama_asli;
         document.getElementById('form-perihal').value = d.perihal || '';
         document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
@@ -430,7 +415,7 @@ function generatePDF(data) {
         const payload = {
             action: id ? 'updatePenawaran' : 'createPenawaran',
             id: id,
-            nama: document.getElementById('search-pelanggan').value, // TAMBAHIKI SAM!
+            nama: document.getElementById('search-pelanggan').value,
             email: document.getElementById('form-email').value,
             perihal: document.getElementById('form-perihal').value,
             items: Array.from(document.querySelectorAll('.item-row')).map(r => ({
@@ -447,8 +432,8 @@ function generatePDF(data) {
         const r = await res.json();
         if(r.success) {
             modalForm.hide();
-            loadPenawaran();
-            Swal.fire('Berhasil', 'Data disimpan', 'success');
+            loadDataSakti(); // Refresh data
+            Swal.fire('Berhasil', 'Data berhasil disimpan!', 'success');
         }
     };
 
