@@ -6,13 +6,27 @@
     <title>Kasir - POS PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <style>
         #product-grid::-webkit-scrollbar { width: 4px; }
         #product-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        /* Hilangkan nota-print lama karena pakai jsPDF */
-        #nota-print { display: none; }
+        
+        /* CSS KHUSUS PRINT AGAR IWARE TAJAM & GAK PUTUS */
+        @media print {
+            body * { visibility: hidden; }
+            #nota-hidden-print, #nota-hidden-print * { visibility: visible; color: #000 !important; }
+            #nota-hidden-print { 
+                position: absolute; left: 0; top: 0; width: 54mm; 
+                display: block !important;
+            }
+            @page { margin: 0; size: auto; }
+        }
+
+        #nota-hidden-print { display: none; background: white; }
+        
+        /* Font Arial lebih solid untuk Iware dibanding Courier */
+        .thermal-font { font-family: Arial, sans-serif; font-size: 11px; line-height: 1.2; }
+        .thermal-bold { font-weight: 900; -webkit-text-stroke: 0.3px black; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -75,6 +89,8 @@
         </main>
     </div>
 
+    <div id="nota-hidden-print"></div>
+
     <script src="js/config.js"></script>
     <script src="js/layout.js"></script>
     <script>
@@ -95,7 +111,7 @@
                     <div class="font-black text-slate-800 text-lg">Rp ${p.harga.toLocaleString()}</div>
                     <div class="flex items-center justify-between mt-3">
                         <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${p.stock < 5 ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-400'} uppercase">Stok: ${p.stock}</span>
-                        <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs group-hover:bg-blue-600 group-hover:text-white transition-colors">+</div>
+                        <div class="w-6 h-6 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs">+</div>
                     </div>
                 </div>
             `).join('');
@@ -176,59 +192,56 @@
             }
         }
 
-        // --- FUNGSI CETAK NOTA DENGAN JSDPF ---
-        async function cetakNotaPDF(info, total, bayar, waktu) {
-            const { jsPDF } = window.jspdf;
+        // --- FUNGSI CETAK HTML DIRECT (ANTI PUTUS-PUTUS IWARE) ---
+        function cetakNotaDirect(info, total, bayar, waktu) {
+            const area = document.getElementById('nota-hidden-print');
+            area.innerHTML = `
+                <div class="thermal-font" style="padding: 2mm;">
+                    <div style="text-align:center; margin-bottom: 5px;">
+                        <div class="thermal-bold" style="font-size: 14px; text-transform: uppercase;">${info.nama}</div>
+                        <div style="font-size: 9px;">${info.alamat || ""}</div>
+                        <div style="font-size: 9px;">WA: ${info.wa || "-"}</div>
+                    </div>
+                    
+                    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                    <div style="font-size: 9px;">
+                        Tgl: ${new Date(waktu).toLocaleString('id-ID')}<br>
+                        Kasir: Admin
+                    </div>
+                    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+
+                    ${keranjang.map(item => `
+                        <div style="margin-bottom: 3px;">
+                            <div class="thermal-bold">${item.nama.substring(0, 25)}</div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>${item.qty} x ${item.harga.toLocaleString()}</span>
+                                <span class="thermal-bold">${(item.qty * item.harga).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                    <div style="display:flex; justify-content:space-between; font-size: 12px;" class="thermal-bold">
+                        <span>TOTAL</span>
+                        <span>${total.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>BAYAR</span>
+                        <span>${bayar.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>KEMBALI</span>
+                        <span>${(bayar - total).toLocaleString()}</span>
+                    </div>
+
+                    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+                    <div style="text-align:center; font-size: 9px; margin-top: 5px;">
+                        Terima Kasih Atas Kunjungannya
+                    </div>
+                    <div style="height: 50px;"></div> </div>
+            `;
             
-            // Tinggi nota dinamis: 70mm dasar + 10mm per item
-            const tinggiNota = 80 + (keranjang.length * 8);
-            const doc = new jsPDF({
-                unit: 'mm',
-                format: [58, tinggiNota]
-            });
-
-            doc.setFont("courier", "bold");
-            doc.setFontSize(12);
-            doc.text(info.nama.toUpperCase(), 29, 10, { align: 'center' });
-            
-            doc.setFontSize(8);
-            doc.setFont("courier", "normal");
-            doc.text(info.alamat || "", 29, 15, { align: 'center' });
-            doc.text("WA: " + (info.wa || "-"), 29, 19, { align: 'center' });
-            doc.text("-------------------------------", 29, 23, { align: 'center' });
-
-            let y = 28;
-            keranjang.forEach((item) => {
-                doc.text(item.nama.substring(0, 22), 5, y);
-                y += 4;
-                doc.text(`${item.qty} x ${item.harga.toLocaleString()}`, 5, y);
-                doc.text((item.qty * item.harga).toLocaleString(), 53, y, { align: 'right' });
-                y += 6;
-            });
-
-            doc.text("-------------------------------", 29, y, { align: 'center' });
-            y += 5;
-            doc.setFont("courier", "bold");
-            doc.text("TOTAL  :", 5, y);
-            doc.text("Rp " + total.toLocaleString(), 53, y, { align: 'right' });
-            
-            y += 4;
-            doc.setFont("courier", "normal");
-            doc.text("BAYAR  :", 5, y);
-            doc.text("Rp " + bayar.toLocaleString(), 53, y, { align: 'right' });
-            
-            y += 4;
-            doc.text("KEMBALI:", 5, y);
-            doc.text("Rp " + (bayar - total).toLocaleString(), 53, y, { align: 'right' });
-
-            y += 8;
-            doc.setFontSize(7);
-            doc.text("Terima Kasih Atas Kunjungannya", 29, y, { align: 'center' });
-            y += 4;
-            doc.text(new Date(waktu).toLocaleString(), 29, y, { align: 'center' });
-
-            // Preview & Print
-            window.open(doc.output('bloburl'), '_blank');
+            window.print();
         }
 
         async function prosesTransaksi() {
@@ -243,28 +256,26 @@
                 const waktu = new Date().getTime();
                 const infoToko = await db.settings.get("info_toko") || { nama: "POS PRO", alamat: "Indonesia", wa: "000" };
 
-                // 1. Simpan Transaksi ke DB
+                // 1. Simpan ke DB
                 await db.transactions.add({
                     waktu: waktu,
                     items: JSON.parse(JSON.stringify(keranjang)),
                     total: total,
                     bayar: bayar,
                     kembali: bayar - total,
-                    kasir: (typeof session !== 'undefined') ? session.nama : 'Admin'
+                    kasir: 'Admin'
                 });
 
-                // 2. Potong Stok Produk
+                // 2. Potong Stok
                 for (const item of keranjang) {
                     const prod = await db.products.get(item.id);
-                    if(prod) {
-                        await db.products.update(item.id, { stock: prod.stock - item.qty });
-                    }
+                    if(prod) await db.products.update(item.id, { stock: prod.stock - item.qty });
                 }
 
-                // 3. Panggil Fungsi Cetak PDF
-                await cetakNotaPDF(infoToko, total, bayar, waktu);
+                // 3. Panggil Cetak Direct (Bukan PDF)
+                cetakNotaDirect(infoToko, total, bayar, waktu);
 
-                // 4. Reset & Refresh
+                // 4. Reset
                 keranjang = [];
                 if(bayarInput) bayarInput.value = '';
                 updateCartUI();
