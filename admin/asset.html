@@ -29,6 +29,10 @@
         
         /* Checklist box */
         #checklistContainer { background: #f8fafc; border-radius: 12px; padding: 15px; border-left: 4px solid #4338ca; }
+
+        /* Scanner Styling */
+        .input-group-text-scanner { background: #4338ca; color: white; border: none; cursor: pointer; border-radius: 0 12px 12px 0 !important; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 2px dashed #4338ca; }
     </style>
 </head>
 <body>
@@ -62,6 +66,11 @@
                     
                     <form id="formAset">
                         <div class="row g-3">
+                            <!-- Scanner Area -->
+                            <div class="col-12">
+                                <div id="reader"></div>
+                            </div>
+
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Pilih Pelanggan</label>
                                 <select class="form-select border-0 bg-light" id="idPelanggan" required>
@@ -79,13 +88,18 @@
                                     <option value="Elektronik Lain">Elektronik Lain</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-8">
+                            <div class="col-12 col-md-7">
                                 <label class="form-label">Nama Barang / Brand / Seri</label>
                                 <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Dahua IPC-HFW1230" required>
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-5">
                                 <label class="form-label">Serial Number (SN)</label>
-                                <input type="text" class="form-control border-0 bg-light fw-bold text-primary" id="snAset" placeholder="Scan / Ketik SN">
+                                <div class="input-group">
+                                    <input type="text" class="form-control border-0 bg-light fw-bold text-primary" id="snAset" placeholder="Ketik atau Scan">
+                                    <button class="input-group-text input-group-text-scanner" type="button" onclick="toggleScanner()" id="btnScanner">
+                                        <i class="fas fa-barcode"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- KHUSUS SALES (Toko & Garansi) -->
@@ -160,6 +174,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<!-- Library Barcode Scanner -->
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <!-- Script Layout & Config -->
 <script src="assets/config.js"></script>
@@ -174,11 +190,62 @@
         "Elektronik Lain": ["Fungsi Utama", "Kabel Power", "Kebersihan"]
     };
 
+    let html5QrCode;
+
     window.onload = async () => {
-        // PENTING: Render header & bottom nav otomatis
         if (typeof renderLayout === "function") renderLayout();
         await loadPelanggan();
     };
+
+    // Fungsi Toggle Scanner
+    async function toggleScanner() {
+        const reader = document.getElementById('reader');
+        const btn = document.getElementById('btnScanner');
+        
+        if (reader.style.display === 'block') {
+            stopScanner();
+            return;
+        }
+
+        reader.style.display = 'block';
+        btn.innerHTML = '<i class="fas fa-times"></i>';
+        btn.classList.replace('input-group-text-scanner', 'btn-danger');
+
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+        try {
+            await html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                (decodedText) => {
+                    document.getElementById('snAset').value = decodedText;
+                    stopScanner();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'SN Terbaca!',
+                        text: decodedText,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            );
+        } catch (err) {
+            Swal.fire('Kamera Error', 'Pastikan izin kamera sudah diberikan.', 'error');
+            stopScanner();
+        }
+    }
+
+    function stopScanner() {
+        const reader = document.getElementById('reader');
+        const btn = document.getElementById('btnScanner');
+        reader.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-barcode"></i>';
+        btn.classList.replace('btn-danger', 'input-group-text-scanner');
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => html5QrCode.clear());
+        }
+    }
 
     function toggleFormType() {
         const type = document.getElementById('kategoriLog').value;
