@@ -78,30 +78,21 @@
     <script src="js/config.js"></script>
     <script src="js/layout.js"></script>
     <script>
-        // Pastikan Database Terkoneksi (Gunakan nama DB yang sama dengan halaman Kasir)
-        // Jika config.js sudah ada db, baris di bawah bisa dihapus
-        if (typeof db === 'undefined') {
-            var db = new Dexie("POSPRO_DB"); 
-            db.version(1).stores({
-                transactions: '++id, waktu, total, bayar, kembali, kasir',
-                settings: 'key',
-                products: '++id, nama, harga, stock'
-            });
-        }
-
         // 1. RENDER RIWAYAT
         async function renderRiwayat() {
             const list = document.getElementById('riwayat-list');
             const filterDate = document.getElementById('filter-tanggal').value;
             
             try {
+                // db diambil dari config.js, tidak perlu dideklarasikan ulang
                 let transaksi = await db.transactions.toArray();
                 transaksi.sort((a, b) => b.waktu - a.waktu);
 
                 if(filterDate) {
                     transaksi = transaksi.filter(t => {
                         const d = new Date(t.waktu);
-                        const tDate = d.toISOString().split('T')[0];
+                        const offset = d.getTimezoneOffset() * 60000;
+                        const tDate = (new Date(d.getTime() - offset)).toISOString().split('T')[0];
                         return tDate === filterDate;
                     });
                 }
@@ -126,7 +117,7 @@
                                 
                                 <div class="space-y-1 mb-4">
                                     ${t.items.map(item => `
-                                        <div class="flex justify-between text-xs text-slate-600 font-medium italic">
+                                        <div class="flex justify-between text-xs text-slate-600 font-medium">
                                             <span>${item.nama} <span class="opacity-40 font-black">x${item.qty}</span></span>
                                             <span class="font-bold">Rp ${(item.harga * item.qty).toLocaleString()}</span>
                                         </div>
@@ -155,12 +146,12 @@
                     </div>
                 `).join('');
             } catch (err) {
-                console.error(err);
-                list.innerHTML = "Gagal memuat data.";
+                console.error("Error Riwayat:", err);
+                list.innerHTML = "Gagal memuat data transaksi.";
             }
         }
 
-        // 2. LOGIC REPRINT (TAJAM - ANTI PUTUS)
+        // 2. REPRINT (HTML DIRECT - ANTI PUTUS)
         async function reprintNota(id) {
             const t = await db.transactions.get(id);
             if (!t) return alert("Data transaksi tidak ditemukan!");
@@ -228,12 +219,15 @@
         }
 
         // Init
-        const dateInput = document.getElementById('filter-tanggal');
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-        
-        // Kasih delay dikit biar Dexie siap
-        setTimeout(renderRiwayat, 500);
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateInput = document.getElementById('filter-tanggal');
+            const today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today.getTime() - offset)).toISOString().split('T')[0];
+            
+            dateInput.value = localISOTime;
+            renderRiwayat();
+        });
     </script>
 </body>
 </html>
