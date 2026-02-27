@@ -39,6 +39,7 @@
         .status-pending { background: #fff7ed; color: #ea580c; }
         .status-sent { background: #eff6ff; color: #2563eb; }
         .status-approved { background: #f0fdf4; color: #16a34a; }
+        .status-accepted { background: #f0fdf4; color: #16a34a; }
 
         .pagination-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
         .btn-page { 
@@ -130,6 +131,7 @@
                                 <option value="Pending">Pending</option>
                                 <option value="Sent">Sent</option>
                                 <option value="Approved">Approved</option>
+                                <option value="Accepted">Accepted</option>
                             </select>
                         </div>
                         <div class="col-6 text-end">
@@ -216,7 +218,11 @@
             return;
         }
 
-        container.innerHTML = paginatedData.map(row => `
+        container.innerHTML = paginatedData.map(row => {
+            const statusLower = row.status.toLowerCase();
+            const showNota = statusLower === 'approved' || statusLower === 'accepted';
+            
+            return `
             <div class="quote-card animate__animated animate__fadeInUp">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
@@ -227,7 +233,7 @@
                             <span class="fw-bold text-dark">${row.nama_asli}</span>
                         </div>
                     </div>
-                    <span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span>
+                    <span class="badge-status status-${statusLower}">${row.status}</span>
                 </div>
                 
                 <div class="quote-footer">
@@ -242,12 +248,13 @@
                         <button class="btn btn-sm btn-light text-danger" onclick='preparePDF("${row.id}")' title="Cetak Penawaran">
                             <i class="fas fa-file-pdf"></i>
                         </button>
+                        ${showNota ? `
                         <button class="btn btn-sm btn-primary" onclick='prepareNota("${row.id}")' title="Cetak Nota">
                             <i class="fas fa-receipt"></i>
-                        </button>
+                        </button>` : ''}
                     </div>
                 </div>
-            </div>`).join('');
+            </div>`}).join('');
 
         let navHtml = '';
         for (let i = 1; i <= totalPages; i++) {
@@ -272,26 +279,27 @@
         if(data) generateNota(data);
     }
 
-    // PDF PENAWARAN (SYARAT & KETENTUAN BALIK MANEH MAS!)
-    function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
+    // --- HELPER HEADER (Standard kanggo kabeh PDF) ---
+    function addPDFHeader(doc) {
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
-
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.setTextColor(40, 40, 40);
         doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-        
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.setTextColor(100); 
         doc.text("Software, Network & Electrical Engineering", 45, 26);
         doc.setFontSize(8);
         doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
         doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
-        
         doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.5);
         doc.line(15, 40, 195, 40);
+    }
+
+    function generatePDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        addPDFHeader(doc);
 
         doc.setTextColor(0); 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
@@ -334,10 +342,15 @@
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, currentY, { align: "right" });
 
-        // --- BAGEAN SYARAT & KETENTUAN (BALIK MANEH) ---
+        // --- BAGEAN SYARAT & KETENTUAN (LINGKAR GARIS PUTUS) ---
         currentY += 15;
+        doc.setDrawColor(150, 150, 150);
+        doc.setLineDash([2, 2]); // Set dashed line
+        doc.rect(14, currentY - 4, 182, 30); // Box dashed
+        doc.setLineDash([]); // Reset to solid line
+
         doc.setFontSize(8); doc.setFont("helvetica", "bold");
-        doc.text("Syarat & Ketentuan:", 15, currentY);
+        doc.text("Syarat & Ketentuan:", 18, currentY + 2);
         doc.setFont("helvetica", "normal");
         const sk = [
             "1. Penawaran harga ini berlaku selama 14 hari sejak tanggal diterbitkan.",
@@ -347,10 +360,10 @@
             "5. Garansi pekerjaan berlaku sesuai kesepakatan masing-masing item."
         ];
         sk.forEach((text, i) => {
-            doc.text(text, 15, currentY + 5 + (i * 4));
+            doc.text(text, 18, currentY + 7 + (i * 4));
         });
 
-        currentY += 35;
+        currentY += 40;
         doc.setFontSize(9); doc.setFont("helvetica", "bold");
         doc.text(`Banyuwangi, ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 145, currentY);
         doc.text("Hormat Kami,", 145, currentY + 5);
@@ -361,32 +374,27 @@
         doc.save(`Penawaran_${data.id}_${namaPelanggan.replace(/\s+/g, '_')}.pdf`);
     }
 
-    // NOTA PROFESIONAL + INFO BANK
     function generateNota(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const namaPelanggan = data.nama_asli || '-';
+        const isLunas = data.status.toLowerCase() === 'accepted';
 
-        // Header
-        doc.setFillColor(40, 40, 40);
-        doc.rect(0, 0, 210, 45, 'F');
-        doc.setTextColor(255);
-        doc.setFontSize(24); doc.setFont("helvetica", "bold");
-        doc.text("NOTA PEMBAYARAN", 15, 25);
-        doc.setFontSize(10); doc.setFont("helvetica", "normal");
-        doc.text("NANDA TEKNIK BANYUWANGI", 15, 33);
-        doc.text("Software, Network & Electrical Engineering", 15, 38);
+        addPDFHeader(doc);
 
-        doc.setTextColor(0);
-        doc.setFontSize(10);
-        doc.text(`No. Nota    : NT/INV/${data.id}`, 15, 55);
-        doc.text(`Tanggal     : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 60);
-        doc.text(`Pelanggan   : ${namaPelanggan}`, 15, 65);
+        doc.setTextColor(0); 
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("NOTA PEMBAYARAN", 105, 50, { align: "center" });
+
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Nota       : NT/INV/${data.id}`, 15, 60);
+        doc.text(`Tanggal Nota   : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
+        doc.text(`Pelanggan      : ${namaPelanggan.toUpperCase()}`, 15, 70);
 
         const body = data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]);
         doc.autoTable({
-            startY: 75,
-            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
+            startY: 78,
+            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
             body: body,
             theme: 'grid',
             headStyles: { fillColor: [40, 40, 40] },
@@ -394,23 +402,35 @@
         });
 
         let finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.setFontSize(11); doc.setFont("helvetica", "bold");
         doc.text(`TOTAL PEMBAYARAN: Rp ${data.total.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        // Info Bank & TTD
-        finalY += 20;
-        doc.setFontSize(9); doc.setFont("helvetica", "bold");
-        doc.text("Informasi Pembayaran (Transfer):", 15, finalY);
-        doc.setFont("helvetica", "normal");
-        doc.text("Bank Central Asia (BCA)", 15, finalY + 5);
-        doc.text("No. Rekening : 1801-XXX-XXX", 15, finalY + 10);
-        doc.text("A/N : NANDA KRISBIANTO", 15, finalY + 15);
+        // --- WATERMARK (LUNAS / BELUM LUNAS) ---
+        doc.setTextColor(isLunas ? 200 : 230, isLunas ? 230 : 200, isLunas ? 200 : 200);
+        doc.setFontSize(60);
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({opacity: 0.15}));
+        doc.text(isLunas ? "LUNAS" : "BELUM LUNAS", 105, 150, { align: "center", angle: 45 });
+        doc.restoreGraphicsState();
 
-        doc.setFont("helvetica", "bold");
-        doc.text("Penerima,", 150, finalY);
-        doc.text("NANDA KRISBIANTO", 150, finalY + 25);
-        doc.setFont("helvetica", "normal");
-        doc.text("Stempel/TTD", 150, finalY + 30);
+        // --- INFO BANK (LINGKAR GARIS PUTUS) ---
+        doc.setTextColor(0);
+        finalY += 15;
+        doc.setDrawColor(150, 150, 150);
+        doc.setLineDash([2, 2]);
+        doc.rect(14, finalY - 4, 100, 25);
+        doc.setLineDash([]);
+
+        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+        doc.text("Informasi Pembayaran (Transfer):", 18, finalY + 2);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+        doc.text("Bank Central Asia (BCA)", 18, finalY + 7);
+        doc.text("No. Rekening : 1801-XXX-XXX", 18, finalY + 11);
+        doc.text("A/N : NANDA KRISBIANTO", 18, finalY + 15);
+
+        // Tanpa TTD sesuai request
+        doc.setFontSize(8); doc.setFont("helvetica", "italic");
+        doc.text("*Nota ini adalah bukti pembayaran sah yang dihasilkan secara sistem.", 15, 280);
 
         doc.save(`Nota_${data.id}_${namaPelanggan.replace(/\s+/g, '_')}.pdf`);
     }
