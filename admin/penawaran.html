@@ -3,41 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management Penawaran | Nanda Teknik</title>
+    <title>Penawaran Harga | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="assets/layout.css">
     
     <style>
-        :root { --primary: #0d6efd; --dark: #1e293b; --light: #f4f7fe; }
-        body { background: var(--light); padding-top: 70px; padding-bottom: 90px; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: #f4f7fe; padding-bottom: 110px; }
+        .admin-card { background: transparent; border: none; }
         
-        /* FIXED HEADER */
-        .main-header { 
-            background: var(--primary); color: white; padding: 15px 0; 
-            position: fixed; top: 0; width: 100%; z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        /* FIXED BOTTOM NAV */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 1000;
-        }
-        .nav-item { text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 600; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.3rem; display: block; margin-bottom: 3px; }
-
         .brand-section { text-align: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .brand-section h5 { font-weight: 800; color: #0d6efd; margin-bottom: 2px; }
+        .brand-subtitle { font-size: 0.75rem; color: #64748b; font-weight: 600; letter-spacing: 1px; }
+
+        .filter-section { background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         
         .quote-card {
             background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
             border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
         }
+        .quote-card:active { transform: scale(0.98); }
         
         .card-id { font-size: 0.75rem; font-weight: 700; color: #94a3b8; }
-        .card-perihal { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-top: 5px; }
+        .card-perihal { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 5px; }
         .card-client { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 5px; }
         
         .quote-footer {
@@ -45,72 +35,69 @@
             margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;
         }
 
-        .badge-status { padding: 4px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+        .badge-status { padding: 6px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .status-pending { background: #fff7ed; color: #ea580c; }
         .status-sent { background: #eff6ff; color: #2563eb; }
         .status-approved { background: #f0fdf4; color: #16a34a; }
 
-        #search-results { position: absolute; z-index: 1050; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
-        
-        .fab-add {
-            position: fixed; bottom: 100px; right: 20px; width: 56px; height: 56px;
-            background: var(--primary); color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4); z-index: 999;
-            text-decoration: none; border: none;
+        .pagination-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .btn-page { 
+            width: 40px; height: 40px; border-radius: 12px; border: none; 
+            background: white; color: #64748b; font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
+        .btn-page.active { background: #0d6efd; color: white; }
+        
+        #search-results { position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
     </style>
 </head>
 <body>
 
-<header class="main-header">
-    <div class="container d-flex justify-content-between align-items-center px-4">
-        <div class="fw-bold"><i class="fas fa-bolt me-2"></i>NANDA TEKNIK</div>
-        <div class="small"><i class="fas fa-user-circle me-1"></i> Admin</div>
-    </div>
-</header>
-
-<div class="container">
+<div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="brand-section animate__animated animate__fadeIn mt-2">
-                <h5 class="fw-bold text-primary mb-0">SURAT PENAWARAN & NOTA</h5>
-                <div style="font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 1px;">MANAGEMENT SYSTEM v3.0</div>
+            <div class="brand-section animate__animated animate__fadeIn">
+                <h5>NANDA TEKNIK BANYUWANGI</h5>
+                <div class="brand-subtitle">SOFTWARE, NETWORK & ELECTRICAL ENGINEERING</div>
             </div>
 
-            <!-- Filter Tanggal -->
-            <div class="bg-white rounded-4 p-3 mb-4 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Penawaran</h6>
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="showAddModal()">
+                    <i class="fas fa-plus me-2"></i>Buat Baru
+                </button>
+            </div>
+
+            <div class="filter-section animate__animated animate__fadeIn">
                 <div class="row g-2">
-                    <div class="col-5"><input type="date" id="filter-mulai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()"></div>
-                    <div class="col-5"><input type="date" id="filter-sampai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()"></div>
-                    <div class="col-2"><button class="btn btn-light btn-sm w-100" onclick="resetFilter()"><i class="fas fa-sync"></i></button></div>
+                    <div class="col-5">
+                        <input type="date" id="filter-mulai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()">
+                    </div>
+                    <div class="col-5">
+                        <input type="date" id="filter-sampai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()">
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-light btn-sm w-100 border-0" onclick="resetFilter()"><i class="fas fa-sync"></i></button>
+                    </div>
                 </div>
             </div>
 
             <div id="cards-container">
-                <div class="text-center p-5"><div class="spinner-border text-primary"></div><br><small>Loading Data...</small></div>
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
             </div>
 
-            <div id="pagination" class="d-flex justify-content-center gap-2 mb-5"></div>
+            <div id="pagination" class="pagination-container mb-5"></div>
         </div>
     </div>
 </div>
 
-<button class="fab-add" onclick="showAddModal()"><i class="fas fa-plus fa-lg"></i></button>
-
-<nav class="bottom-nav">
-    <a href="#" class="nav-item"><i class="fas fa-home"></i>Home</a>
-    <a href="#" class="nav-item active"><i class="fas fa-file-invoice-dollar"></i>Quotes</a>
-    <a href="#" class="nav-item"><i class="fas fa-users"></i>Client</a>
-    <a href="#" class="nav-item"><i class="fas fa-chart-line"></i>Report</a>
-</nav>
-
-<!-- Modal Form -->
 <div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 bg-light">
-                <h6 class="modal-title fw-bold">Input Data Penawaran</h6>
+                <h5 class="modal-title fw-bold">Form Penawaran</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -119,39 +106,38 @@
                     <div class="row g-3">
                         <div class="col-md-6 position-relative">
                             <label class="form-label small fw-bold">Cari Pelanggan</label>
-                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Nama/Email..." oninput="searchPelanggan(this.value)">
-                            <div id="search-results" class="list-group"></div>
+                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Nama atau Email..." oninput="searchPelanggan(this.value)">
+                            <div id="search-results" class="list-group shadow"></div>
                             <input type="hidden" id="form-email" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Perihal Pekerjaan</label>
-                            <input type="text" id="form-perihal" class="form-control" placeholder="Contoh: Instalasi AC" required>
+                            <input type="text" id="form-perihal" class="form-control" placeholder="Contoh: Perbaikan Listrik" required>
                         </div>
                     </div>
+                    
                     <div class="mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label small fw-bold mb-0">Rincian Barang / Jasa</label>
-                        </div>
+                        <label class="form-label small fw-bold">Item Pekerjaan / Barang</label>
                         <div id="items-container"></div>
-                        <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-2 rounded-3" onclick="addItemRow()">
-                            <i class="fas fa-plus me-1"></i> Tambah Item
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="addItemRow()">
+                            <i class="fas fa-plus me-1"></i> Tambah Baris Item
                         </button>
                     </div>
+
                     <div class="row mt-4 align-items-center">
                         <div class="col-6">
-                            <label class="form-label small fw-bold">Status</label>
                             <select id="form-status" class="form-select">
                                 <option value="Pending">Pending</option>
-                                <option value="Sent">Sent (Terkirim)</option>
-                                <option value="Approved">Approved (Lunas)</option>
+                                <option value="Sent">Sent</option>
+                                <option value="Approved">Approved</option>
                             </select>
                         </div>
                         <div class="col-6 text-end">
-                            <small class="text-muted d-block">Grand Total:</small>
-                            <h4 class="fw-bold text-primary mb-0" id="display-total">Rp 0</h4>
+                            <span class="text-muted small d-block">Estimasi Total:</span>
+                            <h3 class="fw-bold text-primary mb-0" id="display-total">Rp 0</h3>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mt-4 py-3 rounded-pill fw-bold shadow">SIMPAN & UPDATE</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow">SIMPAN PENAWARAN</button>
                 </form>
             </div>
         </div>
@@ -163,207 +149,280 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
+<script src="assets/config.js"></script>
+<script src="assets/layout.js"></script>
+
 <script>
-    // GANTI URL IKI KARO PUNYAMU MAS
-    const CONFIG = { WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbz_XXXXXXXXX/exec' };
-    
     let allData = [];
     let listPelanggan = [];
     let currentPage = 1;
-    const itemsPerPage = 6;
+    const itemsPerPage = 5;
     const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
 
-    window.onload = loadData;
+    window.onload = () => { 
+        if(typeof initLayout === 'function') initLayout();
+        loadDataSakti(); 
+    };
 
-    async function loadData() {
+    async function loadDataSakti() {
         const container = document.getElementById('cards-container');
+        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><br><small>Sinkronisasi Data...</small></div>';
+        
         try {
-            // Ambil Pelanggan
-            const resP = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
+            const resP = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getAllPelanggan' }) 
+            });
             const rP = await resP.json();
             if(rP.success) listPelanggan = rP.data;
 
             const mapPelanggan = {};
-            listPelanggan.forEach(p => { if(p[1]) mapPelanggan[p[1].toLowerCase()] = p[0]; });
+            listPelanggan.forEach(p => {
+                if(p[1]) mapPelanggan[p[1].toLowerCase()] = p[0];
+            });
 
-            // Ambil Penawaran
             const resQ = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const rQ = await resQ.json();
             
             if (rQ.success) { 
-                allData = rQ.data.reverse().map(row => ({
-                    ...row,
-                    nama_asli: mapPelanggan[(row.email || "").toLowerCase()] || row.nama || row.email
-                }));
+                allData = rQ.data.reverse().map(row => {
+                    const mail = (row.email || "").toLowerCase();
+                    return {
+                        ...row,
+                        nama_asli: mapPelanggan[mail] || row.nama || row.email 
+                    };
+                });
                 renderDisplay(); 
             }
-        } catch(e) { container.innerHTML = '<div class="alert alert-danger mx-3">Gagal load data. Cek koneksi / URL Script.</div>'; }
+        } catch(e) { 
+            console.error("Gagal sinkronisasi", e);
+            container.innerHTML = '<div class="alert alert-danger">Gagal memuat data. Cek koneksi internet/GAS.</div>';
+        }
     }
 
     function renderDisplay(filteredData = null) {
-        const data = filteredData || allData;
+        const dataToRender = filteredData || allData;
         const container = document.getElementById('cards-container');
-        const paginated = data.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage);
+        const pagination = document.getElementById('pagination');
         
-        if(data.length === 0) {
-            container.innerHTML = '<div class="text-center p-5 text-muted">Data ora enek Mas.</div>';
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = dataToRender.slice(startIndex, endIndex);
+        const totalPages = Math.ceil(dataToRender.length / itemsPerPage);
+
+        if(dataToRender.length === 0) {
+            container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data penawaran.</div>';
+            pagination.innerHTML = '';
             return;
         }
 
-        container.innerHTML = paginated.map(row => {
-            const status = row.status.toLowerCase();
-            return `
+        container.innerHTML = paginatedData.map(row => `
             <div class="quote-card animate__animated animate__fadeInUp">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
-                        <div class="card-perihal">${row.perihal || 'Pekerjaan Teknis'}</div>
-                        <div class="card-client"><i class="fas fa-user-circle text-primary"></i> <b>${row.nama_asli}</b></div>
+                        <div class="card-perihal">${row.perihal || 'Tanpa Perihal'}</div>
+                        <div class="card-client mt-1">
+                            <i class="fas fa-user-circle text-primary me-1"></i> 
+                            <span class="fw-bold text-dark">${row.nama_asli}</span>
+                        </div>
                     </div>
-                    <span class="badge-status status-${status}">${row.status}</span>
+                    <span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span>
                 </div>
+                
                 <div class="quote-footer">
-                    <div><span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span></div>
+                    <div>
+                        <small class="text-muted d-block">Total Nilai:</small>
+                        <span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span>
+                    </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-light border" onclick="editPenawaran('${row.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-light border text-danger" onclick='generatePDF("${row.id}")' title="Cetak Penawaran"><i class="fas fa-file-pdf"></i></button>
-                        <button class="btn btn-sm btn-primary" onclick='generateNota("${row.id}")' title="Cetak Nota"><i class="fas fa-receipt"></i></button>
+                        <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light text-danger" onclick='preparePDF("${row.id}")' title="Cetak Penawaran">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick='prepareNota("${row.id}")' title="Cetak Nota">
+                            <i class="fas fa-receipt"></i>
+                        </button>
                     </div>
                 </div>
-            </div>`;
-        }).join('');
+            </div>`).join('');
+
+        let navHtml = '';
+        for (let i = 1; i <= totalPages; i++) {
+            navHtml += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        }
+        pagination.innerHTML = navHtml;
     }
 
-    // ==========================================
-    // PDF PENAWARAN (SYARAT & KETENTUAN ADA!)
-    // ==========================================
-    function generatePDF(id) {
+    function changePage(page) {
+        currentPage = page;
+        renderDisplay();
+        window.scrollTo(0, 0);
+    }
+
+    function preparePDF(id) {
         const data = allData.find(r => r.id === id);
+        if(data) generatePDF(data);
+    }
+
+    function prepareNota(id) {
+        const data = allData.find(r => r.id === id);
+        if(data) generateNota(data);
+    }
+
+    // PDF PENAWARAN (SYARAT & KETENTUAN BALIK MANEH MAS!)
+    function generatePDF(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Header
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
-        doc.setFontSize(16); doc.setFont("helvetica", "bold");
-        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Software, Network & Electrical Engineering", 45, 26);
-        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jatim", 45, 31);
-        doc.line(15, 40, 195, 40);
 
-        doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text("SURAT PENAWARAN HARGA", 105, 50, { align: "center" });
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
+        doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
         
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No : NT/Q/${data.id}`, 15, 60);
-        doc.text(`Tgl : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
-        doc.text(`Hal : ${data.perihal || 'Pekerjaan Teknis'}`, 15, 70);
+        doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
+        
+        doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.5);
+        doc.line(15, 40, 195, 40);
 
-        doc.text("Kepada Yth:", 140, 60);
+        doc.setTextColor(0); 
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("PENAWARAN HARGA", 105, 50, { align: "center" });
+        
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Penawaran : #${data.id}`, 15, 60);
+        doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
         doc.setFont("helvetica", "bold");
-        doc.text(data.nama_asli.toUpperCase(), 140, 65);
-
-        // KALIMAT PEMBUKA (WES TAK PASANG MAS!)
+        doc.text(`Perihal        : ${data.perihal || 'Penawaran Pekerjaan'}`, 15, 70);
+        
         doc.setFont("helvetica", "normal");
-        doc.text("Bersama surat ini, kami Nanda Teknik Banyuwangi menyampaikan rincian estimasi biaya pekerjaan sebagai berikut:", 15, 80);
+        doc.text("Kepada Yth:", 130, 60);
+        doc.setFont("helvetica", "bold");
+        const namaPelanggan = data.nama_asli || '-'; 
+        const splitNama = doc.splitTextToSize(namaPelanggan.toUpperCase(), 60);
+        doc.text(splitNama, 130, 65);
+
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+        doc.text("Bersama surat ini, kami Nanda Teknik Banyuwangi menyampaikan rincian penawaran harga sebagai berikut:", 15, 82);
+
+        const tableBody = data.items_json.map((item, index) => [
+            index + 1, item.nama, item.qty,
+            `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
+            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+        ]);
+
+        doc.autoTable({
+            startY: 88, 
+            head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
+            body: tableBody, 
+            theme: 'grid', 
+            headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255], halign: 'center', fontSize: 9 },
+            columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right', cellWidth: 35 }, 4: { halign: 'right', cellWidth: 35 } },
+            styles: { fontSize: 9, cellPadding: 3 }
+        });
+
+        let currentY = doc.lastAutoTable.finalY + 10;
+        doc.setFillColor(240, 240, 240); doc.rect(130, currentY - 5, 65, 10, 'F');
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, currentY, { align: "right" });
+
+        // --- BAGEAN SYARAT & KETENTUAN (BALIK MANEH) ---
+        currentY += 15;
+        doc.setFontSize(8); doc.setFont("helvetica", "bold");
+        doc.text("Syarat & Ketentuan:", 15, currentY);
+        doc.setFont("helvetica", "normal");
+        const sk = [
+            "1. Penawaran harga ini berlaku selama 14 hari sejak tanggal diterbitkan.",
+            "2. Harga sudah termasuk jasa instalasi (kecuali disebutkan berbeda).",
+            "3. Pembayaran DP 50% dilakukan setelah penawaran ini disetujui.",
+            "4. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai.",
+            "5. Garansi pekerjaan berlaku sesuai kesepakatan masing-masing item."
+        ];
+        sk.forEach((text, i) => {
+            doc.text(text, 15, currentY + 5 + (i * 4));
+        });
+
+        currentY += 35;
+        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+        doc.text(`Banyuwangi, ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 145, currentY);
+        doc.text("Hormat Kami,", 145, currentY + 5);
+        doc.text("NANDA KRISBIANTO", 145, currentY + 30);
+        doc.setFont("helvetica", "normal");
+        doc.text("( Owner Nanda Teknik )", 145, currentY + 35);
+
+        doc.save(`Penawaran_${data.id}_${namaPelanggan.replace(/\s+/g, '_')}.pdf`);
+    }
+
+    // NOTA PROFESIONAL + INFO BANK
+    function generateNota(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const namaPelanggan = data.nama_asli || '-';
+
+        // Header
+        doc.setFillColor(40, 40, 40);
+        doc.rect(0, 0, 210, 45, 'F');
+        doc.setTextColor(255);
+        doc.setFontSize(24); doc.setFont("helvetica", "bold");
+        doc.text("NOTA PEMBAYARAN", 15, 25);
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text("NANDA TEKNIK BANYUWANGI", 15, 33);
+        doc.text("Software, Network & Electrical Engineering", 15, 38);
+
+        doc.setTextColor(0);
+        doc.setFontSize(10);
+        doc.text(`No. Nota    : NT/INV/${data.id}`, 15, 55);
+        doc.text(`Tanggal     : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 60);
+        doc.text(`Pelanggan   : ${namaPelanggan}`, 15, 65);
 
         const body = data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]);
         doc.autoTable({
-            startY: 85,
-            head: [['NO', 'DESKRIPSI PEKERJAAN', 'QTY', 'HARGA', 'JUMLAH']],
+            startY: 75,
+            head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
             body: body,
             theme: 'grid',
-            headStyles: { fillColor: [60, 60, 60] },
-            styles: { fontSize: 8 }
+            headStyles: { fillColor: [40, 40, 40] },
+            columnStyles: { 0: {halign:'center'}, 2: {halign:'center'}, 3: {halign:'right'}, 4: {halign:'right'} }
         });
 
-        let finalY = doc.lastAutoTable.finalY;
-        doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 190, finalY + 10, { align: "right" });
+        let finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL PEMBAYARAN: Rp ${data.total.toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        // SYARAT & KETENTUAN (IKILHO MAS!)
-        doc.setFontSize(9);
-        doc.text("Syarat & Ketentuan:", 15, finalY + 20);
+        // Info Bank & TTD
+        finalY += 20;
+        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+        doc.text("Informasi Pembayaran (Transfer):", 15, finalY);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        const snk = [
-            "1. Penawaran ini berlaku selama 14 hari sejak tanggal diterbitkan.",
-            "2. Harga sudah termasuk biaya jasa pasang (kecuali disebutkan lain).",
-            "3. Pembayaran DP minimal 50% setelah penawaran disetujui.",
-            "4. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai."
-        ];
-        snk.forEach((line, i) => doc.text(line, 15, finalY + 25 + (i*4)));
+        doc.text("Bank Central Asia (BCA)", 15, finalY + 5);
+        doc.text("No. Rekening : 1801-XXX-XXX", 15, finalY + 10);
+        doc.text("A/N : NANDA KRISBIANTO", 15, finalY + 15);
 
-        let signY = finalY + 50;
         doc.setFont("helvetica", "bold");
-        doc.text("Hormat Kami,", 150, signY);
-        doc.text("NANDA KRISBIANTO", 150, signY + 25);
+        doc.text("Penerima,", 150, finalY);
+        doc.text("NANDA KRISBIANTO", 150, finalY + 25);
         doc.setFont("helvetica", "normal");
-        doc.text("( Owner Nanda Teknik )", 150, signY + 30);
+        doc.text("Stempel/TTD", 150, finalY + 30);
 
-        doc.save(`Penawaran_${data.id}_${data.nama_asli}.pdf`);
+        doc.save(`Nota_${data.id}_${namaPelanggan.replace(/\s+/g, '_')}.pdf`);
     }
 
-    // ==========================================
-    // PDF NOTA (GANTI SNK DADI REKENING!)
-    // ==========================================
-    function generateNota(id) {
-        const data = allData.find(r => r.id === id);
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.setFillColor(13, 110, 253);
-        doc.rect(0, 0, 210, 40, 'F');
-        doc.setTextColor(255);
-        doc.setFontSize(22); doc.setFont("helvetica", "bold");
-        doc.text("NOTA PEMBAYARAN", 15, 20);
-        doc.setFontSize(10); doc.setFont("helvetica", "normal");
-        doc.text("Nanda Teknik Banyuwangi - 082331201148", 15, 28);
-        
-        doc.setTextColor(0);
-        doc.setFontSize(10);
-        doc.text(`No. Nota: NT/INV/${data.id}`, 15, 50);
-        doc.text(`Tanggal : ${new Date().toLocaleDateString('id-ID')}`, 15, 55);
-        doc.text(`Pelanggan: ${data.nama_asli}`, 15, 60);
-
-        const body = data.items_json.map(it => [it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]);
-        doc.autoTable({
-            startY: 70,
-            head: [['ITEM', 'QTY', 'HARGA', 'SUBTOTAL']],
-            body: body,
-            theme: 'striped',
-            headStyles: { fillColor: [13, 110, 253] }
-        });
-
-        let finalY = doc.lastAutoTable.finalY;
-        doc.setFontSize(14); doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL BAYAR: Rp ${data.total.toLocaleString('id-ID')}`, 190, finalY + 15, { align: "right" });
-
-        // INFO REKENING (GANTI SNK MAS!)
-        doc.setFontSize(10);
-        doc.text("Pembayaran Transfer Ke:", 15, finalY + 30);
-        doc.setFont("helvetica", "normal");
-        doc.text("Bank BCA : 1801-XXXX-XXXX", 15, finalY + 36);
-        doc.text("A/N : Nanda Krisbianto", 15, finalY + 41);
-        doc.text("Bank Mandiri : 14300-XXXX-XXXX", 15, finalY + 46);
-
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(8);
-        doc.text("*Harap kirim bukti transfer ke WhatsApp kami.", 15, finalY + 55);
-
-        doc.save(`Nota_${data.id}_${data.nama_asli}.pdf`);
-    }
-
-    // FORM LOGIC
     function addItemRow(n='', h=0, q=1) {
-        const id = Date.now();
         const div = document.createElement('div');
-        div.className = 'row g-2 mb-2 item-row animate__animated animate__fadeInLeft';
+        div.className = 'row g-2 mb-2 item-row animate__animated animate__fadeInDown';
         div.innerHTML = `
-            <div class="col-6"><input type="text" class="form-control form-control-sm it-nama" placeholder="Nama Barang" value="${n}" required></div>
+            <div class="col-6"><input type="text" class="form-control form-control-sm it-nama" placeholder="Item" value="${n}" required></div>
             <div class="col-3"><input type="number" class="form-control form-control-sm it-harga" placeholder="Harga" value="${h}" oninput="calcTotal()" required></div>
             <div class="col-2"><input type="number" class="form-control form-control-sm it-qty" placeholder="Qty" value="${q}" oninput="calcTotal()" required></div>
-            <div class="col-1 text-center"><button type="button" class="btn btn-link text-danger p-0 mt-1" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-trash"></i></button></div>`;
+            <div class="col-1 text-end"><button type="button" class="btn btn-link text-danger p-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times-circle"></i></button></div>`;
         document.getElementById('items-container').appendChild(div);
     }
 
@@ -378,12 +437,12 @@
         return total;
     }
 
-    function searchPelanggan(q) {
-        const res = document.getElementById('search-results');
-        if (q.length < 2) { res.style.display = 'none'; return; }
-        const f = listPelanggan.filter(p => p[0].toLowerCase().includes(q.toLowerCase()) || p[1].toLowerCase().includes(q.toLowerCase()));
-        res.innerHTML = f.map(p => `<button type="button" class="list-group-item list-group-item-action py-2" onclick="selectPelanggan('${p[0]}','${p[1]}')"><b>${p[0]}</b><br><small class="text-muted">${p[1]}</small></button>`).join('');
-        res.style.display = f.length ? 'block' : 'none';
+    function searchPelanggan(query) {
+        const resBox = document.getElementById('search-results');
+        if (query.length < 2) { resBox.style.display = 'none'; return; }
+        const filtered = listPelanggan.filter(p => p[0].toLowerCase().includes(query.toLowerCase()) || p[1].toLowerCase().includes(query.toLowerCase()));
+        resBox.innerHTML = filtered.map(p => `<button type="button" class="list-group-item list-group-item-action" onclick="selectPelanggan('${p[0]}', '${p[1]}')"><b>${p[0]}</b><br><small>${p[1]}</small></button>`).join('');
+        resBox.style.display = filtered.length ? 'block' : 'none';
     }
 
     function selectPelanggan(n, e) {
@@ -395,8 +454,10 @@
     function showAddModal() {
         document.getElementById('formPenawaran').reset();
         document.getElementById('edit-id').value = '';
+        document.getElementById('display-total').innerText = 'Rp 0';
         document.getElementById('items-container').innerHTML = '';
-        addItemRow(); calcTotal(); modalForm.show();
+        addItemRow();
+        modalForm.show();
     }
 
     function editPenawaran(id) {
@@ -409,14 +470,16 @@
         document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
         if(d.items_json) d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
-        calcTotal(); modalForm.show();
+        calcTotal();
+        modalForm.show();
     }
 
     document.getElementById('formPenawaran').onsubmit = async (e) => {
         e.preventDefault();
+        const id = document.getElementById('edit-id').value;
         const payload = {
-            action: document.getElementById('edit-id').value ? 'updatePenawaran' : 'createPenawaran',
-            id: document.getElementById('edit-id').value,
+            action: id ? 'updatePenawaran' : 'createPenawaran',
+            id: id,
             nama: document.getElementById('search-pelanggan').value,
             email: document.getElementById('form-email').value,
             perihal: document.getElementById('form-perihal').value,
@@ -428,32 +491,33 @@
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
-        
+
         Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
         const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const r = await res.json();
-        if(r.success) { 
-            modalForm.hide(); 
-            loadData(); 
-            Swal.fire('Berhasil!', 'Data wes aman tersimpan.', 'success'); 
+        if(r.success) {
+            modalForm.hide();
+            loadDataSakti(); 
+            Swal.fire('Berhasil', 'Data berhasil disimpan!', 'success');
         }
     };
 
     function filterData() {
         const m = document.getElementById('filter-mulai').value;
         const s = document.getElementById('filter-sampai').value;
-        if(m && s) {
-            const f = allData.filter(row => {
-                const t = new Date(row.tanggal).toISOString().split('T')[0];
-                return t >= m && t <= s;
-            });
-            renderDisplay(f);
-        }
+        if (!m || !s) return;
+        const filtered = allData.filter(row => {
+            const t = new Date(row.tanggal).toISOString().split('T')[0];
+            return t >= m && t <= s;
+        });
+        currentPage = 1;
+        renderDisplay(filtered);
     }
 
     function resetFilter() {
         document.getElementById('filter-mulai').value = '';
         document.getElementById('filter-sampai').value = '';
+        currentPage = 1;
         renderDisplay();
     }
 </script>
