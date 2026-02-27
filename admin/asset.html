@@ -7,39 +7,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <!-- Link layout tetep neng kene -->
     <link rel="stylesheet" href="assets/layout.css">
     
     <style>
-        /* Background disesuaikan biar gak tabrakan sama layout */
         body { background: #f4f7fe !important; padding-top: 70px !important; padding-bottom: 100px !important; }
-        
         .card-custom { background: white; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
-        
-        /* Tab Styling */
         .nav-pills-custom .nav-link { border-radius: 12px; color: #64748b; font-weight: 600; padding: 10px 20px; transition: 0.3s; border: 1px solid transparent; }
         .nav-pills-custom .nav-link.active { background-color: #4338ca; color: white; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3); }
-        
         .form-label { font-weight: 600; color: #374151; font-size: 0.85rem; margin-bottom: 5px; }
         .btn-save { background: #4338ca; color: white; border-radius: 12px; padding: 12px; font-weight: bold; border: none; transition: 0.3s; width: 100%; }
         .btn-save:hover { background: #3730a3; transform: translateY(-2px); }
-        
         .status-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
         .bg-sales { background-color: #f0fdf4 !important; }
-        
-        /* Checklist box */
         #checklistContainer { background: #f8fafc; border-radius: 12px; padding: 15px; border-left: 4px solid #4338ca; }
-
-        /* Scanner Styling */
         .input-group-text-scanner { background: #4338ca; color: white; border: none; cursor: pointer; border-radius: 0 12px 12px 0 !important; }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 2px dashed #4338ca; }
     </style>
 </head>
 <body>
 
-<!-- Kontainer Utama -->
 <div class="container">
-    <!-- Tab Navigasi Internal Modul -->
     <div class="d-flex justify-content-center mb-4">
         <ul class="nav nav-pills nav-pills-custom bg-white p-2 rounded-4 shadow-sm" id="assetTab" role="tablist">
             <li class="nav-item">
@@ -52,7 +39,6 @@
     </div>
 
     <div class="tab-content">
-        <!-- TAB 1: INPUT -->
         <div class="tab-pane fade show active" id="pills-input">
             <div class="card card-custom animate__animated animate__fadeIn">
                 <div class="card-body p-4">
@@ -66,7 +52,6 @@
                     
                     <form id="formAset">
                         <div class="row g-3">
-                            <!-- Scanner Area -->
                             <div class="col-12">
                                 <div id="reader"></div>
                             </div>
@@ -102,7 +87,6 @@
                                 </div>
                             </div>
 
-                            <!-- KHUSUS SALES (Toko & Garansi) -->
                             <div id="salesFields" class="d-none">
                                 <div class="row g-3 pt-2">
                                     <div class="col-12 col-md-4">
@@ -115,12 +99,11 @@
                                     </div>
                                     <div class="col-12 col-md-4">
                                         <label class="form-label">Harga Modal (Rp)</label>
-                                        <input type="number" class="form-control border-0 bg-light" id="hargaBeli" placeholder="Opsional">
+                                        <input type="number" class="form-control border-0 bg-light" id="hargaBeli" placeholder="0">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- KHUSUS SERVICE -->
                             <div class="col-12 mt-3" id="checklistSection">
                                 <label class="form-label small text-muted text-uppercase">Checklist Kondisi</label>
                                 <div id="checklistContainer"></div>
@@ -128,11 +111,11 @@
 
                             <div class="col-12">
                                 <label class="form-label">Catatan Tambahan</label>
-                                <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis keterangan detail di sini..."></textarea>
+                                <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis keterangan detail..."></textarea>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-save mt-4">
+                        <button type="submit" class="btn btn-save mt-4" id="btnSubmit">
                             <i class="fas fa-save me-2"></i> SIMPAN DATA & PDF
                         </button>
                     </form>
@@ -140,7 +123,6 @@
             </div>
         </div>
 
-        <!-- TAB 2: HISTORY -->
         <div class="tab-pane fade" id="pills-history">
             <div class="card card-custom animate__animated animate__fadeIn">
                 <div class="card-body p-4">
@@ -169,15 +151,10 @@
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<!-- Library Barcode Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
-<!-- Script Layout & Config -->
 <script src="assets/config.js"></script>
 <script src="assets/layout.js"></script>
 
@@ -197,43 +174,20 @@
         await loadPelanggan();
     };
 
-    // Fungsi Toggle Scanner
     async function toggleScanner() {
         const reader = document.getElementById('reader');
         const btn = document.getElementById('btnScanner');
-        
-        if (reader.style.display === 'block') {
-            stopScanner();
-            return;
-        }
-
+        if (reader.style.display === 'block') { stopScanner(); return; }
         reader.style.display = 'block';
         btn.innerHTML = '<i class="fas fa-times"></i>';
         btn.classList.replace('input-group-text-scanner', 'btn-danger');
-
         html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
         try {
-            await html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                (decodedText) => {
-                    document.getElementById('snAset').value = decodedText;
-                    stopScanner();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'SN Terbaca!',
-                        text: decodedText,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
-            );
-        } catch (err) {
-            Swal.fire('Kamera Error', 'Pastikan izin kamera sudah diberikan.', 'error');
-            stopScanner();
-        }
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                document.getElementById('snAset').value = text;
+                stopScanner();
+            });
+        } catch (e) { stopScanner(); }
     }
 
     function stopScanner() {
@@ -242,36 +196,24 @@
         reader.style.display = 'none';
         btn.innerHTML = '<i class="fas fa-barcode"></i>';
         btn.classList.replace('btn-danger', 'input-group-text-scanner');
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => html5QrCode.clear());
-        }
+        if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear());
     }
 
     function toggleFormType() {
         const type = document.getElementById('kategoriLog').value;
-        const salesFields = document.getElementById('salesFields');
-        const checklist = document.getElementById('checklistSection');
-        if(type === 'SALES') {
-            salesFields.classList.remove('d-none');
-            checklist.classList.add('d-none');
-        } else {
-            salesFields.classList.add('d-none');
-            checklist.classList.remove('d-none');
-        }
+        document.getElementById('salesFields').classList.toggle('d-none', type !== 'SALES');
+        document.getElementById('checklistSection').classList.toggle('d-none', type === 'SALES');
     }
 
     async function loadPelanggan() {
         try {
-            // Memanggil database Pelanggan
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`);
             const json = await res.json();
             const select = document.getElementById('idPelanggan');
-            
-            // Gunakan email sebagai value ID_Pelanggan
             json.data.forEach(p => {
                 if (p.email) {
                     let opt = document.createElement('option');
-                    opt.value = p.email; // Menggunakan Email sebagai ID unik
+                    opt.value = p.email;
                     opt.text = `${p.nama} (${p.email})`;
                     opt.setAttribute('data-nama', p.nama);
                     select.appendChild(opt);
@@ -287,103 +229,89 @@
         if (!tipe) return;
         const items = masterChecklist[tipe] || masterChecklist["Elektronik Lain"];
         items.forEach(item => {
-            container.innerHTML += `
-                <div class="form-check form-check-inline mb-2">
-                    <input class="form-check-input" type="checkbox" value="${item}" id="chk_${item.replace(/\s/g,'')}" checked>
-                    <label class="form-check-label" for="chk_${item.replace(/\s/g,'')}">${item}</label>
-                </div>`;
+            container.innerHTML += `<div class="form-check form-check-inline mb-2">
+                <input class="form-check-input" type="checkbox" value="${item}" checked>
+                <label class="form-check-label">${item}</label>
+            </div>`;
         });
-    }
-
-    async function loadHistory() {
-        const tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5">Narik data...</td></tr>';
-        try {
-            const res = await fetch(`${CONFIG.ASSET_APP_URL}?action=read&sheet=Aset_History`);
-            const json = await res.json();
-            tbody.innerHTML = "";
-            if(!json.data || json.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Kosong.</td></tr>';
-                return;
-            }
-            json.data.reverse().forEach(item => {
-                let garansiInfo = "-";
-                let statusBadge = `<span class="status-badge bg-primary-subtle text-primary">SERVICE</span>`;
-                
-                if(item.Kategori === "SALES") {
-                    const tglExp = new Date(item.Tanggal);
-                    tglExp.setMonth(tglExp.getMonth() + parseInt(item.Garansi_Bulan || 0));
-                    const isExpired = new Date() > tglExp;
-                    garansiInfo = tglExp.toLocaleDateString('id-ID');
-                    statusBadge = isExpired ? 
-                        `<span class="status-badge bg-danger text-white">EXPIRED</span>` : 
-                        `<span class="status-badge bg-success text-white">AKTIF</span>`;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="${item.Kategori === 'SALES' ? 'bg-sales' : ''}">
-                        <td>${new Date(item.Tanggal).toLocaleDateString('id-ID')}</td>
-                        <td>
-                            <b>${item.Nama_Pelanggan}</b><br>
-                            <small class="text-muted">${item.Tipe_Aset} - ${item.Brand_Seri}</small><br>
-                            <small class="text-primary" style="font-size:0.7rem;">${item.ID_Pelanggan}</small>
-                        </td>
-                        <td>
-                            <span class="text-primary fw-bold">${item.SN || '-'}</span><br>
-                            <small class="text-muted">Sup: ${item.Supplier || '-'}</small>
-                        </td>
-                        <td>${garansiInfo}</td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <button class="btn btn-sm btn-light border" title="Cetak PDF"><i class="fas fa-print"></i></button>
-                        </td>
-                    </tr>`;
-            });
-        } catch (e) { tbody.innerHTML = "Error narik data."; }
     }
 
     document.getElementById('formAset').onsubmit = async (e) => {
         e.preventDefault();
-        const kat = document.getElementById('kategoriLog').value;
-        const selPel = document.getElementById('idPelanggan');
         
+        // Proteksi: Cek URL Config
+        if(!CONFIG.ASSET_APP_URL || CONFIG.ASSET_APP_URL.includes("SCRIPT_URL_HERE")) {
+            Swal.fire('Konfigurasi Salah', 'URL Script neng config.js durung diisi bro!', 'error');
+            return;
+        }
+
+        const selPel = document.getElementById('idPelanggan');
         const payload = {
             action: 'create',
             sheet: 'Aset_History',
             data: {
-                Tanggal: new Date().toISOString(),
-                Kategori: kat,
-                ID_Pelanggan: selPel.value, // Menyimpan Email neng kene
+                Tanggal: new Date().toLocaleString('sv-SE'), // Format YYYY-MM-DD HH:mm:ss
+                Kategori: document.getElementById('kategoriLog').value,
+                ID_Pelanggan: selPel.value,
                 Nama_Pelanggan: selPel.options[selPel.selectedIndex].getAttribute('data-nama'),
                 Tipe_Aset: document.getElementById('tipeAset').value,
                 Brand_Seri: document.getElementById('brandAset').value,
                 SN: document.getElementById('snAset').value,
-                Supplier: document.getElementById('supplier').value,
-                Garansi_Bulan: document.getElementById('garansiBulan').value,
-                Harga_Modal: document.getElementById('hargaBeli').value,
+                Supplier: document.getElementById('supplier').value || "-",
+                Garansi_Bulan: document.getElementById('garansiBulan').value || 0,
+                Harga_Modal: document.getElementById('hargaBeli').value || 0,
                 Catatan: document.getElementById('catatan').value,
                 Teknisi: "Admin Nanda Teknik"
             }
         };
 
-        Swal.fire({title:'Menyimpan...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
+        Swal.fire({
+            title: 'Menyimpan...',
+            text: 'Ojo di-close yo bro',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
         try {
-            const res = await fetch(CONFIG.ASSET_APP_URL, { method:'POST', body: JSON.stringify(payload) });
-            const r = await res.json();
-            if(r.success) {
-                Swal.fire('Berhasil!', 'Data log aset wis kesimpen nganggo ID Email.', 'success');
+            // Gunakan mode no-cors nek isih muter, tapi idealnya Apps Script kudu bener
+            const response = await fetch(CONFIG.ASSET_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire('Sip!', 'Data wis mlebu neng Sheets.', 'success');
                 document.getElementById('formAset').reset();
                 document.getElementById('checklistContainer').innerHTML = "";
+            } else {
+                throw new Error(result.message || "Gagal simpan");
             }
-        } catch(e) { Swal.fire('Error', 'Gagal kirim data neng server.', 'error'); }
-    }
+        } catch (error) {
+            console.error("Error Detail:", error);
+            Swal.fire('Waduh!', 'Gagal nyambung neng server. Cek internet utawa URL Script sampeyan.', 'error');
+        }
+    };
 
-    function filterTable() {
-        const val = document.getElementById('searchHistory').value.toLowerCase();
-        const rows = document.querySelectorAll('#historyTableBody tr');
-        rows.forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
-        });
+    async function loadHistory() {
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading data...</td></tr>';
+        try {
+            const res = await fetch(`${CONFIG.ASSET_APP_URL}?action=read&sheet=Aset_History`);
+            const json = await res.json();
+            tbody.innerHTML = "";
+            json.data.reverse().slice(0, 50).forEach(item => {
+                tbody.innerHTML += `<tr>
+                    <td>${item.Tanggal}</td>
+                    <td><b>${item.Nama_Pelanggan}</b><br><small>${item.Brand_Seri}</small></td>
+                    <td>${item.SN}</td>
+                    <td>${item.Garansi_Bulan} Bln</td>
+                    <td><span class="badge bg-primary">${item.Kategori}</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-print"></i></button></td>
+                </tr>`;
+            });
+        } catch (e) { tbody.innerHTML = "Gagal narik riwayat."; }
     }
 </script>
 </body>
