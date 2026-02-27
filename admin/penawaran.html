@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="assets/layout.css">
     
     <style>
         body { background: #f4f7fe; padding-bottom: 110px; }
@@ -48,9 +49,7 @@
                 </button>
             </div>
 
-            <div id="cards-container">
-                <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
-            </div>
+            <div id="cards-container"><div class="text-center p-5"><div class="spinner-border text-primary"></div></div></div>
             <div id="pagination" class="pagination-container mb-5"></div>
         </div>
     </div>
@@ -68,24 +67,23 @@
                     <input type="hidden" id="edit-id">
                     <div class="row g-3">
                         <div class="col-md-6 position-relative">
-                            <label class="form-label small fw-bold">Pelanggan</label>
-                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Cari nama..." oninput="searchPelanggan(this.value)">
+                            <label class="form-label small fw-bold">Cari Pelanggan</label>
+                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Nama..." oninput="searchPelanggan(this.value)">
                             <div id="search-results" class="list-group shadow"></div>
                             <input type="hidden" id="form-email" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Perihal</label>
+                            <label class="form-label small fw-bold">Perihal Pekerjaan</label>
                             <input type="text" id="form-perihal" class="form-control" required>
                         </div>
                     </div>
                     <div class="mt-4">
                         <label class="form-label small fw-bold">Item Pekerjaan</label>
                         <div id="items-container"></div>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="addItemRow()"><i class="fas fa-plus"></i> Tambah Item</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="addItemRow()"><i class="fas fa-plus"></i> Tambah Baris</button>
                     </div>
                     <div class="row mt-4 align-items-center">
                         <div class="col-6">
-                            <label class="form-label small fw-bold">Status</label>
                             <select id="form-status" class="form-select">
                                 <option value="Sent">Sent</option>
                                 <option value="Accepted">Accepted (Belum Lunas)</option>
@@ -94,7 +92,6 @@
                             </select>
                         </div>
                         <div class="col-6 text-end">
-                            <span class="text-muted small d-block">Total Nilai:</span>
                             <h3 class="fw-bold text-primary mb-0" id="display-total">Rp 0</h3>
                         </div>
                     </div>
@@ -110,6 +107,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script src="assets/config.js"></script>
+<script src="assets/layout.js"></script>
 
 <script>
     let allData = [];
@@ -118,7 +116,7 @@
     const itemsPerPage = 5;
     const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
 
-    window.onload = () => { loadDataSakti(); };
+    window.onload = () => { if(typeof initLayout === 'function') initLayout(); loadDataSakti(); };
 
     async function loadDataSakti() {
         try {
@@ -126,16 +124,11 @@
             const rP = await resP.json();
             if(rP.success) listPelanggan = rP.data;
 
-            const mapPelanggan = {};
-            listPelanggan.forEach(p => { if(p[1]) mapPelanggan[p[1].toLowerCase()] = p[0]; });
-
             const resQ = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const rQ = await resQ.json();
             if (rQ.success) { 
-                allData = rQ.data.reverse().map(row => ({
-                    ...row,
-                    nama_asli: mapPelanggan[(row.email || "").toLowerCase()] || row.nama || row.email
-                }));
+                const mapP = {}; listPelanggan.forEach(p => { if(p[1]) mapP[p[1].toLowerCase()] = p[0]; });
+                allData = rQ.data.reverse().map(row => ({ ...row, nama_asli: mapP[(row.email||"").toLowerCase()] || row.nama }));
                 renderDisplay(); 
             }
         } catch(e) { console.error(e); }
@@ -143,11 +136,10 @@
 
     function renderDisplay() {
         const container = document.getElementById('cards-container');
-        const pagination = document.getElementById('pagination');
-        const paginatedData = allData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-        const totalPages = Math.ceil(allData.length / itemsPerPage);
-
-        container.innerHTML = paginatedData.map(row => {
+        const start = (currentPage - 1) * itemsPerPage;
+        const paginated = allData.slice(start, start + itemsPerPage);
+        
+        container.innerHTML = paginated.map(row => {
             const st = row.status.toLowerCase();
             const isReadyNota = st.includes('accepted') || st.includes('approved');
             return `
@@ -156,169 +148,129 @@
                         <div>
                             <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
                             <div class="card-perihal">${row.perihal}</div>
-                            <div class="card-client mt-1"><i class="fas fa-user-circle text-primary"></i> <b>${row.nama_asli}</b></div>
+                            <div class="card-client mt-1"><b>${row.nama_asli}</b></div>
                         </div>
                         <span class="badge-status status-${st.replace(/\s+/g, '-').replace(/[()]/g, '')}">${row.status}</span>
                     </div>
                     <div class="quote-footer">
-                        <div><span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span></div>
+                        <span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-light" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-sm btn-outline-danger" onclick='preparePDF("${row.id}")'><i class="fas fa-file-pdf"></i></button>
                             ${isReadyNota ? `<button class="btn btn-sm btn-success" onclick='prepareNota("${row.id}")'><i class="fas fa-receipt"></i> Nota</button>` : ''}
                         </div>
                     </div>
                 </div>`;
         }).join('');
-
-        let navHtml = '';
-        for (let i = 1; i <= totalPages; i++) navHtml += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-        pagination.innerHTML = navHtml;
+        renderPagination();
     }
 
-    function changePage(p) { currentPage = p; renderDisplay(); }
+    function renderPagination() {
+        const totalPages = Math.ceil(allData.length / itemsPerPage);
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) html += `<button class="btn-page ${i===currentPage?'active':''}" onclick="currentPage=${i};renderDisplay()">${i}</button>`;
+        document.getElementById('pagination').innerHTML = html;
+    }
 
-    // --- 1. GENERATE PENAWARAN (DENGAN SYARAT & KETENTUAN) ---
+    // --- PDF PENAWARAN ---
     function preparePDF(id) {
         const data = allData.find(r => r.id === id);
-        if(!data) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Header
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
         doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text("Software, Network & Electrical Engineering", 45, 26);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 33);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 35);
         doc.line(15, 40, 195, 40);
 
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("SURAT PENAWARAN HARGA", 105, 50, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No: #${data.id}`, 15, 60); doc.text(`Tgl: ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 15, 65);
-        doc.text("Kepada Yth:", 130, 60); doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
+        doc.text(`No: #${data.id}`, 15, 60); doc.text("Kepada Yth:", 130, 60);
+        doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
 
         doc.autoTable({
-            startY: 85, head: [['NO', 'DESKRIPSI PEKERJAAN', 'QTY', 'HARGA', 'JUMLAH']],
+            startY: 85, head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
             body: data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]),
             theme: 'grid', headStyles: { fillColor: [80, 80, 80] }
         });
 
-        let finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFont("helvetica", "bold"); doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
-
-        // SYARAT & KETENTUAN BALIK MANEH
-        const sY = finalY + 10;
-        doc.setLineDashPattern([2, 2], 0); doc.rect(15, sY, 180, 22);
-        doc.setLineDashPattern([], 0); doc.setFontSize(8);
-        doc.text("Syarat & Ketentuan:", 20, sY + 6);
-        doc.setFont("helvetica", "normal");
-        doc.text("1. Pembayaran DP 50% setelah penawaran disetujui.", 20, sY + 11);
-        doc.text("2. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai.", 20, sY + 16);
-
-        doc.text("Hormat Kami,", 155, sY + 35);
-        doc.setFont("helvetica", "bold"); doc.text("NANDA KRISBIANTO", 155, sY + 55);
+        let fY = doc.lastAutoTable.finalY + 10;
+        doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, fY, { align: "right" });
+        
+        doc.setLineDashPattern([2, 2], 0); doc.rect(15, fY + 5, 180, 20);
+        doc.setLineDashPattern([], 0); doc.setFontSize(8); doc.text("Syarat & Ketentuan:", 20, fY + 11);
+        doc.text("1. DP 50% diawal. 2. Pelunasan max 3 hari setelah selesai.", 20, fY + 16);
         doc.save(`Penawaran_${data.id}.pdf`);
     }
 
-    // --- 2. GENERATE NOTA (GARIS PUTUS-PUTUS & WATERMARK) ---
+    // --- PDF NOTA ---
     function prepareNota(id) {
         const data = allData.find(r => r.id === id);
-        if(!data) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const st = data.status.toLowerCase();
-        const isLunas = st.includes('lunas');
-        const txtStatus = isLunas ? "LUNAS" : "BELUM LUNAS";
+        const isLunas = data.status.toLowerCase().includes('lunas');
 
-        // Watermark
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({opacity: 0.1}));
-        doc.setFontSize(60); doc.setFont("helvetica", "bold");
-        doc.setTextColor(isLunas ? [0, 150, 0] : [200, 0, 0]);
-        doc.text(isLunas ? "L U N A S" : "BELUM LUNAS", 105, 150, { align: "center", angle: 45 });
-        doc.restoreGraphicsState();
+        // Fix Watermark Error
+        doc.setTextColor(isLunas ? 200 : 255, isLunas ? 255 : 200, isLunas ? 200 : 200);
+        doc.setFontSize(60); doc.text(isLunas ? "LUNAS" : "BELUM LUNAS", 105, 150, { align: "center", angle: 45 });
 
-        // Header
+        doc.setTextColor(0);
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
-        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
-        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-        doc.setFontSize(8); doc.setFont("helvetica", "normal");
-        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi", 45, 31);
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
         doc.line(15, 40, 195, 40);
 
-        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
+        doc.setFontSize(12); doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`No. Transaksi : #${data.id}`, 15, 60);
-        doc.text(`Tanggal        : ${new Date().toLocaleDateString('id-ID')}`, 15, 65);
-        doc.text("Kepada Yth:", 130, 60); doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
+        doc.text(`No: #${data.id}`, 15, 60); doc.text(data.nama_asli.toUpperCase(), 130, 65);
 
         doc.autoTable({
-            startY: 85, head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'JUMLAH']],
+            startY: 85, head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
             body: data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]),
-            theme: 'grid', headStyles: { fillColor: [80, 80, 80], halign: 'center' }
+            theme: 'grid', headStyles: { fillColor: [80, 80, 80] }
         });
 
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFont("helvetica", "bold"); doc.text(`TOTAL PEMBAYARAN: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+        let fY = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold"); doc.text(`TOTAL: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, fY, { align: "right" });
 
-        // GARIS PUTUS-PUTUS REKENING
-        const rY = finalY + 10;
-        doc.setLineDashPattern([2, 2], 0); doc.rect(15, rY, 180, 18);
-        doc.setLineDashPattern([], 0); doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Informasi Pembayaran Transfer:", 20, rY + 7);
-        doc.setFont("helvetica", "bold"); doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rY + 13);
-
-        doc.text("Hormat Kami,", 155, rY + 35); doc.text("NANDA KRISBIANTO", 155, rY + 55);
-        doc.save(`Nota_${txtStatus}_${data.id}.pdf`);
+        doc.setLineDashPattern([2, 2], 0); doc.rect(15, fY + 5, 180, 15);
+        doc.setLineDashPattern([], 0); doc.setFontSize(9);
+        doc.text("Transfer: Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, fY + 14);
+        doc.save(`Nota_${data.id}.pdf`);
     }
 
-    // --- FORM LOGIC ---
     function addItemRow(n='', h=0, q=1) {
         const div = document.createElement('div');
         div.className = 'row g-2 mb-2 item-row';
         div.innerHTML = `<div class="col-6"><input type="text" class="form-control form-control-sm it-nama" value="${n}" required></div>
-            <div class="col-3"><input type="number" class="form-control form-control-sm it-harga" value="${h}" oninput="calcTotal()" required></div>
-            <div class="col-2"><input type="number" class="form-control form-control-sm it-qty" value="${q}" oninput="calcTotal()" required></div>
+            <div class="col-3"><input type="number" class="form-control form-control-sm it-harga" value="${h}" oninput="calcTotal()"></div>
+            <div class="col-2"><input type="number" class="form-control form-control-sm it-qty" value="${q}" oninput="calcTotal()"></div>
             <div class="col-1"><button type="button" class="btn btn-link text-danger p-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times"></i></button></div>`;
         document.getElementById('items-container').appendChild(div);
     }
 
     function calcTotal() {
-        let total = 0;
-        document.querySelectorAll('.item-row').forEach(r => {
-            total += (parseFloat(r.querySelector('.it-harga').value)||0) * (parseFloat(r.querySelector('.it-qty').value)||0);
-        });
-        document.getElementById('display-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-        return total;
+        let t = 0; document.querySelectorAll('.item-row').forEach(r => { t += (r.querySelector('.it-harga').value*r.querySelector('.it-qty').value); });
+        document.getElementById('display-total').innerText = 'Rp ' + t.toLocaleString('id-ID'); return t;
     }
 
     function searchPelanggan(q) {
-        const resBox = document.getElementById('search-results');
-        if (q.length < 2) { resBox.style.display = 'none'; return; }
-        const filtered = listPelanggan.filter(p => p[0].toLowerCase().includes(q.toLowerCase()) || p[1].toLowerCase().includes(q.toLowerCase()));
-        resBox.innerHTML = filtered.map(p => `<button type="button" class="list-group-item list-group-item-action" onclick="selectPelanggan('${p[0]}', '${p[1]}')"><b>${p[0]}</b><br>${p[1]}</button>`).join('');
-        resBox.style.display = filtered.length ? 'block' : 'none';
+        const b = document.getElementById('search-results');
+        if(q.length<2){ b.style.display='none'; return; }
+        const f = listPelanggan.filter(p => p[0].toLowerCase().includes(q.toLowerCase()));
+        b.innerHTML = f.map(p => `<button type="button" class="list-group-item list-group-item-action" onclick="selectP('${p[0]}','${p[1]}')">${p[0]}</button>`).join('');
+        b.style.display = f.length?'block':'none';
     }
 
-    function selectPelanggan(n, e) {
-        document.getElementById('form-email').value = e;
-        document.getElementById('search-pelanggan').value = n;
-        document.getElementById('search-results').style.display = 'none';
-    }
+    function selectP(n,e) { document.getElementById('search-pelanggan').value=n; document.getElementById('form-email').value=e; document.getElementById('search-results').style.display='none'; }
 
-    function showAddModal() {
-        document.getElementById('formPenawaran').reset();
-        document.getElementById('edit-id').value = '';
-        document.getElementById('items-container').innerHTML = '';
-        addItemRow(); modalForm.show();
-    }
+    function showAddModal() { document.getElementById('formPenawaran').reset(); document.getElementById('edit-id').value=''; document.getElementById('items-container').innerHTML=''; addItemRow(); modalForm.show(); }
 
     function editPenawaran(id) {
         const d = allData.find(r => r.id === id);
-        if(!d) return;
         document.getElementById('edit-id').value = d.id;
-        document.getElementById('form-email').value = d.email;
         document.getElementById('search-pelanggan').value = d.nama_asli;
+        document.getElementById('form-email').value = d.email;
         document.getElementById('form-perihal').value = d.perihal;
         document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
@@ -328,23 +280,19 @@
 
     document.getElementById('formPenawaran').onsubmit = async (e) => {
         e.preventDefault();
-        const payload = {
+        const p = {
             action: document.getElementById('edit-id').value ? 'updatePenawaran' : 'createPenawaran',
             id: document.getElementById('edit-id').value,
             nama: document.getElementById('search-pelanggan').value,
             email: document.getElementById('form-email').value,
             perihal: document.getElementById('form-perihal').value,
-            items: Array.from(document.querySelectorAll('.item-row')).map(r => ({
-                nama: r.querySelector('.it-nama').value,
-                harga: parseInt(r.querySelector('.it-harga').value),
-                qty: parseInt(r.querySelector('.it-qty').value)
-            })),
+            items: Array.from(document.querySelectorAll('.item-row')).map(r => ({ nama: r.querySelector('.it-nama').value, harga: parseInt(r.querySelector('.it-harga').value), qty: parseInt(r.querySelector('.it-qty').value) })),
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
-        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
-        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        if((await res.json()).success) { modalForm.hide(); loadDataSakti(); Swal.fire('Berhasil', 'Data disimpan', 'success'); }
+        Swal.fire({title: 'Loading...', didOpen: () => Swal.showLoading()});
+        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(p) });
+        if((await res.json()).success) { modalForm.hide(); loadDataSakti(); Swal.fire('Berhasil','','success'); }
     };
 </script>
 </body>
