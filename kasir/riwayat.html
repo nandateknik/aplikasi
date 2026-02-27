@@ -8,30 +8,23 @@
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* CSS KHUSUS PRINT AGAR HASILNYA BERSIH & TIDAK BERBAYANG */
         @media print {
             body * { visibility: hidden; }
-            #print-area, #print-area * { 
-                visibility: visible; 
-                color: #000 !important; 
-            }
+            #print-area, #print-area * { visibility: visible; color: #000 !important; }
             #print-area { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 48mm; 
-                display: block !important;
+                position: absolute; left: 0; top: 0; width: 44mm; 
+                display: block !important; 
             }
             @page { margin: 0; size: auto; }
         }
 
-        /* PAKAI FONT MONOSPACE BIAR PRINTER GAK KERJA KERAS */
+        /* FONT CLEAN: ANTI MELUBER */
         #print-area { 
             display: none; 
             background: white; 
             font-family: 'Courier New', Courier, monospace; 
-            font-weight: bold;
-            text-transform: uppercase;
+            font-weight: 600; /* Tidak terlalu tebal biar gak meler */
+            letter-spacing: 0.5px; /* Kasih napas antar huruf */
         }
     </style>
 </head>
@@ -40,18 +33,14 @@
     <div class="lg:ml-64 flex flex-col min-h-screen">
         <div id="layout-header"></div>
         <main class="p-4 lg:p-8 flex-1">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">LOG TRANSAKSI</h2>
-                    <p class="text-sm text-slate-500 font-medium">Data penjualan tersimpan aman.</p>
-                </div>
-                <input type="date" id="filter-tanggal" onchange="renderRiwayat()" 
-                       class="p-3 rounded-2xl border-slate-200 text-sm font-bold shadow-sm outline-none">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-black text-slate-800">LOG TRANSAKSI</h2>
+                <input type="date" id="filter-tanggal" onchange="renderRiwayat()" class="p-3 rounded-2xl border-slate-200 font-bold shadow-sm">
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-                <section class="xl:col-span-4 space-y-6">
-                    <div class="bg-blue-600 rounded-[32px] p-8 text-white shadow-xl shadow-blue-100">
+                <section class="xl:col-span-4">
+                    <div class="bg-blue-600 rounded-[32px] p-8 text-white shadow-xl">
                         <p class="text-[10px] font-black uppercase opacity-80 mb-2">Total Omzet</p>
                         <h2 id="total-omzet" class="text-4xl font-black">Rp 0</h2>
                     </div>
@@ -80,15 +69,12 @@
                 document.getElementById('total-omzet').innerText = `Rp ${transaksi.reduce((a, b) => a + b.total, 0).toLocaleString()}`;
                 
                 list.innerHTML = transaksi.map(t => `
-                    <div class="bg-white border border-slate-100 rounded-[28px] p-6 shadow-sm flex flex-col md:flex-row justify-between gap-4">
-                        <div class="flex-1">
+                    <div class="bg-white border border-slate-100 rounded-[28px] p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex-1 w-full text-center md:text-left">
                             <span class="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full uppercase">TRX #${t.id}</span>
-                            <div class="mt-4 space-y-1">
-                                ${t.items.map(item => `<div class="flex justify-between text-xs font-bold uppercase"><span>${item.nama} x${item.qty}</span><span>Rp ${(item.harga * item.qty).toLocaleString()}</span></div>`).join('')}
-                            </div>
                             <div class="mt-4 border-t pt-2 text-xl font-black text-blue-600">Rp ${t.total.toLocaleString()}</div>
                         </div>
-                        <button onclick="reprintNota(${t.id})" class="bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase">🧾 CETAK NOTA</button>
+                        <button onclick="reprintNota(${t.id})" class="w-full md:w-auto bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase">🧾 CETAK</button>
                     </div>
                 `).join('');
             } catch (err) { console.error(err); }
@@ -99,28 +85,30 @@
             const info = await db.settings.get("info_toko") || { nama: "POS PRO", alamat: "BANYUWANGI", wa: "0" };
             const area = document.getElementById('print-area');
             
+            // Layout Nota yang "Dijinakkan"
             area.innerHTML = `
-                <div style="padding: 1mm; line-height: 1.1; width: 44mm; margin-left: 2mm;">
-                    <div style="text-align:center; margin-bottom: 4px;">
-                        <div style="font-size: 14px; letter-spacing: 1px;">${info.nama}</div>
-                        <div style="font-size: 9px; word-wrap: break-word;">${info.alamat}</div>
-                        <div style="font-size: 9px;">WA: ${info.wa}</div>
-                        <div style="margin-top: 3px;">-----------------------</div>
-                        <div style="font-size: 9px;">** REPRINT NOTA **</div>
-                        <div>-----------------------</div>
+                <div style="padding: 1mm; line-height: 1.2; width: 42mm; font-size: 10px;">
+                    <div style="text-align:center; margin-bottom: 5px;">
+                        <div style="font-size: 12px; font-weight: bold;">${info.nama.toUpperCase()}</div>
+                        <div style="font-size: 8px; margin-top: 2px;">${info.alamat.toUpperCase()}</div>
+                        <div style="font-size: 8px;">WA: ${info.wa}</div>
                     </div>
                     
-                    <div style="font-size: 9px; margin-bottom: 4px;">
+                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
+                    <div style="font-size: 8px; text-align:center; margin-bottom: 3px;">** REPRINT NOTA **</div>
+                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
+
+                    <div style="font-size: 8px;">
                         ID  : #${t.id}<br>
                         TGL : ${new Date(t.waktu).toLocaleString('id-ID')}<br>
                         KSR : ADMIN
                     </div>
-                    <div>-----------------------</div>
+                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
 
-                    <div style="font-size: 9px;">
+                    <div style="font-size: 8px;">
                         ${t.items.map(item => `
-                            <div style="margin-bottom: 2px;">
-                                <div style="word-wrap: break-word;">${item.nama}</div>
+                            <div style="margin-bottom: 3px;">
+                                <div style="word-wrap: break-word;">${item.nama.toUpperCase()}</div>
                                 <div style="display:flex; justify-content:space-between;">
                                     <span>${item.qty} X ${item.harga.toLocaleString()}</span>
                                     <span>${(item.qty * item.harga).toLocaleString()}</span>
@@ -129,25 +117,25 @@
                         `).join('')}
                     </div>
 
-                    <div>-----------------------</div>
-                    <div style="display:flex; justify-content:space-between; font-size: 11px;">
+                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
+                    <div style="display:flex; justify-content:space-between; font-weight: bold;">
                         <span>TOTAL</span>
                         <span>${t.total.toLocaleString()}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size: 9px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 8px;">
                         <span>BAYAR</span>
                         <span>${t.bayar.toLocaleString()}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size: 9px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 8px;">
                         <span>KEMBALI</span>
                         <span>${t.kembali.toLocaleString()}</span>
                     </div>
-                    <div>-----------------------</div>
+                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
 
-                    <div style="text-align:center; font-size: 9px; margin-top: 4px;">
+                    <div style="text-align:center; font-size: 8px; margin-top: 5px;">
                         TERIMA KASIH
                     </div>
-                    <div style="height: 50px;"></div> 
+                    <div style="height: 40px;"></div> 
                 </div>
             `;
             window.print();
