@@ -7,47 +7,27 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <link rel="stylesheet" href="assets/layout.css">
     
     <style>
         body { background: #f4f7fe; padding-bottom: 110px; }
-        .admin-card { background: transparent; border: none; }
-        
         .brand-section { text-align: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         .brand-section h5 { font-weight: 800; color: #0d6efd; margin-bottom: 2px; }
         .brand-subtitle { font-size: 0.75rem; color: #64748b; font-weight: 600; letter-spacing: 1px; }
-
         .filter-section { background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        
-        .quote-card {
-            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
-            border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-            transition: transform 0.2s;
-        }
+        .quote-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04); transition: transform 0.2s; }
         .quote-card:active { transform: scale(0.98); }
-        
         .card-id { font-size: 0.75rem; font-weight: 700; color: #94a3b8; }
         .card-perihal { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 5px; }
         .card-client { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 5px; }
-        
-        .quote-footer {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;
-        }
-
+        .quote-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; }
         .badge-status { padding: 6px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-        .status-pending { background: #fff7ed; color: #ea580c; }
         .status-sent { background: #eff6ff; color: #2563eb; }
-        .status-approved { background: #f0fdf4; color: #16a34a; }
-
+        .status-accepted { background: #fff7ed; color: #ea580c; }
+        .status-approved--lunas- { background: #f0fdf4; color: #16a34a; }
+        .status-rejected { background: #fef2f2; color: #dc2626; }
         .pagination-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-        .btn-page { 
-            width: 40px; height: 40px; border-radius: 12px; border: none; 
-            background: white; color: #64748b; font-weight: 600;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
+        .btn-page { width: 40px; height: 40px; border-radius: 12px; border: none; background: white; color: #64748b; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
         .btn-page.active { background: #0d6efd; color: white; }
-        
         #search-results { position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; display: none; }
     </style>
 </head>
@@ -62,32 +42,15 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h6 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Penawaran</h6>
+                <h6 class="fw-bold m-0"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Daftar Penawaran</h6>
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="showAddModal()">
                     <i class="fas fa-plus me-2"></i>Buat Baru
                 </button>
             </div>
 
-            <div class="filter-section animate__animated animate__fadeIn">
-                <div class="row g-2">
-                    <div class="col-5">
-                        <input type="date" id="filter-mulai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()">
-                    </div>
-                    <div class="col-5">
-                        <input type="date" id="filter-sampai" class="form-control form-control-sm border-0 bg-light" onchange="filterData()">
-                    </div>
-                    <div class="col-2">
-                        <button class="btn btn-light btn-sm w-100 border-0" onclick="resetFilter()"><i class="fas fa-sync"></i></button>
-                    </div>
-                </div>
-            </div>
-
             <div id="cards-container">
-                <div class="text-center p-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
+                <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
             </div>
-
             <div id="pagination" class="pagination-container mb-5"></div>
         </div>
     </div>
@@ -97,7 +60,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 bg-light">
-                <h5 class="modal-title fw-bold">Form Penawaran</h5>
+                <h5 class="modal-title fw-bold">Form Penawaran & Nota</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -105,40 +68,37 @@
                     <input type="hidden" id="edit-id">
                     <div class="row g-3">
                         <div class="col-md-6 position-relative">
-                            <label class="form-label small fw-bold">Cari Pelanggan</label>
-                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Nama atau Email..." oninput="searchPelanggan(this.value)">
+                            <label class="form-label small fw-bold">Pelanggan</label>
+                            <input type="text" id="search-pelanggan" class="form-control" placeholder="Cari nama..." oninput="searchPelanggan(this.value)">
                             <div id="search-results" class="list-group shadow"></div>
                             <input type="hidden" id="form-email" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Perihal Pekerjaan</label>
-                            <input type="text" id="form-perihal" class="form-control" placeholder="Contoh: Perbaikan Listrik" required>
+                            <label class="form-label small fw-bold">Perihal</label>
+                            <input type="text" id="form-perihal" class="form-control" required>
                         </div>
                     </div>
-                    
                     <div class="mt-4">
-                        <label class="form-label small fw-bold">Item Pekerjaan / Barang</label>
+                        <label class="form-label small fw-bold">Item Pekerjaan</label>
                         <div id="items-container"></div>
-                        <button type="button" class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="addItemRow()">
-                            <i class="fas fa-plus me-1"></i> Tambah Baris Item
-                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2 w-100" onclick="addItemRow()"><i class="fas fa-plus"></i> Tambah Item</button>
                     </div>
-
                     <div class="row mt-4 align-items-center">
                         <div class="col-6">
+                            <label class="form-label small fw-bold">Status</label>
                             <select id="form-status" class="form-select">
-    <option value="Sent">Sent</option>
-    <option value="Accepted">Accepted (Belum Lunas)</option>
-    <option value="Approved (Lunas)">Approved (Lunas)</option>
-    <option value="Rejected">Rejected</option>
-</select>
+                                <option value="Sent">Sent</option>
+                                <option value="Accepted">Accepted (Belum Lunas)</option>
+                                <option value="Approved (Lunas)">Approved (Lunas)</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
                         </div>
                         <div class="col-6 text-end">
-                            <span class="text-muted small d-block">Estimasi Total:</span>
+                            <span class="text-muted small d-block">Total Nilai:</span>
                             <h3 class="fw-bold text-primary mb-0" id="display-total">Rp 0</h3>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow">SIMPAN PENAWARAN</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill">SIMPAN DATA</button>
                 </form>
             </div>
         </div>
@@ -149,25 +109,18 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
 <script src="assets/config.js"></script>
-<script src="assets/layout.js"></script>
 
-    <script>
+<script>
     let allData = [];
     let listPelanggan = [];
     let currentPage = 1;
     const itemsPerPage = 5;
     const modalForm = new bootstrap.Modal(document.getElementById('modalForm'));
 
-    window.onload = () => { 
-        if(typeof initLayout === 'function') initLayout();
-        loadDataSakti(); 
-    };
+    window.onload = () => { loadDataSakti(); };
 
     async function loadDataSakti() {
-        const container = document.getElementById('cards-container');
-        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><br><small>Sinkronisasi Data...</small></div>';
         try {
             const resP = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
             const rP = await resP.json();
@@ -178,7 +131,6 @@
 
             const resQ = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const rQ = await resQ.json();
-            
             if (rQ.success) { 
                 allData = rQ.data.reverse().map(row => ({
                     ...row,
@@ -186,42 +138,34 @@
                 }));
                 renderDisplay(); 
             }
-        } catch(e) { console.error("Gagal sinkronisasi", e); }
+        } catch(e) { console.error(e); }
     }
 
-    function renderDisplay(filteredData = null) {
-        const dataToRender = filteredData || allData;
+    function renderDisplay() {
         const container = document.getElementById('cards-container');
         const pagination = document.getElementById('pagination');
-        const paginatedData = dataToRender.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-        const totalPages = Math.ceil(dataToRender.length / itemsPerPage);
-
-        if(dataToRender.length === 0) {
-            container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data.</div>';
-            return;
-        }
+        const paginatedData = allData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        const totalPages = Math.ceil(allData.length / itemsPerPage);
 
         container.innerHTML = paginatedData.map(row => {
             const st = row.status.toLowerCase();
-            const isReadyNota = st === 'accepted' || st === 'approved (lunas)';
+            const isReadyNota = st.includes('accepted') || st.includes('approved');
             return `
                 <div class="quote-card animate__animated animate__fadeInUp">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
-                            <div class="card-perihal">${row.perihal || 'Tanpa Perihal'}</div>
-                            <div class="card-client mt-1">
-                                <i class="fas fa-user-circle text-primary me-1"></i> <b>${row.nama_asli}</b>
-                            </div>
+                            <div class="card-perihal">${row.perihal}</div>
+                            <div class="card-client mt-1"><i class="fas fa-user-circle text-primary"></i> <b>${row.nama_asli}</b></div>
                         </div>
-                        <span class="badge-status status-${st.replace(/\s+/g, '-')}">${row.status}</span>
+                        <span class="badge-status status-${st.replace(/\s+/g, '-').replace(/[()]/g, '')}">${row.status}</span>
                     </div>
                     <div class="quote-footer">
-                        <div><small class="text-muted d-block">Total:</small><span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span></div>
+                        <div><span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span></div>
                         <div class="d-flex gap-2">
                             <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick='preparePDF("${row.id}")' title="Penawaran"><i class="fas fa-file-pdf"></i></button>
-                            ${isReadyNota ? `<button class="btn btn-sm btn-success" onclick='prepareNota("${row.id}")' title="Nota"><i class="fas fa-receipt"></i> Nota</button>` : ''}
+                            <button class="btn btn-sm btn-outline-danger" onclick='preparePDF("${row.id}")'><i class="fas fa-file-pdf"></i></button>
+                            ${isReadyNota ? `<button class="btn btn-sm btn-success" onclick='prepareNota("${row.id}")'><i class="fas fa-receipt"></i> Nota</button>` : ''}
                         </div>
                     </div>
                 </div>`;
@@ -232,59 +176,61 @@
         pagination.innerHTML = navHtml;
     }
 
-    function changePage(p) { currentPage = p; renderDisplay(); window.scrollTo(0, 0); }
+    function changePage(p) { currentPage = p; renderDisplay(); }
 
-    // --- GENERATE PENAWARAN (STANDAR) ---
+    // --- 1. GENERATE PENAWARAN (DENGAN SYARAT & KETENTUAN) ---
     function preparePDF(id) {
         const data = allData.find(r => r.id === id);
-        if(data) generatePDF(data);
-    }
-
-    function generatePDF(data) {
+        if(!data) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+        
+        // Header
         try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
         doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
         doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text("Software, Network & Electrical Engineering", 45, 26);
-        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 35);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 33);
         doc.line(15, 40, 195, 40);
+
         doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("SURAT PENAWARAN HARGA", 105, 50, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No: #${data.id}`, 15, 60); doc.text(`Tgl: ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 15, 65);
         doc.text("Kepada Yth:", 130, 60); doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
+
         doc.autoTable({
-            startY: 85, head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
+            startY: 85, head: [['NO', 'DESKRIPSI PEKERJAAN', 'QTY', 'HARGA', 'JUMLAH']],
             body: data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]),
             theme: 'grid', headStyles: { fillColor: [80, 80, 80] }
         });
+
+        let finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold"); doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+
+        // SYARAT & KETENTUAN BALIK MANEH
+        const sY = finalY + 10;
+        doc.setLineDashPattern([2, 2], 0); doc.rect(15, sY, 180, 22);
+        doc.setLineDashPattern([], 0); doc.setFontSize(8);
+        doc.text("Syarat & Ketentuan:", 20, sY + 6);
+        doc.setFont("helvetica", "normal");
+        doc.text("1. Pembayaran DP 50% setelah penawaran disetujui.", 20, sY + 11);
+        doc.text("2. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai.", 20, sY + 16);
+
+        doc.text("Hormat Kami,", 155, sY + 35);
+        doc.setFont("helvetica", "bold"); doc.text("NANDA KRISBIANTO", 155, sY + 55);
         doc.save(`Penawaran_${data.id}.pdf`);
     }
 
-    // --- GENERATE NOTA (DESAIN PATEN SESUAI REQUEST) ---
+    // --- 2. GENERATE NOTA (GARIS PUTUS-PUTUS & WATERMARK) ---
     function prepareNota(id) {
         const data = allData.find(r => r.id === id);
-        if(data) generateNota(data);
-    }
-
-    function generateNota(data) {
+        if(!data) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const st = data.status.toLowerCase();
         const isLunas = st.includes('lunas');
         const txtStatus = isLunas ? "LUNAS" : "BELUM LUNAS";
-        
-        // --- 1. HEADER ---
-        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
-        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
-        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100); 
-        doc.text("Software, Network & Electrical Engineering", 45, 26);
-        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | www.nandateknik.com", 45, 35);
-        doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.5); doc.line(15, 40, 195, 40);
 
-        // --- WATERMARK ---
+        // Watermark
         doc.saveGraphicsState();
         doc.setGState(new doc.GState({opacity: 0.1}));
         doc.setFontSize(60); doc.setFont("helvetica", "bold");
@@ -292,45 +238,37 @@
         doc.text(isLunas ? "L U N A S" : "BELUM LUNAS", 105, 150, { align: "center", angle: 45 });
         doc.restoreGraphicsState();
 
-        // --- 2. INFO TRANSAKSI ---
-        doc.setTextColor(0); doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
+        // Header
+        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi", 45, 31);
+        doc.line(15, 40, 195, 40);
+
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No. Transaksi : #${data.id}`, 15, 60);
-        doc.text(`Tanggal        : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
-        doc.text("Kepada Yth:", 130, 60);
-        doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
+        doc.text(`Tanggal        : ${new Date().toLocaleDateString('id-ID')}`, 15, 65);
+        doc.text("Kepada Yth:", 130, 60); doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
 
-        // --- 3. TABEL ITEM (PATEN) ---
-        const tableBody = data.items_json.map((item, index) => [
-            index + 1, item.nama, item.qty, 
-            `Rp ${Number(item.harga).toLocaleString('id-ID')}`, 
-            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
-        ]);
         doc.autoTable({
             startY: 85, head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'JUMLAH']],
-            body: tableBody, theme: 'grid',
-            headStyles: { fillColor: [80, 80, 80], halign: 'center', fontSize: 9 },
-            columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right' }, 4: { halign: 'right' } },
-            styles: { fontSize: 9, cellPadding: 3 }
+            body: data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]),
+            theme: 'grid', headStyles: { fillColor: [80, 80, 80], halign: 'center' }
         });
 
-        // --- 4. TOTAL & REKENING ---
         const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-        doc.text(`TOTAL PEMBAYARAN: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+        doc.setFont("helvetica", "bold"); doc.text(`TOTAL PEMBAYARAN: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        const rekY = finalY + 10;
-        doc.setDrawColor(150, 150, 150); doc.setLineDashPattern([2, 2], 0); doc.rect(15, rekY, 180, 18);
+        // GARIS PUTUS-PUTUS REKENING
+        const rY = finalY + 10;
+        doc.setLineDashPattern([2, 2], 0); doc.rect(15, rY, 180, 18);
         doc.setLineDashPattern([], 0); doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Informasi Pembayaran Transfer:", 20, rekY + 7);
-        doc.setFont("helvetica", "bold"); doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rekY + 13);
+        doc.text("Informasi Pembayaran Transfer:", 20, rY + 7);
+        doc.setFont("helvetica", "bold"); doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rY + 13);
 
-        // --- 5. TANDA TANGAN ---
-        const ttdY = rekY + 35;
-        doc.setFont("helvetica", "normal"); doc.text("Hormat Kami,", 155, ttdY);
-        doc.setFont("helvetica", "bold"); doc.text("NANDA KRISBIANTO", 155, ttdY + 20);
-        
+        doc.text("Hormat Kami,", 155, rY + 35); doc.text("NANDA KRISBIANTO", 155, rY + 55);
         doc.save(`Nota_${txtStatus}_${data.id}.pdf`);
     }
 
@@ -381,10 +319,10 @@
         document.getElementById('edit-id').value = d.id;
         document.getElementById('form-email').value = d.email;
         document.getElementById('search-pelanggan').value = d.nama_asli;
-        document.getElementById('form-perihal').value = d.perihal || '';
+        document.getElementById('form-perihal').value = d.perihal;
         document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
-        if(d.items_json) d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
+        d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
         calcTotal(); modalForm.show();
     }
 
@@ -404,11 +342,10 @@
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
-        Swal.fire({title: 'Proses...', didOpen: () => Swal.showLoading()});
+        Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
         const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         if((await res.json()).success) { modalForm.hide(); loadDataSakti(); Swal.fire('Berhasil', 'Data disimpan', 'success'); }
     };
-        </script>
-                                
+</script>
 </body>
 </html>
