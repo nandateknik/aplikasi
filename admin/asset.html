@@ -72,9 +72,9 @@
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Pilih Pelanggan</label>
+                                <label class="form-label">Pilih Pelanggan (Email)</label>
                                 <select class="form-select border-0 bg-light" id="idPelanggan" required>
-                                    <option value="">-- Pilih Pelanggan --</option>
+                                    <option value="">-- Pilih Email Pelanggan --</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-6">
@@ -262,15 +262,20 @@
 
     async function loadPelanggan() {
         try {
+            // Memanggil database Pelanggan
             const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`);
             const json = await res.json();
             const select = document.getElementById('idPelanggan');
+            
+            // Gunakan email sebagai value ID_Pelanggan
             json.data.forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = p.id || p.nama;
-                opt.text = p.nama;
-                opt.setAttribute('data-nama', p.nama);
-                select.appendChild(opt);
+                if (p.email) {
+                    let opt = document.createElement('option');
+                    opt.value = p.email; // Menggunakan Email sebagai ID unik
+                    opt.text = `${p.nama} (${p.email})`;
+                    opt.setAttribute('data-nama', p.nama);
+                    select.appendChild(opt);
+                }
             });
         } catch (e) { console.error("Gagal load pelanggan", e); }
     }
@@ -306,7 +311,6 @@
                 let statusBadge = `<span class="status-badge bg-primary-subtle text-primary">SERVICE</span>`;
                 
                 if(item.Kategori === "SALES") {
-                    const tglBeli = new Date(item.Tanggal);
                     const tglExp = new Date(item.Tanggal);
                     tglExp.setMonth(tglExp.getMonth() + parseInt(item.Garansi_Bulan || 0));
                     const isExpired = new Date() > tglExp;
@@ -321,7 +325,8 @@
                         <td>${new Date(item.Tanggal).toLocaleDateString('id-ID')}</td>
                         <td>
                             <b>${item.Nama_Pelanggan}</b><br>
-                            <small class="text-muted">${item.Tipe_Aset} - ${item.Brand_Seri}</small>
+                            <small class="text-muted">${item.Tipe_Aset} - ${item.Brand_Seri}</small><br>
+                            <small class="text-primary" style="font-size:0.7rem;">${item.ID_Pelanggan}</small>
                         </td>
                         <td>
                             <span class="text-primary fw-bold">${item.SN || '-'}</span><br>
@@ -348,8 +353,8 @@
             data: {
                 Tanggal: new Date().toISOString(),
                 Kategori: kat,
-                ID_Pelanggan: selPel.value,
-                Nama_Pelanggan: selPel.options[selPel.selectedIndex].text,
+                ID_Pelanggan: selPel.value, // Menyimpan Email neng kene
+                Nama_Pelanggan: selPel.options[selPel.selectedIndex].getAttribute('data-nama'),
                 Tipe_Aset: document.getElementById('tipeAset').value,
                 Brand_Seri: document.getElementById('brandAset').value,
                 SN: document.getElementById('snAset').value,
@@ -366,7 +371,7 @@
             const res = await fetch(CONFIG.ASSET_APP_URL, { method:'POST', body: JSON.stringify(payload) });
             const r = await res.json();
             if(r.success) {
-                Swal.fire('Berhasil!', 'Data log aset wis kesimpen.', 'success');
+                Swal.fire('Berhasil!', 'Data log aset wis kesimpen nganggo ID Email.', 'success');
                 document.getElementById('formAset').reset();
                 document.getElementById('checklistContainer').innerHTML = "";
             }
