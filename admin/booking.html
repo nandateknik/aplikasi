@@ -19,6 +19,7 @@
         .price-box { background: #f8fafc; border-radius: 18px; padding: 15px; border: 1px dashed #cbd5e1; }
         .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }
         .form-control, .form-select { border-radius: 12px; }
+        .section-label { font-size: 0.65rem; font-weight: 800; color: #64748b; letter-spacing: 1px; margin-bottom: 8px; display: block; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -32,7 +33,8 @@
     <div class="card-main shadow-lg">
         <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-file-invoice me-2"></i>Buat Work Order</h5>
         
-        <label class="form-label small fw-bold text-muted">DATA PELANGGAN</label>
+        <!-- PELANGGAN -->
+        <label class="section-label">DATA PELANGGAN</label>
         <div class="input-group mb-2 shadow-sm rounded-3 overflow-hidden">
             <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
             <input type="text" id="emailInput" class="form-control bg-white border-0" list="emailList" placeholder="Cari Email/Nama..." oninput="checkSelection()">
@@ -49,11 +51,16 @@
             </div>
         </div>
 
-        <label class="form-label small fw-bold text-muted mt-2">JADWAL PENGERJAAN</label>
+        <!-- JUDUL PEKERJAAN (SING BAKAL MLEBU SHEET BOOKING KOLOM C) -->
+        <label class="section-label mt-2">KETERANGAN PEKERJAAN</label>
+        <input type="text" id="judulPekerjaan" class="form-control mb-3 shadow-sm border-0" placeholder="Contoh: Perbaikan AC Mati atau Pasang CCTV">
+
+        <label class="section-label">JADWAL PENGERJAAN</label>
         <input type="datetime-local" id="tglBooking" class="form-control mb-3 shadow-sm border-0">
 
+        <!-- LOKASI -->
         <div class="d-flex justify-content-between align-items-center mb-2 mt-2">
-            <label class="form-label small fw-bold text-muted mb-0">LOKASI PENGERJAAN</label>
+            <label class="section-label mb-0">LOKASI PENGERJAAN</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="useOldAddr" onchange="toggleMapSync()">
                 <label class="form-check-label small" for="useOldAddr">Gunakan Alamat Profil</label>
@@ -66,7 +73,8 @@
 
         <hr class="opacity-10">
 
-        <label class="form-label small fw-bold text-muted">TAMBAH JASA / SPAREPART</label>
+        <!-- ITEM NOTA -->
+        <label class="section-label">TAMBAH JASA / SPAREPART (UNTUK NOTA)</label>
         <div class="row g-2 mb-2">
             <div class="col-8">
                 <select id="jasaSelect" class="form-select shadow-sm border-0"></select>
@@ -213,7 +221,6 @@
         document.getElementById('txtTotal').innerText = "Rp " + (totalJasa + bensinCost).toLocaleString();
     }
 
-    // ADD DARI SELECT (AUTO QTY +1)
     function addItem() {
         const sel = document.getElementById('jasaSelect');
         const nama = sel.options[sel.selectedIndex].text;
@@ -225,7 +232,6 @@
         renderItems();
     }
 
-    // ADD MANUAL DENGAN INPUT QTY
     function addManualItem() {
         const n = document.getElementById('manualNama').value;
         const h = parseInt(document.getElementById('manualHarga').value);
@@ -258,25 +264,42 @@
     async function submitBooking() {
         const email = document.getElementById('emailInput').value;
         const tgl = document.getElementById('tglBooking').value;
-        if(!email || !tgl || selectedItems.length === 0) return Swal.fire('Error', 'Lengkapi data!', 'warning');
+        const judul = document.getElementById('judulPekerjaan').value; // Ambil Judul
+        
+        if(!email || !tgl || !judul || selectedItems.length === 0) {
+            return Swal.fire('Error', 'Judul, Pelanggan, Jadwal, lan Item Nota kudu diisi kabeh!', 'warning');
+        }
         
         document.getElementById('loader').style.display = 'flex';
+        
+        // Payload saiki ngirim "judul" pisan
         const payload = {
-            action: 'createNota', email, 
+            action: 'createNota', 
+            email: email, 
+            judul: judul, // Iki sing bakal diproses GAS neng Sheet Booking Kolom C
             nama: currentCustomer ? currentCustomer.nama : "Pelanggan",
-            tglPengerjaan: tgl.replace('T', ' '), items: selectedItems,
+            tglPengerjaan: tgl.replace('T', ' '), 
+            items: selectedItems,
             total: selectedItems.reduce((acc, it) => acc + (it.harga * it.qty), 0) + bensinCost,
-            lat: document.getElementById('lat').value, lang: document.getElementById('lng').value,
+            lat: document.getElementById('lat').value, 
+            lang: document.getElementById('lng').value,
             alamat: document.getElementById('alamat').value
         };
+
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             const r = await res.json();
             document.getElementById('loader').style.display = 'none';
-            if(r.success) Swal.fire('Sip!', 'Nota tersimpan', 'success').then(() => window.location.href = 'booking.html');
+            if(r.success) {
+                Swal.fire('Sip!', 'Work Order & Nota tersimpan', 'success').then(() => {
+                    window.location.href = 'booking.html';
+                });
+            } else {
+                Swal.fire('Gagal', r.message || 'Error saat menyimpan', 'error');
+            }
         } catch(e) { 
             document.getElementById('loader').style.display = 'none'; 
-            Swal.fire('Error', 'Gagal menyimpan data', 'error');
+            Swal.fire('Error', 'Gagal koneksi neng server', 'error');
         }
     }
 </script>
