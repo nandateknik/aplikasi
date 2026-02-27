@@ -12,15 +12,14 @@
     <link rel="stylesheet" href="assets/layout.css">
     
     <style>
-        :root { --p-blue: #4338ca; } /* Sesuaike karo werna primary smean */
+        :root { --p-blue: #4338ca; } 
         
         body { 
             background-color: #f4f7fe !important; 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            padding-bottom: 110px !important; /* Spasi nggo navbar ngisor */
+            padding-bottom: 110px !important; 
         }
 
-        /* Ben Toolbar ora tabrakan karo banner biru seko layout.js */
         .main-content-wrapper {
             margin-top: -30px;
             position: relative;
@@ -44,21 +43,27 @@
         .btn-save-pro:hover { background: #3730a3; color: white; }
 
         .editor-container { 
-            background: #475569; /* Slate grey ben eksklusif */
+            background: #475569; 
             border-radius: 20px; 
-            padding: 20px; 
-            min-height: 500px; 
+            padding: 10px; 
+            min-height: 400px; 
             position: relative; 
             overflow: auto; 
             display: flex; 
-            justify-content: center;
+            justify-content: flex-start; /* Ganti ke start biar scrollnya enak di HP */
             box-shadow: inset 0 0 40px rgba(0,0,0,0.2);
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (min-width: 768px) {
+            .editor-container { justify-content: center; padding: 20px; }
         }
         
         #pdf-canvas-wrapper { 
             position: relative; 
             background: white; 
             box-shadow: 0 15px 50px rgba(0,0,0,0.3); 
+            margin: auto; /* Biar tetep di tengah kalau muat */
         }
         
         .draggable-asset {
@@ -82,7 +87,7 @@
         }
         .draggable-asset:hover .btn-del-asset { display: flex; }
 
-        #pad { border: 2px dashed #e2e8f0; background: #fff; border-radius: 15px; width: 100%; touch-action: none; }
+        #pad { border: 2px dashed #e2e8f0; background: #fff; border-radius: 15px; width: 100%; touch-action: none; max-width: 100%; }
     </style>
 </head>
 <body>
@@ -119,21 +124,21 @@
             </div>
 
             <div class="text-center mt-3">
-                <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Klik 'TTD Manual' kanggo corat-coret langsung neng kene.</small>
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i> PDF otomatis menyesuaikan lebar layar HP smean.</small>
             </div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="modalTTD" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
         <div class="modal-content" style="border-radius: 25px; border: none;">
             <div class="modal-header border-0 px-4 pt-4">
                 <h6 class="fw-bold mb-0">Tanda Tangan Digital</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
-                <canvas id="pad" width="450" height="250"></canvas>
+            <div class="modal-body p-4 text-center">
+                <canvas id="pad" width="400" height="250"></canvas>
                 <div class="d-flex gap-2 mt-3">
                     <button class="btn btn-light w-50 fw-bold py-2" style="border-radius: 12px;" onclick="clearPad()">RESET</button>
                     <button class="btn btn-primary w-50 fw-bold py-2" style="border-radius: 12px;" onclick="savePad()">GUNAKAN</button>
@@ -153,14 +158,12 @@
 <script src="assets/layout.js"></script>
 
 <script>
-    // Inisialisasi PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     let pdfDoc = null;
     let pdfBytes = null;
-    let scale = 1.5; 
+    let currentScale = 1.5; 
 
-    // Panggil renderLayout seko layout.js smean
     window.onload = () => { if(typeof renderLayout === 'function') renderLayout(); };
 
     async function loadPDF(event) {
@@ -180,15 +183,32 @@
 
     async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({scale: scale});
+        
+        // --- LOGIC RESPONSIVE ---
+        const containerWidth = document.getElementById('editor').clientWidth - 40;
+        const unscaledViewport = page.getViewport({scale: 1});
+        
+        // Nek layar cilik (HP), scale diatur pas lebar kontainer
+        if (window.innerWidth < 768) {
+            currentScale = containerWidth / unscaledViewport.width;
+        } else {
+            currentScale = 1.5; // Default desktop
+        }
+
+        const viewport = page.getViewport({scale: currentScale});
         const canvas = document.getElementById('pdf-render');
         const context = canvas.getContext('2d');
+        
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+
         await page.render({ canvasContext: context, viewport: viewport }).promise;
+        
         const wrapper = document.getElementById('pdf-canvas-wrapper');
         wrapper.style.width = canvas.width + 'px';
         wrapper.style.height = canvas.height + 'px';
+        
+        // Resik-resik ttd/stempel sing lawas pas ganti file
         document.querySelectorAll('.draggable-asset').forEach(a => a.remove());
     }
 
@@ -208,6 +228,14 @@
             <img src="${imgSrc}" crossorigin="anonymous">
         `;
         wrapper.appendChild(div);
+        
+        // Atur posisi awal ben neng tengah layar sing lagi di-view
+        const x = document.getElementById('editor').scrollLeft + 50;
+        const y = 50;
+        div.style.transform = `translate(${x}px, ${y}px)`;
+        div.setAttribute('data-x', x);
+        div.setAttribute('data-y', y);
+        
         makeInteractable(id);
     }
 
@@ -252,13 +280,24 @@
 
     function getPos(e) {
         const rect = canvasPad.getBoundingClientRect();
-        return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top };
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        return { x: clientX - rect.left, y: clientY - rect.top };
     }
+    
     canvasPad.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctxPad.beginPath(); ctxPad.moveTo(p.x, p.y); });
     canvasPad.addEventListener('mousemove', (e) => { if(!drawing) return; const p = getPos(e); ctxPad.lineTo(p.x, p.y); ctxPad.stroke(); });
     window.addEventListener('mouseup', () => drawing = false);
-    canvasPad.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; const p = getPos(e); ctxPad.beginPath(); ctxPad.moveTo(p.x, p.y); });
-    canvasPad.addEventListener('touchmove', (e) => { e.preventDefault(); if(!drawing) return; const p = getPos(e); ctxPad.lineTo(p.x, p.y); ctxPad.stroke(); });
+    
+    canvasPad.addEventListener('touchstart', (e) => { 
+        if(e.target == canvasPad) e.preventDefault();
+        drawing = true; const p = getPos(e); ctxPad.beginPath(); ctxPad.moveTo(p.x, p.y); 
+    }, {passive: false});
+    
+    canvasPad.addEventListener('touchmove', (e) => { 
+        if(e.target == canvasPad) e.preventDefault();
+        if(!drawing) return; const p = getPos(e); ctxPad.lineTo(p.x, p.y); ctxPad.stroke(); 
+    }, {passive: false});
 
     function clearPad() { ctxPad.clearRect(0, 0, canvasPad.width, canvasPad.height); }
     function savePad() {
@@ -289,6 +328,7 @@
                 const assetW = asset.offsetWidth;
                 const assetH = asset.offsetHeight;
 
+                // Konversi koordinat canvas ke koordinat asli PDF (Penting!)
                 const pdfX = (x * width) / canvasEl.width;
                 const pdfY = height - ((y + assetH) * height) / canvasEl.height;
                 const pdfW = (assetW * width) / canvasEl.width;
@@ -305,8 +345,16 @@
             a.download = "Signed_NandaTeknik.pdf";
             a.click();
             Swal.fire('Berhasil!', 'PDF wis didownload.', 'success');
-        } catch (err) { Swal.fire('Error', 'Gagal nyimpen PDF.', 'error'); }
+        } catch (err) { 
+            console.error(err);
+            Swal.fire('Error', 'Gagal nyimpen PDF.', 'error'); 
+        }
     }
+
+    // Handle resize window ben PDF tetep pas
+    window.onresize = () => {
+        if (pdfDoc) renderPage(1);
+    };
 </script>
 
 </body>
