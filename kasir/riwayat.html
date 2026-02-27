@@ -12,19 +12,19 @@
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; color: #000 !important; }
             #print-area { 
-                position: absolute; left: 0; top: 0; width: 44mm; 
+                position: absolute; left: 0; top: 0; width: 48mm; 
                 display: block !important; 
             }
             @page { margin: 0; size: auto; }
         }
 
-        /* FONT CLEAN: ANTI MELUBER */
+        /* STYLE FONT AGAR JELAS & UKURAN PAS */
         #print-area { 
             display: none; 
             background: white; 
-            font-family: 'Courier New', Courier, monospace; 
-            font-weight: 600; /* Tidak terlalu tebal biar gak meler */
-            letter-spacing: 0.5px; /* Kasih napas antar huruf */
+            font-family: 'Arial', sans-serif; 
+            font-weight: bold;
+            text-transform: uppercase;
         }
     </style>
 </head>
@@ -33,9 +33,9 @@
     <div class="lg:ml-64 flex flex-col min-h-screen">
         <div id="layout-header"></div>
         <main class="p-4 lg:p-8 flex-1">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-8 gap-4">
                 <h2 class="text-3xl font-black text-slate-800">LOG TRANSAKSI</h2>
-                <input type="date" id="filter-tanggal" onchange="renderRiwayat()" class="p-3 rounded-2xl border-slate-200 font-bold shadow-sm">
+                <input type="date" id="filter-tanggal" onchange="renderRiwayat()" class="p-3 rounded-2xl border-slate-200 font-bold shadow-sm outline-none">
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
@@ -70,7 +70,7 @@
                 
                 list.innerHTML = transaksi.map(t => `
                     <div class="bg-white border border-slate-100 rounded-[28px] p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="flex-1 w-full text-center md:text-left">
+                        <div class="flex-1 w-full">
                             <span class="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full uppercase">TRX #${t.id}</span>
                             <div class="mt-4 border-t pt-2 text-xl font-black text-blue-600">Rp ${t.total.toLocaleString()}</div>
                         </div>
@@ -85,57 +85,57 @@
             const info = await db.settings.get("info_toko") || { nama: "POS PRO", alamat: "BANYUWANGI", wa: "0" };
             const area = document.getElementById('print-area');
             
-            // Layout Nota yang "Dijinakkan"
+            // Layout Nota dengan ukuran teks yang ditingkatkan
             area.innerHTML = `
-                <div style="padding: 1mm; line-height: 1.2; width: 42mm; font-size: 10px;">
+                <div style="padding: 1mm; line-height: 1.3; width: 46mm; font-size: 11px;">
                     <div style="text-align:center; margin-bottom: 5px;">
-                        <div style="font-size: 12px; font-weight: bold;">${info.nama.toUpperCase()}</div>
-                        <div style="font-size: 8px; margin-top: 2px;">${info.alamat.toUpperCase()}</div>
-                        <div style="font-size: 8px;">WA: ${info.wa}</div>
+                        <div style="font-size: 16px; font-weight: 900;">${info.nama.toUpperCase()}</div>
+                        <div style="font-size: 10px; margin-top: 2px; word-wrap: break-word; white-space: normal;">${info.alamat.toUpperCase()}</div>
+                        <div style="font-size: 10px;">WA: ${info.wa}</div>
                     </div>
                     
-                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
-                    <div style="font-size: 8px; text-align:center; margin-bottom: 3px;">** REPRINT NOTA **</div>
-                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
+                    <div style="text-align:center; margin: 2px 0;">==========================</div>
+                    <div style="font-size: 11px; text-align:center; font-weight: 900;">** REPRINT NOTA **</div>
+                    <div style="text-align:center; margin: 2px 0;">==========================</div>
 
-                    <div style="font-size: 8px;">
+                    <div style="font-size: 10px;">
                         ID  : #${t.id}<br>
                         TGL : ${new Date(t.waktu).toLocaleString('id-ID')}<br>
                         KSR : ADMIN
                     </div>
-                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
+                    <div style="text-align:center; margin: 2px 0;">--------------------------</div>
 
-                    <div style="font-size: 8px;">
+                    <div style="font-size: 10px;">
                         ${t.items.map(item => `
-                            <div style="margin-bottom: 3px;">
-                                <div style="word-wrap: break-word;">${item.nama.toUpperCase()}</div>
+                            <div style="margin-bottom: 5px;">
+                                <div style="word-wrap: break-word; white-space: normal; font-weight: 900;">${item.nama.toUpperCase()}</div>
                                 <div style="display:flex; justify-content:space-between;">
                                     <span>${item.qty} X ${item.harga.toLocaleString()}</span>
-                                    <span>${(item.qty * item.harga).toLocaleString()}</span>
+                                    <span style="font-weight: 900;">${(item.qty * item.harga).toLocaleString()}</span>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
 
-                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
-                    <div style="display:flex; justify-content:space-between; font-weight: bold;">
+                    <div style="text-align:center; margin: 2px 0;">--------------------------</div>
+                    <div style="display:flex; justify-content:space-between; font-size: 14px; font-weight: 900;">
                         <span>TOTAL</span>
                         <span>${t.total.toLocaleString()}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size: 8px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 11px;">
                         <span>BAYAR</span>
                         <span>${t.bayar.toLocaleString()}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; font-size: 8px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 11px;">
                         <span>KEMBALI</span>
                         <span>${t.kembali.toLocaleString()}</span>
                     </div>
-                    <div style="text-align:center; margin: 3px 0;">--------------------------</div>
+                    <div style="text-align:center; margin: 4px 0;">==========================</div>
 
-                    <div style="text-align:center; font-size: 8px; margin-top: 5px;">
-                        TERIMA KASIH
+                    <div style="text-align:center; font-size: 10px; font-weight: 900; margin-top: 5px;">
+                        TERIMA KASIH<br>ATAS KUNJUNGANNYA
                     </div>
-                    <div style="height: 40px;"></div> 
+                    <div style="height: 60px;"></div> 
                 </div>
             `;
             window.print();
