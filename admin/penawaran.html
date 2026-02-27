@@ -127,10 +127,11 @@
                     <div class="row mt-4 align-items-center">
                         <div class="col-6">
                             <select id="form-status" class="form-select">
-                                <option value="Pending">Pending</option>
-                                <option value="Sent">Sent</option>
-                                <option value="Approved">Approved</option>
-                            </select>
+    <option value="Sent">Sent</option>
+    <option value="Accepted">Accepted (Belum Lunas)</option>
+    <option value="Approved (Lunas)">Approved (Lunas)</option>
+    <option value="Rejected">Rejected</option>
+</select>
                         </div>
                         <div class="col-6 text-end">
                             <span class="text-muted small d-block">Estimasi Total:</span>
@@ -152,7 +153,7 @@
 <script src="assets/config.js"></script>
 <script src="assets/layout.js"></script>
 
-<script>
+    <script>
     let allData = [];
     let listPelanggan = [];
     let currentPage = 1;
@@ -161,260 +162,203 @@
 
     window.onload = () => { 
         if(typeof initLayout === 'function') initLayout();
-        loadDataSakti(); // Gabungan load penawaran & pelanggan
+        loadDataSakti(); 
     };
 
-    // FUNGSI SAKTI: Load data Penawaran sekaligus sinkron jeneng seko Sheet Pelanggan
     async function loadDataSakti() {
         const container = document.getElementById('cards-container');
         container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div><br><small>Sinkronisasi Data...</small></div>';
-        
         try {
-            // 1. Ambil data Pelanggan dhisik nggo mapping
-            const resP = await fetch(CONFIG.WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'getAllPelanggan' }) 
-            });
+            const resP = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllPelanggan' }) });
             const rP = await resP.json();
             if(rP.success) listPelanggan = rP.data;
 
-            // Gawe "Kamus" Pelanggan { email: nama }
             const mapPelanggan = {};
-            listPelanggan.forEach(p => {
-                // p[0] = Nama (Kolom A), p[1] = Email (Kolom B)
-                if(p[1]) mapPelanggan[p[1].toLowerCase()] = p[0];
-            });
+            listPelanggan.forEach(p => { if(p[1]) mapPelanggan[p[1].toLowerCase()] = p[0]; });
 
-            // 2. Ambil data Penawaran
             const resQ = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Penawaran`);
             const rQ = await resQ.json();
             
             if (rQ.success) { 
-                // Inject jeneng asli seko kamus pelanggan dadi properti 'nama_asli'
-                allData = rQ.data.reverse().map(row => {
-                    const mail = (row.email || "").toLowerCase();
-                    return {
-                        ...row,
-                        nama_asli: mapPelanggan[mail] || row.nama || row.email // fallback nek ra ketemu
-                    };
-                });
+                allData = rQ.data.reverse().map(row => ({
+                    ...row,
+                    nama_asli: mapPelanggan[(row.email || "").toLowerCase()] || row.nama || row.email
+                }));
                 renderDisplay(); 
             }
-        } catch(e) { 
-            console.error("Gagal sinkronisasi", e);
-            container.innerHTML = '<div class="alert alert-danger">Gagal memuat data. Cek koneksi internet/GAS.</div>';
-        }
+        } catch(e) { console.error("Gagal sinkronisasi", e); }
     }
 
-    // Render List Penawaran neng Card
     function renderDisplay(filteredData = null) {
         const dataToRender = filteredData || allData;
         const container = document.getElementById('cards-container');
         const pagination = document.getElementById('pagination');
-        
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedData = dataToRender.slice(startIndex, endIndex);
+        const paginatedData = dataToRender.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
         const totalPages = Math.ceil(dataToRender.length / itemsPerPage);
 
         if(dataToRender.length === 0) {
-            container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data penawaran.</div>';
-            pagination.innerHTML = '';
+            container.innerHTML = '<div class="text-center p-5 text-muted">Belum ada data.</div>';
             return;
         }
 
-        container.innerHTML = paginatedData.map(row => `
-            <div class="quote-card animate__animated animate__fadeInUp">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
-                        <div class="card-perihal">${row.perihal || 'Tanpa Perihal'}</div>
-                        <div class="card-client mt-1">
-                            <i class="fas fa-user-circle text-primary me-1"></i> 
-                            <span class="fw-bold text-dark">${row.nama_asli}</span>
+        container.innerHTML = paginatedData.map(row => {
+            const st = row.status.toLowerCase();
+            const isReadyNota = st === 'accepted' || st === 'approved (lunas)';
+            return `
+                <div class="quote-card animate__animated animate__fadeInUp">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="card-id">#${row.id} • ${new Date(row.tanggal).toLocaleDateString('id-ID')}</span>
+                            <div class="card-perihal">${row.perihal || 'Tanpa Perihal'}</div>
+                            <div class="card-client mt-1">
+                                <i class="fas fa-user-circle text-primary me-1"></i> <b>${row.nama_asli}</b>
+                            </div>
+                        </div>
+                        <span class="badge-status status-${st.replace(/\s+/g, '-')}">${row.status}</span>
+                    </div>
+                    <div class="quote-footer">
+                        <div><small class="text-muted d-block">Total:</small><span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span></div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick='preparePDF("${row.id}")' title="Penawaran"><i class="fas fa-file-pdf"></i></button>
+                            ${isReadyNota ? `<button class="btn btn-sm btn-success" onclick='prepareNota("${row.id}")' title="Nota"><i class="fas fa-receipt"></i> Nota</button>` : ''}
                         </div>
                     </div>
-                    <span class="badge-status status-${row.status.toLowerCase()}">${row.status}</span>
-                </div>
-                
-                <div class="quote-footer">
-                    <div>
-                        <small class="text-muted d-block">Total Nilai:</small>
-                        <span class="fw-bold text-primary fs-5">Rp ${Number(row.total).toLocaleString('id-ID')}</span>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-light text-primary" onclick="editPenawaran('${row.id}')" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light text-danger" onclick='preparePDF("${row.id}")' title="Cetak PDF">
-                            <i class="fas fa-file-pdf"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>`).join('');
+                </div>`;
+        }).join('');
 
         let navHtml = '';
-        for (let i = 1; i <= totalPages; i++) {
-            navHtml += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-        }
+        for (let i = 1; i <= totalPages; i++) navHtml += `<button class="btn-page ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
         pagination.innerHTML = navHtml;
     }
 
-    function changePage(page) {
-        currentPage = page;
-        renderDisplay();
-        window.scrollTo(0, 0);
-    }
+    function changePage(p) { currentPage = p; renderDisplay(); window.scrollTo(0, 0); }
 
+    // --- GENERATE PENAWARAN (STANDAR) ---
     function preparePDF(id) {
         const data = allData.find(r => r.id === id);
         if(data) generatePDF(data);
     }
 
-    // PDF GENERATOR (FIXED NAMA DARI DATABASE)
     function generatePDF(data) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // --- 1. HEADER DENGAN LOGO ---
-    try { 
-        doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
-    } catch (e) { 
-        console.error("Logo ora ketemu.");
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com", 45, 35);
+        doc.line(15, 40, 195, 40);
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("SURAT PENAWARAN HARGA", 105, 50, { align: "center" });
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No: #${data.id}`, 15, 60); doc.text(`Tgl: ${new Date(data.tanggal).toLocaleDateString('id-ID')}`, 15, 65);
+        doc.text("Kepada Yth:", 130, 60); doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
+        doc.autoTable({
+            startY: 85, head: [['NO', 'DESKRIPSI', 'QTY', 'HARGA', 'JUMLAH']],
+            body: data.items_json.map((it, i) => [i+1, it.nama, it.qty, `Rp ${it.harga.toLocaleString('id-ID')}`, `Rp ${(it.harga*it.qty).toLocaleString('id-ID')}`]),
+            theme: 'grid', headStyles: { fillColor: [80, 80, 80] }
+        });
+        doc.save(`Penawaran_${data.id}.pdf`);
     }
 
-    doc.setFontSize(18); doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
-    
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.setTextColor(100); 
-    doc.text("Software, Network & Electrical Engineering", 45, 26);
-    doc.setFontSize(8);
-    doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-    doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | Website : www.nandateknik.com", 45, 35);
-    
-    doc.setDrawColor(80, 80, 80);
-    doc.setLineWidth(0.5);
-    doc.line(15, 40, 195, 40);
+    // --- GENERATE NOTA (DESAIN PATEN SESUAI REQUEST) ---
+    function prepareNota(id) {
+        const data = allData.find(r => r.id === id);
+        if(data) generateNota(data);
+    }
 
-    // --- 2. INFO SURAT ---
-    doc.setTextColor(0); 
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("PENAWARAN HARGA", 105, 50, { align: "center" });
+    function generateNota(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const st = data.status.toLowerCase();
+        const isLunas = st.includes('lunas');
+        const txtStatus = isLunas ? "LUNAS" : "BELUM LUNAS";
+        
+        // --- 1. HEADER ---
+        try { doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); } catch (e) {}
+        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8); doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | www.nandateknik.com", 45, 35);
+        doc.setDrawColor(80, 80, 80); doc.setLineWidth(0.5); doc.line(15, 40, 195, 40);
 
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.text(`No. Penawaran : #${data.id}`, 15, 60);
-    doc.text(`Tanggal        : ${new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Perihal        : ${data.perihal || 'Penawaran Pekerjaan'}`, 15, 70);
-    
-    doc.setFont("helvetica", "normal");
-    doc.text("Kepada Yth:", 130, 60);
-    doc.setFont("helvetica", "bold");
-    
-    // Nggunakake nama_asli sing wis disinkron seko database pelanggan
-    const namaPelanggan = data.nama_asli || data.nama || '-'; 
-    const splitNama = doc.splitTextToSize(namaPelanggan.toUpperCase(), 60);
-    doc.text(splitNama, 130, 65);
+        // --- WATERMARK ---
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({opacity: 0.1}));
+        doc.setFontSize(60); doc.setFont("helvetica", "bold");
+        doc.setTextColor(isLunas ? [0, 150, 0] : [200, 0, 0]);
+        doc.text(isLunas ? "L U N A S" : "BELUM LUNAS", 105, 150, { align: "center", angle: 45 });
+        doc.restoreGraphicsState();
 
-    // --- 3. KALIMAT PEMBUKA ---
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const pembuka = "Bersama surat ini, kami Nanda Teknik Banyuwangi bermaksud menyampaikan rincian penawaran harga untuk kebutuhan sebagai berikut:";
-    const splitPembuka = doc.splitTextToSize(pembuka, 180);
-    doc.text(splitPembuka, 15, 82);
+        // --- 2. INFO TRANSAKSI ---
+        doc.setTextColor(0); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi : #${data.id}`, 15, 60);
+        doc.text(`Tanggal        : ${new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`, 15, 65);
+        doc.text("Kepada Yth:", 130, 60);
+        doc.setFont("helvetica", "bold"); doc.text(data.nama_asli.toUpperCase(), 130, 65);
 
-    // --- 4. TABLE ITEMS ---
-    const tableBody = data.items_json.map((item, index) => [
-        index + 1, 
-        item.nama, 
-        item.qty,
-        `Rp ${Number(item.harga).toLocaleString('id-ID')}`,
-        `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
-    ]);
+        // --- 3. TABEL ITEM (PATEN) ---
+        const tableBody = data.items_json.map((item, index) => [
+            index + 1, item.nama, item.qty, 
+            `Rp ${Number(item.harga).toLocaleString('id-ID')}`, 
+            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+        ]);
+        doc.autoTable({
+            startY: 85, head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'JUMLAH']],
+            body: tableBody, theme: 'grid',
+            headStyles: { fillColor: [80, 80, 80], halign: 'center', fontSize: 9 },
+            columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+            styles: { fontSize: 9, cellPadding: 3 }
+        });
 
-    doc.autoTable({
-        startY: 88, 
-        head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA SATUAN', 'JUMLAH']],
-        body: tableBody, 
-        theme: 'grid', 
-        headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255], halign: 'center', fontSize: 9 },
-        columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 15 }, 3: { halign: 'right', cellWidth: 35 }, 4: { halign: 'right', cellWidth: 35 } },
-        styles: { fontSize: 9, cellPadding: 3 }
-    });
+        // --- 4. TOTAL & REKENING ---
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        doc.text(`TOTAL PEMBAYARAN: Rp ${Number(data.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-    // --- 5. TOTAL & SYARAT KETENTUAN (BALIK MANEH SAM!) ---
-    let currentY = doc.lastAutoTable.finalY + 10;
-    
-    // Box Total
-    doc.setFillColor(240, 240, 240);
-    doc.rect(130, currentY - 5, 65, 10, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.text(`TOTAL ESTIMASI: Rp ${Number(data.total).toLocaleString('id-ID')}`, 192, currentY, { align: "right" });
+        const rekY = finalY + 10;
+        doc.setDrawColor(150, 150, 150); doc.setLineDashPattern([2, 2], 0); doc.rect(15, rekY, 180, 18);
+        doc.setLineDashPattern([], 0); doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text("Informasi Pembayaran Transfer:", 20, rekY + 7);
+        doc.setFont("helvetica", "bold"); doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rekY + 13);
 
-    currentY += 15;
-
-    // --- BOX SYARAT & KETENTUAN (Garis Putus-putus) ---
-    doc.setLineDash([2, 2], 0); 
-    doc.setDrawColor(150, 150, 150);
-    doc.rect(15, currentY, 180, 28); 
-    doc.setLineDash([]); 
-
-    doc.setFontSize(8); doc.setFont("helvetica", "bold");
-    doc.text("Syarat & Ketentuan:", 20, currentY + 5);
-    doc.setFont("helvetica", "normal");
-    doc.text("1. Harga di atas sudah termasuk biaya jasa dan instalasi (kecuali ada keterangan lain).", 20, currentY + 10);
-    doc.text("2. Pembayaran Down Payment (DP) minimal 50% setelah penawaran disetujui.", 20, currentY + 14);
-    doc.text("3. Pelunasan dilakukan maksimal 3 hari setelah pekerjaan selesai.", 20, currentY + 18);
-    doc.text("4. Penawaran harga ini berlaku selama 14 hari sejak tanggal diterbitkan.", 20, currentY + 22);
-
-    // --- 6. PENUTUP & TANDA TANGAN ---
-    currentY += 40;
-    doc.setFontSize(9);
-    const penutup = "Demikian surat penawaran ini kami sampaikan. Besar harapan kami untuk dapat menjalin kerjasama yang baik. Atas perhatiannya kami ucapkan terima kasih.";
-    doc.text(doc.splitTextToSize(penutup, 180), 15, currentY - 5);
-
-    const tglSekarang = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-    doc.text(`Banyuwangi, ${tglSekarang}`, 145, currentY + 10);
-    doc.text("Hormat Kami,", 145, currentY + 15);
-    
-    doc.setFont("helvetica", "bold");
-    doc.text("NANDA KRISBIANTO", 145, currentY + 40);
-    doc.setFont("helvetica", "normal");
-    doc.text("( Owner Nanda Teknik )", 145, currentY + 45);
-
-    doc.save(`Penawaran_${data.id}_${namaPelanggan.replace(/\s+/g, '_')}.pdf`);
-}
+        // --- 5. TANDA TANGAN ---
+        const ttdY = rekY + 35;
+        doc.setFont("helvetica", "normal"); doc.text("Hormat Kami,", 155, ttdY);
+        doc.setFont("helvetica", "bold"); doc.text("NANDA KRISBIANTO", 155, ttdY + 20);
+        
+        doc.save(`Nota_${txtStatus}_${data.id}.pdf`);
+    }
 
     // --- FORM LOGIC ---
     function addItemRow(n='', h=0, q=1) {
         const div = document.createElement('div');
-        div.className = 'row g-2 mb-2 item-row animate__animated animate__fadeInDown';
-        div.innerHTML = `
-            <div class="col-6"><input type="text" class="form-control form-control-sm it-nama" placeholder="Item" value="${n}" required></div>
-            <div class="col-3"><input type="number" class="form-control form-control-sm it-harga" placeholder="Harga" value="${h}" oninput="calcTotal()" required></div>
-            <div class="col-2"><input type="number" class="form-control form-control-sm it-qty" placeholder="Qty" value="${q}" oninput="calcTotal()" required></div>
-            <div class="col-1 text-end"><button type="button" class="btn btn-link text-danger p-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times-circle"></i></button></div>`;
+        div.className = 'row g-2 mb-2 item-row';
+        div.innerHTML = `<div class="col-6"><input type="text" class="form-control form-control-sm it-nama" value="${n}" required></div>
+            <div class="col-3"><input type="number" class="form-control form-control-sm it-harga" value="${h}" oninput="calcTotal()" required></div>
+            <div class="col-2"><input type="number" class="form-control form-control-sm it-qty" value="${q}" oninput="calcTotal()" required></div>
+            <div class="col-1"><button type="button" class="btn btn-link text-danger p-0" onclick="this.parentElement.parentElement.remove();calcTotal()"><i class="fas fa-times"></i></button></div>`;
         document.getElementById('items-container').appendChild(div);
     }
 
     function calcTotal() {
         let total = 0;
         document.querySelectorAll('.item-row').forEach(r => {
-            const h = parseFloat(r.querySelector('.it-harga').value) || 0;
-            const q = parseFloat(r.querySelector('.it-qty').value) || 0;
-            total += (h * q);
+            total += (parseFloat(r.querySelector('.it-harga').value)||0) * (parseFloat(r.querySelector('.it-qty').value)||0);
         });
         document.getElementById('display-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
         return total;
     }
 
-    function searchPelanggan(query) {
+    function searchPelanggan(q) {
         const resBox = document.getElementById('search-results');
-        if (query.length < 2) { resBox.style.display = 'none'; return; }
-        const filtered = listPelanggan.filter(p => p[0].toLowerCase().includes(query.toLowerCase()) || p[1].toLowerCase().includes(query.toLowerCase()));
-        resBox.innerHTML = filtered.map(p => `<button type="button" class="list-group-item list-group-item-action" onclick="selectPelanggan('${p[0]}', '${p[1]}')"><b>${p[0]}</b><br><small>${p[1]}</small></button>`).join('');
+        if (q.length < 2) { resBox.style.display = 'none'; return; }
+        const filtered = listPelanggan.filter(p => p[0].toLowerCase().includes(q.toLowerCase()) || p[1].toLowerCase().includes(q.toLowerCase()));
+        resBox.innerHTML = filtered.map(p => `<button type="button" class="list-group-item list-group-item-action" onclick="selectPelanggan('${p[0]}', '${p[1]}')"><b>${p[0]}</b><br>${p[1]}</button>`).join('');
         resBox.style.display = filtered.length ? 'block' : 'none';
     }
 
@@ -427,10 +371,8 @@
     function showAddModal() {
         document.getElementById('formPenawaran').reset();
         document.getElementById('edit-id').value = '';
-        document.getElementById('display-total').innerText = 'Rp 0';
         document.getElementById('items-container').innerHTML = '';
-        addItemRow();
-        modalForm.show();
+        addItemRow(); modalForm.show();
     }
 
     function editPenawaran(id) {
@@ -443,16 +385,14 @@
         document.getElementById('form-status').value = d.status;
         document.getElementById('items-container').innerHTML = '';
         if(d.items_json) d.items_json.forEach(it => addItemRow(it.nama, it.harga, it.qty));
-        calcTotal();
-        modalForm.show();
+        calcTotal(); modalForm.show();
     }
 
     document.getElementById('formPenawaran').onsubmit = async (e) => {
         e.preventDefault();
-        const id = document.getElementById('edit-id').value;
         const payload = {
-            action: id ? 'updatePenawaran' : 'createPenawaran',
-            id: id,
+            action: document.getElementById('edit-id').value ? 'updatePenawaran' : 'createPenawaran',
+            id: document.getElementById('edit-id').value,
             nama: document.getElementById('search-pelanggan').value,
             email: document.getElementById('form-email').value,
             perihal: document.getElementById('form-perihal').value,
@@ -464,35 +404,11 @@
             total: calcTotal(),
             status: document.getElementById('form-status').value
         };
-
-        Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+        Swal.fire({title: 'Proses...', didOpen: () => Swal.showLoading()});
         const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const r = await res.json();
-        if(r.success) {
-            modalForm.hide();
-            loadDataSakti(); // Refresh data
-            Swal.fire('Berhasil', 'Data berhasil disimpan!', 'success');
-        }
+        if((await res.json()).success) { modalForm.hide(); loadDataSakti(); Swal.fire('Berhasil', 'Data disimpan', 'success'); }
     };
-
-    function filterData() {
-        const m = document.getElementById('filter-mulai').value;
-        const s = document.getElementById('filter-sampai').value;
-        if (!m || !s) return;
-        const filtered = allData.filter(row => {
-            const t = new Date(row.tanggal).toISOString().split('T')[0];
-            return t >= m && t <= s;
-        });
-        currentPage = 1;
-        renderDisplay(filtered);
-    }
-
-    function resetFilter() {
-        document.getElementById('filter-mulai').value = '';
-        document.getElementById('filter-sampai').value = '';
-        currentPage = 1;
-        renderDisplay();
-    }
-</script>
+        </script>
+                                
 </body>
 </html>
