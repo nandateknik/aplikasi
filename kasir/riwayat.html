@@ -5,110 +5,112 @@
     <title>Riwayat - POS PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
-        /* CSS nggo area render gambar (hidden) */
-        #render-nota-image {
-            width: 380px; /* Ukuran pas nggo 58mm */
-            background: white;
-            padding: 10px;
-            color: black;
-            font-family: 'Courier New', Courier, monospace;
-            text-transform: uppercase;
-            position: absolute;
-            left: -9999px; /* Ndhelik nang mburine layar */
-        }
+        /* MODE PRINT PALING RINGAN */
         @media print {
             body * { visibility: hidden; }
-            #print-final-image, #print-final-image * { visibility: visible; }
-            #print-final-image { position: absolute; left: 0; top: 0; width: 100%; }
+            #print-area, #print-area * { 
+                visibility: visible; 
+                color: #000 !important;
+            }
+            #print-area { 
+                position: absolute; 
+                left: 0; top: 0; 
+                width: 44mm; /* Diciutke meneh biar gak kepotong */
+                display: block !important;
+            }
+            @page { margin: 0; }
+        }
+
+        /* FONT STANDAR PRINTER */
+        #print-area { 
+            display: none; 
+            background: white; 
+            font-family: 'Courier New', Courier, monospace; /* Font paling aman */
+            font-size: 10px;
+            line-height: 1.1;
         }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <div class="lg:ml-64 p-8">
-        <h2 class="text-3xl font-black mb-8">LOG TRANSAKSI</h2>
-        <div id="riwayat-list" class="space-y-4"></div>
+    <div class="lg:ml-64 p-4 lg:p-8">
+        <h2 class="text-2xl font-black mb-6 uppercase">Log Transaksi</h2>
+        <div id="riwayat-list" class="space-y-3"></div>
     </div>
 
-    <div id="render-nota-image"></div>
-
-    <div id="print-final-image"></div>
+    <div id="print-area"></div>
 
     <script src="js/config.js"></script>
+    <script src="js/layout.js"></script>
     <script>
         async function renderRiwayat() {
-            let transaksi = await db.transactions.toArray();
-            transaksi.sort((a, b) => b.waktu - a.waktu);
-            document.getElementById('riwayat-list').innerHTML = transaksi.map(t => `
-                <div class="bg-white p-6 rounded-3xl border flex justify-between items-center">
-                    <div>
-                        <span class="font-black">TRX #${t.id}</span>
-                        <div class="text-xl font-black text-blue-600">Rp ${t.total.toLocaleString()}</div>
+            const list = document.getElementById('riwayat-list');
+            try {
+                let transaksi = await db.transactions.toArray();
+                transaksi.sort((a, b) => b.waktu - a.waktu);
+                
+                list.innerHTML = transaksi.map(t => `
+                    <div class="bg-white p-4 rounded-2xl border flex justify-between items-center shadow-sm">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400">#${t.id}</p>
+                            <p class="font-black text-blue-600">Rp ${t.total.toLocaleString()}</p>
+                        </div>
+                        <button onclick="reprintNota(${t.id})" class="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-bold uppercase">Cetak</button>
                     </div>
-                    <button onclick="reprintNota(${t.id})" class="bg-black text-white px-6 py-3 rounded-xl font-bold">🧾 CETAK RAW</button>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (err) { console.error(err); }
         }
 
         async function reprintNota(id) {
             const t = await db.transactions.get(id);
             const info = await db.settings.get("info_toko") || { nama: "NANDA TEKNIK", alamat: "BANYUWANGI", wa: "0" };
+            const area = document.getElementById('print-area');
             
-            const area = document.getElementById('render-nota-image');
-            
-            // Layout Nota (Digawe kontras Item Putih murni)
+            // Layout Nota Paling Sederhana (Minimalis Pol)
             area.innerHTML = `
-                <div style="text-align:center; border-bottom: 2px dashed black; padding-bottom:10px; margin-bottom:10px;">
-                    <b style="font-size: 24px;">${info.nama}</b><br>
-                    <span style="font-size: 14px;">${info.alamat}</span><br>
-                    <span style="font-size: 14px;">WA: ${info.wa}</span>
+                <div style="text-align:center; padding-top: 5px;">
+                    <b style="font-size: 14px;">${info.nama.toUpperCase()}</b><br>
+                    <span style="font-size: 9px;">${info.alamat.toUpperCase()}</span><br>
+                    <span style="font-size: 9px;">WA: ${info.wa}</span><br>
+                    ---------------------------
                 </div>
-                <div style="font-size: 14px;">
-                    TGL: ${new Date(t.waktu).toLocaleString()}<br>
-                    ID : #${t.id}<br>
-                    KSR: ADMIN
+                
+                <div style="font-size: 9px;">
+                    TGL: ${new Date(t.waktu).toLocaleDateString()}<br>
+                    ID : #${t.id}
                 </div>
-                <div style="border-bottom: 2px dashed black; margin: 10px 0;"></div>
-                ${t.items.map(item => `
-                    <div style="margin-bottom: 8px;">
-                        <b style="font-size: 16px;">${item.nama}</b><br>
-                        <div style="display:flex; justify-content:space-between; font-size: 14px;">
-                            <span>${item.qty} X ${item.harga.toLocaleString()}</span>
-                            <b>${(item.qty * item.harga).toLocaleString()}</b>
+                ---------------------------
+
+                <div style="font-size: 9px;">
+                    ${t.items.map(item => `
+                        <div style="margin-bottom: 2px;">
+                            ${item.nama.toUpperCase()}<br>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>${item.qty} X ${item.harga.toLocaleString()}</span>
+                                <span>${(item.qty * item.harga).toLocaleString()}</span>
+                            </div>
                         </div>
-                    </div>
-                `).join('')}
-                <div style="border-bottom: 2px dashed black; margin: 10px 0;"></div>
-                <div style="display:flex; justify-content:space-between; font-size: 20px; font-weight:bold;">
+                    `).join('')}
+                </div>
+
+                ---------------------------
+                <div style="display:flex; justify-content:space-between; font-weight: bold; font-size: 11px;">
                     <span>TOTAL</span>
                     <span>${t.total.toLocaleString()}</span>
                 </div>
-                <div style="text-align:center; margin-top: 20px; font-size: 14px;">
-                    *** TERIMA KASIH ***
-                </div>
-                <div style="height: 40px;"></div>
-            `;
-
-            // PROSES MERUBAH HTML DADI GAMBAR (Biar Gak Meler/Putus)
-            html2canvas(area, {
-                scale: 2, // Bikin gambar luwih tajam
-                logging: false,
-                backgroundColor: "#ffffff"
-            }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const printContainer = document.getElementById('print-final-image');
-                printContainer.innerHTML = `<img src="${imgData}" style="width: 100%;">`;
+                ---------------------------
                 
-                setTimeout(() => {
-                    window.print();
-                    printContainer.innerHTML = ""; // Resiki meneh
-                }, 500);
-            });
+                <div style="text-align:center; font-size: 9px; margin-top: 5px;">
+                    TERIMA KASIH
+                </div>
+                
+                <div style="height: 30px;">.</div> 
+            `;
+            window.print();
         }
 
-        renderRiwayat();
+        document.addEventListener('DOMContentLoaded', renderRiwayat);
     </script>
 </body>
 </html>
