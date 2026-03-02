@@ -2,281 +2,281 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nanda Teknik | Messaging System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nanda Teknik - Email System</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { --primary: #0061ff; --bg: #f8fafc; }
-        body { background-color: var(--bg); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
         
-        .messenger-wrapper { height: 100vh; display: flex; flex-direction: column; }
-        .top-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+        /* Layout */
+        .card-mail { background: white; border-radius: 20px; min-height: 85vh; overflow: hidden; border: none; }
+        .sidebar-mail { padding: 20px; }
         
-        .main-layout { flex: 1; display: flex; overflow: hidden; }
+        /* Sidebar Navigation */
+        .btn-compose { 
+            background: #4338ca; color: white; border-radius: 16px; padding: 15px; 
+            font-weight: 700; width: 100%; margin-bottom: 25px; border: none; 
+            box-shadow: 0 4px 15px rgba(67, 56, 202, 0.2); transition: 0.3s;
+        }
+        .btn-compose:hover { background: #3730a3; transform: translateY(-2px); color: white; }
         
-        /* Sidebar Styles */
-        .sidebar { width: 350px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; }
-        .nav-pills .nav-link { border-radius: 8px; color: #64748b; font-weight: 500; margin-bottom: 4px; }
-        .nav-pills .nav-link.active { background: #eff6ff; color: var(--primary); }
-        .message-list { flex: 1; overflow-y: auto; }
-        .msg-item { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; position: relative; }
-        .msg-item:hover { background-color: #f8fafc; }
-        .msg-item.unread { background-color: #f0f7ff; border-left: 4px solid var(--primary); }
-        .msg-item .time { font-size: 0.75rem; color: #94a3b8; }
+        .nav-link { 
+            border-radius: 12px; padding: 12px 20px; color: #64748b; 
+            font-weight: 600; margin-bottom: 5px; border: none; width: 100%; 
+            text-align: left; transition: 0.2s;
+        }
+        .nav-link:hover { background: #f1f5f9; color: #4338ca; }
+        .nav-link.active { background: #e0e7ff; color: #4338ca; }
+        .nav-link i { margin-right: 12px; width: 20px; font-size: 1.1rem; }
         
-        /* Content Area */
-        .content-area { flex: 1; background: white; display: flex; flex-direction: column; position: relative; }
-        .view-header { padding: 20px 30px; border-bottom: 1px solid #e2e8f0; }
-        .view-body { flex: 1; padding: 30px; overflow-y: auto; background: #fff; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; }
+        /* Email List Item */
+        .email-item { 
+            cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #f1f5f9; 
+            padding: 15px 20px; display: block; text-decoration: none; color: inherit;
+        }
+        .email-item:hover { background: #f8fafc; }
+        .email-item.unread { background: #fff; border-left: 4px solid #4338ca; }
+        .email-item.unread .subject { font-weight: 700; color: #0f172a; }
         
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569; }
+        .sender-name { font-size: 0.9rem; font-weight: 600; color: #4338ca; }
+        .subject { font-size: 0.95rem; margin-bottom: 2px; }
+        .snippet { font-size: 0.85rem; color: #64748b; }
+        .time-label { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
         
-        /* Loading Overlay */
-        #loader { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: none; z-index: 10; align-items: center; justify-content: center; }
+        .section-label { 
+            font-size: 0.65rem; font-weight: 800; color: #94a3b8; 
+            letter-spacing: 1px; text-transform: uppercase; 
+            margin: 20px 0 10px 15px; display: block; 
+        }
+
+        /* Form Styling */
+        .form-control { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.9rem; }
+        .form-control:focus { border-color: #4338ca; box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1); }
+        
+        /* Custom Scrollbar */
+        #emailListContainer { height: 70vh; overflow-y: auto; }
+        #emailListContainer::-webkit-scrollbar { width: 6px; }
+        #emailListContainer::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<div class="messenger-wrapper">
-    <div class="top-bar">
-        <div class="d-flex align-items-center">
-            <i class="fas fa-tools text-primary me-2 fa-lg"></i>
-            <span class="fw-bold fs-5">Nanda Teknik <span class="text-muted fw-normal">| Backend</span></span>
-        </div>
-        <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="refreshData()">
-            <i class="fas fa-sync-alt me-1"></i> Refresh
-        </button>
-    </div>
-
-    <div class="main-layout">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <button class="btn btn-primary w-100 py-2 fw-bold mb-3" data-bs-toggle="modal" data-bs-target="#composeModal">
-                    <i class="fas fa-plus me-2"></i> Tulis Pesan
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-4">
+            <div class="card-mail shadow-sm sidebar-mail">
+                <button class="btn-compose" onclick="openCompose()">
+                    <i class="fas fa-plus me-2"></i>Tulis Pesan
                 </button>
-                <ul class="nav nav-pills nav-fill" id="filterTab">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#" onclick="switchTab('inbox')"><i class="fas fa-inbox me-2"></i>Masuk</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="switchTab('sent')"><i class="fas fa-paper-plane me-2"></i>Terkirim</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="message-list" id="msgContainer">
-                <!-- Data akan dimuat di sini -->
+                
+                <label class="section-label">Menu Utama</label>
+                <button id="btn-inbox" class="nav-link active" onclick="switchFolder('listInbox', this)">
+                    <i class="fas fa-inbox"></i>Kotak Masuk
+                </button>
+                <button id="btn-sent" class="nav-link" onclick="switchFolder('listSent', this)">
+                    <i class="fas fa-paper-plane"></i>Terkirim
+                </button>
+                
+                <label class="section-label">Bantuan</label>
+                <a href="https://wa.me/6282331201148" target="_blank" class="nav-link">
+                    <i class="fab fa-whatsapp"></i>Support WA
+                </a>
             </div>
         </div>
 
-        <!-- Content Area -->
-        <div class="content-area">
-            <div id="loader"><div class="spinner-border text-primary"></div></div>
-            
-            <div id="emptyView" class="empty-state">
-                <i class="fas fa-envelope-open-text fa-4x mb-3 text-light"></i>
-                <p>Pilih pesan untuk melihat detail</p>
-            </div>
-
-            <div id="detailView" style="display: none;" class="h-100 d-flex flex-column">
-                <div class="view-header">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h4 id="viewSubject" class="fw-bold mb-0">Subjek Pesan</h4>
-                        <button class="btn-close" onclick="closeDetail()"></button>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar me-3" id="viewAvatar">N</div>
-                        <div>
-                            <div class="fw-bold" id="viewFrom">Sender Name</div>
-                            <div class="small text-muted" id="viewDate">Senin, 12 Feb 2024</div>
-                        </div>
+        <div class="col-lg-9 col-md-8">
+            <div class="card-mail shadow-sm">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                    <h5 class="fw-bold mb-0 text-dark" id="folderTitle">Kotak Masuk</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light btn-sm rounded-pill px-3" onclick="refreshList()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
                     </div>
                 </div>
-                <div class="view-body" id="viewBody">
-                    <!-- Konten HTML Email -->
-                </div>
-                <div class="p-3 border-top bg-light">
-                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="replyBtn">
-                        <i class="fas fa-reply me-1"></i> Balas
-                    </button>
+                
+                <div id="emailListContainer">
+                    <div class="p-5 text-center text-muted">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p class="fw-bold">Menghubungkan ke Server...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Compose -->
-<div class="modal fade" id="composeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Pesan Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="composeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg" style="border-radius: 24px; border: none;">
+            <div class="modal-header border-0 bg-light" style="border-radius: 24px 24px 0 0; padding: 20px 30px;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-pen-nib me-2"></i>Pesan Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="sendForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <input type="email" id="to" class="form-control" placeholder="Kepada" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="text" id="subject" class="form-control" placeholder="Subjek" required>
-                    </div>
-                    <div class="mb-3">
-                        <textarea id="messageBody" class="form-control" rows="8" placeholder="Tulis pesan Anda..." required></textarea>
-                    </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div class="mb-3">
+                    <input type="email" id="mailTo" class="form-control" placeholder="Kepada (Email Penerima)">
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-primary px-4 py-2 fw-bold rounded-pill" id="btnKirim">
-                        Kirim Sekarang <i class="fas fa-paper-plane ms-2"></i>
-                    </button>
+                <div class="mb-3">
+                    <input type="text" id="mailSubject" class="form-control" placeholder="Subjek / Judul Pesan">
                 </div>
-            </form>
+                <div class="mb-3">
+                    <textarea id="mailBody" class="form-control" rows="8" placeholder="Tulis isi pesan Anda di sini..."></textarea>
+                </div>
+                
+                <div class="p-3 bg-light rounded-4">
+                    <label class="section-label mt-0 mb-2">Lampiran File (Opsional)</label>
+                    <input type="file" id="mailAttachment" class="form-control bg-white">
+                    <small class="text-muted mt-1 d-block">Maksimal ukuran file disarankan < 5MB</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0" style="padding: 20px 30px;">
+                <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold shadow" onclick="sendEmail()">
+                    <i class="fas fa-paper-plane me-2"></i>Kirim Sekarang
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/config.js"></script>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLHFzNlilbprewUqph7G9ZPkHb2FZsKGolhr0RcCHTiZtF80f53TRizRUgz_5e8Dn3TA/exec";
-    let allMessages = [];
-    let activeTab = 'inbox';
+    let activeAction = 'listInbox';
+    const composeModal = new bootstrap.Modal(document.getElementById('composeModal'));
 
-    window.onload = refreshData;
-
-    async function refreshData() {
-        showLoader(true);
-        const container = document.getElementById('msgContainer');
-        container.innerHTML = '<div class="text-center p-5"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
-        
-        try {
-            // FIX CORS: Menggunakan fetch dengan redirect: follow
-            const response = await fetch(`${SCRIPT_URL}?action=getMessages`, {
-                method: 'GET',
-                redirect: 'follow'
-            });
-            
-            allMessages = await response.json();
-            renderMessages();
-        } catch (err) {
-            container.innerHTML = `<div class="p-3 text-center text-danger small">Gagal sinkronisasi.<br>${err.message}</div>`;
-        } finally {
-            showLoader(false);
-        }
-    }
-
-    function renderMessages() {
-        const container = document.getElementById('msgContainer');
-        const filtered = allMessages.filter(m => m.type === activeTab);
-        
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="p-5 text-center text-muted small">Tidak ada pesan</div>';
+    window.onload = () => {
+        if(typeof CONFIG === 'undefined' || !CONFIG.EMAIL_APP_URL) {
+            Swal.fire('Error', 'Variabel CONFIG.EMAIL_APP_URL belum diset!', 'error');
             return;
         }
+        loadEmails(activeAction);
+    };
 
-        container.innerHTML = filtered.map(msg => `
-            <div class="msg-item ${!msg.read ? 'unread' : ''}" onclick="loadDetail('${msg.id}')">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-bold text-truncate" style="max-width: 180px;">${msg.sender}</span>
-                    <span class="time">${msg.time}</span>
-                </div>
-                <div class="small fw-semibold text-dark text-truncate">${msg.subject}</div>
-                <div class="small text-muted text-truncate">${msg.body}</div>
-            </div>
-        `).join('');
+    function openCompose() {
+        document.getElementById('mailTo').value = "";
+        document.getElementById('mailSubject').value = "";
+        document.getElementById('mailBody').value = "";
+        document.getElementById('mailAttachment').value = "";
+        composeModal.show();
     }
 
-    async function loadDetail(id) {
-        showLoader(true);
-        try {
-            const response = await fetch(`${SCRIPT_URL}?action=getMessageDetails&id=${id}`, {
-                method: 'GET',
-                redirect: 'follow'
-            });
-            const data = await response.json();
+    async function loadEmails(action) {
+        activeAction = action;
+        const container = document.getElementById('emailListContainer');
+        container.innerHTML = `
+            <div class="p-5 text-center text-muted">
+                <div class="spinner-border text-primary mb-3"></div>
+                <p>Memuat Pesan...</p>
+            </div>`;
 
-            if (data.status === "success") {
-                document.getElementById('emptyView').style.display = 'none';
-                document.getElementById('detailView').style.display = 'flex';
-                
-                document.getElementById('viewSubject').innerText = data.subject;
-                document.getElementById('viewFrom').innerText = data.from;
-                document.getElementById('viewDate').innerText = new Date(data.date).toLocaleString('id-ID');
-                document.getElementById('viewAvatar').innerText = data.from.charAt(0).toUpperCase();
-                document.getElementById('viewBody').innerHTML = data.body;
-                
-                // Set Reply Button
-                const cleanEmail = data.from.match(/<(.+)>/) ? data.from.match(/<(.+)>/)[1] : data.from;
-                document.getElementById('replyBtn').onclick = () => openReply(cleanEmail, data.subject);
+        try {
+            const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=${action}`);
+            const data = await response.json();
+            
+            if (data.length === 0) {
+                container.innerHTML = `<div class="p-5 text-center text-muted">Kosong. Tidak ada pesan di folder ini.</div>`;
+                return;
             }
+
+            container.innerHTML = data.map(m => `
+                <div class="email-item ${m.isUnread ? 'unread' : ''}" onclick="viewEmail('${m.id}')">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="sender-name text-truncate">${action === 'listSent' ? 'Ke: ' + m.to : m.from}</span>
+                        <span class="time-label">${m.date}</span>
+                    </div>
+                    <div class="subject text-truncate fw-bold">${m.subject || '(Tanpa Subjek)'}</div>
+                    <div class="snippet text-truncate">${m.snippet}</div>
+                </div>
+            `).join('');
         } catch (err) {
-            Swal.fire('Error', 'Gagal memuat detail pesan', 'error');
-        } finally {
-            showLoader(false);
+            container.innerHTML = `<div class="p-5 text-center text-danger">Gagal mengambil data. Pastikan URL Apps Script benar.</div>`;
+            console.error(err);
         }
     }
 
-    function openReply(email, subject) {
-        document.getElementById('to').value = email;
-        document.getElementById('subject').value = "Re: " + subject;
-        new bootstrap.Modal(document.getElementById('composeModal')).show();
+    function viewEmail(id) {
+        // Berpindah ke halaman baca
+        window.location.href = `read.html?id=${id}`;
     }
 
-    document.getElementById('sendForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnKirim');
-        btn.disabled = true;
-        btn.innerHTML = 'Mengirim...';
+    function switchFolder(action, el) {
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('folderTitle').innerText = el.innerText.trim();
+        loadEmails(action);
+    }
+
+    function refreshList() {
+        loadEmails(activeAction);
+    }
+
+    async function sendEmail() {
+        const to = document.getElementById('mailTo').value;
+        const subject = document.getElementById('mailSubject').value;
+        const body = document.getElementById('mailBody').value;
+        const fileInput = document.getElementById('mailAttachment');
+
+        if (!to || !subject || !body) {
+            return Swal.fire('Peringatan', 'Mohon lengkapi Alamat, Subjek, dan Pesan!', 'warning');
+        }
+
+        Swal.fire({
+            title: 'Mengirim Pesan...',
+            html: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        let attachmentData = null;
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            attachmentData = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve({
+                    name: file.name,
+                    mimeType: file.type,
+                    data: reader.result.split(',')[1]
+                });
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Memasukkan Header & Footer Nanda Teknik
+        const fullBody = `--- NANDA TEKNIK BANYUWANGI ---\nJasa Electrical, Network & Software Engineering\n\n${body}\n\n------------------------------\nHubungi Kami: WA 082331201148\nJl. Raya Banyuwangi, Jawa Timur.`;
 
         const payload = {
-            action: 'sendMessage',
-            to: document.getElementById('to').value,
-            subject: document.getElementById('subject').value,
-            body: document.getElementById('messageBody').value
+            action: 'sendEmail',
+            to: to,
+            subject: subject,
+            body: fullBody,
+            attachment: attachmentData
         };
 
         try {
-            // FIX CORS: POST ke Google Script harus dikirim sebagai text/plain 
-            // agar tidak memicu Pre-flight OPTIONS request
-            await fetch(SCRIPT_URL, {
+            const res = await fetch(CONFIG.EMAIL_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Penting untuk bypass CORS Google Script
-                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
             });
+            const result = await res.json();
 
-            Swal.fire('Berhasil', 'Pesan telah dikirim ke antrian Gmail.', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('composeModal')).hide();
-            document.getElementById('sendForm').reset();
-            setTimeout(refreshData, 2000);
+            if (result.success) {
+                Swal.fire('Berhasil!', 'Email Anda telah terkirim.', 'success');
+                composeModal.hide();
+                loadEmails('listSent');
+            } else {
+                throw new Error(result.message);
+            }
         } catch (err) {
-            Swal.fire('Gagal', 'Terjadi kesalahan pengiriman', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'Kirim Sekarang <i class="fas fa-paper-plane ms-2"></i>';
+            Swal.fire('Gagal', 'Terjadi kesalahan: ' + err.message, 'error');
         }
-    };
-
-    function switchTab(tab) {
-        activeTab = tab;
-        document.querySelectorAll('#filterTab .nav-link').forEach(l => l.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        renderMessages();
-        closeDetail();
-    }
-
-    function closeDetail() {
-        document.getElementById('detailView').style.display = 'none';
-        document.getElementById('emptyView').style.display = 'flex';
-    }
-
-    function showLoader(show) {
-        document.getElementById('loader').style.display = show ? 'flex' : 'none';
     }
 </script>
 
