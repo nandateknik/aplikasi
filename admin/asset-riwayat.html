@@ -132,13 +132,12 @@
             const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=${action}`);
             const data = await response.json();
             
-            // Validasi: Cek apakah data adalah Array
             if (!Array.isArray(data)) {
-                throw new Error(data.message || "Data dari server bukan format list.");
+                throw new Error(data.message || "Gagal mengambil data dari server.");
             }
             
             if (data.length === 0) {
-                container.innerHTML = `<div class="p-5 text-center text-muted">Tidak ada pesan.</div>`;
+                container.innerHTML = `<div class="p-5 text-center text-muted">Tidak ada pesan di folder ini.</div>`;
                 return;
             }
 
@@ -153,7 +152,10 @@
                 </div>
             `).join('');
         } catch (err) {
-            container.innerHTML = `<div class="p-5 text-center text-danger">Gagal memuat data: ${err.message}</div>`;
+            container.innerHTML = `<div class="p-5 text-center text-danger">
+                <i class="fas fa-exclamation-circle mb-2 fs-3"></i><br>
+                ${err.message}
+            </div>`;
         }
     }
 
@@ -173,24 +175,42 @@
     }
 
     function openCompose() {
+        document.getElementById('mailTo').value = "";
+        document.getElementById('mailSubject').value = "";
+        document.getElementById('mailBody').value = "";
         composeModal.show();
     }
 
     async function sendEmail() {
-        // ... (Logika sendEmail Anda sudah benar, pastikan fetch mengarah ke CONFIG.EMAIL_APP_URL)
         const to = document.getElementById('mailTo').value;
         const subject = document.getElementById('mailSubject').value;
         const body = document.getElementById('mailBody').value;
-        
-        if (!to || !subject || !body) return Swal.fire('Error', 'Lengkapi data!', 'warning');
+        const fileInput = document.getElementById('mailAttachment');
+
+        if (!to || !subject || !body) return Swal.fire('Error', 'Mohon isi semua field!', 'warning');
 
         Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        let attachmentData = null;
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            attachmentData = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve({
+                    name: file.name,
+                    mimeType: file.type,
+                    data: reader.result.split(',')[1]
+                });
+                reader.readAsDataURL(file);
+            });
+        }
 
         const payload = {
             action: 'sendEmail',
             to: to,
             subject: subject,
-            body: body
+            body: body,
+            attachment: attachmentData
         };
 
         try {
@@ -200,9 +220,11 @@
             });
             const result = await res.json();
             if (result.success) {
-                Swal.fire('Berhasil!', '', 'success');
+                Swal.fire('Berhasil!', 'Email telah terkirim.', 'success');
                 composeModal.hide();
                 loadEmails('listSent');
+            } else {
+                throw new Error(result.message);
             }
         } catch (e) {
             Swal.fire('Gagal', e.message, 'error');
