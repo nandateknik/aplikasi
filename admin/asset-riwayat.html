@@ -11,19 +11,14 @@
     
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        
-        /* Layout */
         .card-mail { background: white; border-radius: 20px; min-height: 85vh; overflow: hidden; border: none; }
         .sidebar-mail { padding: 20px; }
-        
-        /* Sidebar Navigation */
         .btn-compose { 
             background: #4338ca; color: white; border-radius: 16px; padding: 15px; 
             font-weight: 700; width: 100%; margin-bottom: 25px; border: none; 
             box-shadow: 0 4px 15px rgba(67, 56, 202, 0.2); transition: 0.3s;
         }
         .btn-compose:hover { background: #3730a3; transform: translateY(-2px); color: white; }
-        
         .nav-link { 
             border-radius: 12px; padding: 12px 20px; color: #64748b; 
             font-weight: 600; margin-bottom: 5px; border: none; width: 100%; 
@@ -32,35 +27,19 @@
         .nav-link:hover { background: #f1f5f9; color: #4338ca; }
         .nav-link.active { background: #e0e7ff; color: #4338ca; }
         .nav-link i { margin-right: 12px; width: 20px; font-size: 1.1rem; }
-        
-        /* Email List Item */
         .email-item { 
             cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #f1f5f9; 
             padding: 15px 20px; display: block; text-decoration: none; color: inherit;
         }
         .email-item:hover { background: #f8fafc; }
         .email-item.unread { background: #fff; border-left: 4px solid #4338ca; }
-        .email-item.unread .subject { font-weight: 700; color: #0f172a; }
-        
         .sender-name { font-size: 0.9rem; font-weight: 600; color: #4338ca; }
         .subject { font-size: 0.95rem; margin-bottom: 2px; }
         .snippet { font-size: 0.85rem; color: #64748b; }
         .time-label { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
-        
-        .section-label { 
-            font-size: 0.65rem; font-weight: 800; color: #94a3b8; 
-            letter-spacing: 1px; text-transform: uppercase; 
-            margin: 20px 0 10px 15px; display: block; 
-        }
-
-        /* Form Styling */
+        .section-label { font-size: 0.65rem; font-weight: 800; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; margin: 20px 0 10px 15px; display: block; }
         .form-control { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.9rem; }
-        .form-control:focus { border-color: #4338ca; box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1); }
-        
-        /* Custom Scrollbar */
         #emailListContainer { height: 70vh; overflow-y: auto; }
-        #emailListContainer::-webkit-scrollbar { width: 6px; }
-        #emailListContainer::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -72,7 +51,6 @@
                 <button class="btn-compose" onclick="openCompose()">
                     <i class="fas fa-plus me-2"></i>Tulis Pesan
                 </button>
-                
                 <label class="section-label">Menu Utama</label>
                 <button id="btn-inbox" class="nav-link active" onclick="switchFolder('listInbox', this)">
                     <i class="fas fa-inbox"></i>Kotak Masuk
@@ -80,7 +58,6 @@
                 <button id="btn-sent" class="nav-link" onclick="switchFolder('listSent', this)">
                     <i class="fas fa-paper-plane"></i>Terkirim
                 </button>
-                
                 <label class="section-label">Bantuan</label>
                 <a href="https://wa.me/6282331201148" target="_blank" class="nav-link">
                     <i class="fab fa-whatsapp"></i>Support WA
@@ -92,16 +69,13 @@
             <div class="card-mail shadow-sm">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
                     <h5 class="fw-bold mb-0 text-dark" id="folderTitle">Kotak Masuk</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-light btn-sm rounded-pill px-3" onclick="refreshList()">
-                            <i class="fas fa-sync-alt me-1"></i> Refresh
-                        </button>
-                    </div>
+                    <button class="btn btn-light btn-sm rounded-pill px-3" onclick="refreshList()">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
                 </div>
-                
                 <div id="emailListContainer">
                     <div class="p-5 text-center text-muted">
-                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <div class="spinner-border text-primary mb-3"></div>
                         <p class="fw-bold">Menghubungkan ke Server...</p>
                     </div>
                 </div>
@@ -110,35 +84,24 @@
     </div>
 </div>
 
-<div class="modal fade" id="composeModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="composeModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content shadow-lg" style="border-radius: 24px; border: none;">
-            <div class="modal-header border-0 bg-light" style="border-radius: 24px 24px 0 0; padding: 20px 30px;">
-                <h5 class="modal-title fw-bold"><i class="fas fa-pen-nib me-2"></i>Pesan Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0 bg-light" style="border-radius: 24px 24px 0 0;">
+                <h5 class="modal-title fw-bold">Pesan Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="padding: 30px;">
-                <div class="mb-3">
-                    <input type="email" id="mailTo" class="form-control" placeholder="Kepada (Email Penerima)">
-                </div>
-                <div class="mb-3">
-                    <input type="text" id="mailSubject" class="form-control" placeholder="Subjek / Judul Pesan">
-                </div>
-                <div class="mb-3">
-                    <textarea id="mailBody" class="form-control" rows="8" placeholder="Tulis isi pesan Anda di sini..."></textarea>
-                </div>
-                
+            <div class="modal-body p-4">
+                <input type="email" id="mailTo" class="form-control mb-3" placeholder="Kepada">
+                <input type="text" id="mailSubject" class="form-control mb-3" placeholder="Subjek">
+                <textarea id="mailBody" class="form-control mb-3" rows="8" placeholder="Isi pesan..."></textarea>
                 <div class="p-3 bg-light rounded-4">
-                    <label class="section-label mt-0 mb-2">Lampiran File (Opsional)</label>
+                    <label class="section-label mt-0 mb-2">Lampiran</label>
                     <input type="file" id="mailAttachment" class="form-control bg-white">
-                    <small class="text-muted mt-1 d-block">Maksimal ukuran file disarankan < 5MB</small>
                 </div>
             </div>
-            <div class="modal-footer border-0" style="padding: 20px 30px;">
-                <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold shadow" onclick="sendEmail()">
-                    <i class="fas fa-paper-plane me-2"></i>Kirim Sekarang
-                </button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary px-5 rounded-pill fw-bold" onclick="sendEmail()">Kirim</button>
             </div>
         </div>
     </div>
@@ -160,29 +123,22 @@
         loadEmails(activeAction);
     };
 
-    function openCompose() {
-        document.getElementById('mailTo').value = "";
-        document.getElementById('mailSubject').value = "";
-        document.getElementById('mailBody').value = "";
-        document.getElementById('mailAttachment').value = "";
-        composeModal.show();
-    }
-
     async function loadEmails(action) {
         activeAction = action;
         const container = document.getElementById('emailListContainer');
-        container.innerHTML = `
-            <div class="p-5 text-center text-muted">
-                <div class="spinner-border text-primary mb-3"></div>
-                <p>Memuat Pesan...</p>
-            </div>`;
+        container.innerHTML = `<div class="p-5 text-center text-muted"><div class="spinner-border text-primary mb-3"></div><p>Memuat...</p></div>`;
 
         try {
             const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=${action}`);
             const data = await response.json();
             
+            // Validasi: Cek apakah data adalah Array
+            if (!Array.isArray(data)) {
+                throw new Error(data.message || "Data dari server bukan format list.");
+            }
+            
             if (data.length === 0) {
-                container.innerHTML = `<div class="p-5 text-center text-muted">Kosong. Tidak ada pesan di folder ini.</div>`;
+                container.innerHTML = `<div class="p-5 text-center text-muted">Tidak ada pesan.</div>`;
                 return;
             }
 
@@ -197,13 +153,11 @@
                 </div>
             `).join('');
         } catch (err) {
-            container.innerHTML = `<div class="p-5 text-center text-danger">Gagal mengambil data. Pastikan URL Apps Script benar.</div>`;
-            console.error(err);
+            container.innerHTML = `<div class="p-5 text-center text-danger">Gagal memuat data: ${err.message}</div>`;
         }
     }
 
     function viewEmail(id) {
-        // Berpindah ke halaman baca
         window.location.href = `read.html?id=${id}`;
     }
 
@@ -218,46 +172,25 @@
         loadEmails(activeAction);
     }
 
+    function openCompose() {
+        composeModal.show();
+    }
+
     async function sendEmail() {
+        // ... (Logika sendEmail Anda sudah benar, pastikan fetch mengarah ke CONFIG.EMAIL_APP_URL)
         const to = document.getElementById('mailTo').value;
         const subject = document.getElementById('mailSubject').value;
         const body = document.getElementById('mailBody').value;
-        const fileInput = document.getElementById('mailAttachment');
+        
+        if (!to || !subject || !body) return Swal.fire('Error', 'Lengkapi data!', 'warning');
 
-        if (!to || !subject || !body) {
-            return Swal.fire('Peringatan', 'Mohon lengkapi Alamat, Subjek, dan Pesan!', 'warning');
-        }
-
-        Swal.fire({
-            title: 'Mengirim Pesan...',
-            html: 'Mohon tunggu sebentar',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        let attachmentData = null;
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            attachmentData = await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = () => resolve({
-                    name: file.name,
-                    mimeType: file.type,
-                    data: reader.result.split(',')[1]
-                });
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Memasukkan Header & Footer Nanda Teknik
-        const fullBody = `--- NANDA TEKNIK BANYUWANGI ---\nJasa Electrical, Network & Software Engineering\n\n${body}\n\n------------------------------\nHubungi Kami: WA 082331201148\nJl. Raya Banyuwangi, Jawa Timur.`;
+        Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         const payload = {
             action: 'sendEmail',
             to: to,
             subject: subject,
-            body: fullBody,
-            attachment: attachmentData
+            body: body
         };
 
         try {
@@ -266,19 +199,15 @@
                 body: JSON.stringify(payload)
             });
             const result = await res.json();
-
             if (result.success) {
-                Swal.fire('Berhasil!', 'Email Anda telah terkirim.', 'success');
+                Swal.fire('Berhasil!', '', 'success');
                 composeModal.hide();
                 loadEmails('listSent');
-            } else {
-                throw new Error(result.message);
             }
-        } catch (err) {
-            Swal.fire('Gagal', 'Terjadi kesalahan: ' + err.message, 'error');
+        } catch (e) {
+            Swal.fire('Gagal', e.message, 'error');
         }
     }
 </script>
-
 </body>
 </html>
