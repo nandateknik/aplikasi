@@ -112,7 +112,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-modal="hide">Batal</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary rounded-pill px-4" id="sendBtn">Kirim Sekarang</button>
                 </div>
             </form>
@@ -125,21 +125,14 @@
 <script src="assets/config.js"></script>
 
 <script>
+    // URL Web App Langsung di Script agar lebih mudah
+    const EMAIL_SERVICE_URL = "https://script.google.com/macros/s/AKfycbwLHFzNlilbprewUqph7G9ZPkHb2FZsKGolhr0RcCHTiZtF80f53TRizRUgz_5e8Dn3TA/exec";
+    
     let messages = [];
     let currentFilter = 'inbox';
 
     window.onload = () => {
-        // Validasi apakah URL sudah terisi di config.js
-        if (!CONFIG.EMAIL_APP_URL || CONFIG.EMAIL_APP_URL === "https://script.google.com/macros/s/AKfycbwLHFzNlilbprewUqph7G9ZPkHb2FZsKGolhr0RcCHTiZtF80f53TRizRUgz_5e8Dn3TA/exec") {
-            Swal.fire({
-                title: 'Konfigurasi Diperlukan',
-                text: 'URL Web App untuk Email belum diatur di assets/config.js',
-                icon: 'warning',
-                confirmButtonText: 'Siap'
-            });
-        } else {
-            fetchMessages();
-        }
+        fetchMessages();
     };
 
     async function fetchMessages() {
@@ -147,13 +140,12 @@
         listDiv.innerHTML = '<div class="loading-state"><div class="spinner-border text-primary spinner-border-sm mb-2"></div><small>Sinkronisasi email...</small></div>';
         
         try {
-            // Menggunakan EMAIL_APP_URL secara spesifik
-            const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=getMessages`);
+            const response = await fetch(`${EMAIL_SERVICE_URL}?action=getMessages`);
             const data = await response.json();
             messages = data;
             renderList();
         } catch (e) {
-            listDiv.innerHTML = '<div class="p-3 text-danger small text-center">Gagal memuat pesan. Periksa koneksi atau URL Web App.</div>';
+            listDiv.innerHTML = '<div class="p-3 text-danger small text-center">Gagal memuat pesan. Pastikan URL Web App benar dan sudah di-deploy sebagai "Anyone".</div>';
         }
     }
 
@@ -183,7 +175,7 @@
         bodyView.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><br><small>Membuka pesan...</small></div>';
 
         try {
-            const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=getMessageDetails&id=${id}`);
+            const response = await fetch(`${EMAIL_SERVICE_URL}?action=getMessageDetails&id=${id}`);
             const data = await response.json();
 
             if (data.status === "success") {
@@ -230,24 +222,27 @@
         };
 
         try {
-            // Mengirim request ke EMAIL_APP_URL
-            const response = await fetch(CONFIG.EMAIL_APP_URL, {
+            const response = await fetch(EMAIL_SERVICE_URL, {
                 method: 'POST',
+                mode: 'no-cors', // Penting untuk Google Apps Script POST jika tidak menggunakan library tambahan
                 body: JSON.stringify(payload)
             });
-            const result = await response.json();
             
-            if (result.success) {
-                Swal.fire('Terkirim!', 'Email berhasil dikirim ke ' + payload.to, 'success');
+            // Karena mode no-cors tidak bisa membaca JSON response, kita asumsikan berhasil jika tidak error
+            Swal.fire({
+                title: 'Proses Selesai',
+                text: 'Email sedang diproses oleh server.',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            }).then(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalCompose'));
                 if(modal) modal.hide();
                 document.getElementById('composeForm').reset();
-                fetchMessages(); // Refresh list
-            } else {
-                throw new Error();
-            }
+                setTimeout(fetchMessages, 2000); // Refresh setelah jeda
+            });
+
         } catch (err) {
-            Swal.fire('Gagal Kirim', 'Gagal menghubungi server email. Pastikan Web App sudah di-deploy.', 'error');
+            Swal.fire('Gagal Kirim', 'Gagal menghubungi server email.', 'error');
         } finally {
             sendBtn.disabled = false;
             sendBtn.innerText = 'Kirim Sekarang';
