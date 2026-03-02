@@ -2,250 +2,258 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nanda Teknik - Manajemen Pesan</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pesan | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        :root { --p-blue: #0d6efd; --bg-light: #f4f7fe; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-light); padding-bottom: 110px; }
+        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; }
+        .app-container { max-width: 1000px; margin: 30px auto; }
+        .card-messenger { border: none; border-radius: 15px; overflow: hidden; height: 80vh; display: flex; flex-direction: row; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        .card-main { background: white; border-radius: 20px; padding: 20px; margin-top: 10px; min-height: 85vh; border: none; }
+        /* Sidebar Styles */
+        .msg-sidebar { width: 300px; background: #ffffff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #f0f0f0; }
+        .nav-email { flex: 1; overflow-y: auto; }
+        .nav-item-msg { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f9f9f9; transition: 0.3s; }
+        .nav-item-msg:hover { background: #f8f9fa; }
+        .nav-item-msg.active { background: #e7f3ff; border-left: 4px solid #0084ff; }
         
-        /* Tab Styling */
-        .nav-pills-custom { background: #f1f5f9; border-radius: 15px; padding: 5px; display: flex; gap: 5px; }
-        .nav-pills-custom .nav-link { 
-            flex: 1; border-radius: 12px; color: #64748b; font-weight: 700; font-size: 0.85rem; 
-            padding: 10px; border: none; transition: 0.2s; background: transparent;
-        }
-        .nav-pills-custom .nav-link.active { background: var(--p-blue); color: white; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2); }
-
-        /* Message Card */
-        .message-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px;
-            border: 1px solid #e2e8f0; transition: 0.2s; cursor: pointer;
-        }
-        .message-item:active { transform: scale(0.98); }
-        .message-item.unread { border-left: 4px solid var(--p-blue); background: #f8fafc; }
+        /* Content Area */
+        .msg-content { flex: 1; background: #ffffff; display: flex; flex-direction: column; }
+        .msg-header { padding: 15px 25px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; }
+        .msg-body { flex: 1; padding: 25px; overflow-y: auto; }
         
-        .msg-icon {
-            width: 45px; height: 45px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; flex-shrink: 0; margin-right: 15px;
-        }
-        .icon-inbox { background: #eff6ff; color: #3b82f6; }
-        .icon-sent { background: #f0fdf4; color: #22c55e; }
-
-        .msg-body-preview { font-size: 0.75rem; color: #64748b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        .loading-state { display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column; }
+        .badge-type { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-bottom: 5px; display: inline-block; }
+        .type-inbox { background: #dcfce7; color: #166534; }
+        .type-sent { background: #dbeafe; color: #1e40af; }
         
-        .section-label { font-size: 0.65rem; font-weight: 800; color: #64748b; letter-spacing: 1px; margin-bottom: 15px; display: block; text-transform: uppercase; }
-        
-        .fab-add {
-            position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px;
-            border-radius: 20px; background: var(--p-blue); color: white;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.3); z-index: 999; border: none;
-        }
-
-        .form-control { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.9rem; }
-        
-        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
+        .empty-state { text-align: center; color: #8e8e8e; margin-top: 100px; }
+        .btn-compose { border-radius: 20px; padding: 10px 20px; font-weight: 600; }
     </style>
 </head>
 <body>
 
-<div class="loader-overlay" id="loader">
-    <div class="spinner-border text-primary mb-2"></div>
-    <span class="fw-bold small">Menghubungkan ke Server...</span>
-</div>
-
-<div class="container mt-3">
-    <div class="card-main shadow-sm">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-bold m-0 text-primary"><i class="fas fa-envelope-open-text me-2"></i>Pesan</h5>
-            <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold border" onclick="fetchMessages()">
-                <i class="fas fa-sync-alt me-1" id="syncIcon"></i> SYNC
-            </button>
+<div class="container app-container">
+    <div class="card card-messenger shadow">
+        <!-- Sidebar -->
+        <div class="msg-sidebar">
+            <div class="sidebar-header">
+                <button class="btn btn-primary btn-compose w-100 mb-3" data-bs-toggle="modal" data-bs-target="#modalCompose">
+                    <i class="fas fa-edit me-2"></i> Tulis Pesan
+                </button>
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setFilter('inbox')">Kotak Masuk</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setFilter('sent')">Terkirim</button>
+                </div>
+            </div>
+            <div class="nav-email" id="emailList">
+                <div class="loading-state"><div class="spinner-border text-primary spinner-border-sm"></div></div>
+            </div>
         </div>
 
-        <div class="nav-pills-custom mb-4">
-            <button class="nav-link active" id="tabInbox" onclick="switchTab('inbox')">Masuk</button>
-            <button class="nav-link" id="tabSent" onclick="switchTab('sent')">Terkirim</button>
-        </div>
+        <!-- Main Content -->
+        <div class="msg-content">
+            <div id="contentPlaceholder" class="empty-state">
+                <i class="fas fa-envelope-open fa-4x mb-3" style="color: #e0e0e0;"></i>
+                <p>Pilih pesan untuk membaca detailnya</p>
+            </div>
 
-        <label class="section-label" id="listLabel">DAFTAR PESAN MASUK</label>
-        
-        <div id="listPesan">
-            <!-- Loader awal -->
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary opacity-25"></div>
+            <div id="messageView" style="display: none;">
+                <div class="msg-header">
+                    <button class="btn btn-sm btn-light d-md-none" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h6 class="m-0 fw-bold" id="viewSubject">Subject Pesan</h6>
+                    <button class="btn btn-sm btn-outline-danger" onclick="closeView()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="msg-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;" id="viewAvatar">?</div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="fw-bold" id="viewFrom">Nama Pengirim</div>
+                            <div class="text-muted small" id="viewDate">Tanggal</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="viewBody" class="mt-3" style="line-height: 1.6; white-space: pre-wrap;">
+                        Isi pesan di sini...
+                    </div>
+                    <div class="mt-5 border-top pt-3">
+                        <button class="btn btn-sm btn-primary px-4 rounded-pill" id="replyBtn">
+                            <i class="fas fa-reply me-1"></i> Balas
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<button class="fab-add" onclick="modalCompose.show()">
-    <i class="fas fa-paper-plane fa-lg"></i>
-</button>
-
 <!-- Modal Compose -->
 <div class="modal fade" id="modalCompose" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
-            <div class="modal-header border-0 px-4 pt-4">
-                <h6 class="fw-bold mb-0">Tulis Email</h6>
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Pesan Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
-                <div class="mb-3">
-                    <label class="section-label mb-2">KEPADA</label>
-                    <input type="email" id="emailTo" class="form-control" placeholder="nama@email.com">
+            <form id="composeForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="email" id="to" class="form-control" placeholder="Email Penerima" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" id="subject" class="form-control" placeholder="Subjek / Perihal" required>
+                    </div>
+                    <div class="mb-3">
+                        <textarea id="body" class="form-control" rows="6" placeholder="Tulis pesan Anda..." required></textarea>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="section-label mb-2">SUBJEK</label>
-                    <input type="text" id="emailSubject" class="form-control" placeholder="Subjek pesan">
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-modal="hide">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="sendBtn">Kirim Sekarang</button>
                 </div>
-                <div class="mb-3">
-                    <label class="section-label mb-2">PESAN</label>
-                    <textarea id="emailBody" class="form-control" rows="5" placeholder="Isi pesan..."></textarea>
-                </div>
-                <button class="btn btn-primary w-100 py-3 fw-bold rounded-4 shadow-sm" onclick="kirimEmail()">
-                    KIRIM EMAIL <i class="fas fa-paper-plane ms-2"></i>
-                </button>
-            </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/config.js"></script>
 
 <script>
-    // URL KHUSUS EMAIL (Ganti dengan URL Deployment Anda yang baru)
-    const EMAIL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9tarQzrkB9YYSLbTU09psuiLyGE0XUSXrwGUHT67PzeCPtgPE5dZxDK2040UiSb-H/exec";
-    
-    let currentTab = 'inbox';
-    let allMessages = [];
-    let modalCompose;
+    let messages = [];
+    let currentFilter = 'inbox';
 
     window.onload = () => {
-        modalCompose = new bootstrap.Modal(document.getElementById('modalCompose'));
-        fetchMessages();
+        // Validasi apakah URL sudah terisi di config.js
+        if (!CONFIG.EMAIL_APP_URL || CONFIG.EMAIL_APP_URL === "https://script.google.com/macros/s/AKfycbwLHFzNlilbprewUqph7G9ZPkHb2FZsKGolhr0RcCHTiZtF80f53TRizRUgz_5e8Dn3TA/exec") {
+            Swal.fire({
+                title: 'Konfigurasi Diperlukan',
+                text: 'URL Web App untuk Email belum diatur di assets/config.js',
+                icon: 'warning',
+                confirmButtonText: 'Siap'
+            });
+        } else {
+            fetchMessages();
+        }
     };
 
     async function fetchMessages() {
-        const icon = document.getElementById('syncIcon');
-        if(icon) icon.classList.add('fa-spin');
-
+        const listDiv = document.getElementById('emailList');
+        listDiv.innerHTML = '<div class="loading-state"><div class="spinner-border text-primary spinner-border-sm mb-2"></div><small>Sinkronisasi email...</small></div>';
+        
         try {
-            // Gunakan fetch dengan penanganan error manual
-            const response = await fetch(`${EMAIL_SCRIPT_URL}?action=getMessages`);
-            
-            if (!response.ok) throw new Error("Network response was not ok");
-            
+            // Menggunakan EMAIL_APP_URL secara spesifik
+            const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=getMessages`);
             const data = await response.json();
-            allMessages = data;
-            renderMessages();
-        } catch (error) {
-            console.error("Fetch Error:", error);
-            document.getElementById('listPesan').innerHTML = `
-                <div class="text-center py-5">
-                    <i class="fas fa-exclamation-triangle text-warning fs-1 mb-3"></i>
-                    <p class="small fw-bold px-4">CORS Error / Server Offline.<br><span class="fw-normal text-muted">Pastikan Apps Script dideploy sebagai 'Anyone'.</span></p>
-                    <button class="btn btn-sm btn-outline-primary rounded-pill mt-2" onclick="fetchMessages()">Coba Lagi</button>
-                </div>`;
-        } finally {
-            if(icon) icon.classList.remove('fa-spin');
+            messages = data;
+            renderList();
+        } catch (e) {
+            listDiv.innerHTML = '<div class="p-3 text-danger small text-center">Gagal memuat pesan. Periksa koneksi atau URL Web App.</div>';
         }
     }
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById('tabInbox').classList.toggle('active', tab === 'inbox');
-        document.getElementById('tabSent').classList.toggle('active', tab === 'sent');
-        document.getElementById('listLabel').innerText = tab === 'inbox' ? 'DAFTAR PESAN MASUK' : 'DAFTAR PESAN TERKIRIM';
-        renderMessages();
-    }
-
-    function renderMessages() {
-        const container = document.getElementById('listPesan');
-        const filtered = allMessages.filter(m => m.type === currentTab);
+    function renderList() {
+        const listDiv = document.getElementById('emailList');
+        const filtered = messages.filter(m => m.type === currentFilter);
         
-        if(filtered.length === 0) {
-            container.innerHTML = `<div class="text-center py-5 opacity-50"><i class="fas fa-envelope-open fs-1 mb-3"></i><p class="small fw-bold">Kosong</p></div>`;
+        if (filtered.length === 0) {
+            listDiv.innerHTML = '<div class="p-4 text-center text-muted small">Tidak ada pesan di kategori ini.</div>';
             return;
         }
 
-        container.innerHTML = filtered.map(m => `
-            <div class="message-item ${!m.read && m.type === 'inbox' ? 'unread' : ''} shadow-sm" onclick="detailPesan(${m.id})">
-                <div class="d-flex align-items-center overflow-hidden">
-                    <div class="msg-icon ${m.type === 'inbox' ? 'icon-inbox' : 'icon-sent'}">
-                        <i class="fas ${m.type === 'inbox' ? 'fa-envelope' : 'fa-paper-plane'}"></i>
-                    </div>
-                    <div class="overflow-hidden">
-                        <div class="fw-bold text-dark small text-truncate">${m.type === 'inbox' ? m.sender : 'Ke: ' + m.email}</div>
-                        <div class="fw-bold text-primary" style="font-size: 0.8rem;">${m.subject}</div>
-                        <span class="msg-body-preview">${m.body}</span>
-                    </div>
-                </div>
-                <div class="text-end flex-shrink-0 ms-2">
-                    <div class="text-muted fw-bold" style="font-size: 0.6rem;">${m.time}</div>
-                </div>
+        listDiv.innerHTML = filtered.map(msg => `
+            <div class="nav-item-msg" onclick="loadDetail('${msg.id}')">
+                <span class="badge-type type-${msg.type}">${msg.type === 'inbox' ? 'KOTAK MASUK' : 'TERKIRIM'}</span>
+                <div class="fw-bold text-truncate" style="max-width: 220px;">${msg.sender}</div>
+                <div class="small text-truncate text-dark">${msg.subject}</div>
+                <div class="text-muted" style="font-size: 0.7rem;">${msg.time}</div>
             </div>
         `).join('');
     }
 
-    function detailPesan(id) {
-        const msg = allMessages.find(x => x.id === id);
-        if(!msg) return;
-
-        Swal.fire({
-            title: `<div class="text-start fs-6 fw-bold border-bottom pb-2">${msg.subject}</div>`,
-            html: `<div class="text-start mt-3 small"><div class="bg-light p-2 rounded-3 mb-3"><b>Dari:</b> ${msg.sender} (${msg.email})</div><div style="white-space:pre-wrap;">${msg.body}</div></div>`,
-            confirmButtonText: 'BALAS',
-            showCancelButton: true,
-            cancelButtonText: 'TUTUP',
-            customClass: { popup: 'rounded-5', confirmButton: 'btn btn-primary rounded-pill w-100 mb-2', cancelButton: 'btn btn-light rounded-pill w-100 text-muted' },
-            buttonsStyling: false
-        }).then((res) => {
-            if(res.isConfirmed) {
-                document.getElementById('emailTo').value = msg.email;
-                document.getElementById('emailSubject').value = 'Re: ' + msg.subject;
-                modalCompose.show();
-            }
-        });
-    }
-
-    async function kirimEmail() {
-        const to = document.getElementById('emailTo').value;
-        const subject = document.getElementById('emailSubject').value;
-        const body = document.getElementById('emailBody').value;
-
-        if(!to || !subject || !body) return Swal.fire('Error', 'Data tidak lengkap', 'error');
-
-        document.getElementById('loader').style.display = 'flex';
+    async function loadDetail(id) {
+        document.getElementById('contentPlaceholder').style.display = 'none';
+        document.getElementById('messageView').style.display = 'block';
+        const bodyView = document.getElementById('viewBody');
+        bodyView.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><br><small>Membuka pesan...</small></div>';
 
         try {
-            // POST ke GAS sering memicu CORS jika tidak pakai mode no-cors
-            // Tapi mode no-cors tidak bisa baca response.
-            // Solusi terbaik: Pakai query parameter untuk kirim data kecil (GET)
-            const url = `${EMAIL_SCRIPT_URL}?action=sendMessage&to=${encodeURIComponent(to)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            
-            await fetch(url, { method: 'GET' });
+            const response = await fetch(`${CONFIG.EMAIL_APP_URL}?action=getMessageDetails&id=${id}`);
+            const data = await response.json();
 
-            Swal.fire({ icon: 'success', title: 'Terkirim', text: 'Pesan sedang diproses server.', target: '#modalCompose' });
-            modalCompose.hide();
-            fetchMessages();
-        } catch (error) {
-            Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error');
-        } finally {
-            document.getElementById('loader').style.display = 'none';
+            if (data.status === "success") {
+                document.getElementById('viewSubject').innerText = data.subject;
+                document.getElementById('viewFrom').innerText = data.from;
+                document.getElementById('viewDate').innerText = new Date(data.date).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+                document.getElementById('viewAvatar').innerText = data.from.charAt(0).toUpperCase();
+                bodyView.innerHTML = data.body;
+
+                document.getElementById('replyBtn').onclick = () => {
+                    const emailOnly = data.from.match(/<(.+)>/) ? data.from.match(/<(.+)>/)[1] : data.from;
+                    document.getElementById('to').value = emailOnly;
+                    document.getElementById('subject').value = "Re: " + data.subject;
+                    new bootstrap.Modal(document.getElementById('modalCompose')).show();
+                };
+            }
+        } catch (e) {
+            bodyView.innerHTML = '<div class="alert alert-danger m-3">Kesalahan teknis: Gagal memuat konten pesan.</div>';
         }
     }
+
+    function setFilter(type) {
+        currentFilter = type;
+        renderList();
+        closeView();
+    }
+
+    function closeView() {
+        document.getElementById('messageView').style.display = 'none';
+        document.getElementById('contentPlaceholder').style.display = 'block';
+    }
+
+    document.getElementById('composeForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim...';
+
+        const payload = {
+            action: 'sendMessage',
+            to: document.getElementById('to').value,
+            subject: document.getElementById('subject').value,
+            body: document.getElementById('body').value
+        };
+
+        try {
+            // Mengirim request ke EMAIL_APP_URL
+            const response = await fetch(CONFIG.EMAIL_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                Swal.fire('Terkirim!', 'Email berhasil dikirim ke ' + payload.to, 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCompose'));
+                if(modal) modal.hide();
+                document.getElementById('composeForm').reset();
+                fetchMessages(); // Refresh list
+            } else {
+                throw new Error();
+            }
+        } catch (err) {
+            Swal.fire('Gagal Kirim', 'Gagal menghubungi server email. Pastikan Web App sudah di-deploy.', 'error');
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerText = 'Kirim Sekarang';
+        }
+    };
 </script>
+
 </body>
 </html>
