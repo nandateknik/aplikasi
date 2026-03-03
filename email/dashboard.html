@@ -133,222 +133,199 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0WkPLKHEl5dTwBz-41mRvqcIyPlzIh8te1pnqi1uFktsvhmuwzI-s18cJXvMjtLCYLw/exec"; // <--- WAJIB DIGANTI
-        const appPassword = localStorage.getItem('appPassword');
-        let currentThreadId = null;
-        let currentAction = 'getInbox';
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXXXG7al-9qVW2cn_r9DAH4osi87978sPBgj3F94UqYsjXgD9GRDdEzMSkXd_4IyHY/exec"; 
+    const appPassword = localStorage.getItem('appPassword');
+    let currentThreadId = null;
+    let currentAction = 'getInbox';
 
-        // 1. Fungsi Utama Load Daftar Email
-        async function loadFolder(action, element) {
-            currentAction = action;
-            showLoader(true);
-            switchView('list');
-            
-            // Update UI Sidebar
-            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
-            if(element) element.classList.add('active-nav');
-            
-            document.getElementById('view-title').innerText = action === 'getInbox' ? 'Kotak Masuk' : 'Kotak Keluar';
-            
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: action, password: appPassword })
-                });
-                const result = await res.json();
-                
-                const wrapper = document.getElementById('email-items-wrapper');
-                wrapper.innerHTML = "";
+    // FUNGSI UTAMA FETCH (DIPERBAIKI UNTUK MENGHINDARI CORS)
+    async function callAPI(payload) {
+        // Kita gunakan mode 'no-cors' untuk pengiriman, tapi Apps Script butuh data JSON
+        // Cara terbaik adalah menggunakan Content-Type text/plain agar tidak memicu Preflight CORS
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors', 
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify(payload)
+        });
+        return await response.json();
+    }
 
-                if (result.data.length === 0) {
-                    wrapper.innerHTML = `<div class="p-20 text-center"><i class="fas fa-folder-open text-5xl text-slate-200 mb-4 block"></i><p class="text-slate-400 font-medium">Folder ini kosong</p></div>`;
-                }
-
-                result.data.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "email-item p-5 border-b border-slate-50 flex items-center gap-6";
-                    div.onclick = () => loadDetail(item.id);
-                    div.innerHTML = `
-                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                            ${item.from.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-slate-800 truncate pr-4">${item.from.split('<')[0]}</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded">${new Date(item.date).toLocaleDateString()}</span>
-                            </div>
-                            <div class="text-sm font-bold text-slate-700 truncate mb-1">${item.subject}</div>
-                            <div class="text-xs text-slate-400 truncate">${item.snippet}</div>
-                        </div>
-                        <div class="flex gap-2">
-                             <button onclick="event.stopPropagation(); deleteEmail('${item.id}')" class="text-slate-300 hover:text-red-500 p-2 transition-all">
-                                <i class="fas fa-trash-alt"></i>
-                             </button>
-                        </div>
-                    `;
-                    wrapper.appendChild(div);
-                });
-            } catch (e) {
-                alert("Koneksi gagal. Cek URL Apps Script Anda.");
-            } finally {
-                showLoader(false);
+    async function loadFolder(action, element) {
+        currentAction = action;
+        showLoader(true);
+        switchView('list');
+        
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
+        if(element) element.classList.add('active-nav');
+        
+        document.getElementById('view-title').innerText = action === 'getInbox' ? 'Kotak Masuk' : 'Kotak Keluar';
+        
+        try {
+            const result = await callAPI({ action: action, password: appPassword });
+            
+            if (!result.success) {
+                alert("Gagal: " + result.message);
+                return;
             }
-        }
 
-        // 2. Fungsi Baca Detail (Seluruh Riwayat)
-        async function loadDetail(id) {
-            showLoader(true);
-            currentThreadId = id;
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'getDetail', id: id, password: appPassword })
-                });
-                const result = await res.json();
-                
-                switchView('detail');
-                
-                // Set Header Subjek
-                document.getElementById('detail-subject-header').innerHTML = `
-                    <h1 class="text-3xl font-black text-slate-800 leading-tight">${result.data[0].subject}</h1>
-                    <div class="mt-2 flex items-center gap-2">
-                         <span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider">${result.data.length} Pesan</span>
+            const wrapper = document.getElementById('email-items-wrapper');
+            wrapper.innerHTML = "";
+
+            if (result.data.length === 0) {
+                wrapper.innerHTML = `<div class="p-20 text-center"><i class="fas fa-folder-open text-5xl text-slate-200 mb-4 block"></i><p class="text-slate-400 font-medium">Folder ini kosong</p></div>`;
+            }
+
+            result.data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "email-item p-5 border-b border-slate-50 flex items-center gap-6";
+                div.onclick = () => loadDetail(item.id);
+                div.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        ${item.from.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-800 truncate pr-4">${item.from.split('<')[0]}</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded">${new Date(item.date).toLocaleDateString()}</span>
+                        </div>
+                        <div class="text-sm font-bold text-slate-700 truncate mb-1">${item.subject}</div>
+                        <div class="text-xs text-slate-400 truncate">${item.snippet}</div>
+                    </div>
+                    <div class="flex gap-2">
+                         <button onclick="event.stopPropagation(); deleteEmail('${item.id}')" class="text-slate-300 hover:text-red-500 p-2 transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                         </button>
                     </div>
                 `;
-
-                const msgWrapper = document.getElementById('detail-messages-wrapper');
-                msgWrapper.innerHTML = "";
-
-                // Render setiap pesan dalam thread
-                result.data.forEach((msg) => {
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = "bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm";
-                    msgDiv.innerHTML = `
-                        <div class="bg-slate-50/50 px-6 py-4 flex justify-between items-center border-b border-slate-100">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
-                                    ${msg.from.charAt(0)}
-                                </div>
-                                <div>
-                                    <div class="text-sm font-bold text-slate-800">${msg.from}</div>
-                                    <div class="text-[10px] text-slate-400 font-medium">Ke: ${msg.to}</div>
-                                </div>
-                            </div>
-                            <div class="text-[10px] font-bold text-slate-400 text-right">
-                                ${new Date(msg.date).toLocaleString()}
-                            </div>
-                        </div>
-                        <div class="p-8 text-slate-700 leading-relaxed overflow-x-auto email-body-content">
-                            ${msg.body}
-                        </div>
-                    `;
-                    msgWrapper.appendChild(msgDiv);
-                });
-
-                // Scroll ke bawah ke pesan terbaru
-                setTimeout(() => {
-                    const view = document.getElementById('view-detail');
-                    view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' });
-                }, 300);
-
-            } catch (e) {
-                alert("Gagal memuat percakapan.");
-            } finally {
-                showLoader(false);
-            }
+                wrapper.appendChild(div);
+            });
+        } catch (e) {
+            console.error(e);
+            alert("Koneksi gagal. Pastikan Anda telah menyetujui izin saat Deploy Apps Script dan memilih 'Anyone' pada akses.");
+        } finally {
+            showLoader(false);
         }
+    }
 
-        // 3. Fungsi Balas
-        async function sendReply() {
-            const body = document.getElementById('reply-body').value;
-            if(!body) return alert("Tulis sesuatu untuk membalas!");
+    async function loadDetail(id) {
+        showLoader(true);
+        currentThreadId = id;
+        try {
+            const result = await callAPI({ action: 'getDetail', id: id, password: appPassword });
+            switchView('detail');
             
-            const btn = document.getElementById('replyBtn');
-            btn.disabled = true;
-            btn.innerText = "Mengirim...";
+            document.getElementById('detail-subject-header').innerHTML = `
+                <h1 class="text-3xl font-black text-slate-800 leading-tight">${result.data[0].subject}</h1>
+                <div class="mt-2 flex items-center gap-2">
+                     <span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider">${result.data.length} Pesan</span>
+                </div>
+            `;
 
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'replyEmail', threadId: currentThreadId, body: body, password: appPassword })
-                });
-                alert("Balasan Terkirim!");
-                document.getElementById('reply-body').value = "";
-                loadDetail(currentThreadId); // Refresh detail
-            } catch (e) { alert("Gagal membalas."); }
-            finally { btn.disabled = false; btn.innerText = "Kirim Balasan"; }
+            const msgWrapper = document.getElementById('detail-messages-wrapper');
+            msgWrapper.innerHTML = "";
+
+            result.data.forEach((msg) => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = "bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm";
+                msgDiv.innerHTML = `
+                    <div class="bg-slate-50/50 px-6 py-4 flex justify-between items-center border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                                ${msg.from.charAt(0)}
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-slate-800">${msg.from}</div>
+                                <div class="text-[10px] text-slate-400 font-medium">Ke: ${msg.to}</div>
+                            </div>
+                        </div>
+                        <div class="text-[10px] font-bold text-slate-400 text-right">
+                            ${new Date(msg.date).toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="p-8 text-slate-700 leading-relaxed overflow-x-auto email-body-content text-sm">
+                        ${msg.body}
+                    </div>
+                `;
+                msgWrapper.appendChild(msgDiv);
+            });
+
+            setTimeout(() => {
+                const view = document.getElementById('view-detail');
+                view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' });
+            }, 300);
+
+        } catch (e) {
+            alert("Gagal memuat percakapan.");
+        } finally {
+            showLoader(false);
         }
+    }
 
-        // 4. Fungsi Kirim Email Baru
-        async function sendEmailNew() {
-            const to = document.getElementById('to-field').value;
-            const sub = document.getElementById('subject-field').value;
-            const body = document.getElementById('body-field').value;
+    async function sendReply() {
+        const body = document.getElementById('reply-body').value;
+        if(!body) return alert("Tulis sesuatu untuk membalas!");
+        const btn = document.getElementById('replyBtn');
+        btn.disabled = true;
+        btn.innerText = "Mengirim...";
+        try {
+            await callAPI({ action: 'replyEmail', threadId: currentThreadId, body: body, password: appPassword });
+            alert("Balasan Terkirim!");
+            document.getElementById('reply-body').value = "";
+            loadDetail(currentThreadId);
+        } catch (e) { alert("Gagal membalas."); }
+        finally { btn.disabled = false; btn.innerText = "Kirim Balasan"; }
+    }
 
-            if(!to || !sub || !body) return alert("Mohon lengkapi semua kolom.");
+    async function sendEmailNew() {
+        const to = document.getElementById('to-field').value;
+        const sub = document.getElementById('subject-field').value;
+        const body = document.getElementById('body-field').value;
+        if(!to || !sub || !body) return alert("Mohon lengkapi semua kolom.");
+        showLoader(true);
+        try {
+            await callAPI({ action: 'sendEmail', to: to, subject: sub, body: body, password: appPassword });
+            alert("Email Berhasil Dikirim!");
+            document.getElementById('to-field').value = "";
+            document.getElementById('subject-field').value = "";
+            document.getElementById('body-field').value = "";
+            loadFolder('getInbox', document.getElementById('btn-inbox'));
+        } catch (e) { alert("Gagal mengirim email."); }
+        finally { showLoader(false); }
+    }
 
-            showLoader(true);
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'sendEmail', to: to, subject: sub, body: body, password: appPassword })
-                });
-                alert("Email Berhasil Dikirim!");
-                // Reset & Back
-                document.getElementById('to-field').value = "";
-                document.getElementById('subject-field').value = "";
-                document.getElementById('body-field').value = "";
-                loadFolder('getInbox', document.getElementById('btn-inbox'));
-            } catch (e) { alert("Gagal mengirim email."); }
-            finally { showLoader(false); }
-        }
+    async function deleteEmail(id) {
+        if(!confirm("Hapus percakapan ini?")) return;
+        showLoader(true);
+        try {
+            await callAPI({ action: 'deleteThread', id: id, password: appPassword });
+            refreshCurrent();
+        } catch (e) { alert("Gagal menghapus."); }
+        finally { showLoader(false); }
+    }
 
-        // 5. Fungsi Hapus
-        async function deleteEmail(id) {
-            if(!confirm("Hapus percakapan ini?")) return;
-            showLoader(true);
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'deleteThread', id: id, password: appPassword })
-                });
-                refreshCurrent();
-            } catch (e) { alert("Gagal menghapus."); }
-            finally { showLoader(false); }
-        }
+    function showLoader(val) { document.getElementById('loader').classList.toggle('hidden', !val); }
+    function switchView(view) {
+        document.getElementById('view-list').classList.add('hidden');
+        document.getElementById('view-detail').classList.add('hidden');
+        document.getElementById('view-compose').classList.add('hidden');
+        if(view === 'list') document.getElementById('view-list').classList.remove('hidden');
+        if(view === 'detail') document.getElementById('view-detail').classList.remove('hidden');
+        if(view === 'compose') document.getElementById('view-compose').classList.remove('medium'); 
+        // perbaikan typo di baris atas:
+        if(view === 'compose') document.getElementById('view-compose').classList.remove('hidden');
+    }
+    function showCompose() {
+        switchView('compose');
+        document.getElementById('view-title').innerText = "Tulis Email";
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
+    }
+    function refreshCurrent() { loadFolder(currentAction); }
+    function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
-        // UI Helpers
-        function showLoader(val) {
-            document.getElementById('loader').classList.toggle('hidden', !val);
-        }
-
-        function switchView(view) {
-            document.getElementById('view-list').classList.add('hidden');
-            document.getElementById('view-detail').classList.add('hidden');
-            document.getElementById('view-compose').classList.add('hidden');
-
-            if(view === 'list') document.getElementById('view-list').classList.remove('hidden');
-            if(view === 'detail') document.getElementById('view-detail').classList.remove('hidden');
-            if(view === 'compose') document.getElementById('view-compose').classList.remove('hidden');
-        }
-
-        function showCompose() {
-            switchView('compose');
-            document.getElementById('view-title').innerText = "Tulis Email";
-            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
-        }
-
-        function refreshCurrent() {
-            loadFolder(currentAction);
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-
-        // Start
-        window.onload = () => loadFolder('getInbox');
-    </script>
+    window.onload = () => loadFolder('getInbox');
+</script>
 </body>
 </html>
