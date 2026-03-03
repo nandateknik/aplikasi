@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MyEmail Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+        <div class="text-center mb-8">
+            <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                <i class="fas fa-envelope-open-text text-white text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">Email Manager</h1>
+            <p class="text-slate-500 text-sm">Silakan masukkan password admin Anda</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Password Akses</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" id="password" required
+                        class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        placeholder="••••••••">
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all transform active:scale-95 flex items-center justify-center">
+                <span>Masuk Ke Inbox</span>
+                <i class="fas fa-arrow-right ml-2 text-sm"></i>
+            </button>
+        </form>
+
+        <div id="errorMessage" class="hidden mt-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-center">
+            Password salah, coba lagi!
+        </div>
+
+        <footer class="mt-8 text-center text-slate-400 text-xs">
+            &copy; 2026 Powered by Apps Script & GitHub Pages
+        </footer>
+    </div>
+
+    <script>
+        // GANTI DENGAN URL WEB APP ANDA DARI GOOGLE APPS SCRIPT
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0WkPLKHEl5dTwBz-41mRvqcIyPlzIh8te1pnqi1uFktsvhmuwzI-s18cJXvMjtLCYLw/exec";
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMessage');
+
+            // Loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> &nbsp; Memverifikasi...';
+            errorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Penting untuk Apps Script redirect
+                    body: JSON.stringify({
+                        action: 'login',
+                        password: password
+                    })
+                });
+
+                /* Catatan: 'no-cors' tidak mengembalikan body JSON. 
+                   Untuk demo ini, kita berasumsi jika tidak error, lanjut ke dashboard.
+                   Untuk sistem yang lebih aman, kita simpan password di localStorage.
+                */
+                
+                // Verifikasi sederhana (karena fetch ke Apps Script seringkali opaque)
+                // Kita akan melakukan fetch ulang dengan mode cors untuk validasi sebenarnya
+                const realRes = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', password: password })
+                });
+                
+                const result = await realRes.json();
+
+                if (result.success) {
+                    // Simpan status login sederhana di browser
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('appPassword', password);
+                    
+                    // Redirect ke halaman dashboard (misal dashboard.html)
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error("Unauthorized");
+                }
+
+            } catch (error) {
+                errorMsg.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Masuk Ke Inbox</span><i class="fas fa-arrow-right ml-2 text-sm"></i>';
+            }
+        }
+    </script>
+</body>
+</html>
