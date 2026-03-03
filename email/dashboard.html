@@ -10,14 +10,16 @@
         .loading-overlay { background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); }
         .email-item:hover { background-color: #f1f5f9; cursor: pointer; transition: 0.2s; }
         .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
-        /* Reset minimal untuk konten email agar tidak merusak layout dashboard */
-        .email-body-content img { max-width: 100%; height: auto; }
-        .email-body-content table { width: 100% !important; }
+        /* Reset untuk konten email agar tidak merusak layout */
+        .email-body-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+        .email-body-content table { width: 100% !important; border-collapse: collapse; }
+        .email-body-content { line-height: 1.6; word-break: break-word; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
 
     <script>
+        // Proteksi Halaman
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
         }
@@ -36,10 +38,10 @@
             </div>
             
             <nav class="flex-1 px-4 space-y-2">
-                <button onclick="loadFolder('getInbox', this)" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold transition-all active-nav" id="btn-inbox">
+                <button id="btn-inbox" onclick="loadFolder('getInbox', this)" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold transition-all active-nav">
                     <i class="fas fa-inbox w-5 text-lg"></i> Kotak Masuk
                 </button>
-                <button onclick="loadFolder('getSent', this)" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold transition-all" id="btn-sent">
+                <button id="btn-sent" onclick="loadFolder('getSent', this)" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold transition-all">
                     <i class="fas fa-paper-plane w-5 text-lg"></i> Terkirim
                 </button>
             </nav>
@@ -84,11 +86,8 @@
                         <i class="fas fa-chevron-left"></i> Kembali
                     </button>
                     
-                    <div id="detail-subject-header" class="mb-8">
-                        </div>
-
-                    <div id="detail-messages-wrapper" class="space-y-6">
-                        </div>
+                    <div id="detail-subject-header" class="mb-8"></div>
+                    <div id="detail-messages-wrapper" class="space-y-6"></div>
 
                     <div class="mt-12 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -133,63 +132,67 @@
     </div>
 
     <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEcSoMgisHTlzoa34b4j7zITVhDxGNrkQlsmJOE0nrQasddoVAWsowmH56CgKZuxk1NA/exec"; 
+    // GANTI URL INI JIKA ANDA MELAKUKAN DEPLOY ULANG (NEW VERSION)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOEpqZnRFod95bBNwN40YmMeQ7bR9sDDgrhSN-9CiLH9QIIcQl67CJy7j3uwk2SO2M6w/exec"; 
     const appPassword = localStorage.getItem('appPassword');
     let currentThreadId = null;
     let currentAction = 'getInbox';
 
-    // FUNGSI UTAMA FETCH (DIPERBAIKI UNTUK MENGHINDARI CORS)
+    /**
+     * Fungsi utama komunikasi ke API Apps Script (Fixed CORS)
+     */
     async function callAPI(payload) {
-        // Kita gunakan mode 'no-cors' untuk pengiriman, tapi Apps Script butuh data JSON
-        // Cara terbaik adalah menggunakan Content-Type text/plain agar tidak memicu Preflight CORS
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'cors', 
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-            },
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         });
-        return await response.json();
+        
+        const text = await response.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Format Response Error:", text);
+            throw new Error("Gagal membaca data dari server.");
+        }
     }
 
+    /**
+     * Memuat List Email (Inbox/Sent)
+     */
     async function loadFolder(action, element) {
         currentAction = action;
         showLoader(true);
         switchView('list');
         
+        // Update UI Navigasi
         document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
         if(element) element.classList.add('active-nav');
-        
         document.getElementById('view-title').innerText = action === 'getInbox' ? 'Kotak Masuk' : 'Kotak Keluar';
         
         try {
             const result = await callAPI({ action: action, password: appPassword });
-            
-            if (!result.success) {
-                alert("Gagal: " + result.message);
-                return;
-            }
+            if (!result.success) throw new Error(result.message);
 
             const wrapper = document.getElementById('email-items-wrapper');
-            wrapper.innerHTML = "";
-
-            if (result.data.length === 0) {
-                wrapper.innerHTML = `<div class="p-20 text-center"><i class="fas fa-folder-open text-5xl text-slate-200 mb-4 block"></i><p class="text-slate-400 font-medium">Folder ini kosong</p></div>`;
-            }
+            wrapper.innerHTML = result.data.length === 0 ? 
+                `<div class="p-20 text-center"><i class="fas fa-folder-open text-5xl text-slate-200 mb-4 block"></i><p class="text-slate-400 font-medium">Folder ini kosong</p></div>` : "";
 
             result.data.forEach(item => {
+                const dateFormatted = new Date(item.date).toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+                const cleanFrom = item.from.split('<')[0].replace(/"/g, "").trim();
+                
                 const div = document.createElement('div');
                 div.className = "email-item p-5 border-b border-slate-50 flex items-center gap-6";
                 div.onclick = () => loadDetail(item.id);
                 div.innerHTML = `
                     <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                        ${item.from.charAt(0).toUpperCase()}
+                        ${cleanFrom.charAt(0).toUpperCase()}
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-slate-800 truncate pr-4">${item.from.split('<')[0]}</span>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded">${new Date(item.date).toLocaleDateString()}</span>
+                            <span class="font-bold text-slate-800 truncate pr-4">${cleanFrom}</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded">${dateFormatted}</span>
                         </div>
                         <div class="text-sm font-bold text-slate-700 truncate mb-1">${item.subject}</div>
                         <div class="text-xs text-slate-400 truncate">${item.snippet}</div>
@@ -203,20 +206,23 @@
                 wrapper.appendChild(div);
             });
         } catch (e) {
-            console.error(e);
-            alert("Koneksi gagal. Pastikan Anda telah menyetujui izin saat Deploy Apps Script dan memilih 'Anyone' pada akses.");
+            alert("Error: " + e.message);
         } finally {
             showLoader(false);
         }
     }
 
+    /**
+     * Memuat Detail Pesan dalam Thread
+     */
     async function loadDetail(id) {
         showLoader(true);
         currentThreadId = id;
         try {
             const result = await callAPI({ action: 'getDetail', id: id, password: appPassword });
+            if (!result.success) throw new Error(result.message);
+
             switchView('detail');
-            
             document.getElementById('detail-subject-header').innerHTML = `
                 <h1 class="text-3xl font-black text-slate-800 leading-tight">${result.data[0].subject}</h1>
                 <div class="mt-2 flex items-center gap-2">
@@ -242,28 +248,32 @@
                             </div>
                         </div>
                         <div class="text-[10px] font-bold text-slate-400 text-right">
-                            ${new Date(msg.date).toLocaleString()}
+                            ${new Date(msg.date).toLocaleString('id-ID')}
                         </div>
                     </div>
-                    <div class="p-8 text-slate-700 leading-relaxed overflow-x-auto email-body-content text-sm">
+                    <div class="p-8 text-slate-700 email-body-content text-sm overflow-x-auto">
                         ${msg.body}
                     </div>
                 `;
                 msgWrapper.appendChild(msgDiv);
             });
 
+            // Scroll ke pesan terbaru
             setTimeout(() => {
                 const view = document.getElementById('view-detail');
                 view.scrollTo({ top: view.scrollHeight, behavior: 'smooth' });
             }, 300);
 
         } catch (e) {
-            alert("Gagal memuat percakapan.");
+            alert("Gagal memuat detail: " + e.message);
         } finally {
             showLoader(false);
         }
     }
 
+    /**
+     * Aksi Balas Email
+     */
     async function sendReply() {
         const body = document.getElementById('reply-body').value;
         if(!body) return alert("Tulis sesuatu untuk membalas!");
@@ -279,6 +289,9 @@
         finally { btn.disabled = false; btn.innerText = "Kirim Balasan"; }
     }
 
+    /**
+     * Aksi Kirim Email Baru
+     */
     async function sendEmailNew() {
         const to = document.getElementById('to-field').value;
         const sub = document.getElementById('subject-field').value;
@@ -288,14 +301,16 @@
         try {
             await callAPI({ action: 'sendEmail', to: to, subject: sub, body: body, password: appPassword });
             alert("Email Berhasil Dikirim!");
-            document.getElementById('to-field').value = "";
-            document.getElementById('subject-field').value = "";
-            document.getElementById('body-field').value = "";
+            // Reset fields
+            ['to-field', 'subject-field', 'body-field'].forEach(id => document.getElementById(id).value = "");
             loadFolder('getInbox', document.getElementById('btn-inbox'));
         } catch (e) { alert("Gagal mengirim email."); }
         finally { showLoader(false); }
     }
 
+    /**
+     * Hapus Email
+     */
     async function deleteEmail(id) {
         if(!confirm("Hapus percakapan ini?")) return;
         showLoader(true);
@@ -306,25 +321,31 @@
         finally { showLoader(false); }
     }
 
+    /**
+     * Navigasi UI
+     */
     function showLoader(val) { document.getElementById('loader').classList.toggle('hidden', !val); }
+    
     function switchView(view) {
-        document.getElementById('view-list').classList.add('hidden');
-        document.getElementById('view-detail').classList.add('hidden');
-        document.getElementById('view-compose').classList.add('hidden');
-        if(view === 'list') document.getElementById('view-list').classList.remove('hidden');
-        if(view === 'detail') document.getElementById('view-detail').classList.remove('hidden');
-        if(view === 'compose') document.getElementById('view-compose').classList.remove('medium'); 
-        // perbaikan typo di baris atas:
-        if(view === 'compose') document.getElementById('view-compose').classList.remove('hidden');
+        const views = ['view-list', 'view-detail', 'view-compose'];
+        views.forEach(v => document.getElementById(v).classList.add('hidden'));
+        document.getElementById('view-' + view).classList.remove('hidden');
     }
+
     function showCompose() {
         switchView('compose');
         document.getElementById('view-title').innerText = "Tulis Email";
         document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav'));
     }
-    function refreshCurrent() { loadFolder(currentAction); }
-    function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
+    function refreshCurrent() { loadFolder(currentAction); }
+
+    function logout() { 
+        localStorage.clear(); 
+        window.location.href = 'index.html'; 
+    }
+
+    // Load Inbox otomatis saat buka dashboard
     window.onload = () => loadFolder('getInbox');
 </script>
 </body>
