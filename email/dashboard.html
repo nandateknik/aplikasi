@@ -8,21 +8,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .loading-overlay { background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); }
-        .email-item:hover { background-color: #f8fafc; cursor: pointer; transition: 0.2s; }
+        .email-item:hover { background-color: #f8fafc; cursor: pointer; transition: 0.2s; border-left: 4px solid #2563eb; }
         .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
         .email-body-content { line-height: 1.6; word-break: break-word; font-size: 0.95rem; }
-        .email-body-content img { max-width: 100%; height: auto; border-radius: 8px; }
+        .email-body-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
         .view-section { transition: opacity 0.2s ease-in-out; }
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
 
     <script>
-        // Proteksi Login
+        // Cek status login
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
         }
@@ -59,7 +57,7 @@
             <div id="loader" class="hidden absolute inset-0 z-50 flex items-center justify-center loading-overlay">
                 <div class="text-center">
                     <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto"></div>
-                    <p class="mt-4 text-slate-500 font-medium">Menyinkronkan...</p>
+                    <p class="mt-4 text-slate-500 font-medium">Menghubungkan ke Gmail...</p>
                 </div>
             </div>
 
@@ -72,7 +70,8 @@
 
             <div id="view-list" class="flex-1 overflow-y-auto view-section">
                 <div id="email-items-wrapper" class="divide-y divide-slate-100 bg-white">
-                    </div>
+                    <div class="p-20 text-center text-slate-400 italic">Memuat email...</div>
+                </div>
             </div>
 
             <div id="view-detail" class="hidden flex-1 overflow-y-auto bg-slate-50 view-section">
@@ -94,14 +93,14 @@
 
             <div id="view-compose" class="hidden flex-1 overflow-y-auto bg-white p-8 view-section">
                 <div class="max-w-3xl mx-auto">
-                    <h2 class="text-3xl font-black mb-8 text-slate-800">Email Baru</h2>
+                    <h2 class="text-3xl font-black mb-8 text-slate-800 text-center">Tulis Email</h2>
                     <div class="space-y-4">
-                        <input type="email" id="to-field" placeholder="Penerima" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium">
+                        <input type="email" id="to-field" placeholder="Ke: (email@gmail.com)" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium">
                         <input type="text" id="subject-field" placeholder="Subjek" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium">
-                        <textarea id="body-field" placeholder="Pesan Anda..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl h-64 outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium"></textarea>
+                        <textarea id="body-field" placeholder="Tulis pesan Anda..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl h-64 outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium"></textarea>
                         <div class="flex justify-end pt-4">
                             <button onclick="sendEmailNew()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-200">
-                                <i class="fas fa-paper-plane mr-2"></i> Kirim Sekarang
+                                <i class="fas fa-paper-plane mr-2"></i> Kirim Email
                             </button>
                         </div>
                     </div>
@@ -111,9 +110,9 @@
     </div>
 
     <script>
-        // --- SESUAIKAN URL INI ---
+        // --- KONFIGURASI ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6z9-oBN0OGxpvaFnnQbVp87aDHAqthXekMjg8KP6-ijchx2iEMTiZ55gnem1mf0x_nA/exec"; 
-        const appPassword = localStorage.getItem('appPassword'); // Ini harus sama dengan ADMIN_PASSWORD di Code.gs
+        const appPassword = localStorage.getItem('appPassword'); // Pastikan tersimpan saat login
         let currentThreadId = null;
         let currentAction = 'getInbox';
 
@@ -126,16 +125,14 @@
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                if (!result.success) throw new Error(result.message);
                 return result;
             } catch (e) {
-                console.error("Fetch Error:", e);
-                alert("Kesalahan: " + e.message);
-                return { success: false };
+                console.error("API Connection Error:", e);
+                return { success: false, message: "Koneksi ke server gagal!" };
             }
         }
 
-        // --- LOAD FOLDER ---
+        // --- LOAD FOLDER (VERSI ANTI-ERROR FOREACH) ---
         async function loadFolder(action) {
             currentAction = action;
             const wrapper = document.getElementById('email-items-wrapper');
@@ -144,47 +141,60 @@
             updateSidebarUI(action);
             switchView('list');
 
-            // Cek Cache agar tidak kosong melompong saat loading
+            // Cek Cache (Gunakan Try-Catch)
             const cached = localStorage.getItem(cacheKey);
-            if (cached) renderEmailList(JSON.parse(cached));
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    renderEmailList(parsed);
+                } catch(e) { localStorage.removeItem(cacheKey); }
+            }
 
             showLoader(true);
             const res = await callAPI({ action: action, password: appPassword });
             showLoader(false);
 
-            if (res.success) {
+            if (res && res.success && Array.isArray(res.data)) {
                 localStorage.setItem(cacheKey, JSON.stringify(res.data));
                 renderEmailList(res.data);
+            } else {
+                renderEmailList([]); // Tampilkan folder kosong jika gagal
             }
         }
 
-        // --- RENDER LIST ---
+        // --- RENDERER (VERSI FIX ERROR FOREACH) ---
         function renderEmailList(data) {
             const wrapper = document.getElementById('email-items-wrapper');
-            if (!data || data.length === 0) {
-                wrapper.innerHTML = `<div class="p-20 text-center text-slate-400"><i class="fas fa-folder-open text-4xl mb-3 block"></i>Folder Kosong</div>`;
+            const list = Array.isArray(data) ? data : [];
+
+            if (list.length === 0) {
+                wrapper.innerHTML = `<div class="p-20 text-center text-slate-400">
+                    <i class="fas fa-inbox text-5xl mb-4 block opacity-20"></i>
+                    Belum ada email yang ditemukan.
+                </div>`;
                 return;
             }
 
             let html = "";
-            data.forEach(item => {
-                const name = (item.from || "Unknown").split('<')[0].replace(/"/g, "").trim();
-                const date = new Date(item.date).toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+            list.forEach(item => {
+                if (!item) return;
+                const name = (item.from || "System").split('<')[0].replace(/"/g, "").trim();
+                const date = item.date ? new Date(item.date).toLocaleDateString('id-ID', { day:'2-digit', month:'short' }) : '---';
                 
                 html += `
                     <div class="email-item p-5 flex items-center gap-5 border-b border-slate-50" onclick="loadDetail('${item.id}')">
-                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
                             ${name.charAt(0).toUpperCase()}
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-center mb-1">
                                 <span class="font-bold text-slate-800 truncate">${name}</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-1 rounded">${date}</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded">${date}</span>
                             </div>
-                            <div class="text-sm font-bold text-slate-700 truncate">${item.subject}</div>
-                            <div class="text-xs text-slate-400 truncate mt-1">${item.snippet}</div>
+                            <div class="text-sm font-bold text-slate-700 truncate">${item.subject || '(Tanpa Subjek)'}</div>
+                            <div class="text-xs text-slate-400 truncate mt-1">${item.snippet || ''}</div>
                         </div>
-                        <button onclick="event.stopPropagation(); deleteEmail('${item.id}')" class="text-slate-300 hover:text-red-500 p-2">
+                        <button onclick="event.stopPropagation(); deleteEmail('${item.id}')" class="text-slate-200 hover:text-red-500 p-2 transition-colors">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>`;
@@ -199,36 +209,36 @@
             const res = await callAPI({ action: 'getDetail', id: id, password: appPassword });
             showLoader(false);
 
-            if (res.success) {
+            if (res && res.success && Array.isArray(res.data)) {
                 switchView('detail');
                 document.getElementById('detail-subject-header').innerHTML = `
-                    <h1 class="text-2xl font-black text-slate-800 leading-tight">${res.data[0].subject}</h1>
-                    <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mt-2 inline-block">${res.data.length} Pesan dalam percakapan</span>
+                    <h1 class="text-2xl font-black text-slate-800 leading-tight">${res.data[0].subject || '(Tanpa Subjek)'}</h1>
+                    <div class="mt-2 text-xs font-bold text-blue-600">Percakapan Berlangsung</div>
                 `;
 
                 let msgHtml = "";
                 res.data.forEach(msg => {
                     msgHtml += `
-                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
                             <div class="bg-slate-50/50 px-6 py-4 flex justify-between items-center border-b border-slate-100">
                                 <div class="text-sm font-bold text-slate-800">${msg.from}</div>
                                 <div class="text-[10px] font-bold text-slate-400">${new Date(msg.date).toLocaleString('id-ID')}</div>
                             </div>
-                            <div class="p-6 text-slate-700 email-body-content">${msg.body}</div>
+                            <div class="p-8 text-slate-700 email-body-content">${msg.body}</div>
                         </div>`;
                 });
                 document.getElementById('detail-messages-wrapper').innerHTML = msgHtml;
+            } else {
+                alert("Gagal memuat detail email.");
             }
         }
 
         // --- ACTIONS ---
         async function sendReply() {
             const body = document.getElementById('reply-body').value;
-            if(!body) return alert("Pesan kosong!");
-            
+            if(!body) return alert("Ketik balasan dulu!");
             const btn = document.getElementById('replyBtn');
             btn.disabled = true; btn.innerText = "Mengirim...";
-            
             const res = await callAPI({ action: 'replyEmail', threadId: currentThreadId, body: body, password: appPassword });
             if(res.success) {
                 document.getElementById('reply-body').value = "";
@@ -241,22 +251,19 @@
             const to = document.getElementById('to-field').value;
             const sub = document.getElementById('subject-field').value;
             const body = document.getElementById('body-field').value;
-            
-            if(!to || !sub || !body) return alert("Lengkapi semua kolom!");
-
+            if(!to || !sub || !body) return alert("Isi semua data!");
             showLoader(true);
             const res = await callAPI({ action: 'sendEmail', to: to, subject: sub, body: body, password: appPassword });
             showLoader(false);
-
             if(res.success) {
-                alert("Email berhasil dikirim!");
-                showCompose(); // Reset form
+                alert("Email Terkirim!");
+                showCompose();
                 loadFolder('getInbox');
             }
         }
 
         async function deleteEmail(id) {
-            if(!confirm("Hapus percakapan ini?")) return;
+            if(!confirm("Buang email ke sampah?")) return;
             showLoader(true);
             const res = await callAPI({ action: 'deleteThread', id: id, password: appPassword });
             if(res.success) refreshCurrent();
@@ -265,35 +272,24 @@
 
         // --- UI HELPERS ---
         function showLoader(v) { document.getElementById('loader').classList.toggle('hidden', !v); }
-        
         function switchView(v) {
             ['view-list', 'view-detail', 'view-compose'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById('view-' + v).classList.remove('hidden');
         }
-
         function updateSidebarUI(action) {
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
             const active = document.getElementById('btn-' + action);
             if(active) active.classList.add('active-nav');
             document.getElementById('view-title').innerText = action === 'getInbox' ? 'Kotak Masuk' : 'Terkirim';
         }
-
         function showCompose() {
             switchView('compose');
-            document.getElementById('view-title').innerText = "Tulis Email Baru";
+            document.getElementById('view-title').innerText = "Tulis Email";
             ['to-field', 'subject-field', 'body-field'].forEach(id => document.getElementById(id).value = "");
         }
+        function refreshCurrent() { loadFolder(currentAction); }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
-        function refreshCurrent() {
-            loadFolder(currentAction);
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-
-        // Start
         window.onload = () => loadFolder('getInbox');
     </script>
 </body>
