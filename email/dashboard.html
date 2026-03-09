@@ -3,333 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - G-DASH</title>
+    <title>G-DASH | Email Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .loading-overlay { background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); }
-        .email-item:hover { background-color: #f8fafc; cursor: pointer; transition: 0.2s; border-left: 4px solid #2563eb; }
-        .active-nav { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
-        .email-body-content { line-height: 1.6; word-break: break-word; font-size: 0.95rem; }
-        .email-body-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
-        .view-section { transition: opacity 0.2s ease-in-out; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-gray-50">
+    <div id="login-screen" class="h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-md w-96">
+            <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">G-DASH Login</h1>
+            <input type="password" id="pass" placeholder="Password Admin" class="w-full p-2 border rounded mb-4">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Masuk</button>
+        </div>
+    </div>
 
-    <script>
-        // PROTEKSI LOGIN: Langsung tendang ke index jika belum login
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'index.html';
-        }
-    </script>
+    <div id="main-app" class="hidden flex h-screen">
+        <div class="w-64 bg-slate-900 text-white p-5 space-y-4">
+            <h2 class="text-xl font-bold border-b border-slate-700 pb-2">Navigation</h2>
+            <button onclick="fetchEmails('getInbox')" class="block w-full text-left hover:text-blue-400">📥 Kotak Masuk</button>
+            <button onclick="fetchEmails('getSent')" class="block w-full text-left hover:text-blue-400">📤 Terkirim</button>
+            <button onclick="showCompose()" class="block w-full bg-blue-600 py-2 rounded text-center mt-10 hover:bg-blue-500">Tulis Email</button>
+            <button onclick="logout()" class="block w-full text-sm text-gray-400 pt-10">Logout</button>
+        </div>
 
-    <div class="flex h-screen overflow-hidden">
-        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm">
-            <div class="p-6">
-                <div class="flex items-center gap-3 text-blue-600 font-black text-2xl mb-8">
-                    <i class="fas fa-envelope-open-text"></i> <span>G-DASH</span>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <span id="view-title" class="font-bold text-lg text-gray-700">Inbox</span>
+                <div id="loading" class="hidden flex items-center">
+                    <div class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5 mr-2"></div>
+                    <span class="text-sm text-gray-500">Memproses...</span>
                 </div>
-                <button onclick="showCompose()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2 font-bold">
-                    <i class="fas fa-plus"></i> Tulis Email
-                </button>
-            </div>
-            
-            <nav class="flex-1 px-4 space-y-2">
-                <button id="btn-getInbox" onclick="loadFolder('getInbox')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold transition-all">
-                    <i class="fas fa-inbox w-5"></i> Kotak Masuk
-                </button>
-                <button id="btn-getSent" onclick="loadFolder('getSent')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-semibold transition-all">
-                    <i class="fas fa-paper-plane w-5"></i> Terkirim
-                </button>
-            </nav>
-
-            <div class="p-6 border-t border-slate-100">
-                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all text-sm font-bold">
-                    <i class="fas fa-power-off"></i> Keluar
-                </button>
-            </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col overflow-hidden relative">
-            <div id="loader" class="hidden absolute inset-0 z-50 flex items-center justify-center loading-overlay">
-                <div class="text-center">
-                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto"></div>
-                    <p class="mt-4 text-slate-500 font-medium">Sinkronisasi Gmail...</p>
-                </div>
-            </div>
-
-            <header class="bg-white border-b border-slate-200 px-8 py-5 flex justify-between items-center shadow-sm z-10">
-                <h2 id="view-title" class="text-xl font-extrabold text-slate-800">Kotak Masuk</h2>
-                <button onclick="refreshCurrent()" class="p-2 text-slate-400 hover:text-blue-600 transition-colors">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
             </header>
-
-            <div id="view-list" class="flex-1 overflow-y-auto view-section">
-                <div id="email-items-wrapper" class="divide-y divide-slate-100 bg-white">
-                    <div class="p-20 text-center text-slate-400 italic">Memuat pesan...</div>
-                </div>
-            </div>
-
-            <div id="view-detail" class="hidden flex-1 overflow-y-auto bg-slate-50 view-section">
-                <div class="max-w-4xl mx-auto p-8">
-                    <button onclick="switchView('list')" class="mb-6 bg-white border border-slate-200 px-4 py-2 rounded-xl text-slate-600 hover:text-blue-600 flex items-center gap-2 shadow-sm transition-all font-bold">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                    </button>
-                    <div id="detail-subject-header" class="mb-6"></div>
-                    <div id="detail-messages-wrapper" class="space-y-6"></div>
-
-                    <div class="mt-10 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                        <textarea id="reply-body" class="w-full p-4 border border-slate-200 rounded-xl h-32 mb-3 focus:ring-4 focus:ring-blue-50 outline-none transition-all" placeholder="Tulis balasan..."></textarea>
-                        <div class="flex justify-end">
-                            <button id="replyBtn" onclick="sendReply()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition-all">Kirim Balasan</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-compose" class="hidden flex-1 overflow-y-auto bg-white p-8 view-section">
-                <div class="max-w-3xl mx-auto">
-                    <h2 class="text-3xl font-black mb-8 text-slate-800 text-center">Tulis Email</h2>
-                    <div class="space-y-4">
-                        <input type="email" id="to-field" placeholder="Ke: (email@gmail.com)" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium">
-                        <input type="text" id="subject-field" placeholder="Subjek" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium">
-                        <textarea id="body-field" placeholder="Isi pesan..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl h-64 outline-none focus:bg-white focus:ring-4 focus:ring-blue-50 transition-all font-medium"></textarea>
-                        <div class="flex justify-end pt-4">
-                            <button onclick="sendEmailNew()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-200">
-                                <i class="fas fa-paper-plane mr-2"></i> Kirim Email
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+            <main id="content" class="flex-1 overflow-y-auto p-4 space-y-2">
+                </main>
+        </div>
     </div>
 
     <script>
-        // --- CONFIG ---
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP KAMU!
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVoGPnaSTwybTmqauFVMSWg40llHA4580zNJZ-WQqWCCBmSPM5TL7KsIOnqpiGvKKr1A/exec"; 
-        
-        const appPassword = localStorage.getItem('appPassword');
-        let currentThreadId = null;
-        let currentAction = 'getInbox';
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVoGPnaSTwybTmqauFVMSWg40llHA4580zNJZ-WQqWCCBmSPM5TL7KsIOnqpiGvKKr1A/exec"; // Masukkan URL Deploy Apps Script
+        let CURRENT_PASSWORD = localStorage.getItem('g_dash_pass');
 
-        // --- CORE API HANDLER ---
-        async function callAPI(payload) {
+        if (CURRENT_PASSWORD) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            fetchEmails('getInbox');
+        }
+
+        async function api(payload) {
+            document.getElementById('loading').classList.remove('hidden');
             try {
-                // Sisipkan password otomatis ke setiap request
-                payload.password = appPassword;
-
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ ...payload, password: CURRENT_PASSWORD })
                 });
-                
-                const result = await response.json();
-
-                // Jika password di Script diubah, dashboard akan otomatis minta login ulang
-                if (result.message && result.message.includes("Akses Ditolak")) {
-                    alert("Sesi tidak valid. Silakan login kembali.");
-                    logout();
-                }
-
-                return result;
-            } catch (e) {
-                console.error("Fetch Error:", e);
-                return { success: false, message: "Koneksi gagal. Cek URL Deployment!" };
+                return await response.json();
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
             }
         }
 
-        // --- FOLDER LOADER (ANTI-ERROR VERSION) ---
-        async function loadFolder(action) {
-            currentAction = action;
-            const cacheKey = `cache_${action}`;
-            
-            updateSidebarUI(action);
-            switchView('list');
+        async function handleLogin() {
+            const p = document.getElementById('pass').value;
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', password: p })
+            }).then(r => r.json());
 
-            // 1. Load dari Cache (Biar cepet)
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                try {
-                    const parsed = JSON.parse(cached);
-                    // Pastikan yang di-render adalah Array agar tidak error forEach
-                    renderEmailList(Array.isArray(parsed) ? parsed : []);
-                } catch(e) { 
-                    localStorage.removeItem(cacheKey); 
-                }
-            }
-
-            // 2. Load dari Server (Sinkronisasi)
-            showLoader(true);
-            const res = await callAPI({ action: action });
-            showLoader(false);
-
-            if (res && res.success && Array.isArray(res.data)) {
-                localStorage.setItem(cacheKey, JSON.stringify(res.data));
-                renderEmailList(res.data);
+            if (res.success) {
+                CURRENT_PASSWORD = p;
+                localStorage.setItem('g_dash_pass', p);
+                location.reload();
             } else {
-                // Jika server tidak kirim array, tampilkan folder kosong
-                if (!cached) renderEmailList([]);
+                alert("Password Salah!");
             }
         }
 
-        // --- RENDERER ---
-        function renderEmailList(data) {
-            const wrapper = document.getElementById('email-items-wrapper');
-            // Validasi data: wajib array
-            const emailList = Array.isArray(data) ? data : [];
-
-            if (emailList.length === 0) {
-                wrapper.innerHTML = `<div class="p-20 text-center text-slate-400">
-                    <i class="fas fa-inbox text-5xl mb-4 block opacity-20"></i>
-                    Tidak ada email yang ditemukan.
-                </div>`;
-                return;
-            }
-
-            let html = "";
-            emailList.forEach(item => {
-                if (!item) return;
-                const name = (item.from || "System").split('<')[0].replace(/"/g, "").trim();
-                const date = item.date ? new Date(item.date).toLocaleDateString('id-ID', { day:'2-digit', month:'short' }) : '---';
-                
-                html += `
-                    <div class="email-item p-5 flex items-center gap-5 border-b border-slate-50" onclick="loadDetail('${item.id}')">
-                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                            ${name.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-slate-800 truncate">${name}</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded">${date}</span>
-                            </div>
-                            <div class="text-sm font-bold text-slate-700 truncate">${item.subject || '(Tanpa Subjek)'}</div>
-                            <div class="text-xs text-slate-400 truncate mt-1 line-clamp-1">${item.snippet || ''}</div>
-                        </div>
-                        <button onclick="event.stopPropagation(); deleteEmail('${item.id}')" class="text-slate-200 hover:text-red-500 p-2 transition-colors">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>`;
-            });
-            wrapper.innerHTML = html;
-        }
-
-        // --- DETAIL LOAD ---
-        async function loadDetail(id) {
-            showLoader(true);
-            currentThreadId = id;
-            const res = await callAPI({ action: 'getDetail', id: id });
-            showLoader(false);
-
-            if (res && res.success && Array.isArray(res.data)) {
-                switchView('detail');
-                document.getElementById('detail-subject-header').innerHTML = `
-                    <h1 class="text-2xl font-black text-slate-800 leading-tight">${res.data[0].subject || '(Tanpa Subjek)'}</h1>
-                    <div class="mt-2 text-xs font-bold text-blue-600">Terbuka di G-DASH</div>
-                `;
-
-                let msgHtml = "";
-                res.data.forEach(msg => {
-                    msgHtml += `
-                        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm mb-4">
-                            <div class="bg-slate-50/50 px-6 py-4 flex justify-between items-center border-b border-slate-100">
-                                <div class="text-sm font-bold text-slate-800">${msg.from}</div>
-                                <div class="text-[10px] font-bold text-slate-400">${new Date(msg.date).toLocaleString('id-ID')}</div>
-                            </div>
-                            <div class="p-8 text-slate-700 email-body-content">${msg.body}</div>
-                        </div>`;
-                });
-                document.getElementById('detail-messages-wrapper').innerHTML = msgHtml;
-                window.scrollTo(0,0);
-            }
-        }
-
-        // --- ACTIONS ---
-        async function sendReply() {
-            const body = document.getElementById('reply-body').value;
-            if(!body) return alert("Tulis pesan balasan!");
-            
-            const btn = document.getElementById('replyBtn');
-            btn.disabled = true; btn.innerText = "Mengirim...";
-            
-            const res = await callAPI({ action: 'replyEmail', threadId: currentThreadId, body: body });
-            if(res.success) {
-                document.getElementById('reply-body').value = "";
-                loadDetail(currentThreadId);
-            }
-            btn.disabled = false; btn.innerText = "Kirim Balasan";
-        }
-
-        async function sendEmailNew() {
-            const to = document.getElementById('to-field').value;
-            const sub = document.getElementById('subject-field').value;
-            const body = document.getElementById('body-field').value;
-            
-            if(!to || !sub || !body) return alert("Lengkapi semua kolom!");
-            
-            showLoader(true);
-            const res = await callAPI({ action: 'sendEmail', to: to, subject: sub, body: body });
-            showLoader(false);
-            
-            if(res.success) {
-                alert("Email Berhasil Terkirim!");
-                showCompose();
-                loadFolder('getInbox');
-            }
-        }
-
-        async function deleteEmail(id) {
-            if(!confirm("Pindahkan email ke Sampah?")) return;
-            showLoader(true);
-            const res = await callAPI({ action: 'deleteThread', id: id });
-            if(res.success) refreshCurrent();
-            showLoader(false);
-        }
-
-        // --- UI SYSTEM ---
-        function showLoader(v) { document.getElementById('loader').classList.toggle('hidden', !v); }
-        
-        function switchView(v) {
-            ['view-list', 'view-detail', 'view-compose'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById('view-' + v).classList.remove('hidden');
-        }
-
-        function updateSidebarUI(action) {
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
-            const active = document.getElementById('btn-' + action);
-            if(active) active.classList.add('active-nav');
+        async function fetchEmails(action) {
             document.getElementById('view-title').innerText = action === 'getInbox' ? 'Kotak Masuk' : 'Terkirim';
+            const res = await api({ action: action });
+            const list = res.data.map(item => `
+                <div class="bg-white p-4 rounded border hover:border-blue-500 cursor-pointer shadow-sm transition" onclick="viewDetail('${item.id}')">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-blue-800">${item.from.split('<')[0]}</span>
+                        <span class="text-xs text-gray-400">${new Date(item.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="text-sm font-medium">${item.subject}</div>
+                    <div class="text-xs text-gray-500 truncate">${item.snippet}</div>
+                </div>
+            `).join('');
+            document.getElementById('content').innerHTML = list || '<p class="text-center text-gray-500 mt-10">Tidak ada pesan.</p>';
+        }
+
+        async function viewDetail(id) {
+            const res = await api({ action: 'getDetail', id: id });
+            const msg = res.data[0];
+            document.getElementById('content').innerHTML = `
+                <div class="bg-white p-6 rounded shadow-sm border">
+                    <button onclick="fetchEmails('getInbox')" class="mb-4 text-blue-600 text-sm">← Kembali</button>
+                    <h1 class="text-xl font-bold mb-2">${msg.subject}</h1>
+                    <p class="text-sm text-gray-600 mb-4">Dari: ${msg.from}</p>
+                    <div class="border-t pt-4 text-gray-800 leading-relaxed">${msg.body}</div>
+                    <button onclick="deleteEmail('${id}')" class="mt-10 text-red-500 text-sm">Hapus Percakapan</button>
+                </div>
+            `;
         }
 
         function showCompose() {
-            switchView('compose');
-            document.getElementById('view-title').innerText = "Tulis Email";
-            document.getElementById('to-field').value = "";
-            document.getElementById('subject-field').value = "";
-            document.getElementById('body-field').value = "";
+            document.getElementById('content').innerHTML = `
+                <div class="bg-white p-6 rounded shadow-sm border max-w-2xl mx-auto">
+                    <h2 class="text-lg font-bold mb-4">Email Baru</h2>
+                    <input id="to" type="text" placeholder="Ke" class="w-full p-2 border rounded mb-2">
+                    <input id="sub" type="text" placeholder="Subjek" class="w-full p-2 border rounded mb-2">
+                    <textarea id="body" rows="8" class="w-full p-2 border rounded mb-4" placeholder="Isi pesan..."></textarea>
+                    <button onclick="send()" class="bg-blue-600 text-white px-6 py-2 rounded">Kirim</button>
+                </div>
+            `;
         }
 
-        function refreshCurrent() { loadFolder(currentAction); }
-        
-        function logout() { 
-            localStorage.clear(); 
-            window.location.href = 'index.html'; 
+        async function send() {
+            const data = {
+                action: 'sendEmail',
+                to: document.getElementById('to').value,
+                subject: document.getElementById('sub').value,
+                body: document.getElementById('body').value
+            };
+            const res = await api(data);
+            if (res.success) { alert("Terkirim!"); fetchEmails('getSent'); }
         }
 
-        // STARTUP
-        window.onload = () => {
-            // Bersihkan data cache yang berpotensi rusak setiap kali reload
-            // localStorage.clear(); // Aktifkan ini jika ingin selalu sinkron dari nol
-            loadFolder('getInbox');
-        };
+        function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
