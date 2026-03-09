@@ -3,208 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-DASH | Technical Monitor</title>
+    <title>G-DASH | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loader { border-top-color: #3b82f6; animation: spinner 1s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .email-body img { max-width: 100%; height: auto; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 min-h-screen font-sans">
 
     <div id="login-screen" class="h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md border border-gray-200">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-extrabold text-blue-600">G-DASH</h1>
-                <p class="text-gray-500 text-sm">Panel Kontrol Email & Servis</p>
-            </div>
-            <input type="password" id="pass" placeholder="Masukkan Password Admin" class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
-            <button onclick="handleLogin()" id="btn-login" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">Masuk Ke Sistem</button>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm border">
+            <h1 class="text-3xl font-black text-blue-600 mb-2 text-center">G-DASH</h1>
+            <p class="text-gray-400 text-center text-sm mb-6">Technical Monitor System</p>
+            <input type="password" id="pass" placeholder="Password Admin" class="w-full p-3 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-400 text-center">
+            <button onclick="handleLogin()" id="btn-login" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">MASUK</button>
         </div>
     </div>
 
     <div id="main-app" class="hidden flex h-screen overflow-hidden">
-        <div class="w-64 bg-slate-900 text-white flex flex-col">
-            <div class="p-6 text-xl font-bold border-b border-slate-800 text-blue-400">G-DASH v1.0</div>
-            <nav class="flex-1 p-4 space-y-2">
-                <button onclick="fetchEmails('getInbox')" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center">
-                    <span class="mr-3">📥</span> Kotak Masuk
-                </button>
-                <button onclick="fetchEmails('getSent')" class="w-full text-left p-3 rounded hover:bg-slate-800 flex items-center">
-                    <span class="mr-3">📤</span> Terkirim
-                </button>
-                <button onclick="showCompose()" class="w-full bg-blue-600 p-3 rounded-lg mt-6 font-bold hover:bg-blue-500 transition">
-                    + Tulis Pesan
-                </button>
+        <div class="w-64 bg-slate-900 text-white flex flex-col shrink-0">
+            <div class="p-6 text-xl font-bold border-b border-slate-800 text-blue-400 flex items-center">
+                <span class="mr-2">⚡</span> G-DASH v1.3
+            </div>
+            <nav class="flex-1 p-4 space-y-1">
+                <button onclick="fetchEmails('getInbox')" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 transition flex items-center">📥 Inbox</button>
+                <button onclick="fetchEmails('getSent')" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 transition flex items-center">📤 Sent</button>
+                <div class="border-t border-slate-800 my-4"></div>
+                <button onclick="showCompose()" class="w-full bg-blue-600 p-3 rounded-xl font-bold hover:bg-blue-500 transition mb-2">+ New Email</button>
+                <button onclick="showSettings()" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 transition flex items-center text-gray-400">⚙️ Settings CSS</button>
             </nav>
             <div class="p-4 border-t border-slate-800">
-                <button onclick="logout()" class="text-gray-400 text-sm hover:text-white"> Keluar (Logout)</button>
+                <button onclick="logout()" class="text-gray-500 text-xs hover:text-white transition">LOGOUT SYSTEM</button>
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col bg-gray-50">
+        <div class="flex-1 flex flex-col bg-gray-50 overflow-hidden">
             <header class="bg-white shadow-sm p-4 flex justify-between items-center border-b">
-                <h2 id="view-title" class="font-bold text-lg text-gray-800">Kotak Masuk</h2>
-                <div id="loading-status" class="hidden flex items-center text-blue-600 font-medium">
-                    <div class="loader rounded-full border-4 border-t-4 border-gray-200 h-5 w-5 mr-3"></div>
-                    Menghubungkan ke Server...
+                <h2 id="view-title" class="font-bold text-gray-800">Panel Utama</h2>
+                <div id="loading-status" class="hidden flex items-center text-blue-600 text-xs font-bold">
+                    <div class="loader rounded-full border-2 border-t-2 border-gray-200 h-4 w-4 mr-2"></div> LOADING...
                 </div>
             </header>
-
-            <main id="content" class="flex-1 overflow-y-auto p-6">
-                <div class="text-center mt-20 text-gray-400">Silakan pilih menu untuk memulai.</div>
-            </main>
+            <main id="content" class="flex-1 overflow-y-auto p-4 md:p-8">
+                </main>
         </div>
     </div>
 
     <script>
-        // PENTING: Ganti URL ini dengan hasil "Deploy as Web App" Anda
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_X6-tdwOtcDWmLAA2If6WqakN2nTieH7h1gyl8ALtuXcaAVqUIhRBt1Rlmgdy7EGnNg/exec"; 
-        let CURRENT_PASSWORD = localStorage.getItem('g_dash_session');
+        // --- MASUKKAN URL WEB APP ANDA DI SINI ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxq5hXeLRB2PcqcYadIvubLfXfkAOERP0KIXndcZctr_7z1O4BozNkXeBpgUZ5UN2y/exec"; 
+        
+        let PASS = localStorage.getItem('gd_pass');
+        // Default Header/Footer CSS (Bisa diubah di menu Settings)
+        let MAIL_HEADER = localStorage.getItem('mail_header') || '<div style="font-family:sans-serif; color:#2563eb; font-weight:bold; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:20px;">NANDA TEKNIK BANYUWANGI - Official Response</div>';
+        let MAIL_FOOTER = localStorage.getItem('mail_footer') || '<div style="margin-top:30px; padding-top:15px; border-top:1px solid #eee; font-size:12px; color:#666;">Hormat Kami,<br><b>Nanda Teknik Banyuwangi</b><br>Layanan AC, CCTV & Networking<br>Banyuwangi, Jawa Timur</div>';
 
-        // Cek Session saat buka halaman
-        if (CURRENT_PASSWORD) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            fetchEmails('getInbox');
-        }
+        window.onload = () => {
+            if (PASS) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                fetchEmails('getInbox');
+            }
+        };
 
         async function apiRequest(payload) {
-            const status = document.getElementById('loading-status');
-            status.classList.remove('hidden');
-            
+            document.getElementById('loading-status').classList.remove('hidden');
             try {
-                // Gunakan mode: 'cors' jika memungkinkan, atau tangani manual
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ ...payload, password: CURRENT_PASSWORD })
+                    body: JSON.stringify({ ...payload, password: PASS })
                 });
-
-                if (!response.ok) throw new Error("Server tidak merespon (Error " + response.status + ")");
-                
-                const result = await response.json();
-                if (result.success === false) throw new Error(result.message || "Akses Ditolak");
-                
-                return result;
+                return await response.json();
             } catch (err) {
                 console.error(err);
-                alert("Gagal memuat data: " + err.message + "\nPastikan Apps Script sudah di-Deploy sebagai 'Anyone'.");
-                return { success: false, data: [] };
+                return { success: false };
             } finally {
-                status.classList.add('hidden');
+                document.getElementById('loading-status').classList.add('hidden');
             }
         }
 
         async function handleLogin() {
             const p = document.getElementById('pass').value;
-            const btn = document.getElementById('btn-login');
-            btn.innerText = "Mengecek...";
-            
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'login', password: p })
-                }).then(r => r.json());
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', password: p })
+            }).then(r => r.json());
 
-                if (res.success) {
-                    CURRENT_PASSWORD = p;
-                    localStorage.setItem('g_dash_session', p);
-                    location.reload();
-                } else {
-                    alert("Password Salah!");
-                }
-            } catch (e) {
-                alert("Koneksi gagal. Cek URL Apps Script atau Deploy ulang skrip Anda.");
-            } finally {
-                btn.innerText = "Masuk Ke Sistem";
-            }
+            if (res.success) {
+                localStorage.setItem('gd_pass', p);
+                location.reload();
+            } else { alert("Akses Ditolak!"); }
         }
 
         async function fetchEmails(action) {
+            const container = document.getElementById('content');
             document.getElementById('view-title').innerText = action === 'getInbox' ? 'Kotak Masuk' : 'Pesan Terkirim';
+            container.innerHTML = '<div class="text-center py-20 text-gray-400">Menghubungkan ke Gmail...</div>';
+
             const res = await apiRequest({ action: action });
-            
-            if (!res.data || res.data.length === 0) {
-                document.getElementById('content').innerHTML = `
-                    <div class="text-center py-20">
-                        <p class="text-gray-400">Tidak ada email ditemukan.</p>
-                    </div>`;
+            if (!res.success || res.data.length === 0) {
+                container.innerHTML = '<div class="text-center py-20">Kosong.</div>';
                 return;
             }
 
-            const html = res.data.map(item => `
-                <div onclick="viewDetail('${item.id}')" class="bg-white p-4 rounded-lg shadow-sm border mb-3 hover:border-blue-400 cursor-pointer transition flex justify-between items-center group">
-                    <div class="overflow-hidden pr-4">
-                        <div class="font-bold text-gray-900 group-hover:text-blue-600">${item.from.split('<')[0]}</div>
-                        <div class="text-sm font-semibold text-gray-700 truncate">${item.subject}</div>
-                        <div class="text-xs text-gray-400 truncate mt-1">${item.snippet}</div>
+            container.innerHTML = res.data.map(item => `
+                <div onclick="viewDetail('${item.id}')" class="bg-white p-4 rounded-xl shadow-sm border mb-2 hover:border-blue-400 cursor-pointer transition flex justify-between items-center group">
+                    <div class="overflow-hidden">
+                        <div class="font-bold text-gray-800 text-sm group-hover:text-blue-600">${item.from}</div>
+                        <div class="text-sm text-gray-600 truncate font-medium">${item.subject}</div>
+                        <div class="text-xs text-gray-400 truncate">${item.snippet}</div>
                     </div>
-                    <div class="text-right min-w-[80px]">
-                        <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded">${new Date(item.date).toLocaleDateString()}</span>
-                    </div>
+                    <div class="text-[10px] text-gray-400 font-mono">${new Date(item.date).toLocaleDateString()}</div>
                 </div>
             `).join('');
-            
-            document.getElementById('content').innerHTML = html;
         }
 
         async function viewDetail(id) {
+            const container = document.getElementById('content');
             const res = await apiRequest({ action: 'getDetail', id: id });
             if (!res.success) return;
             const msg = res.data[0];
             
-            document.getElementById('content').innerHTML = `
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-                    <button onclick="fetchEmails('getInbox')" class="mb-6 text-blue-600 font-medium flex items-center"> ← Kembali ke Daftar</button>
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">${msg.subject}</h1>
-                    <div class="flex justify-between items-center border-b pb-4 mb-6">
-                        <span class="text-sm text-gray-500">Dari: <b>${msg.from}</b></span>
-                    </div>
-                    <div class="prose max-w-none text-gray-800 overflow-x-auto">
-                        ${msg.body}
+            container.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-4xl mx-auto">
+                    <button onclick="fetchEmails('getInbox')" class="mb-4 text-blue-600 text-sm font-bold">← KEMBALI</button>
+                    <h1 class="text-xl font-bold text-gray-900 mb-2">${msg.subject}</h1>
+                    <div class="text-xs text-gray-500 mb-6 pb-4 border-b">Dari: ${msg.from}</div>
+                    <div class="email-body text-gray-800 leading-relaxed overflow-x-auto">${msg.body}</div>
+                    <div class="mt-10 pt-6 border-t flex gap-2">
+                        <button onclick="showReply('${msg.from}', '${msg.subject}')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold text-sm">BALAS PESAN</button>
                     </div>
                 </div>
             `;
         }
 
-        function showCompose() {
+        function showCompose(to = "", sub = "") {
             document.getElementById('view-title').innerText = 'Tulis Pesan Baru';
             document.getElementById('content').innerHTML = `
-                <div class="bg-white p-8 rounded-xl shadow-sm border max-w-3xl mx-auto">
-                    <div class="space-y-4">
-                        <input id="to" type="text" placeholder="Penerima (Email)" class="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                        <input id="sub" type="text" placeholder="Subjek / Judul Pesan" class="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                        <textarea id="body_mail" rows="10" class="w-full p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ketik pesan Anda di sini..."></textarea>
-                        <button onclick="sendEmailNow()" id="btn-send" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">Kirim Sekarang</button>
-                    </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-2xl mx-auto space-y-4">
+                    <input id="to" type="text" value="${to}" placeholder="Penerima" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400">
+                    <input id="sub" type="text" value="${sub}" placeholder="Subjek" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400">
+                    <textarea id="msg_body" rows="10" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400" placeholder="Isi pesan teknis..."></textarea>
+                    <button onclick="sendEmail()" id="btn-send" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">KIRIM SEKARANG</button>
                 </div>
             `;
         }
 
-        async function sendEmailNow() {
+        function showReply(from, sub) {
+            const email = from.match(/<([^>]+)>/) ? from.match(/<([^>]+)>/)[1] : from;
+            showCompose(email, "Re: " + sub);
+        }
+
+        async function sendEmail() {
             const btn = document.getElementById('btn-send');
+            const fullBody = MAIL_HEADER + document.getElementById('msg_body').value.replace(/\n/g, '<br>') + MAIL_FOOTER;
+            
             const data = {
                 action: 'sendEmail',
                 to: document.getElementById('to').value,
                 subject: document.getElementById('sub').value,
-                body: document.getElementById('body_mail').value
+                body: fullBody
             };
 
-            if(!data.to || !data.body) return alert("Penerima dan isi pesan wajib diisi!");
-            
-            btn.disabled = true;
-            btn.innerText = "Mengirim...";
+            btn.disabled = true; btn.innerText = "MENGIRIM...";
             const res = await apiRequest(data);
-            if (res.success) {
-                alert("Email Berhasil Terkirim!");
-                fetchEmails('getSent');
-            }
+            if(res.success) { alert("Email Terkirim!"); fetchEmails('getSent'); }
+            else { alert("Gagal!"); btn.disabled = false; btn.innerText = "KIRIM SEKARANG"; }
         }
 
-        function logout() {
-            localStorage.removeItem('g_dash_session');
-            location.reload();
+        function showSettings() {
+            document.getElementById('view-title').innerText = 'Settings Header & Footer CSS';
+            document.getElementById('content').innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-2xl mx-auto space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-blue-600">HTML Header Email</label>
+                        <textarea id="set_header" rows="4" class="w-full p-3 border rounded-xl font-mono text-xs">${MAIL_HEADER}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-blue-600">HTML Footer Email</label>
+                        <textarea id="set_footer" rows="4" class="w-full p-3 border rounded-xl font-mono text-xs">${MAIL_FOOTER}</textarea>
+                    </div>
+                    <button onclick="saveSettings()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition">SIMPAN PERUBAHAN</button>
+                </div>
+            `;
         }
+
+        function saveSettings() {
+            MAIL_HEADER = document.getElementById('set_header').value;
+            MAIL_FOOTER = document.getElementById('set_footer').value;
+            localStorage.setItem('mail_header', MAIL_HEADER);
+            localStorage.setItem('mail_footer', MAIL_FOOTER);
+            alert("Setting CSS Berhasil Disimpan!");
+            fetchEmails('getInbox');
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
