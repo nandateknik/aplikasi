@@ -55,9 +55,15 @@
     </div>
 
     <script>
+        // GANTI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGojTrOTKT-gX2jJRutp6NlonDSyug-bNSr_26OawnvKT5M_BGtjA6rfYGqYdKxjS-/exec";
+
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Logika integrasi Apps Script akan diletakkan di sini
+            
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
             Swal.fire({
                 title: 'Memproses...',
                 text: 'Sedang memvalidasi data',
@@ -65,10 +71,40 @@
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            // Simulasi dummy login
-            setTimeout(() => {
-                Swal.fire('Berhasil!', 'Selamat datang kembali.', 'success');
-            }, 1500);
+            const payload = {
+                action: "login",
+                username: user,
+                password: pass
+            };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === "success") {
+                    // Simpan data user ke sessionStorage agar bisa diakses di halaman dashboard
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('userData', JSON.stringify(res.data));
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Selamat datang, ' + res.data.username,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = 'dashboard.html'; // Arahkan ke dashboard
+                    });
+                } else {
+                    Swal.fire('Gagal', res.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Terjadi kesalahan koneksi!', 'error');
+            });
         });
     </script>
 </body>
