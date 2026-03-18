@@ -18,3 +18,5 @@ const CONFIG = {
         window.location.href = "login.html";
     }
 };
+// Jalankan proteksi secepat mungkin
+CONFIG.checkAuth();
