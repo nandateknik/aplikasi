@@ -3,35 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Karyawan - CRUD</title>
+    <title>Admin Panel - Data Karyawan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+        }
+        /* Custom scrollbar untuk list penilai */
+        #list-penilai::-webkit-scrollbar { width: 5px; }
+        #list-penilai::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex">
 
-    <div class="flex-1 flex flex-col min-w-0">
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h2 class="font-bold text-slate-700"><i class="fas fa-user-tie mr-2"></i> DATA KARYAWAN</h2>
-            <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 shadow-lg transition">
-                <i class="fas fa-plus mr-1"></i> Tambah Karyawan
+    <aside id="sidebar" class="sidebar fixed md:relative z-50 w-64 h-screen bg-slate-800 text-white p-5 flex flex-col shadow-xl">
+        <div class="flex justify-between items-center mb-10">
+            <span class="text-xl font-bold italic text-blue-400">ADMIN PANEL</span>
+            <button onclick="toggleSidebar()" class="md:hidden text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <nav class="space-y-2 flex-grow">
+            <a href="karyawan.html" class="flex items-center p-3 rounded-lg bg-blue-600 shadow-lg shadow-blue-900/20 transition">
+                <i class="fas fa-user-tie w-8"></i> Data Karyawan
+            </a>
+            <a href="setting.html" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition">
+                <i class="fas fa-cog w-8"></i> Pengaturan
+            </a>
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition">
+                <i class="fas fa-sign-out-alt w-8"></i> Logout
+            </a>
+        </nav>
+        
+        <div class="text-xs text-slate-500 text-center mt-auto border-t border-slate-700 pt-4 uppercase">
+            &copy; 2026 Mandiri Usaha Teknik
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header class="bg-white shadow-sm p-4 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="text-slate-600 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h2 class="font-bold text-slate-700 uppercase tracking-wide">Data Karyawan</h2>
+            </div>
+            <button onclick="openModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 shadow-md transition flex items-center gap-2">
+                <i class="fas fa-plus"></i> <span class="hidden md:block">Tambah Karyawan</span>
             </button>
         </header>
 
-        <main class="p-4 md:p-8">
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <main class="p-4 md:p-8 overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-slate-400 text-xs font-bold uppercase">Total Karyawan</div>
+                    <div id="stat-total" class="text-2xl font-black text-slate-800">0</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-green-500">
+                    <div class="text-slate-400 text-xs font-bold uppercase">Karyawan Aktif</div>
+                    <div id="stat-aktif" class="text-2xl font-black text-green-600">0</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-red-500">
+                    <div class="text-slate-400 text-xs font-bold uppercase">Resign</div>
+                    <div id="stat-resign" class="text-2xl font-black text-red-600">0</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700">Master Data Karyawan</h3>
+                    <button onclick="loadKaryawan()" class="text-blue-500 hover:rotate-180 transition-all duration-500"><i class="fas fa-sync"></i></button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                        <thead class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold tracking-wider">
                             <tr>
-                                <th class="p-4">Nama Karyawan</th>
-                                <th class="p-4">Divisi / Jabatan</th>
-                                <th class="p-4">Penilai (JSON)</th>
-                                <th class="p-4">Status</th>
+                                <th class="p-4">Karyawan</th>
+                                <th class="p-4">Divisi & Jabatan</th>
+                                <th class="p-4">Otoritas Penilai</th>
+                                <th class="p-4">Status Kerja</th>
                                 <th class="p-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="karyawanTable" class="text-sm divide-y">
+                        <tbody id="karyawanTable" class="text-sm divide-y divide-slate-100">
                             </tbody>
                     </table>
                 </div>
@@ -39,41 +98,53 @@
         </main>
     </div>
 
-    <div id="modalKaryawan" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div class="p-6 border-b bg-slate-50 flex justify-between">
-                <h3 id="modalTitle" class="font-bold text-slate-700">Form Karyawan</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+    <div id="modalKaryawan" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200">
+            <div class="p-5 border-b bg-slate-50 flex justify-between items-center">
+                <h3 id="modalTitle" class="font-bold text-slate-700 uppercase text-sm tracking-widest">Tambah Karyawan Baru</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
             </div>
             <form id="formKaryawan" class="p-6 space-y-4">
                 <input type="hidden" id="kar-id">
+                
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">NAMA LENGKAP</label>
-                    <input type="text" id="kar-nama" required class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Nama Lengkap</label>
+                    <input type="text" id="kar-nama" required placeholder="Nama Karyawan" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">DIVISI</label>
-                        <select id="kar-divisi" class="w-full p-2 border rounded-lg"></select>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Divisi</label>
+                        <select id="kar-divisi" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">JABATAN</label>
-                        <select id="kar-jabatan" class="w-full p-2 border rounded-lg"></select>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Jabatan</label>
+                        <select id="kar-jabatan" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></select>
                     </div>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase text-blue-600">Pilih Penilai (Users yang Berhak Menilai)</label>
-                    <div id="list-penilai" class="mt-2 h-32 overflow-y-auto border p-3 rounded-lg bg-gray-50 space-y-2">
+                    <label class="block text-[10px] font-black text-blue-500 uppercase mb-1 flex justify-between">
+                        <span>Otoritas Penilai</span>
+                        <span id="count-penilai" class="text-slate-400 font-normal">0 terpilih</span>
+                    </label>
+                    <div id="list-penilai" class="h-36 overflow-y-auto border border-slate-200 p-3 rounded-xl bg-slate-50 space-y-2">
                         </div>
                 </div>
+
                 <div id="status-container" class="hidden">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">STATUS KERJA</label>
-                    <select id="kar-status" class="w-full p-2 border rounded-lg">
-                        <option value="Aktif">Aktif</option>
-                        <option value="Resign">Resign</option>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Status Kepegawaian</label>
+                    <select id="kar-status" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                        <option value="Aktif" class="text-green-600">AKTIF</option>
+                        <option value="Resign" class="text-red-600">RESIGN</option>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg">SIMPAN DATA</button>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                        SIMPAN DATA KARYAWAN
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -82,23 +153,31 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKjdCOR8kBk9yzvJ-pHALiaPrbA_iwKDDSBP7CiOShh487g7PBZl2oQLfkOXi9TH-L/exec";
         let allUsers = [];
 
-        async function init() {
-            Swal.fire({title: 'Loading...', didOpen: () => Swal.showLoading()});
-            
-            // Ambil data pendukung (Divisi, Jabatan, Users)
-            const metaRes = await fetch(`${SCRIPT_URL}?action=get_metadata`);
-            const meta = await metaRes.json();
-            
-            const userRes = await fetch(`${SCRIPT_URL}?action=get_users`);
-            allUsers = await userRes.json();
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
 
-            // Isi Dropdown & Checkbox
-            fillSelect('kar-divisi', meta.divisi);
-            fillSelect('kar-jabatan', meta.jabatan);
-            fillPenilai(allUsers);
+        async function init() {
+            Swal.fire({ title: 'Menghubungkan Server...', didOpen: () => Swal.showLoading() });
             
-            await loadKaryawan();
-            Swal.close();
+            try {
+                // Ambil Data Master (Divisi, Jabatan)
+                const metaRes = await fetch(`${SCRIPT_URL}?action=get_metadata`);
+                const meta = await metaRes.json();
+                
+                // Ambil Data Users untuk Penilai
+                const userRes = await fetch(`${SCRIPT_URL}?action=get_users`);
+                allUsers = await userRes.json();
+
+                fillSelect('kar-divisi', meta.divisi);
+                fillSelect('kar-jabatan', meta.jabatan);
+                fillPenilai(allUsers);
+                
+                await loadKaryawan();
+                Swal.close();
+            } catch (err) {
+                Swal.fire('Error', 'Gagal memuat data pendukung', 'error');
+            }
         }
 
         function fillSelect(id, data) {
@@ -109,39 +188,72 @@
         function fillPenilai(users) {
             const container = document.getElementById('list-penilai');
             container.innerHTML = users.map(u => `
-                <label class="flex items-center gap-3 p-2 bg-white border rounded hover:border-blue-400 cursor-pointer transition">
-                    <input type="checkbox" name="penilai" value="${u.id}" class="w-4 h-4">
-                    <span class="text-sm font-medium text-gray-700">${u.username} <span class="text-[10px] text-gray-400">(${u.jabatan})</span></span>
+                <label class="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl hover:border-blue-300 cursor-pointer transition shadow-sm group">
+                    <input type="checkbox" name="penilai" value="${u.id}" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" onchange="countChecked()">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition">${u.username}</span>
+                        <span class="text-[9px] text-slate-400 uppercase tracking-tighter">${u.jabatan} - ${u.divisi}</span>
+                    </div>
                 </label>
             `).join('');
+        }
+
+        function countChecked() {
+            const checked = document.querySelectorAll('input[name="penilai"]:checked').length;
+            document.getElementById('count-penilai').innerText = `${checked} terpilih`;
         }
 
         async function loadKaryawan() {
             const res = await fetch(`${SCRIPT_URL}?action=get_karyawan`);
             const data = await res.json();
+            
+            // Update Stats
+            document.getElementById('stat-total').innerText = data.length;
+            document.getElementById('stat-aktif').innerText = data.filter(k => k.is_active === 'Aktif').length;
+            document.getElementById('stat-resign').innerText = data.filter(k => k.is_active === 'Resign').length;
+
             const table = document.getElementById('karyawanTable');
-            table.innerHTML = data.map(k => `
-                <tr class="hover:bg-slate-50">
-                    <td class="p-4 font-bold text-slate-700">${k.nama}</td>
-                    <td class="p-4 text-xs text-slate-500 uppercase">${k.divisi} <br> <span class="text-blue-500">${k.jabatan}</span></td>
-                    <td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-bold">${k.json_users.length} PENILAI</span></td>
+            table.innerHTML = data.map(k => {
+                const isAktif = k.is_active === 'Aktif';
+                return `
+                <tr class="hover:bg-blue-50/50 transition duration-300">
                     <td class="p-4">
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold ${k.is_active === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
+                        <div class="font-bold text-slate-700">${k.nama}</div>
+                        <div class="text-[10px] text-slate-400">ID: #${k.id}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-[11px] font-bold text-slate-500 uppercase">${k.divisi}</div>
+                        <div class="text-[10px] text-blue-500 font-medium">${k.jabatan}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-2">
+                            <div class="flex -space-x-2">
+                                ${k.json_users.slice(0, 3).map(() => `<div class="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[8px] font-bold text-slate-500"><i class="fas fa-user text-[10px]"></i></div>`).join('')}
+                            </div>
+                            <span class="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${k.json_users.length} PENILAI</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase ${isAktif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
                             ${k.is_active}
                         </span>
                     </td>
                     <td class="p-4 text-center">
-                        <button onclick='editKaryawan(${JSON.stringify(k)})' class="text-blue-500 hover:bg-blue-50 p-2 rounded-full"><i class="fas fa-edit"></i></button>
+                        <button onclick='editKaryawan(${JSON.stringify(k)})' class="text-blue-500 hover:bg-white hover:shadow-md p-2 rounded-xl transition duration-300 border border-transparent hover:border-blue-100">
+                            <i class="fas fa-edit"></i>
+                        </button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
 
         function openModal() {
             document.getElementById('formKaryawan').reset();
             document.getElementById('kar-id').value = '';
+            document.getElementById('modalTitle').innerText = "Tambah Karyawan Baru";
             document.getElementById('status-container').classList.add('hidden');
             document.getElementById('modalKaryawan').classList.remove('hidden');
+            countChecked();
         }
 
         function closeModal() {
@@ -150,7 +262,7 @@
 
         function editKaryawan(k) {
             openModal();
-            document.getElementById('modalTitle').innerText = "Edit Karyawan";
+            document.getElementById('modalTitle').innerText = "Edit Profile Karyawan";
             document.getElementById('status-container').classList.remove('hidden');
             document.getElementById('kar-id').value = k.id;
             document.getElementById('kar-nama').value = k.nama;
@@ -158,15 +270,19 @@
             document.getElementById('kar-jabatan').value = k.jabatan;
             document.getElementById('kar-status').value = k.is_active;
             
-            // Checkbox penilai
             const checks = document.querySelectorAll('input[name="penilai"]');
             checks.forEach(c => c.checked = k.json_users.includes(parseInt(c.value)));
+            countChecked();
         }
 
         document.getElementById('formKaryawan').onsubmit = async (e) => {
             e.preventDefault();
             const penilaiIds = Array.from(document.querySelectorAll('input[name="penilai"]:checked')).map(c => parseInt(c.value));
             
+            if(penilaiIds.length === 0) {
+                return Swal.fire('Oops!', 'Pilih minimal satu penilai!', 'warning');
+            }
+
             const payload = {
                 action: "save_karyawan",
                 id: document.getElementById('kar-id').value,
@@ -177,12 +293,16 @@
                 penilai: penilaiIds
             };
 
-            Swal.fire({title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            Swal.fire({ title: 'Menyimpan data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
-            Swal.fire('Berhasil!', 'Data Karyawan Tersimpan.', 'success');
-            closeModal();
-            loadKaryawan();
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                Swal.fire('Tersimpan!', 'Data karyawan berhasil diperbarui.', 'success');
+                closeModal();
+                loadKaryawan();
+            } catch (err) {
+                Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data', 'error');
+            }
         };
 
         window.onload = init;
