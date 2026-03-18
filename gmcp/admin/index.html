@@ -1,219 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Settings</title>
+    <title>MUT Admin - Settings</title>
+    
+    <script src="config.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
     <style>
-        .sidebar { transition: all 0.3s; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
         }
+        .nav-link.active { 
+            background: #2563eb; 
+            color: white; 
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+        .nav-link.active i { color: white !important; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex">
+<body class="bg-slate-50 min-h-screen flex text-slate-800">
 
-    <aside id="sidebar" class="sidebar fixed md:relative z-50 w-64 h-screen bg-slate-800 text-white p-5 flex flex-col shadow-xl">
-        <div class="flex justify-between items-center mb-10">
-            <span class="text-xl font-bold italic text-blue-400">ADMIN PANEL</span>
-            <button onclick="toggleSidebar()" class="md:hidden text-white">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-          <nav class="space-y-2 flex-grow">
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition">
-                <i class="fas fa-cog w-8"></i> Pengaturan
-            </a>
-            <a href="karyawan.html" class="flex items-center p-3 rounded-lg bg-blue-600 shadow-lg shadow-blue-900/20 transition">
-                <i class="fas fa-user-tie w-8"></i> Data Karyawan
-            </a>
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition">
-                <i class="fas fa-sign-out-alt w-8"></i> Logout
-            </a>
-        </nav>
-        
-        <div class="text-xs text-slate-500 text-center mt-auto border-t border-slate-700 pt-4 uppercase">
-            &copy; 2026 Mandiri Usaha Teknik
+    <aside id="sidebar-container" class="sidebar fixed md:relative z-50 w-64 h-screen bg-slate-900 text-white p-6 flex flex-col shadow-2xl shrink-0">
+        <div class="flex items-center justify-center h-full opacity-20">
+            <i class="fas fa-circle-notch fa-spin text-2xl"></i>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header class="bg-white shadow-sm p-4 flex items-center gap-4">
-            <button onclick="toggleSidebar()" class="text-slate-600 focus:outline-none">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-            <h2 class="font-bold text-slate-700 uppercase tracking-wide">Pengaturan Sistem</h2>
+        <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 sticky top-0 z-40 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition md:hidden">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 class="font-extrabold text-slate-800 uppercase tracking-tight">Pengaturan <span class="text-blue-600 italic">Sistem</span></h2>
+            </div>
+            <div id="admin-info" class="text-right hidden md:block">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Administrator</p>
+                <p id="admin-name" class="text-sm font-black text-slate-700 italic">Admin MUT</p>
+            </div>
         </header>
 
-        <main class="p-4 md:p-8 overflow-y-auto">
-            <div class="flex border-b border-gray-200 mb-6 space-x-8 overflow-x-auto">
-                <button onclick="showTab('users')" id="btn-users" class="tab-link border-b-2 border-blue-600 py-2 px-1 text-blue-600 font-medium">Data User</button>
-                <button onclick="showTab('divisi')" id="btn-divisi" class="tab-link border-b-2 border-transparent py-2 px-1 text-gray-500 hover:text-blue-600 transition">Master Divisi</button>
-                <button onclick="showTab('jabatan')" id="btn-jabatan" class="tab-link border-b-2 border-transparent py-2 px-1 text-gray-500 hover:text-blue-600 transition">Master Jabatan</button>
+        <main class="p-4 md:p-10 overflow-y-auto">
+            <div class="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto no-scrollbar">
+                <button onclick="showTab('users')" id="btn-users" class="tab-link border-b-4 border-blue-600 pb-3 px-2 text-blue-600 font-extrabold text-sm uppercase tracking-tighter transition-all">Manajemen User</button>
+                <button onclick="showTab('divisi')" id="btn-divisi" class="tab-link border-b-4 border-transparent pb-3 px-2 text-slate-400 font-extrabold text-sm uppercase tracking-tighter transition-all hover:text-blue-500">Master Divisi</button>
+                <button onclick="showTab('jabatan')" id="btn-jabatan" class="tab-link border-b-4 border-transparent pb-3 px-2 text-slate-400 font-extrabold text-sm uppercase tracking-tighter transition-all hover:text-blue-500">Master Jabatan</button>
             </div>
 
-            <section id="content-users" class="tab-pane">
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
-                    <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                        <h3 class="font-bold text-slate-700">Daftar Pengguna Aplikasi</h3>
-                        <button onclick="loadData()" class="text-blue-500 hover:rotate-180 transition-all duration-500"><i class="fas fa-sync"></i></button>
+            <div id="content-users" class="tab-pane animate-in fade-in duration-500">
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Database Pengguna</h3>
+                        <button onclick="loadData()" class="w-8 h-8 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-50 transition active:rotate-180">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
-                            <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-bold">
+                            <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-black tracking-[0.15em]">
                                 <tr>
-                                    <th class="p-4">User Info</th>
-                                    <th class="p-4">Divisi & Jabatan</th>
-                                    <th class="p-4">Status</th>
-                                    <th class="p-4 text-center">Aksi</th>
+                                    <th class="p-5">Informasi User</th>
+                                    <th class="p-5">Penugasan</th>
+                                    <th class="p-5">Status Akses</th>
+                                    <th class="p-5 text-center">Tindakan</th>
                                 </tr>
                             </thead>
-                            <tbody id="userTable" class="text-sm divide-y"></tbody>
+                            <tbody id="userTable" class="text-sm divide-y divide-slate-50"></tbody>
                         </table>
                     </div>
                 </div>
+            </div>
+
+            <section id="content-divisi" class="tab-pane hidden animate-in fade-in duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-black text-slate-800 uppercase italic">List Divisi</h3>
+                    <button onclick="addEntry('divisi')" class="bg-blue-600 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition uppercase tracking-widest">
+                        + Tambah Divisi
+                    </button>
+                </div>
+                <div id="list-divisi" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </section>
 
-            <section id="content-divisi" class="tab-pane hidden">
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold">Master Divisi</h3>
-                        <button onclick="addEntry('divisi')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 shadow-md">
-                            <i class="fas fa-plus mr-1"></i> Tambah Divisi
-                        </button>
-                    </div>
-                    <div id="list-divisi" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <section id="content-jabatan" class="tab-pane hidden animate-in fade-in duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-black text-slate-800 uppercase italic">List Jabatan</h3>
+                    <button onclick="addEntry('jabatan')" class="bg-slate-900 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-slate-200 hover:bg-slate-800 transition uppercase tracking-widest">
+                        + Tambah Jabatan
+                    </button>
                 </div>
-            </section>
-
-            <section id="content-jabatan" class="tab-pane hidden">
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold">Master Jabatan</h3>
-                        <button onclick="addEntry('jabatan')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 shadow-md">
-                            <i class="fas fa-plus mr-1"></i> Tambah Jabatan
-                        </button>
-                    </div>
-                    <div id="list-jabatan" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                </div>
+                <div id="list-jabatan" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </section>
         </main>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2O-8Izo4gi0zk85B6rz-NoIakrjgzl6uu7-0nWyncewi4BS_RaTozFAgAXrTQjyk/exec"; 
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
+        // 1. Logic Fetch Layout & Active Link
+        async function fetchLayout() {
+            try {
+                const response = await fetch('head.html');
+                const html = await response.text();
+                document.getElementById('sidebar-container').innerHTML = html;
+                
+                // Set active link
+                const currentPage = window.location.pathname.split("/").pop().split(".")[0] || 'index';
+                const links = document.querySelectorAll('.nav-link');
+                links.forEach(l => {
+                    if(l.dataset.page === currentPage) l.classList.add('active');
+                });
+            } catch (e) { console.error("Sidebar Error:", e); }
         }
+
+        // 2. Logic Tabs & Sidebar Toggle
+        function toggleSidebar() { document.getElementById('sidebar-container').classList.toggle('active'); }
 
         function showTab(tabName) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-link').forEach(el => {
                 el.classList.remove('border-blue-600', 'text-blue-600');
-                el.classList.add('border-transparent', 'text-gray-500');
+                el.classList.add('border-transparent', 'text-slate-400');
             });
-            
             document.getElementById(`content-${tabName}`).classList.remove('hidden');
             document.getElementById(`btn-${tabName}`).classList.add('border-blue-600', 'text-blue-600');
+            document.getElementById(`btn-${tabName}`).classList.remove('border-transparent', 'text-slate-400');
         }
 
-        // --- FETCH & RENDER ---
+        // 3. Logic Fetch Data dari Apps Script (Pakai CONFIG.SCRIPT_URL)
         async function loadData() {
-            Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
-            
-            // Get Users
-            const userRes = await fetch(`${SCRIPT_URL}?action=get_users`);
-            const users = await userRes.json();
-            renderUsers(users);
-
-            // Get Metadata
-            const metaRes = await fetch(`${SCRIPT_URL}?action=get_metadata`);
-            const meta = await metaRes.json();
-            renderMeta('divisi', meta.divisi);
-            renderMeta('jabatan', meta.jabatan);
-
-            Swal.close();
+            Swal.fire({ title: 'Menyinkronkan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+            try {
+                const [userRes, metaRes] = await Promise.all([
+                    fetch(`${CONFIG.SCRIPT_URL}?action=get_users`),
+                    fetch(`${CONFIG.SCRIPT_URL}?action=get_metadata`)
+                ]);
+                renderUsers(await userRes.json());
+                const meta = await metaRes.json();
+                renderMeta('divisi', meta.divisi);
+                renderMeta('jabatan', meta.jabatan);
+                Swal.close();
+            } catch (err) { Swal.fire('Error', 'Gagal koneksi ke server.', 'error'); }
         }
 
         function renderUsers(users) {
             const table = document.getElementById('userTable');
-            table.innerHTML = '';
-            users.forEach(u => {
+            table.innerHTML = users.map(u => {
                 const isActive = u.is_active === "Yes";
-                table.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4">
-                            <div class="font-bold text-slate-700">${u.username}</div>
+                return `
+                    <tr class="hover:bg-blue-50/30 transition border-b border-slate-50">
+                        <td class="p-5">
+                            <div class="font-extrabold text-slate-700 uppercase tracking-tighter">${u.username}</div>
+                            <div class="text-[9px] font-bold text-slate-300">ID: USER-${u.id}</div>
                         </td>
-                        <td class="p-4 text-slate-500 uppercase text-[11px] font-medium">
-                            ${u.divisi} <br> <span class="text-blue-500">${u.jabatan}</span>
+                        <td class="p-5">
+                            <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black uppercase">${u.divisi}</span>
+                            <div class="text-[11px] font-bold text-slate-500 mt-1 italic">${u.jabatan}</div>
                         </td>
-                        <td class="p-4">
-                            <span class="px-2 py-1 rounded-full text-[10px] font-bold ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
-                                ${u.is_active}
+                        <td class="p-5 text-center">
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
+                                ${isActive ? 'Authorized' : 'Disabled'}
                             </span>
                         </td>
-                        <td class="p-4">
+                        <td class="p-5">
                             <div class="flex justify-center gap-2">
-                                <button onclick="editUser('${u.id}', '${u.username}', '${u.divisi}', '${u.jabatan}')" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full transition"><i class="fas fa-edit"></i></button>
-                                <button onclick="updateStatus(${u.id}, '${isActive ? 'No' : 'Yes'}')" class="p-2 rounded-full transition ${isActive ? 'text-orange-500 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'}">
-                                    <i class="fas ${isActive ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                                <button onclick="editUser(${u.id}, '${u.username}', '${u.divisi}', '${u.jabatan}')" class="w-8 h-8 rounded-lg text-blue-500 hover:bg-blue-100 transition"><i class="fas fa-user-edit"></i></button>
+                                <button onclick="updateStatus(${u.id}, '${isActive ? 'No' : 'Yes'}')" class="w-8 h-8 rounded-lg ${isActive ? 'text-orange-400 hover:bg-orange-50' : 'text-green-500 hover:bg-green-50'} transition">
+                                    <i class="fas ${isActive ? 'fa-user-lock' : 'fa-user-check'}"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>`;
-            });
+            }).join('');
         }
 
         function renderMeta(type, data) {
             const container = document.getElementById(`list-${type}`);
-            container.innerHTML = '';
-            data.forEach(item => {
-                container.innerHTML += `
-                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border hover:border-blue-400 transition">
-                        <span class="font-medium text-slate-700">${item.nama}</span>
-                        <button onclick="editEntry('${type}', ${item.id}, '${item.nama}')" class="text-slate-400 hover:text-blue-500"><i class="fas fa-edit text-xs"></i></button>
-                    </div>`;
-            });
+            container.innerHTML = data.map(item => `
+                <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-100 hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/5 transition-all group">
+                    <span class="font-extrabold text-slate-700 uppercase text-xs tracking-wide">${item.nama}</span>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="editEntry('${type}', ${item.id}, '${item.nama}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg"><i class="fas fa-edit text-xs"></i></button>
+                    </div>
+                </div>`).join('');
         }
 
-        // --- ACTIONS ---
+        // Tambah fungsi update status yang diringkas
         async function updateStatus(id, status) {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_status", id: id, status: status }) });
+            Swal.fire({ title: 'Updating...', showConfirmButton: false, didOpen: () => Swal.showLoading() });
+            await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_status", id: id, status: status }) });
             loadData();
         }
 
-        async function editUser(id, username, divisi, jabatan) {
-            const { value: formValues } = await Swal.fire({
-                title: 'Update Data User',
-                html:
-                    `<input id="swal-username" class="swal2-input" placeholder="Username" value="${username}">` +
-                    `<input id="swal-divisi" class="swal2-input" placeholder="Divisi" value="${divisi}">` +
-                    `<input id="swal-jabatan" class="swal2-input" placeholder="Jabatan" value="${jabatan}">`,
-                focusConfirm: false,
-                showCancelButton: true,
-                preConfirm: () => ({
-                    username: document.getElementById('swal-username').value,
-                    divisi: document.getElementById('swal-divisi').value,
-                    jabatan: document.getElementById('swal-jabatan').value
-                })
-            });
-
-            if (formValues) {
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "update_user", id: id, ...formValues }) });
-                Swal.fire('Berhasil!', 'Data telah diperbarui.', 'success');
-                loadData();
-            }
-        }
-
         // Inisialisasi
-        window.onload = loadData;
+        window.onload = () => {
+            fetchLayout();
+            const user = JSON.parse(localStorage.getItem('user_login'));
+            if(user) document.getElementById('admin-name').innerText = user.username;
+            loadData();
+        };
     </script>
 </body>
 </html>
