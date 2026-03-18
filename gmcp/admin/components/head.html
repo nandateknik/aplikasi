@@ -1,1 +1,23 @@
 
+<div class="flex justify-between items-center mb-10">
+    <span class="text-xl font-bold italic text-blue-400">ADMIN PANEL</span>
+    <button onclick="toggleSidebar()" class="md:hidden text-white">
+        <i class="fas fa-times text-xl"></i>
+    </button>
+</div>
+
+<nav class="space-y-2 flex-grow">
+    <a href="index.html" class="nav-link flex items-center p-3 rounded-lg hover:bg-slate-700 transition" data-page="index">
+        <i class="fas fa-cog w-8"></i> Pengaturan
+    </a>
+    <a href="karyawan.html" class="nav-link flex items-center p-3 rounded-lg hover:bg-slate-700 transition" data-page="karyawan">
+        <i class="fas fa-user-tie w-8"></i> Data Karyawan
+    </a>
+    <a href="javascript:void(0)" onclick="CONFIG.logout()" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition text-red-400">
+        <i class="fas fa-sign-out-alt w-8"></i> Logout
+    </a>
+</nav>
+
+<div class="text-[10px] text-slate-500 text-center mt-auto border-t border-slate-700 pt-4 uppercase tracking-widest font-bold">
+    &copy; 2026 Nanda Teknik Banyuwangi
+</div>
