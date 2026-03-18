@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Pengaturan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="bg-blue-700 text-white p-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="font-bold text-lg"><i class="fas fa-cogs mr-2"></i> Pengaturan Aplikasi</h1>
+            <a href="index.html" class="text-sm bg-blue-800 px-3 py-1 rounded hover:bg-blue-900">Logout</a>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="md:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 bg-gray-100 border-b font-bold text-gray-700">
+                <i class="fas fa-users mr-2 text-blue-600"></i> Aktivasi Akun User
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-xs uppercase text-gray-500">
+                            <th class="p-4">Username</th>
+                            <th class="p-4">Divisi / Jabatan</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable" class="text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider">Tambah Data Master</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Pilih Kategori</label>
+                        <select id="metaType" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="divisi">Divisi Baru</option>
+                            <option value="jabatan">Jabatan Baru</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Nama (Divisi/Jabatan)</label>
+                        <input type="text" id="metaName" placeholder="Contoh: IT Support"
+                            class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <button onclick="addMetadata()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold text-sm">
+                        <i class="fas fa-plus mr-1"></i> SIMPAN DATA
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <h3 class="text-blue-800 font-bold text-xs mb-2 italic">Informasi Admin</h3>
+                <p class="text-xs text-blue-700 leading-relaxed">
+                    User yang statusnya <b>"No"</b> tidak akan bisa login ke sistem. Klik tombol centang untuk mengaktifkan akses mereka segera.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfVuTDPd-8OkBsobyaPeAfC1c2MOhF07ei_joWXsdLo14lNwuTpMPQOXMm84d94mSu/exec";
+
+        // Load Data saat masuk
+        window.onload = () => {
+            loadUsers();
+        };
+
+        function loadUsers() {
+            const table = document.getElementById('userTable');
+            table.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Memuat data user...</td></tr>`;
+
+            fetch(`${SCRIPT_URL}?action=get_users`)
+            .then(res => res.json())
+            .then(data => {
+                table.innerHTML = '';
+                data.forEach(u => {
+                    const statusColor = u.is_active === "Yes" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+                    table.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-4 font-semibold text-gray-700">${u.username}</td>
+                            <td class="p-4 text-xs text-gray-500">${u.divisi}<br>${u.jabatan}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${statusColor}">${u.is_active}</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                ${u.is_active === 'No' ? 
+                                `<button onclick="updateStatus(${u.id}, 'Yes')" class="bg-emerald-500 text-white p-2 rounded hover:bg-emerald-600 shadow-sm">
+                                    <i class="fas fa-check"></i> AKTIFKAN
+                                </button>` : 
+                                `<button onclick="updateStatus(${u.id}, 'No')" class="bg-gray-400 text-white p-2 rounded hover:bg-gray-500 shadow-sm">
+                                    <i class="fas fa-times"></i> NONAKTIF
+                                </button>`}
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function updateStatus(userId, newStatus) {
+            Swal.fire({ title: 'Mengupdate status...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "update_status", id: userId, status: newStatus })
+            })
+            .then(res => res.json())
+            .then(res => {
+                Swal.fire('Berhasil', res.message, 'success');
+                loadUsers();
+            });
+        }
+
+        // Contoh fungsi simpan di sisi Frontend (JavaScript)
+  function addMetadata() {
+      const type = document.getElementById('metaType').value; // isinya 'divisi' atau 'jabatan'
+      const name = document.getElementById('metaName').value;
+  
+      fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+              action: "add_metadata",
+              type: type, // Akan mencari sheet bernama 'divisi' atau 'jabatan'
+              name: name
+          })
+      })
+      .then(res => res.json())
+      .then(res => {
+          if(res.status === "success") {
+              Swal.fire('Berhasil', res.message, 'success');
+          }
+      });
+}
+    </script>
+</body>
+</html>
