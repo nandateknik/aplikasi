@@ -1,135 +1,214 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Penilaian - Mandiri Usaha Teknik</title>
+    <title>Assessment Dashboard - MUT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .gradient-bg { background: radial-gradient(circle at top right, #eff6ff, #f8fafc); }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="gradient-bg min-h-screen flex text-slate-800">
 
-    <nav class="bg-white border-b p-4 sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="font-black text-slate-800 tracking-tighter text-xl italic">MUT <span class="text-blue-600">ASSESS</span></h1>
-            <div class="flex items-center gap-3">
-                <span id="display-user" class="text-xs font-bold text-slate-500 uppercase">User</span>
-                <button onclick="logout()" class="text-red-500 text-sm"><i class="fas fa-sign-out-alt"></i></button>
+    <aside class="hidden lg:flex w-72 flex-col bg-white border-r border-slate-200 p-6 sticky top-0 h-screen">
+        <div class="flex items-center gap-3 px-2 mb-10">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                <i class="fas fa-chart-line text-lg"></i>
             </div>
-        </div>
-    </nav>
-
-    <main class="max-w-4xl mx-auto p-4 md:p-8">
-        <div id="welcome-msg" class="mb-8">
-            <h2 class="text-2xl font-bold text-slate-800">Halo, Selamat Bekerja! 👋</h2>
-            <p class="text-slate-500 text-sm">Berikut adalah daftar rekan kerja yang perlu Anda berikan penilaian periode ini.</p>
+            <h1 class="font-black text-xl tracking-tighter uppercase italic text-slate-900">MUT <span class="text-blue-600">Assess</span></h1>
         </div>
 
-        <div id="target-container" class="grid grid-cols-1 gap-4">
+        <nav class="flex-1 space-y-2">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold transition">
+                <i class="fas fa-th-large w-5"></i> Dashboard
+            </a>
+            <a href="#" onclick="Swal.fire('Fitur Segera Datang', 'Halaman Riwayat sedang dikembangkan', 'info')" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-50 hover:text-slate-600 rounded-xl font-semibold transition">
+                <i class="fas fa-history w-5"></i> Riwayat Saya
+            </a>
+        </nav>
+
+        <div class="mt-auto p-4 bg-slate-900 rounded-2xl relative overflow-hidden group">
+            <div class="relative z-10">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Login Sebagai</p>
+                <p id="side-user" class="text-white font-bold truncate">User Name</p>
+                <button onclick="logout()" class="mt-4 text-xs text-red-400 font-bold flex items-center gap-2 hover:text-red-300 transition">
+                    <i class="fas fa-sign-out-alt"></i> LOGOUT
+                </button>
+            </div>
+            <i class="fas fa-user-shield absolute -bottom-2 -right-2 text-white/5 text-6xl group-hover:scale-110 transition-transform duration-500"></i>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+        
+        <header class="lg:hidden glass sticky top-0 z-30 p-4 flex justify-between items-center border-b">
+            <h1 class="font-black text-lg text-slate-800 italic">MUT <span class="text-blue-600 text-sm">v2.0</span></h1>
+            <button onclick="logout()" class="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center">
+                <i class="fas fa-power-off"></i>
+            </button>
+        </header>
+
+        <div class="p-6 md:p-10 max-w-5xl">
+            <section class="mb-10">
+                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                    Halo, <span id="welcome-name" class="text-blue-600">Leader</span>! 👋
+                </h2>
+                <p class="text-slate-500 font-medium">Anda memiliki tanggung jawab untuk memberikan penilaian kepada rekan tim berikut.</p>
+            </section>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target</p>
+                    <p id="stat-total" class="text-2xl font-black text-slate-800">0</p>
+                </div>
+                <div class="bg-blue-600 p-4 rounded-2xl shadow-lg shadow-blue-100">
+                    <p class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Status</p>
+                    <p class="text-sm font-bold text-white uppercase italic">Active Period</p>
+                </div>
             </div>
 
-        <div id="modalPenilaian" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                <div class="p-6 bg-blue-600 text-white">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Penilaian Kinerja</p>
-                            <h3 id="target-nama" class="text-xl font-black">NAMA KARYAWAN</h3>
-                            <p id="target-meta" class="text-xs text-blue-200 uppercase">DIVISI - JABATAN</p>
-                        </div>
-                        <button onclick="closeModal()" class="bg-white/10 p-2 rounded-full hover:bg-white/20 transition"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>
-
-                <div class="p-6 overflow-y-auto space-y-8 flex-1">
-                    <form id="formNilai">
-                        <input type="hidden" id="target-id">
-                        
-                        <div id="aspek-container" class="space-y-10">
-                            </div>
-
-                        <div class="mt-10">
-                            <button type="submit" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black hover:bg-blue-600 transition shadow-xl shadow-blue-200">
-                                KIRIM PENILAIAN SEKARANG
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <i class="fas fa-list-ul text-blue-600 text-sm"></i> Daftar Penilaian
+                </h3>
             </div>
+
+            <div id="target-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </div>
         </div>
     </main>
 
+    <div id="modalPenilaian" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in duration-300">
+            <div class="p-8 bg-blue-600 text-white relative">
+                <div class="relative z-10 flex justify-between items-center">
+                    <div>
+                        <span class="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest mb-2 inline-block">Beri Nilai Objektif</span>
+                        <h3 id="target-nama" class="text-3xl font-black tracking-tight leading-tight">NAMA KARYAWAN</h3>
+                        <p id="target-meta" class="text-sm text-blue-100 mt-1 font-medium italic opacity-80 uppercase tracking-wide">DIVISI • JABATAN</p>
+                    </div>
+                    <button onclick="closeModal()" class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <i class="fas fa-pen-nib absolute -bottom-4 -right-4 text-white/10 text-9xl"></i>
+            </div>
+
+            <div class="p-8 overflow-y-auto flex-1 bg-slate-50/50">
+                <form id="formNilai" class="space-y-12 pb-10">
+                    <input type="hidden" id="target-id">
+                    <div id="aspek-container" class="space-y-12">
+                        </div>
+                    
+                    <div class="pt-8 sticky bottom-0 bg-transparent">
+                        <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-blue-600 transition-all shadow-2xl shadow-slate-200 uppercase tracking-widest flex items-center justify-center gap-3 group">
+                            Submit Penilaian <i class="fas fa-paper-plane group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJk8vGRcfyCVPkCVCCY_9xKaiAzRaYuA-gPI7UshOAy0u241UtmHufPb3O6l27bP31/exec";
-        const currentUser = JSON.parse(localStorage.getItem('user_login')); // Asumsi data login disimpan di localStorage
-        
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7H8Epn6ulqRZpgGZWcOMFsGGKS0T9kacURWcWpIn-SGRSSmAJ2WypeEdZ5B4-pB64/exec";
+        const currentUser = JSON.parse(localStorage.getItem('user_login'));
+
         const ASPEK = [
-            "Kejujuran", "Semangat Kerja", "Ketaatan dan Kepatuhan", 
-            "Ketelitian", "Hasil Kerja", "Tanggung Jawab", "Kerja Sama"
+            {id: 'jujur', n: "Kejujuran", desc: "Integritas dan kejujuran dalam bekerja"},
+            {id: 'semangat', n: "Semangat Kerja", desc: "Antusiasme dan motivasi harian"},
+            {id: 'patuh', n: "Ketaatan & Kepatuhan", desc: "Mengikuti SOP dan aturan perusahaan"},
+            {id: 'teliti', n: "Ketelitian", desc: "Kecermatan dalam setiap detail tugas"},
+            {id: 'hasil', n: "Hasil Kerja", desc: "Kualitas output yang dihasilkan"},
+            {id: 'tanggung', n: "Tanggung Jawab", desc: "Kepedulian terhadap hasil & proses"},
+            {id: 'kerjasama', n: "Kerja Sama", desc: "Kemampuan kolaborasi antar tim"}
         ];
 
         const SKALA = [
-            {v: 1, t: "Sangat Tidak Baik"},
-            {v: 2, t: "Kurang Baik"},
-            {v: 3, t: "Cukup Baik"},
-            {v: 4, t: "Baik"},
-            {v: 5, t: "Sangat Baik"}
+            {v: 1, t: "STB", label: "Sangat Tidak Baik", color: "text-red-600", bg: "bg-red-50"},
+            {v: 2, t: "KB", label: "Kurang Baik", color: "text-orange-600", bg: "bg-orange-50"},
+            {v: 3, t: "CB", label: "Cukup Baik", color: "text-yellow-600", bg: "bg-yellow-50"},
+            {v: 4, t: "B", label: "Baik", color: "text-green-600", bg: "bg-green-50"},
+            {v: 5, t: "SB", label: "Sangat Baik", color: "text-blue-600", bg: "bg-blue-50"}
         ];
 
         if(!currentUser) window.location.href = "index.html";
 
         async function init() {
-            document.getElementById('display-user').innerText = currentUser.username;
+            document.getElementById('side-user').innerText = currentUser.username;
+            document.getElementById('welcome-name').innerText = currentUser.username;
             loadTargets();
         }
 
         async function loadTargets() {
-            Swal.fire({title: 'Memuat data...', didOpen: () => Swal.showLoading()});
-            const res = await fetch(`${SCRIPT_URL}?action=get_target_penilaian&userId=${currentUser.id}`);
-            const targets = await res.json();
-            
-            const container = document.getElementById('target-container');
-            container.innerHTML = targets.map(t => `
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center group hover:border-blue-500 transition-all duration-300">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
-                            <i class="fas fa-user-check"></i>
+            Swal.fire({title: 'Memuat...', didOpen: () => Swal.showLoading(), showConfirmButton: false});
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=get_target_penilaian&userId=${currentUser.id}`);
+                const targets = await res.json();
+                
+                const grid = document.getElementById('target-grid');
+                document.getElementById('stat-total').innerText = targets.length;
+
+                grid.innerHTML = targets.map(t => `
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm card-hover transition-all duration-300 flex flex-col justify-between group">
+                        <div class="flex items-start justify-between mb-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-inner">
+                                    <i class="fas fa-user-tie text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-black text-slate-800 uppercase tracking-tight">${t.nama}</h4>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${t.divisi} • ${t.jabatan}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-slate-800 uppercase text-sm">${t.nama}</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${t.divisi} • ${t.jabatan}</p>
-                        </div>
+                        <button onclick='openPenilaian(${JSON.stringify(t)})' 
+                            class="w-full bg-slate-50 text-slate-900 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">
+                            Beri Penilaian <i class="fas fa-chevron-right ml-1"></i>
+                        </button>
                     </div>
-                    <button onclick='openPenilaian(${JSON.stringify(t)})' class="bg-slate-50 text-slate-700 px-5 py-2 rounded-xl text-xs font-black hover:bg-blue-600 hover:text-white transition">
-                        NILAI <i class="fas fa-arrow-right ml-1"></i>
-                    </button>
-                </div>
-            `).join('');
-            
-            if(targets.length === 0) container.innerHTML = `<div class="text-center p-10 text-slate-400 italic">Tidak ada karyawan yang perlu dinilai.</div>`;
-            Swal.close();
+                `).join('');
+                
+                if(targets.length === 0) grid.innerHTML = `<div class="col-span-2 text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400 font-bold italic">Selesai! Tidak ada target penilaian tersisa.</div>`;
+                Swal.close();
+            } catch(e) { Swal.fire('Error', 'Gagal memuat data', 'error'); }
         }
 
         function openPenilaian(t) {
             document.getElementById('target-id').value = t.id;
             document.getElementById('target-nama').innerText = t.nama;
-            document.getElementById('target-meta').innerText = `${t.divisi} - ${t.jabatan}`;
+            document.getElementById('target-meta').innerText = `${t.divisi} • ${t.jabatan}`;
             
             const container = document.getElementById('aspek-container');
             container.innerHTML = ASPEK.map((asp, idx) => `
-                <div class="space-y-4">
-                    <h5 class="font-black text-slate-700 text-sm uppercase flex items-center gap-3">
-                        <span class="bg-slate-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]">${idx+1}</span>
-                        ${asp}
-                    </h5>
-                    <div class="grid grid-cols-5 gap-2">
+                <div class="space-y-6">
+                    <div>
+                        <h5 class="font-black text-slate-800 text-lg uppercase tracking-tighter flex items-center gap-2">
+                            <span class="text-blue-600">0${idx+1}.</span> ${asp.n}
+                        </h5>
+                        <p class="text-xs text-slate-400 font-medium">${asp.desc}</p>
+                    </div>
+                    <div class="grid grid-cols-5 gap-3">
                         ${SKALA.map(s => `
-                            <label class="cursor-pointer group">
+                            <label class="cursor-pointer group relative">
                                 <input type="radio" name="asp_${idx}" value="${s.v}" required class="peer hidden">
-                                <div class="text-center p-3 rounded-xl border bg-slate-50 border-slate-100 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition group-hover:bg-slate-200">
-                                    <div class="text-lg font-bold">${s.v}</div>
-                                    <div class="text-[8px] font-bold uppercase leading-tight hidden md:block">${s.t}</div>
+                                <div class="text-center p-4 rounded-2xl border-2 border-slate-100 bg-white peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all duration-300">
+                                    <div class="text-xl font-black ${s.color} mb-1">${s.v}</div>
+                                    <div class="text-[9px] font-black uppercase text-slate-400 peer-checked:text-blue-600 leading-tight">${s.t}</div>
+                                </div>
+                                <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                    ${s.label}
                                 </div>
                             </label>
                         `).join('')}
@@ -138,13 +217,14 @@
             `).join('');
 
             document.getElementById('modalPenilaian').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
 
         document.getElementById('formNilai').onsubmit = async (e) => {
             e.preventDefault();
             const skor = {};
             ASPEK.forEach((asp, idx) => {
-                skor[asp] = document.querySelector(`input[name="asp_${idx}"]:checked`).value;
+                skor[asp.n] = document.querySelector(`input[name="asp_${idx}"]:checked`).value;
             });
 
             const payload = {
@@ -154,16 +234,24 @@
                 userId: currentUser.id
             };
 
-            Swal.fire({title: 'Mengirim Nilai...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            
-            Swal.fire('Terima Kasih!', 'Penilaian Anda telah tersimpan.', 'success');
-            closeModal();
-            loadTargets();
+            Swal.fire({title: 'Memproses Penilaian...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                Swal.fire({icon: 'success', title: 'Berhasil!', text: 'Penilaian telah terkirim.', timer: 2000, showConfirmButton: false});
+                closeModal();
+                loadTargets();
+            } catch(e) { Swal.fire('Gagal', 'Gagal mengirim data.', 'error'); }
         };
 
-        function closeModal() { document.getElementById('modalPenilaian').classList.add('hidden'); }
-        function logout() { localStorage.clear(); window.location.href = "index.html"; }
+        function closeModal() { 
+            document.getElementById('modalPenilaian').classList.add('hidden'); 
+            document.body.style.overflow = 'auto';
+        }
+        
+        function logout() { 
+            localStorage.clear(); 
+            window.location.href = "index.html"; 
+        }
 
         window.onload = init;
     </script>
