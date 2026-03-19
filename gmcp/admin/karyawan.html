@@ -1,54 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Data Karyawan</title>
+    
+    <script src="components/config.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
         .sidebar { transition: all 0.3s; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
         }
-        /* Custom scrollbar untuk list penilai */
         #list-penilai::-webkit-scrollbar { width: 5px; }
         #list-penilai::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* Style untuk link aktif di sidebar */
+        .nav-link.active { background-color: #2563eb !important; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex">
 
-    <aside id="sidebar" class="sidebar fixed md:relative z-50 w-64 h-screen bg-slate-800 text-white p-5 flex flex-col shadow-xl">
-        <div class="flex justify-between items-center mb-10">
-            <span class="text-xl font-bold italic text-blue-400">ADMIN PANEL</span>
-            <button onclick="toggleSidebar()" class="md:hidden text-white">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-        <nav class="space-y-2 flex-grow">
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition">
-                <i class="fas fa-cog w-8"></i> Pengaturan
-            </a>
-            <a href="karyawan.html" class="flex items-center p-3 rounded-lg bg-blue-600 shadow-lg shadow-blue-900/20 transition">
-                <i class="fas fa-user-tie w-8"></i> Data Karyawan
-            </a>
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-700 transition">
-                <i class="fas fa-sign-out-alt w-8"></i> Logout
-            </a>
-        </nav>
-        
-        <div class="text-xs text-slate-500 text-center mt-auto border-t border-slate-700 pt-4 uppercase">
-            &copy; 2026 Mandiri Usaha Teknik
+    <aside id="sidebar" class="sidebar fixed md:relative z-50 w-64 h-screen bg-slate-800 text-white p-5 flex flex-col shadow-xl shrink-0">
+        <div class="flex items-center justify-center h-full opacity-20">
+            <i class="fas fa-circle-notch fa-spin text-xl"></i>
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header class="bg-white shadow-sm p-4 flex items-center justify-between gap-4">
+        <header class="bg-white shadow-sm p-4 flex items-center justify-between gap-4 sticky top-0 z-40">
             <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="text-slate-600 focus:outline-none">
+                <button onclick="toggleSidebar()" class="text-slate-600 focus:outline-none md:hidden">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <h2 class="font-bold text-slate-700 uppercase tracking-wide">Data Karyawan</h2>
@@ -76,8 +62,8 @@
 
             <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
                 <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                    <h3 class="font-bold text-slate-700">Master Data Karyawan</h3>
-                    <button onclick="loadKaryawan()" class="text-blue-500 hover:rotate-180 transition-all duration-500"><i class="fas fa-sync"></i></button>
+                    <h3 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Master Data Karyawan</h3>
+                    <button onclick="loadKaryawan()" class="text-blue-500 hover:rotate-180 transition-all duration-500 p-2"><i class="fas fa-sync"></i></button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -90,7 +76,7 @@
                                 <th class="p-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="karyawanTable" class="text-sm divide-y divide-slate-100">
+                        <tbody id="karyawanTable" class="text-sm divide-y divide-slate-100 italic">
                             </tbody>
                     </table>
                 </div>
@@ -106,12 +92,10 @@
             </div>
             <form id="formKaryawan" class="p-6 space-y-4">
                 <input type="hidden" id="kar-id">
-                
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Nama Lengkap</label>
                     <input type="text" id="kar-nama" required placeholder="Nama Karyawan" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Divisi</label>
@@ -122,16 +106,13 @@
                         <select id="kar-jabatan" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-[10px] font-black text-blue-500 uppercase mb-1 flex justify-between">
                         <span>Otoritas Penilai</span>
                         <span id="count-penilai" class="text-slate-400 font-normal">0 terpilih</span>
                     </label>
-                    <div id="list-penilai" class="h-36 overflow-y-auto border border-slate-200 p-3 rounded-xl bg-slate-50 space-y-2">
-                        </div>
+                    <div id="list-penilai" class="h-36 overflow-y-auto border border-slate-200 p-3 rounded-xl bg-slate-50 space-y-2"></div>
                 </div>
-
                 <div id="status-container" class="hidden">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Status Kepegawaian</label>
                     <select id="kar-status" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
@@ -139,9 +120,8 @@
                         <option value="Resign" class="text-red-600">RESIGN</option>
                     </select>
                 </div>
-
                 <div class="pt-4">
-                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700 transition shadow-lg shadow-blue-200 uppercase tracking-widest">
                         SIMPAN DATA KARYAWAN
                     </button>
                 </div>
@@ -150,23 +130,40 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKjdCOR8kBk9yzvJ-pHALiaPrbA_iwKDDSBP7CiOShh487g7PBZl2oQLfkOXi9TH-L/exec";
         let allUsers = [];
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
+        // 1. MODULAR LAYOUT FETCH
+        async function fetchLayout() {
+            try {
+                const response = await fetch('components/head.html');
+                const html = await response.text();
+                document.getElementById('sidebar').innerHTML = html;
+                
+                // Set Active Class based on URL
+                const currentPage = window.location.pathname.split("/").pop().split(".")[0] || 'index';
+                const links = document.querySelectorAll('.nav-link');
+                links.forEach(l => {
+                    if(l.dataset.page === currentPage) l.classList.add('active');
+                });
+            } catch (e) { console.error("Gagal memuat sidebar:", e); }
         }
 
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        // 2. CORE LOGIC
         async function init() {
-            Swal.fire({ title: 'Menghubungkan Server...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Menyinkronkan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
             
             try {
-                // Ambil Data Master (Divisi, Jabatan)
-                const metaRes = await fetch(`${SCRIPT_URL}?action=get_metadata`);
-                const meta = await metaRes.json();
+                await fetchLayout(); // Panggil layout sidebar
                 
-                // Ambil Data Users untuk Penilai
-                const userRes = await fetch(`${SCRIPT_URL}?action=get_users`);
+                // Ambil data menggunakan URL dari CONFIG
+                const [metaRes, userRes] = await Promise.all([
+                    fetch(`${CONFIG.SCRIPT_URL}?action=get_metadata`),
+                    fetch(`${CONFIG.SCRIPT_URL}?action=get_users`)
+                ]);
+                
+                const meta = await metaRes.json();
                 allUsers = await userRes.json();
 
                 fillSelect('kar-divisi', meta.divisi);
@@ -176,10 +173,11 @@
                 await loadKaryawan();
                 Swal.close();
             } catch (err) {
-                Swal.fire('Error', 'Gagal memuat data pendukung', 'error');
+                Swal.fire('Error', 'Gagal memuat data dari server.', 'error');
             }
         }
 
+        // --- Sisanya Fungsi Helper (Tetap Sama) ---
         function fillSelect(id, data) {
             const el = document.getElementById(id);
             el.innerHTML = data.map(d => `<option value="${d.nama}">${d.nama}</option>`).join('');
@@ -189,10 +187,10 @@
             const container = document.getElementById('list-penilai');
             container.innerHTML = users.map(u => `
                 <label class="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl hover:border-blue-300 cursor-pointer transition shadow-sm group">
-                    <input type="checkbox" name="penilai" value="${u.id}" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" onchange="countChecked()">
+                    <input type="checkbox" name="penilai" value="${u.id}" class="w-4 h-4 rounded text-blue-600" onchange="countChecked()">
                     <div class="flex flex-col">
                         <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition">${u.username}</span>
-                        <span class="text-[9px] text-slate-400 uppercase tracking-tighter">${u.jabatan} - ${u.divisi}</span>
+                        <span class="text-[9px] text-slate-400 uppercase tracking-tighter">${u.jabatan}</span>
                     </div>
                 </label>
             `).join('');
@@ -204,10 +202,9 @@
         }
 
         async function loadKaryawan() {
-            const res = await fetch(`${SCRIPT_URL}?action=get_karyawan`);
+            const res = await fetch(`${CONFIG.SCRIPT_URL}?action=get_karyawan`);
             const data = await res.json();
             
-            // Update Stats
             document.getElementById('stat-total').innerText = data.length;
             document.getElementById('stat-aktif').innerText = data.filter(k => k.is_active === 'Aktif').length;
             document.getElementById('stat-resign').innerText = data.filter(k => k.is_active === 'Resign').length;
@@ -216,22 +213,19 @@
             table.innerHTML = data.map(k => {
                 const isAktif = k.is_active === 'Aktif';
                 return `
-                <tr class="hover:bg-blue-50/50 transition duration-300">
+                <tr class="hover:bg-blue-50/50 transition">
                     <td class="p-4">
-                        <div class="font-bold text-slate-700">${k.nama}</div>
-                        <div class="text-[10px] text-slate-400">ID: #${k.id}</div>
+                        <div class="font-bold text-slate-700 uppercase tracking-tighter">${k.nama}</div>
+                        <div class="text-[9px] text-slate-300 font-bold tracking-widest">#${k.id}</div>
                     </td>
                     <td class="p-4">
-                        <div class="text-[11px] font-bold text-slate-500 uppercase">${k.divisi}</div>
-                        <div class="text-[10px] text-blue-500 font-medium">${k.jabatan}</div>
+                        <div class="text-[10px] font-black text-slate-500 uppercase">${k.divisi}</div>
+                        <div class="text-[10px] text-blue-500 font-black italic tracking-tight">${k.jabatan}</div>
                     </td>
                     <td class="p-4">
-                        <div class="flex items-center gap-2">
-                            <div class="flex -space-x-2">
-                                ${k.json_users.slice(0, 3).map(() => `<div class="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[8px] font-bold text-slate-500"><i class="fas fa-user text-[10px]"></i></div>`).join('')}
-                            </div>
-                            <span class="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${k.json_users.length} PENILAI</span>
-                        </div>
+                        <span class="text-[10px] font-black text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                            <i class="fas fa-users-cog mr-1"></i> ${k.json_users.length} PENILAI
+                        </span>
                     </td>
                     <td class="p-4">
                         <span class="px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase ${isAktif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
@@ -239,8 +233,8 @@
                         </span>
                     </td>
                     <td class="p-4 text-center">
-                        <button onclick='editKaryawan(${JSON.stringify(k)})' class="text-blue-500 hover:bg-white hover:shadow-md p-2 rounded-xl transition duration-300 border border-transparent hover:border-blue-100">
-                            <i class="fas fa-edit"></i>
+                        <button onclick='editKaryawan(${JSON.stringify(k)})' class="w-8 h-8 rounded-lg text-blue-500 hover:bg-blue-100 transition">
+                            <i class="fas fa-user-edit text-xs"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -256,13 +250,11 @@
             countChecked();
         }
 
-        function closeModal() {
-            document.getElementById('modalKaryawan').classList.add('hidden');
-        }
+        function closeModal() { document.getElementById('modalKaryawan').classList.add('hidden'); }
 
         function editKaryawan(k) {
             openModal();
-            document.getElementById('modalTitle').innerText = "Edit Profile Karyawan";
+            document.getElementById('modalTitle').innerText = "Update Profile Karyawan";
             document.getElementById('status-container').classList.remove('hidden');
             document.getElementById('kar-id').value = k.id;
             document.getElementById('kar-nama').value = k.nama;
@@ -279,9 +271,7 @@
             e.preventDefault();
             const penilaiIds = Array.from(document.querySelectorAll('input[name="penilai"]:checked')).map(c => parseInt(c.value));
             
-            if(penilaiIds.length === 0) {
-                return Swal.fire('Oops!', 'Pilih minimal satu penilai!', 'warning');
-            }
+            if(penilaiIds.length === 0) return Swal.fire('Oops!', 'Pilih minimal satu penilai!', 'warning');
 
             const payload = {
                 action: "save_karyawan",
@@ -293,16 +283,14 @@
                 penilai: penilaiIds
             };
 
-            Swal.fire({ title: 'Menyimpan data...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-                Swal.fire('Tersimpan!', 'Data karyawan berhasil diperbarui.', 'success');
+                await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                Swal.fire('Berhasil!', 'Database telah diperbarui.', 'success');
                 closeModal();
                 loadKaryawan();
-            } catch (err) {
-                Swal.fire('Gagal', 'Terjadi kesalahan saat menyimpan data', 'error');
-            }
+            } catch (err) { Swal.fire('Gagal', 'Koneksi bermasalah.', 'error'); }
         };
 
         window.onload = init;
