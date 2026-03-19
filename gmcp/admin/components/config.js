@@ -1,22 +1,45 @@
 // config.js
 const CONFIG = {
-    // Ganti dengan URL Deploy Apps Script terbaru
     SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzs_Xdq2Z_N76XOrCyOqKYthiuUfeQHvdVWJaS6C977hGWHAXvwxKRLqcTsKcgmgaJE/exec",
     
-    // Proteksi Login
     checkAuth: () => {
-        const user = JSON.parse(localStorage.getItem('user_login'));
-        // Cek apakah user ada dan memiliki role 'Admin' (sesuaikan dengan kolom role di sheet kamu)
-        if (!user || user.role !== 'Admin') {
-            window.location.href = "login.html"; // Redirect ke login jika bukan admin
+        const savedUser = localStorage.getItem('user_login');
+        
+        // 1. Jika tidak ada data login sama sekali
+        if (!savedUser) {
+            window.location.href = 'index.html';
+            return;
         }
+
+        const user = JSON.parse(savedUser);
+
+        // 2. Validasi Role: Cek apakah jabatan mengandung kata 'admin'
+        // Kita pakai .toLowerCase() supaya 'Admin', 'ADMIN', atau 'administrator' semua lolos
+        const isAdmin = user.jabatan && user.jabatan.toLowerCase().includes('admin');
+
+        if (!isAdmin) {
+            // Jika dia login tapi BUKAN admin, lempar ke halaman penilaian (untuk user biasa)
+            Swal.fire({
+                icon: 'error',
+                title: 'Akses Ditolak',
+                text: 'Halaman ini hanya untuk Administrator!',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = 'penilaian.html';
+            });
+            return;
+        }
+
+        // Jika lolos semua, return data user untuk dipakai di UI
         return user;
     },
 
     logout: () => {
-        localStorage.clear();
-        window.location.href = "login.html";
+        localStorage.removeItem('user_login');
+        window.location.href = 'login.html';
     }
 };
-// Jalankan proteksi secepat mungkin
+
+// Langsung jalankan saat script dimuat
 CONFIG.checkAuth();
