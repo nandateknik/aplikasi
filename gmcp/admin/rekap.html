@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Penilaian - Mandiri Usaha Teknik</title>
+    <script src="components/config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar { transition: all 0.3s; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } }
+        .nav-link.active { background-color: #2563eb !important; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+
+    <aside id="sidebar" class="sidebar fixed md:relative z-50 w-64 h-screen bg-slate-800 text-white p-5 flex flex-col shadow-xl shrink-0">
+        </aside>
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header class="bg-white shadow-sm p-4 flex items-center justify-between no-print">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="text-slate-600 md:hidden"><i class="fas fa-bars"></i></button>
+                <h2 class="font-bold text-slate-700 uppercase tracking-widest text-sm">Hasil Penilaian Karyawan</h2>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="loadRekap()" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </header>
+
+        <main class="p-4 md:p-8 overflow-y-auto">
+            <div class="mb-6 flex flex-col md:flex-row gap-4 no-print">
+                <div class="flex-1 relative">
+                    <i class="fas fa-search absolute left-3 top-3.5 text-slate-400"></i>
+                    <input type="text" id="searchKaryawan" onkeyup="filterTable()" placeholder="Cari Nama Karyawan..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                </div>
+            </div>
+
+            <div id="rekapContainer" class="space-y-6">
+                <div class="text-center py-20 text-slate-400">
+                    <i class="fas fa-database fa-3x mb-4 opacity-20"></i>
+                    <p>Memproses data penilaian...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="pdf-template" class="hidden">
+        <div style="padding: 40px; font-family: sans-serif; color: #334155;">
+            <div style="text-align: center; margin-bottom: 30px; border-bottom: 4px double #e2e8f0; padding-bottom: 20px;">
+                <h1 style="margin: 0; color: #1e293b; font-size: 24px; text-transform: uppercase;">Laporan Evaluasi Kinerja</h1>
+                <p style="margin: 5px 0; font-size: 14px; color: #64748b;">MANDIRI USAHA TEKNIK - BANYUWANGI</p>
+            </div>
+            <div id="pdf-content"></div>
+            <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+                <div style="text-align: center; width: 200px;">
+                    <p style="font-size: 12px;">Dicetak pada: <br><b id="pdf-date"></b></p>
+                </div>
+                <div style="text-align: center; width: 200px; border-top: 1px solid #000; padding-top: 10px;">
+                    <p style="font-size: 12px; font-weight: bold;">Direktur Utama</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+
+        async function fetchLayout() {
+            try {
+                const response = await fetch('components/head.html');
+                const html = await response.text();
+                document.getElementById('sidebar').innerHTML = html;
+                document.querySelectorAll('.nav-link').forEach(l => {
+                    if(l.dataset.page === 'rekap') l.classList.add('active');
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadRekap() {
+            Swal.fire({ title: 'Menghitung Skor...', didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(`${CONFIG.SCRIPT_URL}?action=get_rekap_nilai`);
+                rawData = await res.json();
+                renderCards(rawData);
+                Swal.close();
+            } catch (err) {
+                Swal.fire('Error', 'Gagal memuat rekap', 'error');
+            }
+        }
+
+        function renderCards(data) {
+            const container = document.getElementById('rekapContainer');
+            if(data.length === 0) {
+                container.innerHTML = `<div class="bg-white p-10 text-center rounded-2xl border">Belum ada penilaian masuk.</div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(item => {
+                const avg = parseFloat(item.rata_rata).toFixed(1);
+                let badgeColor = "bg-red-100 text-red-700";
+                let statusRekomendasi = "TIDAK DISARANKAN PERPANJANG";
+                
+                if(avg >= 85) {
+                    badgeColor = "bg-emerald-100 text-emerald-700";
+                    statusRekomendasi = "SANGAT DISARANKAN PERPANJANG";
+                } else if(avg >= 70) {
+                    badgeColor = "bg-blue-100 text-blue-700";
+                    statusRekomendasi = "PERTIMBANGKAN PERPANJANG";
+                }
+
+                return `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition card-karyawan" data-nama="${item.nama}">
+                    <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                                <i class="fas fa-user-tie text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-slate-800 text-lg uppercase">${item.nama}</h3>
+                                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">${item.jabatan} | ${item.divisi}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <div class="text-[10px] font-black text-slate-400 uppercase">Skor Kolektif</div>
+                            <div class="text-3xl font-black ${avg >= 70 ? 'text-blue-600' : 'text-red-600'}">${avg}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase mb-3"><i class="fas fa-users mr-1"></i> Partisipasi Penilai</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${item.rincian.map(r => `
+                                    <span class="text-[9px] bg-white border px-2 py-1 rounded-md font-bold text-slate-600">
+                                        ${r.penilai} (${r.skor_total})
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="${badgeColor} px-4 py-3 rounded-xl flex-1 text-center">
+                                <p class="text-[10px] font-black uppercase opacity-70">Rekomendasi Sistem</p>
+                                <p class="text-xs font-black tracking-tight">${statusRekomendasi}</p>
+                            </div>
+                            <button onclick="downloadPDF('${item.nama}')" class="bg-slate-800 text-white p-4 rounded-xl hover:bg-slate-900 transition shadow-lg">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        async function downloadPDF(namaKaryawan) {
+            const data = rawData.find(d => d.nama === namaKaryawan);
+            const content = document.getElementById('pdf-content');
+            document.getElementById('pdf-date').innerText = new Date().toLocaleDateString('id-ID', { dateStyle: 'long' });
+
+            content.innerHTML = `
+                <table style="width: 100%; margin-bottom: 20px;">
+                    <tr>
+                        <td style="width: 150px; font-weight: bold;">Nama Karyawan</td>
+                        <td>: ${data.nama}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Jabatan / Divisi</td>
+                        <td>: ${data.jabatan} / ${data.divisi}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Total Penilai</td>
+                        <td>: ${data.rincian.length} Orang</td>
+                    </tr>
+                </table>
+
+                <h3 style="background: #f1f5f9; padding: 10px; font-size: 14px; text-transform: uppercase;">Detail Skor Penilai</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #1e293b; color: white; font-size: 12px;">
+                            <th style="padding: 10px; text-align: left; border: 1px solid #cbd5e1;">Nama Penilai</th>
+                            <th style="padding: 10px; text-align: center; border: 1px solid #cbd5e1;">Skor Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.rincian.map(r => `
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 12px;">${r.penilai}</td>
+                                <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${r.skor_total}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f8fafc;">
+                            <td style="padding: 10px; border: 1px solid #cbd5e1; font-weight: bold; text-align: right;">RATA-RATA KOLEKTIF</td>
+                            <td style="padding: 10px; border: 1px solid #cbd5e1; text-align: center; font-size: 18px; font-weight: 900; color: #1d4ed8;">${parseFloat(data.rata_rata).toFixed(1)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div style="padding: 20px; border: 2px solid #e2e8f0; border-radius: 10px;">
+                    <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #64748b;">KESIMPULAN ANALISA:</p>
+                    <p style="font-size: 14px; line-height: 1.6;">
+                        Berdasarkan evaluasi performa dari ${data.rincian.length} penilai, saudara/i <b>${data.nama}</b> memperoleh skor rata-rata sebesar <b>${parseFloat(data.rata_rata).toFixed(1)}</b>. 
+                        Hal ini menunjukkan tingkat kompetensi yang ${data.rata_rata >= 85 ? 'Sangat Baik' : (data.rata_rata >= 70 ? 'Cukup Baik' : 'Kurang Baik')}.
+                    </p>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0,
+                filename: `Evaluasi_${namaKaryawan}_2026.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(document.getElementById('pdf-template')).toPdf().get('pdf').then(function (pdf) {
+                window.open(pdf.output('bloburl'), '_blank');
+            }).save();
+        }
+
+        function filterTable() {
+            const val = document.getElementById('searchKaryawan').value.toLowerCase();
+            document.querySelectorAll('.card-karyawan').forEach(card => {
+                const nama = card.dataset.nama.toLowerCase();
+                card.style.display = nama.includes(val) ? 'block' : 'none';
+            });
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        window.onload = () => { fetchLayout(); loadRekap(); };
+    </script>
+</body>
+</html>
