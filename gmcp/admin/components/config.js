@@ -1,6 +1,6 @@
 // config.js
 const CONFIG = {
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzs_Xdq2Z_N76XOrCyOqKYthiuUfeQHvdVWJaS6C977hGWHAXvwxKRLqcTsKcgmgaJE/exec",
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzbcLtvoV8JWqgkxgSyF-g6YwnfAxAQcAYYgtwCi7fu3rh5T67kpOlqyOWsnzXKCAWl/exec",
     
     checkAuth: () => {
         const savedUser = localStorage.getItem('user_login');
