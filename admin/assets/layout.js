@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             // Pastikan file sw.js ada di root directory
-            navigator.serviceWorker.register('/sw.js')
+            navigator.serviceWorker.register('assets/sw.js')
                 .then(reg => console.log('PWA: Service Worker aktif!'))
                 .catch(err => console.error('PWA: Gagal registrasi SW:', err));
         });
@@ -38,16 +38,6 @@ const headerTemplate = `
                 <button class="btn-logout-new" onclick="confirmLogout()">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
-            </div>
-
-            <div class="brand-card animate__animated animate__fadeInUp">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="brand-title">Nanda Teknik</h4>
-                        <p class="brand-sub">Spesialis Pendingin & Teknik</p>
-                    </div>
-                    <span class="badge bg-primary rounded-pill" style="font-size: 0.6rem;">Admin Pro</span>
-                </div>
             </div>
         </div>
     </header>`;

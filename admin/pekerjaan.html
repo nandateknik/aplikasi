@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <script src="assets/config.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nanda Teknik - Pro Admin</title>
@@ -113,16 +111,23 @@
                 </div>
 
                 <div class="section-title">Status Progres</div>
-                <div class="update-box mb-4">
-                    <select id="statusSelect" class="form-select border-0 shadow-sm mb-3">
-                        <option value="Pending">🕒 Pending</option>
-                        <option value="Proses">⚙️ Sedang Dikerjakan</option>
-                        <option value="Menunggu Part">📦 Menunggu Part</option>
-                        <option value="Selesai">✅ Selesai (Belum Bayar)</option>
-                        <option value="Lunas">💰 Lunas & Selesai</option>
-                    </select>
-                    <textarea id="catatanProgres" class="form-control border-0 shadow-sm" rows="2" placeholder="Tulis progres..."></textarea>
-                </div>
+                    <div class="update-box mb-4">
+                        <select id="statusSelect" class="form-select border-0 shadow-sm mb-3">
+                            <option value="Pending">🕒 Pending</option>
+                            <option value="Proses">⚙️ Sedang Dikerjakan</option>
+                            <option value="Menunggu Part">📦 Menunggu Part</option>
+                            <option value="Selesai">✅ Selesai (Belum Bayar)</option>
+                            <option value="Lunas">💰 Lunas & Selesai</option>
+                        </select>
+                        <textarea id="catatanProgres" class="form-control border-0 shadow-sm mb-3" rows="2" placeholder="Tulis progres..."></textarea>
+                        
+                        <div class="form-check form-switch p-2 bg-white rounded-3 border shadow-sm mx-1">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" id="kirimEmailNotif" checked>
+                            <label class="form-check-label small fw-bold text-primary" for="kirimEmailNotif">
+                                <i class="fas fa-envelope me-1"></i> Kirim Notif Email ke Pelanggan
+                            </label>
+                        </div>
+                    </div>
 
                 <div class="section-title">Riwayat Log</div>
                 <div id="timelineList"></div>
@@ -236,7 +241,14 @@
 
     async function viewDetail(id) {
         currentId = id;
-        Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        
+        // Tampilkan loading biar user tahu proses lagi jalan
+        Swal.fire({ 
+            title: 'Memuat Detail...', 
+            didOpen: () => Swal.showLoading(), 
+            allowOutsideClick: false 
+        });
+
         try {
             const res = await fetch(CONFIG.WEB_APP_URL, { 
                 method: 'POST', 
@@ -244,26 +256,52 @@
             });
             const r = await res.json();
             Swal.close();
+
             if(r.success) {
                 fullDataDetail = r.data; 
-                document.getElementById('modalTitleID').innerText = "Detail: " + id;
+                
+                // 1. Set Header & Info Pelanggan
+                document.getElementById('modalTitleID').innerText = "Detail Job: " + id;
                 document.getElementById('detNama').innerText = fullDataDetail.nama;
                 document.getElementById('detEmail').innerText = fullDataDetail.email;
                 document.getElementById('detAlamat').innerText = fullDataDetail.alamat || '-';
                 
+                // 2. Setup Tombol Google Maps (Perbaikan Link)
                 const btnMaps = document.getElementById('btnMapsContainer');
                 if(fullDataDetail.lat && fullDataDetail.lang) {
-                    btnMaps.innerHTML = `<a href="https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2"><i class="fas fa-map-marked-alt me-1"></i> Buka Rute</a>`;
-                } else { btnMaps.innerHTML = ""; }
+                    const mapUrl = `https://www.google.com/maps?q=${fullDataDetail.lat},${fullDataDetail.lang}`;
+                    btnMaps.innerHTML = `<a href="${mapUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mt-2">
+                        <i class="fas fa-map-marked-alt me-1"></i> Buka Rute Ke Lokasi</a>`;
+                } else { 
+                    btnMaps.innerHTML = '<small class="text-muted d-block mt-2">Koordinat tidak tersedia</small>'; 
+                }
 
+                // 3. Set Checkbox Notif dari Kolom K Database
+                // r.data.notifyStatus berisi nilai true/false dari Apps Script
+                const checkNotif = document.getElementById('kirimEmailNotif');
+                checkNotif.checked = (fullDataDetail.notifyStatus === true || fullDataDetail.notifyStatus === "TRUE");
+
+                // 4. Set Status & Reset Input Catatan
                 document.getElementById('statusSelect').value = fullDataDetail.status;
                 document.getElementById('catatanProgres').value = ""; 
+
+                // 5. Render Daftar Item (Biaya/Barang)
                 selectedItems = fullDataDetail.notaItems || [];
                 renderItems();
+
+                // 6. Render Riwayat Pekerjaan (Timeline)
                 renderTimeline(fullDataDetail.history || []);
+
+                // Tampilkan Modal
                 myModal.show();
+
+            } else {
+                Swal.fire('Gagal', 'Data tidak ditemukan atau error di server.', 'error');
             }
-        } catch(e) { Swal.fire('Error', 'Gagal nyambung ning server', 'error'); }
+        } catch(e) { 
+            console.error(e);
+            Swal.fire('Error', 'Koneksi bermasalah, cek sinyalmu Sam!', 'error'); 
+        }
     }
 
     function tambahItem(isManual) {
@@ -349,26 +387,47 @@
     }
 
     async function saveSemuaPerubahan() {
-        const btn = document.getElementById('btnSimpan');
-        btn.disabled = true;
-        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading() });
-        const payload = {
-            action: 'updateFullData', id: currentId,
-            status: document.getElementById('statusSelect').value,
-            keterangan: document.getElementById('catatanProgres').value || "Update data oleh Admin",
-            items: selectedItems
-        };
-        try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const r = await res.json();
-            btn.disabled = false;
-            if(r.success) { 
-                Swal.fire({ icon: 'success', title: 'Sip!', text: 'Database wis diupdate.', target: document.getElementById('modalUpdate') }).then(() => {
-                    myModal.hide(); loadRiwayat();
-                });
-            }
-        } catch(e) { btn.disabled = false; Swal.fire({ title: 'Gagal', text: 'Koneksi bermasalah.', icon: 'error', target: document.getElementById('modalUpdate') }); }
+    const btn = document.getElementById('btnSimpan');
+    const isNotify = document.getElementById('kirimEmailNotif').checked; // Ambil status centang
+    
+    btn.disabled = true;
+    Swal.fire({ 
+        title: 'Menyimpan...', 
+        allowOutsideClick: false, 
+        target: document.getElementById('modalUpdate'), 
+        didOpen: () => Swal.showLoading() 
+    });
+
+    // Di dalam fungsi saveSemuaPerubahan()
+    const payload = {
+        action: 'updateFullData', 
+        id: currentId,
+        status: document.getElementById('statusSelect').value,
+        keterangan: document.getElementById('catatanProgres').value || "Update data oleh Admin",
+        items: selectedItems,
+        notifyCustomer: document.getElementById('kirimEmailNotif').checked // Ini akan mengirim boolean true/false
+    };
+
+    try {
+        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const r = await res.json();
+        btn.disabled = false;
+        if(r.success) { 
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Sip Sam!', 
+                text: isNotify ? 'Data update & Email terkirim.' : 'Database wis diupdate (Tanpa email).', 
+                target: document.getElementById('modalUpdate') 
+            }).then(() => {
+                myModal.hide(); 
+                loadRiwayat();
+            });
+        }
+    } catch(e) { 
+        btn.disabled = false; 
+        Swal.fire({ title: 'Gagal', text: 'Koneksi bermasalah.', icon: 'error', target: document.getElementById('modalUpdate') }); 
     }
+}
 
     async function hapusData() {
         const confirm = await Swal.fire({ title: 'Hapus Data?', text: 'Data sing wis ilang ra iso dibalekne!', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus!', target: document.getElementById('modalUpdate') });

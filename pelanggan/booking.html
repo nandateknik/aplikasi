@@ -114,33 +114,21 @@
                     <hr class="my-4">
 
                     <div class="mb-3">
-                        <label class="form-label-custom text-uppercase">Pilih Jasa / Pekerjaan</label>
-                        <div class="input-group mb-2">
-                            <select id="jasaSelect" class="form-select rounded-start-3"><option value="">-- Pilih Jasa --</option></select>
-                            <button class="btn btn-primary px-3" onclick="tambahJasaList()"><i class="fas fa-plus"></i></button>
-                        </div>
-                        <div class="input-group mb-2">
-                            <input type="text" id="manualNama" class="form-control w-50" placeholder="Jasa Manual">
-                            <input type="number" id="manualHarga" class="form-control w-25" placeholder="Rp">
-                            <button class="btn btn-secondary btn-sm px-3" onclick="tambahJasaManual()">Ok</button>
+                        <label class="form-label-custom text-uppercase">Detail Pekerjaan / Kerusakan</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-tools text-muted"></i></span>
+                            <input type="text" id="judulPekerjaan" class="form-control" placeholder="Contoh: Cuci AC / Pasang CCTV 2 Titik">
                         </div>
                     </div>
 
                     <ul class="list-group mb-3" id="itemList"></ul>
 
                     <div class="price-box shadow-sm">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">Subtotal Jasa:</span>
-                            <span id="txtSubtotalJasa" class="fw-bold">Rp 0</span>
-                        </div>
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">Ongkir / Bensin:</span>
-                            <span id="txtBensin" class="fw-bold">Rp 0</span>
-                        </div>
-                        <div class="d-flex justify-content-between fw-bold text-primary fs-5 border-top mt-2 pt-2">
-                            <span>TOTAL:</span>
+                        <div class="d-flex justify-content-between fw-bold text-primary fs-5">
+                            <span>BIAYA TRANSPORT:</span>
                             <span id="txtTotal">Rp 0</span>
                         </div>
+                        <p class="small text-muted mb-0 mt-2">*Biaya ini adalah ongkir teknisi ke lokasi Anda dan belum termasuk jasa.</p>
                     </div>
 
                     <button class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow" onclick="simpanDataNota()">
@@ -163,7 +151,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxbNJ_VezUyyGF2oWn91LvKOMwpXD75T-6JvPEByWr1sC_0pE2ycS9cyhv2AvElJvMb/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxWksoVFbuF-DHkkLtUcroQ5l20BI4Eom_ukfoYcNfkStscU0jSVmlyN-WChU5HMaqa/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
     
     let map, marker, timeoutCheck;
@@ -261,99 +249,76 @@
         }
     }
 
-    async function loadDaftarHarga() {
-        try {
-            const res = await fetch(`${WEB_APP_URL}?action=getDaftarHarga`);
-            const result = await res.json();
-            const select = document.getElementById('jasaSelect');
-            result.data.forEach(item => {
-                select.innerHTML += `<option value="${item[1]}">${item[0]}</option>`;
-            });
-        } catch(e) {}
+    // Variable selectedItems dihapus saja karena sudah tidak pakai keranjang
+let biayaTransport = 0;
+
+function hitungBiaya() {
+    const lat = document.getElementById('lat').value;
+    const lng = document.getElementById('lang').value;
+    
+    if(lat && lng) {
+        let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+        // Logika bensin Mas Nanda: Jarak > 5km, per km 10rb
+        biayaTransport = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
+    } else {
+        biayaTransport = 0;
+    }
+    
+    document.getElementById('txtTotal').innerText = "Rp " + biayaTransport.toLocaleString();
+    return biayaTransport;
+}
+
+async function simpanDataNota() {
+    const email = document.getElementById('email').value.trim();
+    const tgl = document.getElementById('tglBooking').value;
+    const pekerjaan = document.getElementById('judulPekerjaan').value.trim();
+    const lat = document.getElementById('lat').value;
+    const lang = document.getElementById('lang').value;
+    const alamat = document.getElementById('alamat').value;
+    
+    const totalNota = hitungBiaya(); // Ini sekarang isinya cuma biaya transport
+
+    if(!email || !tgl || !pekerjaan || !lat) {
+        return Swal.fire('Data Kurang Sam', 'Email, Jadwal, Detail Pekerjaan, lan Lokasi kudu lengkap!', 'warning');
     }
 
-    function tambahJasaList() {
-        const select = document.getElementById('jasaSelect');
-        if(!select.value) return;
-        const nama = select.options[select.selectedIndex].text;
-        const harga = parseInt(select.value);
-        const existing = selectedItems.find(i => i.nama === nama);
-        if(existing) { existing.qty += 1; } 
-        else { selectedItems.push({ nama, harga, qty: 1 }); }
-        renderItems();
-    }
+    document.getElementById('loader').style.display = 'flex';
 
-    function tambahJasaManual() {
-        const nama = document.getElementById('manualNama').value;
-        const harga = parseInt(document.getElementById('manualHarga').value);
-        if(!nama || !harga) return;
-        selectedItems.push({ nama: "[M] " + nama, harga, qty: 1 });
-        document.getElementById('manualNama').value = '';
-        document.getElementById('manualHarga').value = '';
-        renderItems();
-    }
+    try {
+        const payload = {
+            action: 'createNota', 
+            email: email,
+            nama: pelangganData ? pelangganData.nama : "Pelanggan Umum",
+            tglPengerjaan: tgl.replace('T', ' '),
+            // Karena backend minta 'items' sebagai array, kita kirim biaya transport sebagai satu-satunya item
+            items: [{ nama: "Biaya Transport / Bensin", harga: totalNota, qty: 1 }],
+            total: totalNota,
+            judulPekerjaan: pekerjaan, // Ini akan masuk ke Judul (Kolom C) di Sheet Booking
+            lat: lat,
+            lang: lang,
+            alamat: alamat
+        };
 
-    function renderItems() {
-        const list = document.getElementById('itemList');
-        list.innerHTML = '';
-        selectedItems.forEach((item, index) => {
-            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-3">
-                <div class="small fw-bold text-dark">${item.nama}</div>
-                <div class="d-flex align-items-center">
-                    <span class="small me-3 fw-bold">Rp ${(item.harga * item.qty).toLocaleString()}</span>
-                    <button class="btn btn-sm btn-danger rounded-circle p-1" style="width:24px;height:24px;line-height:10px;" onclick="removeItem(${index})">&times;</button>
-                </div>
-            </li>`;
+        const response = await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload) 
         });
-        hitungBiaya();
-    }
 
-    function removeItem(index) { selectedItems.splice(index, 1); renderItems(); }
+        const res = await response.json();
+        document.getElementById('loader').style.display = 'none';
 
-    function hitungBiaya() {
-        const lat = document.getElementById('lat').value;
-        const lng = document.getElementById('lang').value;
-        let bensin = 0;
-        if(lat && lng) {
-            let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
-            bensin = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
+        if(res.success) {
+            Swal.fire('Berhasil Sam!', `Booking & Nota Transport (${res.notaId}) wis kesimpen.`, 'success')
+                .then(() => location.reload());
         }
-        const subtotal = selectedItems.reduce((acc, curr) => acc + (curr.harga * curr.qty), 0);
-        document.getElementById('txtBensin').innerText = "Rp " + bensin.toLocaleString();
-        document.getElementById('txtSubtotalJasa').innerText = "Rp " + subtotal.toLocaleString();
-        document.getElementById('txtTotal').innerText = "Rp " + (subtotal + bensin).toLocaleString();
-        return subtotal + bensin;
+    } catch(e) { 
+        document.getElementById('loader').style.display = 'none';
+        Swal.fire('Error', 'Gagal nyambung server!', 'error'); 
     }
+}
 
-    async function simpanDataNota() {
-        const email = document.getElementById('email').value.trim();
-        const tgl = document.getElementById('tglBooking').value;
-        const total = hitungBiaya();
-        if(!email || !tgl || selectedItems.length === 0) return Swal.fire('Lengkapi Data', 'Email, Jadwal, lan Jasa kudu diisi Sam!', 'warning');
-
-        document.getElementById('loader').style.display = 'flex';
-        try {
-            const payload = {
-                action: 'createNota', 
-                email: email,
-                tglPengerjaan: tgl.replace('T', ' '),
-                items: selectedItems,
-                total: total,
-                lat: document.getElementById('lat').value,
-                lang: document.getElementById('lang').value,
-                alamat: document.getElementById('alamat').value
-            };
-            const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const res = await response.json();
-            document.getElementById('loader').style.display = 'none';
-            if(res.success) {
-                Swal.fire('Berhasil Sam!', 'ID Nota: ' + res.notaId, 'success').then(() => location.reload());
-            }
-        } catch(e) { 
-            document.getElementById('loader').style.display = 'none';
-            Swal.fire('Error', 'Gagal nyimpen data!', 'error'); 
-        }
-    }
-</script>
+    
+    </script>
 </body>
 </html>

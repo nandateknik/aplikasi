@@ -1,15 +1,10 @@
-const CACHE_NAME = 'nanda-teknik-v1';
+const CACHE_NAME = 'nandateknik-cache';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './update.html',
-  './register.html',
-  './booking.html',
-  './404.html',
-  './logo-none-text.png',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css'
+  '/',
+  'index.html',
+  'pekerjaan.html',
+  'penawaran.html',
+  'pelanggan.html',
 ];
 
 // 1. Proses Install: Nyimpen aset penting neng cache

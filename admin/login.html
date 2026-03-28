@@ -34,6 +34,7 @@
     <button class="btn btn-primary" onclick="handleLogin()">LOG IN</button>
     <div id="errMsg">⚠️ Username utawa Password Salah!</div>
 </div>
+<script src="assets/config.js"></script>
 
 <script>
     // Langsung cek session nek wis login
@@ -41,27 +42,64 @@
         window.location.href = 'index.html';
     }
 
-    function handleLogin() {
-        // AMBIL INPUT
-        const user = document.getElementById('userInput').value;
-        const pass = document.getElementById('passInput').value;
-        const error = document.getElementById('errMsg');
+async function handleLogin() {
+    const user = document.getElementById('userInput').value;
+    const pass = document.getElementById('passInput').value;
+    const error = document.getElementById('errMsg');
+    const loginBtn = document.querySelector('button');
 
-        // SETINGAN LOGIN (Ganti neng kene Mas)
-        const USER_BENER = "admin";
-        const PASS_BENER = "nandateknik2024";
+    // Validasi input kosong
+    if (!user || !pass) {
+        error.innerText = "Isi username & password dulu Mas!";
+        error.style.display = 'block';
+        return;
+    }
 
-        // CEK LOGIN
-        if (user === USER_BENER && pass === PASS_BENER) {
+    // Efek loading
+    loginBtn.innerHTML = "Memproses...";
+    loginBtn.disabled = true;
+
+    try {
+        // GANTI URL INI dengan URL Web App GAS Mas Nanda yang sudah di-deploy
+        // const URL_GAS = "https://script.google.com/macros/s/AKfycby1lOAYv1WDh5wzCZJ7V-fHiMkIBxx-ndF4ogtXox8MymhhsmgkjUNe4Wj2I07E5eE/exec";
+
+        // Di dalam function handleLogin() Mas Nanda
+        const response = await fetch(CONFIG.WEB_APP_URL, {
+            method: 'POST',
+            // JANGAN pakai application/json, pakai text/plain agar tidak kena CORS
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify({
+                action: 'loginTeknisi',
+                username: user,
+                password: pass
+            })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            // Simpan status login & data user
             localStorage.setItem('isLoggedIn', 'true');
-            // Pastikan alamat file iki bener yo Mas!
+            localStorage.setItem('user_nanda_teknik', JSON.stringify(result.data));
+            
+            // Pindah ke dashboard
             window.location.href = 'index.html'; 
         } else {
+            // Tampilkan pesan error dari backend (salah pass / tidak aktif)
+            error.innerText = result.message;
             error.style.display = 'block';
             document.getElementById('passInput').value = "";
-            setTimeout(() => { error.style.display = 'none'; }, 3000);
+            setTimeout(() => { error.style.display = 'none'; }, 4000);
         }
+    } catch (err) {
+        error.innerText = "Koneksi Error: " + err.toString();
+        error.style.display = 'block';
+    } finally {
+        loginBtn.innerHTML = "Login";
+        loginBtn.disabled = false;
     }
+}
 
     // Fitur Enter
     document.addEventListener('keypress', function (e) {
