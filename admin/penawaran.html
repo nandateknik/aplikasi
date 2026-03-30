@@ -413,13 +413,7 @@
         doc.text(isLunas ? "LUNAS" : "BELUM LUNAS", 105, 150, { align: "center", angle: 45 });
         doc.restoreGraphicsState();
 
-        // --- INFO BANK (LINGKAR GARIS PUTUS) ---
-        doc.setTextColor(0);
-        finalY += 15;
-        doc.setDrawColor(150, 150, 150);
-        doc.setLineDash([2, 2]);
-        doc.rect(14, finalY - 4, 100, 25);
-        doc.setLineDash([]);
+        GIT ADD
 
         doc.setFontSize(9); doc.setFont("helvetica", "bold");
         doc.text("Informasi Pembayaran (Transfer):", 18, finalY + 2);

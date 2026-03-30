@@ -69,6 +69,14 @@
             </div>
         </div>
 
+        <div class="form-check form-switch mb-3 mt-3 px-5 py-2 bg-light rounded-3 border">
+            <input class="form-check-input" type="checkbox" id="sendEmailOpt" checked>
+            <label class="form-check-label small fw-bold text-primary" for="sendEmailOpt">
+                <i class="fas fa-bell me-1"></i> Aktifkan Update Progres via Email
+            </label>
+            <div style="font-size: 0.65rem; color: #64748b;">Pelanggan akan menerima email otomatis setiap teknisi memperbarui status pekerjaan.</div>
+        </div>
+
         <label class="section-label mt-3">DETAIL PEKERJAAN</label>
         <input type="text" id="judulPekerjaan" class="form-control mb-3" placeholder="Misal: Perbaikan CCTV Mati / Cuci AC">
 
@@ -291,40 +299,47 @@
     }
 
     async function submitBooking() {
-        const email = document.getElementById('emailInput').value;
-        const tgl = document.getElementById('tglBooking').value;
-        const judul = document.getElementById('judulPekerjaan').value;
-        if(!email || !tgl || !judul || selectedItems.length === 0) return Swal.fire('Data Belum Lengkap', 'Cek maneh Sam!', 'warning');
+    const email = document.getElementById('emailInput').value;
+    const tgl = document.getElementById('tglBooking').value;
+    const judul = document.getElementById('judulPekerjaan').value;
+    // AMBIL STATUS SWITCH EMAIL
+    const isNotify = document.getElementById('sendEmailOpt').checked;
 
-        document.getElementById('loader').style.display = 'flex';
+    if(!email || !tgl || !judul || selectedItems.length === 0) return Swal.fire('Data Belum Lengkap', 'Cek maneh Sam!', 'warning');
 
-        // GABUNGKAN BENSIN KE ARRAY ITEMS AGAR MASUK NOTA
-        let finalItems = [...selectedItems];
-        if(bensinCost > 0) {
-            finalItems.push({
-                nama: `Biaya Transport (${document.getElementById('txtJarak').innerText} km)`,
-                harga: bensinCost,
-                qty: 1
-            });
-        }
+    document.getElementById('loader').style.display = 'flex';
 
-        const payload = {
-            action: 'createNota', email: email, judulPekerjaan: judul, 
-            nama: currentCustomer ? currentCustomer.nama : "Pelanggan Baru",
-            tglPengerjaan: tgl.replace('T', ' '), 
-            items: finalItems, // Mengirim items yang sudah ada bensinnya
-            total: finalItems.reduce((acc, it) => acc + (it.harga * it.qty), 0),
-            lat: document.getElementById('lat').value, lang: document.getElementById('lng').value, alamat: document.getElementById('alamat').value
-        };
-
-        try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const r = await res.json();
-            if(r.success) Swal.fire('Berhasil Sam!', `WO ${r.notaId} wis tersimpan.`, 'success').then(() => location.reload());
-            else Swal.fire('Gagal', r.message, 'error');
-        } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
-        document.getElementById('loader').style.display = 'none';
+    let finalItems = [...selectedItems];
+    if(bensinCost > 0) {
+        finalItems.push({
+            nama: `Biaya Transport (${document.getElementById('txtJarak').innerText} km)`,
+            harga: bensinCost,
+            qty: 1
+        });
     }
+
+    const payload = {
+        action: 'createNota', 
+        email: email, 
+        judulPekerjaan: judul, 
+        nama: currentCustomer ? currentCustomer.nama : "Pelanggan Baru",
+        tglPengerjaan: tgl.replace('T', ' '), 
+        items: finalItems, 
+        total: finalItems.reduce((acc, it) => acc + (it.harga * it.qty), 0),
+        lat: document.getElementById('lat').value, 
+        lang: document.getElementById('lng').value, 
+        alamat: document.getElementById('alamat').value,
+        sendEmail: isNotify // <--- INI MASUK KE KOLOM K DI SHEET BOOKING
+    };
+
+    try {
+        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const r = await res.json();
+        if(r.success) Swal.fire('Berhasil Sam!', `WO ${r.notaId} wis tersimpan.`, 'success').then(() => location.reload());
+        else Swal.fire('Gagal', r.message, 'error');
+    } catch(e) { Swal.fire('Error', 'Koneksi bermasalah', 'error'); }
+    document.getElementById('loader').style.display = 'none';
+}
 </script>
 </body>
 </html>

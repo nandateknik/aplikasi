@@ -21,6 +21,17 @@
     <style>
         :root { --p-blue: #0d6efd; --dark: #0046b8; --bg-soft: #f4f7fe; }
         body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 110px; }
+
+        .status-step:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: 15px; /* Posisi tengah ikon */
+            top: 32px;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+            z-index: 1;
+        }
         
         /* HEADER BIRU MEWAH (KONSISTEN) */
         .header-brand { 
@@ -170,8 +181,24 @@
     <div id="listPekerjaan" style="display: none;"></div>
     <div id="listNota" style="display: none;"></div>
 
-    <div id="detailView" class="card-custom animate__animated animate__fadeInUp">
+    <div id="detailView" class="card-custom animate__animated animate__fadeInUp" style="padding-bottom: 30px;">
         <div id="detailContent"></div>
+        <hr class="my-4 opacity-25">
+        <div class="px-2">
+            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-comments me-2"></i>DISKUSI PEKERJAAN</h6>
+            <div id="discussionSection" class="mt-5 p-3 border-top">
+    <div class="text-center" id="disqus_loader">
+        <i class="fas fa-comments text-primary fa-2x mb-2"></i>
+        <h6 class="fw-bold text-dark">Butuh Diskusi / Tanya Teknisi?</h6>
+        <p class="small text-muted mb-3">Klik tombol di bawah untuk membuka kolom komentar.</p>
+        <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="loadDisqusExplicitly()">
+            <i class="fas fa-comment-dots me-2"></i> Buka Kolom Diskusi
+        </button>
+    </div>
+    
+    <div id="disqus_thread" style="display: none;"></div>
+</div>
+        </div>
     </div>
 
     <div id="noData" class="text-center py-5" style="display:none;">
@@ -200,7 +227,7 @@
 </nav>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxWksoVFbuF-DHkkLtUcroQ5l20BI4Eom_ukfoYcNfkStscU0jSVmlyN-WChU5HMaqa/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyv5F4Se851szRL2Z8OaN3GyHH4fGSNolt1hTF3VdO8Rd6eZuB-nImR6X1jbIhPu5bS/exec';
     let fullData = { jobs: [], notes: [], customer: {} };
 
     function cleanDate(str) {
@@ -308,51 +335,162 @@
         } catch(e) { showLoader(false); }
     }
 
-    function showUIByDetail(r) {
-        const detailBox = document.getElementById('detailView');
-        const content = document.getElementById('detailContent');
-        detailBox.style.display = 'block';
+function showUIByDetail(r) {
+    const detailBox = document.getElementById('detailView');
+    const content = document.getElementById('detailContent');
+    detailBox.style.display = 'block';
+    
+    // --- BAGIAN 1: LOGIKA UNTUK WORK ORDER (PROGRESS PEKERJAAN) ---
+    if(r.type === 'WO') {
+        const d = r.data;
         
-        if(r.type === 'WO') {
-            const d = r.data;
-            content.innerHTML = `
-                <h6 class="fw-bold text-primary mb-3">WORK ORDER #${d.woId}</h6>
-                <div class="bg-light p-3 rounded-4 mb-3 small">
-                    <strong>Item:</strong> ${d.pekerjaan}
-                </div>
-                <h6 class="fw-bold small mb-3 text-muted">LOG PROGRESS:</h6>
-                ${d.history.map(h => `
-                    <div class="status-step">
-                        <small class="fw-bold d-block">${h.status}</small>
-                        <small class="text-muted" style="font-size:10px">${cleanDate(h.tgl)}</small>
-                        <div class="small text-secondary">${h.detail || '-'}</div>
-                    </div>
-                `).join('')}
-            `;
-        } else {
-            const n = r.data;
-            content.innerHTML = `
-                <div class="text-center mb-4">
-                    <h6 class="fw-bold mb-0 text-primary">INVOICE PEMBAYARAN</h6>
-                    <small class="text-muted fw-bold">#${n.notaId} | ${cleanDate(n.tanggal)}</small>
-                </div>
-                <table class="table table-sm small table-grey">
-                    <thead><tr><th>Deskripsi</th><th class="text-end">Subtotal</th></tr></thead>
-                    <tbody>
-                    ${n.items.map(it => `<tr><td>${it.nama}<br><small>${it.qty} x ${Number(it.harga).toLocaleString()}</small></td><td class="text-end fw-bold">Rp ${(it.qty*it.harga).toLocaleString()}</td></tr>`).join('')}
-                    </tbody>
-                </table>
-                <div class="d-flex justify-content-between fw-bold p-3 bg-primary bg-opacity-10 text-primary rounded-4">
-                    <span>TOTAL</span><span>Rp ${Number(n.total).toLocaleString()}</span>
-                </div>
-                <button class="btn btn-success w-100 rounded-pill mt-4 py-3 fw-bold" onclick="downloadPDF('${n.notaId}')">
-                    <i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF
-                </button>
-            `;
-        }
-        detailBox.scrollIntoView({ behavior: 'smooth' });
-    }
+        // Fungsi pembantu untuk ikon timeline
+        const getStatusStyle = (status) => {
+            const s = status.toLowerCase();
+            if(s.includes('selesai') || s.includes('success')) return { icon: 'fa-check-circle', color: 'text-success', bg: 'bg-success' };
+            if(s.includes('proses') || s.includes('jalan')) return { icon: 'fa-tools', color: 'text-primary', bg: 'bg-primary' };
+            return { icon: 'fa-clock', color: 'text-warning', bg: 'bg-warning' };
+        };
 
+        content.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <button class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="document.getElementById('detailView').style.display='none'">
+                    <i class="fas fa-arrow-left me-1"></i> Kembali
+                </button>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 border border-primary border-opacity-25">ID WO: ${d.woId}</span>
+            </div>
+
+            <div class="p-4 rounded-4 bg-primary text-white mb-4 shadow-lg animate__animated animate__fadeIn">
+                <small class="opacity-75 fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 2px;">Detail Pekerjaan</small>
+                <h5 class="fw-bold mb-0 mt-1">${d.pekerjaan}</h5>
+            </div>
+
+            <h6 class="fw-bold small mb-4 text-muted mx-1"><i class="fas fa-stream me-2"></i>TIMELINE PROGRES:</h6>
+            <div class="ps-2">
+                ${d.history.map((h, index) => {
+                    const style = getStatusStyle(h.status);
+                    return `
+                    <div class="status-step pb-4 position-relative">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
+                                 style="width: 32px; height: 32px; z-index: 2; border: 2px solid #fff; outline: 2px solid ${style.color === 'text-success' ? '#198754' : style.color === 'text-primary' ? '#0d6efd' : '#ffc107'}">
+                                <i class="fas ${style.icon} ${style.color}" style="font-size: 16px;"></i>
+                            </div>
+                            <div class="ms-3 flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-dark" style="font-size: 14px;">${h.status}</span>
+                                    <small class="text-muted" style="font-size: 10px;">${cleanDate(h.tgl)}</small>
+                                </div>
+                                <div class="small p-3 bg-light rounded-3 text-secondary mt-2 border-start border-4 ${style.color.replace('text', 'border')}" style="font-size: 12px;">
+                                    ${h.detail || 'Tidak ada catatan tambahan.'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        
+        // Panggil fungsi Disqus untuk WO
+        resetDisqus(d.woId, d.pekerjaan);
+
+    // --- BAGIAN 2: LOGIKA UNTUK NOTA / INVOICE ---
+    } else {
+        const n = r.data;
+        const isLunas = n.status === 'Lunas';
+        
+        content.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <button class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="document.getElementById('detailView').style.display='none'">
+                    <i class="fas fa-arrow-left me-1"></i> Kembali
+                </button>
+            </div>
+
+            <div class="text-center mb-4 position-relative">
+                <div style="position: absolute; right: 0; top: -10px;">
+                    <span class="badge ${isLunas ? 'bg-success' : 'bg-danger'} shadow-sm animate__animated animate__bounceIn" 
+                          style="padding: 10px 18px; border-radius: 50px; font-size: 11px; letter-spacing: 1px;">
+                          <i class="fas ${isLunas ? 'fa-check-circle' : 'fa-clock'} me-1"></i> 
+                          ${n.status.toUpperCase()}
+                    </span>
+                </div>
+                <h6 class="fw-bold mb-0 text-primary" style="letter-spacing: 1px;">INVOICE PEMBAYARAN</h6>
+                <small class="text-muted fw-bold">#${n.notaId} | ${cleanDate(n.tanggal)}</small>
+            </div>
+
+            ${isLunas ? `
+            <div style="position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); 
+                        opacity: 0.1; font-size: 70px; font-weight: 900; color: green; pointer-events: none; z-index: 0; width: 100%; text-align: center;">
+                PAID / LUNAS
+            </div>
+            ` : ''}
+
+            <div style="position: relative; z-index: 1;">
+                <div class="table-responsive rounded-4 border overflow-hidden mb-3">
+                    <table class="table table-sm small table-grey mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="p-3">Deskripsi Layanan</th>
+                                <th class="text-end p-3">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${n.items.map(it => `
+                                <tr>
+                                    <td class="p-3 border-bottom">
+                                        <span class="fw-bold text-dark">${it.nama}</span><br>
+                                        <small class="text-muted">${it.qty} x Rp ${Number(it.harga).toLocaleString('id-ID')}</small>
+                                    </td>
+                                    <td class="text-end fw-bold p-3 align-middle border-bottom">
+                                        Rp ${(it.qty*it.harga).toLocaleString('id-ID')}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-4 ${isLunas ? 'bg-success' : 'bg-primary'} bg-opacity-10 rounded-4 mb-4">
+                    <div>
+                        <small class="d-block text-muted fw-bold" style="font-size: 10px; letter-spacing: 1px;">TOTAL TAGIHAN</small>
+                        <span class="fw-extrabold ${isLunas ? 'text-success' : 'text-primary'}" style="font-size: 22px;">
+                            Rp ${Number(n.total).toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                    <i class="fas ${isLunas ? 'fa-file-invoice-dollar' : 'fa-receipt'} fa-3x opacity-25"></i>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12">
+                        <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="downloadPDF('${n.notaId}')">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> DOWNLOAD PDF INVOICE
+                        </button>
+                    </div>
+                    ${!isLunas ? `
+                    <div class="col-12">
+                        <a href="https://wa.me/6282331201148?text=Halo%20Nanda%20Teknik,%20saya%20ingin%20konfirmasi%20pembayaran%20Invoice%20${n.notaId}" 
+                           class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm">
+                            <i class="fab fa-whatsapp me-2"></i> KONFIRMASI PEMBAYARAN
+                        </a>
+                    </div>
+                    ` : `
+                    <div class="col-12 text-center p-3">
+                        <div class="badge bg-success bg-opacity-10 text-success p-2 rounded-3 w-100">
+                            <i class="fas fa-heart me-1"></i> Terima kasih! Pembayaran telah kami terima.
+                        </div>
+                    </div>
+                    `}
+                </div>
+            </div>
+        `;
+        
+        // Panggil fungsi Disqus untuk Nota
+        resetDisqus(n.notaId, "Invoice " + n.notaId);
+    }
+    
+    detailBox.scrollIntoView({ behavior: 'smooth' });
+}
     async function downloadPDF(id) {
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
         const r = await res.json();
@@ -422,5 +560,82 @@
         });
       }
     </script>
+    <script>
+        // --- FUNGSI AUTO-LOAD DARI LINK EMAIL ---
+    window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const notaId = urlParams.get('id'); // Mengambil INV-xxxx dari URL
+
+    if (notaId) {
+        // Jika ada ID di URL, otomatis masukkan ke input dan cari
+        document.getElementById('searchInput').value = notaId;
+        
+        // Langsung panggil fungsi detail mendalam
+        loadDeepDetail(notaId);
+        
+        // Opsional: Hilangkan parameter di URL supaya rapi setelah diload
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+};
+    </script>
+    <script>
+    // Konfigurasi Disqus
+    var disqus_config = function () {
+        this.page.url = window.location.href;  
+        this.page.identifier = 'default'; 
+    };
+
+    let currentWOId = "";
+let currentWOTitle = "";
+
+function resetDisqus(id, title) {
+    // Simpan data WO yang sedang dibuka ke variabel global
+    currentWOId = id;
+    currentWOTitle = title;
+    
+    // Reset tampilan: sembunyikan kolom komentar, munculkan tombol "Buka Diskusi"
+    document.getElementById('disqus_thread').style.display = 'none';
+    document.getElementById('disqus_loader').style.display = 'block';
+    
+    // Kosongkan isi Disqus lama agar tidak tabrakan data
+    document.getElementById('disqus_thread').innerHTML = '';
+}
+
+function loadDisqusExplicitly() {
+    const loader = document.getElementById('disqus_loader');
+    const thread = document.getElementById('disqus_thread');
+    
+    loader.innerHTML = '<div class="spinner-border text-primary spinner-border-sm"></div> <small class="ms-2">Memuat Diskusi...</small>';
+
+    // Konfigurasi Disqus
+    var disqus_config = function () {
+        this.page.url = window.location.origin + window.location.pathname + "?id=" + currentWOId;
+        this.page.identifier = currentWOId;
+        this.page.title = currentWOTitle;
+    };
+
+    // Load script Disqus secara dinamis
+    if (window.DISQUS) {
+        // Jika script sudah pernah di-load sebelumnya, cukup reset datanya
+        DISQUS.reset({
+            reload: true,
+            config: disqus_config
+        });
+        showThread();
+    } else {
+        // Jika belum pernah di-load sama sekali (pertama kali klik)
+        var d = document, s = d.createElement('script');
+        s.src = 'https://nandateknik.disqus.com/embed.js'; // PASTIKAN SHORTNAME BENAR
+        s.setAttribute('data-timestamp', +new Date());
+        s.onload = showThread; // Tampilkan kolom setelah script siap
+        (d.head || d.body).appendChild(s);
+    }
+
+    function showThread() {
+        loader.style.display = 'none';
+        thread.style.display = 'block';
+    }
+}
+</script>
 </body>
 </html>

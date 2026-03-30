@@ -12,7 +12,6 @@
         :root { --primary: #0d6efd; --bg: #f8f9fc; --dark: #0046b8; }
         body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding-bottom: 120px; }
         
-        /* HEADER STYLE */
         .header-brand { 
             background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%); 
             padding: 40px 20px; text-align: center; color: white; 
@@ -31,7 +30,6 @@
             background: white; position: relative; z-index: 20;
         }
 
-        /* MAP FIX: Pastikan Z-Index di bawah Card tapi di atas background */
         #map { 
             height: 250px; width: 100%; border-radius: 15px; 
             margin-bottom: 10px; border: 2px solid #eee; 
@@ -40,7 +38,7 @@
         
         .price-box { 
             background: #f0f7ff; padding: 18px; border-radius: 20px; 
-            border: 1px dashed var(--primary); margin-top: 20px; 
+            border: 1px dashed var(--primary); margin: 20px 0; 
         }
         
         .loader-overlay { 
@@ -65,7 +63,16 @@
         .nav-item.active { color: var(--primary); }
 
         .form-label-custom { font-size: 11px; font-weight: 800; color: #6c757d; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .list-group-item { border: none; background: #f8f9fc; margin-bottom: 5px; border-radius: 12px !important; }
+        
+        /* Notif Switch Style */
+        .notif-box {
+            background: #fdfdfd;
+            border: 1px solid #edf2f7;
+            padding: 15px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+        .notif-box:hover { border-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -115,24 +122,29 @@
 
                     <div class="mb-3">
                         <label class="form-label-custom text-uppercase">Detail Pekerjaan / Kerusakan</label>
-                        <div class="input-group">
+                        <div class="input-group mb-3">
                             <span class="input-group-text bg-light"><i class="fas fa-tools text-muted"></i></span>
                             <input type="text" id="judulPekerjaan" class="form-control" placeholder="Contoh: Cuci AC / Pasang CCTV 2 Titik">
                         </div>
                     </div>
 
-                    <ul class="list-group mb-3" id="itemList"></ul>
-
-                    <div class="price-box shadow-sm">
-                        <div class="d-flex justify-content-between fw-bold text-primary fs-5">
-                            <span>BIAYA TRANSPORT:</span>
-                            <span id="txtTotal">Rp 0</span>
-                        </div>
-                        <p class="small text-muted mb-0 mt-2">*Biaya ini adalah ongkir teknisi ke lokasi Anda dan belum termasuk jasa.</p>
+                    <div class="price-box shadow-sm text-center">
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Estimasi Biaya Transport</small>
+                        <div class="fw-bold text-primary fs-3" id="txtTotal">Rp 0</div>
+                        <p class="small text-muted mb-0 mt-1">*Belum termasuk biaya jasa & sparepart.</p>
                     </div>
 
-                    <button class="btn btn-primary w-100 mt-4 py-3 fw-bold rounded-pill shadow" onclick="simpanDataNota()">
-                        <i class="fas fa-save me-2"></i> SIMPAN BOOKING
+                    <div class="notif-box mb-4">
+                        <div class="form-check form-switch d-flex align-items-center justify-content-between p-0">
+                            <label class="form-check-label small fw-bold text-dark" for="sendEmailNotif" style="cursor:pointer">
+                                <i class="fas fa-envelope-open-text me-2 text-primary"></i>Kirim Konfirmasi ke Email
+                            </label>
+                            <input class="form-check-input ms-0" type="checkbox" id="sendEmailNotif" checked style="width: 40px; height: 20px;">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-lg" onclick="simpanDataNota()">
+                        <i class="fas fa-paper-plane me-2"></i> KONFIRMASI BOOKING
                     </button>
                 </div>
             </div>
@@ -151,37 +163,29 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxWksoVFbuF-DHkkLtUcroQ5l20BI4Eom_ukfoYcNfkStscU0jSVmlyN-WChU5HMaqa/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbziXlDhSUS2ztgQ7ydu8H5cGrGu70NWv-pOVrKMlNx3uNKcV2P4mS6Hk-WOLl1Fdp7_/exec';
     const KANTOR_COORDS = { lat: -8.1910395, lng: 114.3697974 }; 
     
     let map, marker, timeoutCheck;
     let pelangganData = null;
-    let selectedItems = []; 
 
     window.onload = () => {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('tglBooking').value = now.toISOString().slice(0,16);
-        
         initMap();
-        loadDaftarHarga();
     };
 
     function initMap() {
-        // Fix for grey tiles: Ensure map container is sized
         setTimeout(() => {
             map = L.map('map').setView([KANTOR_COORDS.lat, KANTOR_COORDS.lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
-            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             marker = L.marker([KANTOR_COORDS.lat, KANTOR_COORDS.lng], {draggable: true}).addTo(map);
             marker.on('dragend', (e) => {
                 const pos = e.target.getLatLng();
                 updateLocationInfo(pos.lat, pos.lng);
             });
-            
-            map.invalidateSize(); // Force refresh map render
+            map.invalidateSize();
         }, 300);
     }
 
@@ -204,16 +208,12 @@
         const email = document.getElementById('email').value.trim();
         const msgDiv = document.getElementById('emailMsg');
         if(email.length < 5) return;
-
         msgDiv.style.display = 'block';
         msgDiv.className = "text-muted small mt-2";
         msgDiv.innerHTML = "Mengecek email...";
-
         try {
-            // Gunakan query string untuk GET biar lebih stabil untuk pencarian
             const res = await fetch(`${WEB_APP_URL}?action=getPelangganByEmail&email=${encodeURIComponent(email)}`);
             const result = await res.json();
-            
             if(result.success) {
                 pelangganData = result.data;
                 msgDiv.innerHTML = `<i class="fas fa-check-circle"></i> Pelanggan: ${result.data.nama}`;
@@ -225,12 +225,8 @@
                 msgDiv.style.display = 'none';
                 document.getElementById('btnReg').style.display = 'block';
                 document.getElementById('syncAddress').disabled = true;
-                document.getElementById('syncAddress').checked = false;
             }
-        } catch(e) {
-            console.error(e);
-            msgDiv.innerHTML = "Gagal koneksi server";
-        }
+        } catch(e) { msgDiv.innerHTML = "Gagal koneksi server"; }
     }
 
     function toggleSync() {
@@ -244,81 +240,81 @@
                 document.getElementById('lat').value = lat;
                 document.getElementById('lang').value = lng;
                 hitungBiaya();
-                map.invalidateSize();
             }
         }
     }
 
-    // Variable selectedItems dihapus saja karena sudah tidak pakai keranjang
-let biayaTransport = 0;
-
-function hitungBiaya() {
-    const lat = document.getElementById('lat').value;
-    const lng = document.getElementById('lang').value;
-    
-    if(lat && lng) {
-        let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
-        // Logika bensin Mas Nanda: Jarak > 5km, per km 10rb
-        biayaTransport = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
-    } else {
-        biayaTransport = 0;
-    }
-    
-    document.getElementById('txtTotal').innerText = "Rp " + biayaTransport.toLocaleString();
-    return biayaTransport;
-}
-
-async function simpanDataNota() {
-    const email = document.getElementById('email').value.trim();
-    const tgl = document.getElementById('tglBooking').value;
-    const pekerjaan = document.getElementById('judulPekerjaan').value.trim();
-    const lat = document.getElementById('lat').value;
-    const lang = document.getElementById('lang').value;
-    const alamat = document.getElementById('alamat').value;
-    
-    const totalNota = hitungBiaya(); // Ini sekarang isinya cuma biaya transport
-
-    if(!email || !tgl || !pekerjaan || !lat) {
-        return Swal.fire('Data Kurang Sam', 'Email, Jadwal, Detail Pekerjaan, lan Lokasi kudu lengkap!', 'warning');
-    }
-
-    document.getElementById('loader').style.display = 'flex';
-
-    try {
-        const payload = {
-            action: 'createNota', 
-            email: email,
-            nama: pelangganData ? pelangganData.nama : "Pelanggan Umum",
-            tglPengerjaan: tgl.replace('T', ' '),
-            // Karena backend minta 'items' sebagai array, kita kirim biaya transport sebagai satu-satunya item
-            items: [{ nama: "Biaya Transport / Bensin", harga: totalNota, qty: 1 }],
-            total: totalNota,
-            judulPekerjaan: pekerjaan, // Ini akan masuk ke Judul (Kolom C) di Sheet Booking
-            lat: lat,
-            lang: lang,
-            alamat: alamat
-        };
-
-        const response = await fetch(WEB_APP_URL, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload) 
-        });
-
-        const res = await response.json();
-        document.getElementById('loader').style.display = 'none';
-
-        if(res.success) {
-            Swal.fire('Berhasil Sam!', `Booking & Nota Transport (${res.notaId}) wis kesimpen.`, 'success')
-                .then(() => location.reload());
+    function hitungBiaya() {
+        const lat = document.getElementById('lat').value;
+        const lng = document.getElementById('lang').value;
+        let biaya = 0;
+        if(lat && lng) {
+            let jarak = map.distance([lat, lng], [KANTOR_COORDS.lat, KANTOR_COORDS.lng]) / 1000;
+            biaya = (jarak > 5) ? Math.ceil(jarak - 5) * 10000 : 0;
         }
-    } catch(e) { 
-        document.getElementById('loader').style.display = 'none';
-        Swal.fire('Error', 'Gagal nyambung server!', 'error'); 
+        document.getElementById('txtTotal').innerText = "Rp " + biaya.toLocaleString();
+        return biaya;
     }
-}
 
-    
-    </script>
+    async function simpanDataNota() {
+        const email = document.getElementById('email').value.trim();
+        const tgl = document.getElementById('tglBooking').value;
+        const pekerjaan = document.getElementById('judulPekerjaan').value.trim();
+        const lat = document.getElementById('lat').value;
+        const lang = document.getElementById('lang').value;
+        const alamat = document.getElementById('alamat').value;
+        const isSendEmail = document.getElementById('sendEmailNotif').checked;
+        const totalNota = hitungBiaya();
+
+        if(!email || !tgl || !pekerjaan || !lat) {
+            return Swal.fire('Data Kurang Sam', 'Email, Jadwal, Detail Pekerjaan, lan Lokasi kudu lengkap!', 'warning');
+        }
+
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
+        
+        loader.style.display = 'flex';
+        loaderText.innerText = isSendEmail ? "Mengirim Notifikasi Email..." : "Menyimpan Data...";
+
+        try {
+            const payload = {
+                action: 'createNota', 
+                email: email,
+                nama: pelangganData ? pelangganData.nama : "Pelanggan Umum",
+                tglPengerjaan: tgl.replace('T', ' '),
+                items: [{ nama: "Biaya Transport / Bensin", harga: totalNota, qty: 1 }],
+                total: totalNota,
+                judulPekerjaan: pekerjaan, 
+                lat: lat,
+                lang: lang,
+                alamat: alamat,
+                sendEmail: isSendEmail 
+            };
+
+            const response = await fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload) 
+            });
+
+            const res = await response.json();
+            loader.style.display = 'none';
+
+            if(res.success) {
+                let htmlMsg = `Booking & Nota Transport (${res.notaId}) wis kesimpen.`;
+                if(isSendEmail) htmlMsg += `<br><br><span class="badge bg-success">Email Konfirmasi Terkirim!</span>`;
+
+                Swal.fire({
+                    title: 'Berhasil Sam!',
+                    html: htmlMsg,
+                    icon: 'success'
+                }).then(() => location.reload());
+            }
+        } catch(e) { 
+            loader.style.display = 'none';
+            Swal.fire('Error', 'Gagal nyambung server!', 'error'); 
+        }
+    }
+</script>
 </body>
 </html>
