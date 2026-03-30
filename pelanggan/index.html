@@ -227,7 +227,7 @@
 </nav>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyv5F4Se851szRL2Z8OaN3GyHH4fGSNolt1hTF3VdO8Rd6eZuB-nImR6X1jbIhPu5bS/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzjRTFxwkzR2YTtqWA7G5rLsFM62HLqubcxnbdqsHQJNXeZQa-L_xJoTNwVKd1Oop75/exec';
     let fullData = { jobs: [], notes: [], customer: {} };
 
     function cleanDate(str) {
@@ -491,58 +491,130 @@ function showUIByDetail(r) {
     
     detailBox.scrollIntoView({ behavior: 'smooth' });
 }
-    async function downloadPDF(id) {
+  async function downloadPDF(id) {
+    // 1. Ambil Data dari Database
+    Swal.fire({ title: 'Menyiapkan Nota...', didOpen: () => Swal.showLoading() });
+    
+    try {
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
         const r = await res.json();
-        const n = r.data;
-        const c = r.customer;
+        const n = r.data;      // Data Transaksi
+        const c = r.customer;  // Data Pelanggan
+        
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(13, 110, 253);
-        doc.text("NANDA TEKNIK BANYUWANGI", 105, 20, { align: "center" });
-        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100);
-        doc.text("Engineering & Information Technology Solutions", 105, 26, { align: "center" });
-        doc.text("Sukowidi Indah Residence D-5 | WA: 082331201148", 105, 31, { align: "center" });
-        doc.line(15, 35, 195, 35);
-        doc.setTextColor(0); doc.setFontSize(11); doc.setFont("helvetica", "bold");
-        doc.text("NOTA TAGIHAN / INVOICE", 15, 45);
+        // --- 1. HEADER (ABU-ABU ELEGAN) ---
+        try { 
+            // Logo di pojok kiri (Pastikan file logo-none-text.png tersedia di folder root)
+            doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
+        } catch (e) { 
+            console.error("Logo tidak ditemukan, melewati bagian gambar.");
+        }
+
+        // Teks Header (Rata Kiri di samping logo)
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
+        doc.setTextColor(40, 40, 40);
+        doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
+        
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`ID Transaksi : ${n.notaId}`, 15, 51);
-        doc.text(`Tanggal      : ${cleanDate(n.tanggal)}`, 15, 56);
-        doc.text("Kepada Yth:", 130, 45);
+        doc.setTextColor(100); 
+        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.setFontSize(8);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | www.nandateknik.com", 45, 35);
+        
+        // Garis Kop Abu-abu
+        doc.setDrawColor(80, 80, 80);
+        doc.setLineWidth(0.5);
+        doc.line(15, 40, 195, 40);
+
+        // --- 2. INFO TRANSAKSI ---
+        doc.setTextColor(0); 
+        doc.setFontSize(12); doc.setFont("helvetica", "bold");
+        doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
+
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text(`No. Transaksi : #${n.notaId}`, 15, 60);
+        // Menggunakan helper cleanDate jika ada, atau default locale string
+        const tglNota = typeof cleanDate === "function" ? cleanDate(n.tanggal) : new Date(n.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+        doc.text(`Tanggal         : ${tglNota}`, 15, 65);
+        
+        doc.text("Kepada Yth:", 130, 60);
         doc.setFont("helvetica", "bold");
-        doc.text(c.nama || "Pelanggan", 130, 51);
+        doc.text(c.nama || "Pelanggan", 130, 65); 
         doc.setFont("helvetica", "normal");
-        doc.text("Di Tempat", 130, 56, { maxWidth: 65 });
+        doc.setFontSize(8);
+        const splitAlamat = doc.splitTextToSize(c.alamat || 'Di Tempat', 65);
+        doc.text(splitAlamat, 130, 69);
+
+        // --- 3. TABEL ITEM (WARNA ABU-ABU) ---
+        const tableBody = n.items.map((item, index) => [
+            index + 1, 
+            item.nama, 
+            item.qty, 
+            `Rp ${Number(item.harga).toLocaleString('id-ID')}`, 
+            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+        ]);
 
         doc.autoTable({
-            startY: 65,
-            head: [['NO', 'DESKRIPSI LAYANAN', 'QTY', 'HARGA', 'SUBTOTAL']],
-            body: n.items.map((it, i) => [i+1, it.nama, it.qty, it.harga.toLocaleString(), (it.qty*it.harga).toLocaleString()]),
+            startY: 85,
+            head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'JUMLAH']],
+            body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: [40, 40, 40] },
-            styles: { fontSize: 8 }
+            headStyles: { 
+                fillColor: [80, 80, 80], 
+                halign: 'center',
+                fontSize: 9,
+                valign: 'middle'
+            },
+            columnStyles: {
+                0: { cellWidth: 12, halign: 'center' },
+                2: { cellWidth: 15, halign: 'center' },
+                3: { halign: 'right', cellWidth: 35 },
+                4: { halign: 'right', cellWidth: 35 }
+            },
+            styles: { fontSize: 9, cellPadding: 3 }
         });
 
+        // --- 4. TOTAL & REKENING ---
         const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setLineDash([1, 1], 0);
-        doc.line(130, finalY - 2, 195, finalY - 2);
-        doc.setLineDash([]);
+        
         doc.setFont("helvetica", "bold");
-        doc.text(`TOTAL PEMBAYARAN: Rp ${Number(n.total).toLocaleString()}`, 195, finalY + 5, { align: "right" });
-        doc.setDrawColor(200); doc.rect(15, finalY + 10, 85, 22);
-        doc.setFontSize(8); doc.setFont("helvetica", "normal");
-        doc.text("Metode Pembayaran Transfer:", 18, finalY + 15);
-        doc.setFont("helvetica", "bold");
-        doc.text("BCA: 1801826011", 18, finalY + 21);
-        doc.text("A/n NANDA KRISBIANTO", 18, finalY + 27);
+        doc.setFontSize(11);
+        doc.text(`TOTAL PEMBAYARAN: Rp ${Number(n.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
+
+        // Kotak Rekening Garis Putus-putus
+        const rekY = finalY + 10;
+        doc.setDrawColor(150, 150, 150);
+        doc.setLineDashPattern([2, 2], 0); 
+        doc.rect(15, rekY, 180, 18);
+        
+        doc.setLineDashPattern([], 0); 
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text(`Banyuwangi, ${cleanDate(n.tanggal)}`, 145, finalY + 20);
-        doc.text("Hormat Kami,", 145, finalY + 25);
-        doc.text("NANDA KRISBIANTO", 145, finalY + 50);
+        doc.text("Informasi Pembayaran Transfer:", 20, rekY + 7);
+        doc.setFont("helvetica", "bold");
+        doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rekY + 13);
+
+        // --- 5. TANDA TANGAN ---
+        const ttdY = rekY + 35;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("Hormat Kami,", 155, ttdY);
+        doc.setFont("helvetica", "bold");
+        doc.text("NANDA KRISBIANTO", 155, ttdY + 20);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text("( Owner )", 155, ttdY + 25);
+        
+        Swal.close();
         doc.save(`Invoice_${n.notaId}.pdf`);
+        
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Error', 'Gagal membuat nota PDF.', 'error');
     }
+}
 
     function resetUI() {
         ['cardProfile', 'tabContainer', 'listPekerjaan', 'listNota', 'detailView', 'noData'].forEach(id => {
