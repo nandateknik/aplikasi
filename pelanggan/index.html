@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d6efd">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,115 +14,33 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
 
     <style>
         :root { --p-blue: #0d6efd; --dark: #0046b8; --bg-soft: #f4f7fe; }
         body { background: var(--bg-soft); font-family: 'Segoe UI', sans-serif; padding-bottom: 110px; }
-
-        .status-step:not(:last-child)::after {
-            content: "";
-            position: absolute;
-            left: 15px; /* Posisi tengah ikon */
-            top: 32px;
-            bottom: 0;
-            width: 2px;
-            background: #e2e8f0;
-            z-index: 1;
-        }
-        
-        /* HEADER BIRU MEWAH (KONSISTEN) */
-        .header-brand { 
-            background: linear-gradient(135deg, var(--p-blue) 0%, var(--dark) 100%); 
-            padding: 40px 20px; 
-            text-align: center; 
-            color: white; 
-            border-radius: 0 0 35px 35px; 
-            margin-bottom: -40px; 
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
-        }
-        .header-brand h4 { font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; }
-        .header-brand p { font-size: 0.75rem; opacity: 0.8; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
-
-
-        /* HEADER BIRU MEWAH (SAIKI WIS DISESUAIKE) */
-.header-brand { 
-    background: linear-gradient(135deg, var(--p-blue) 0%, var(--dark) 100%); 
-    padding: 40px 20px; /* Podo karo koncone */
-    text-align: center; 
-    color: white; 
-    border-radius: 0 0 35px 35px; /* Radius podo karo update.html */
-    margin-bottom: -50px; /* Ben overlap-e pas */
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.15);
-}
-
-.header-logo { 
-    width: 70px; height: 70px; 
-    background: white; border-radius: 18px; 
-    padding: 10px; margin-bottom: 12px; 
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
-}
-
-/* Penyesuaian jarak container ben gak nabrak header */
-.container { 
-    margin-top: 5rem !important; /* Ben search box-e nggantung pas neng tengah radius */
-}
-
-.search-container {
-    position: relative;
-    z-index: 10;
-    padding: 0 10px;
-}
-        /* Search Box Overlap */
-        .search-container {
-            position: relative;
-            z-index: 10;
-            padding: 0 20px;
-        }
-        
-        /* Profile Card Mewah */
+        .header-brand { background: linear-gradient(135deg, var(--p-blue) 0%, var(--dark) 100%); padding: 40px 20px; text-align: center; color: white; border-radius: 0 0 35px 35px; margin-bottom: -50px; position: relative; z-index: 2; box-shadow: 0 8px 20px rgba(13, 110, 253, 0.15); }
+        .header-logo { width: 70px; height: 70px; background: white; border-radius: 18px; padding: 10px; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .container { margin-top: 5rem !important; }
+        .search-container { position: relative; z-index: 10; padding: 0 10px; }
         .profile-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; border: 1px solid #e2e8f0; }
         .profile-icon { width: 45px; height: 45px; background: var(--p-blue); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-
-        /* Tabs */
         .nav-tabs-custom { display: flex; background: #e2e8f0; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
         .nav-link-custom { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 700; color: #64748b; transition: 0.3s; border: none; background: none; font-size: 13px; }
         .nav-link-custom.active { background: white; color: var(--p-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-
         .card-custom { border-radius: 20px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.04); background: white; padding: 20px; margin-bottom: 15px; display: none; }
-        
-        /* Table Grey Style */
         .table-grey thead { background-color: #f1f5f9; }
         .table-grey th { color: #475569; font-size: 12px; text-transform: uppercase; }
-        
         .history-item { border: 1px solid #f1f5f9; border-radius: 15px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: white; display: flex; justify-content: space-between; align-items: center; }
         .history-item:hover { border-color: var(--p-blue); background: #f8faff; transform: translateY(-2px); }
-
         .status-step { border-left: 2px solid #e2e8f0; padding-left: 20px; position: relative; padding-bottom: 15px; }
-        .status-step::before { content: ""; position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--p-blue); border: 2px solid white; box-shadow: 0 0 0 2px var(--p-blue); }
-
-        /* BOTTOM NAV (KONSISTEN) */
-        .bottom-nav { 
-            position: fixed; bottom: 15px; left: 15px; right: 15px; 
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); 
-            display: flex; justify-content: space-around; padding: 12px 5px; 
-            border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-            z-index: 10000; border: 1px solid rgba(255,255,255,0.3);
-        }
-        .nav-item { 
-            color: #94a3b8; display: flex; flex-direction: column; align-items: center; 
-            font-size: 9px; font-weight: 700; text-decoration: none; width: 25%; transition: 0.3s;
-        }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; transition: 0.3s; }
+        .status-step:not(:last-child)::after { content: ""; position: absolute; left: -1px; top: 15px; bottom: 0; width: 2px; background: #e2e8f0; }
+        .bottom-nav { position: fixed; bottom: 15px; left: 15px; right: 15px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 5px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 10000; border: 1px solid rgba(255,255,255,0.3); }
+        .nav-item { color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 9px; font-weight: 700; text-decoration: none; width: 25%; transition: 0.3s; }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
         .nav-item.active { color: var(--p-blue); }
-        .nav-item:active i { transform: scale(0.8); }
-
         .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
@@ -135,14 +53,14 @@
 
 <div class="header-brand">
     <img src="logo-none-text.png" class="header-logo" alt="Logo" onerror="this.src='https://via.placeholder.com/70'">
-    <h4 class="fw-bold mb-0">BOOKING JASA</h4>
+    <h4 class="fw-bold mb-0">PORTAL PELANGGAN</h4>
     <p class="small opacity-75 mb-0">Nanda Teknik Banyuwangi</p>
 </div>
 
 <div class="container">
     <div class="search-container">
         <div class="input-group mb-4 shadow-lg rounded-pill overflow-hidden bg-white p-1" style="border: 1px solid #e0e0e0;">
-            <input type="text" id="searchInput" class="form-control border-0 px-3" placeholder="Masukkan Email Anda">
+            <input type="text" id="searchInput" class="form-control border-0 px-3" placeholder="Masukkan Email atau ID Nota">
             <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="cariData()">Cari</button>
         </div>
     </div>
@@ -156,18 +74,9 @@
             </div>
         </div>
         <div class="row g-3">
-            <div class="col-6">
-                <small class="text-muted d-block small">Nomor WhatsApp</small>
-                <span id="pWa" class="fw-bold text-dark">--</span>
-            </div>
-            <div class="col-6">
-                <small class="text-muted d-block small">Tanggal Daftar</small>
-                <span id="pTgl" class="fw-bold text-dark">--</span>
-            </div>
-            <div class="col-12">
-                <small class="text-muted d-block small">Alamat Lengkap</small>
-                <span id="pAlamat" class="fw-bold text-dark">--</span>
-            </div>
+            <div class="col-6"><small class="text-muted d-block small">WhatsApp</small><span id="pWa" class="fw-bold text-dark">--</span></div>
+            <div class="col-6"><small class="text-muted d-block small">Tgl Daftar</small><span id="pTgl" class="fw-bold text-dark">--</span></div>
+            <div class="col-12"><small class="text-muted d-block small">Alamat</small><span id="pAlamat" class="fw-bold text-dark">--</span></div>
         </div>
     </div>
 
@@ -181,49 +90,29 @@
     <div id="listPekerjaan" style="display: none;"></div>
     <div id="listNota" style="display: none;"></div>
 
-    <div id="detailView" class="card-custom animate__animated animate__fadeInUp" style="padding-bottom: 30px;">
+    <div id="detailView" class="card-custom animate__animated animate__fadeInUp">
         <div id="detailContent"></div>
-        <hr class="my-4 opacity-25">
-        <div class="px-2">
-            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-comments me-2"></i>DISKUSI PEKERJAAN</h6>
-            <div id="discussionSection" class="mt-5 p-3 border-top">
-    <div class="text-center" id="disqus_loader">
-        <i class="fas fa-comments text-primary fa-2x mb-2"></i>
-        <h6 class="fw-bold text-dark">Butuh Diskusi / Tanya Teknisi?</h6>
-        <p class="small text-muted mb-3">Klik tombol di bawah untuk membuka kolom komentar.</p>
-        <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="loadDisqusExplicitly()">
-            <i class="fas fa-comment-dots me-2"></i> Buka Kolom Diskusi
-        </button>
-    </div>
-    
-    <div id="disqus_thread" style="display: none;"></div>
-</div>
+        <div id="discussionSection" class="mt-5 p-3 border-top">
+            <div class="text-center" id="disqus_loader">
+                <i class="fas fa-comments text-primary fa-2x mb-2"></i>
+                <h6 class="fw-bold text-dark">Butuh Diskusi?</h6>
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-4" onclick="loadDisqusExplicitly()">Buka Diskusi</button>
+            </div>
+            <div id="disqus_thread" style="display: none;"></div>
         </div>
     </div>
 
     <div id="noData" class="text-center py-5" style="display:none;">
         <i class="fas fa-search fa-3x text-muted mb-3 opacity-20"></i>
-        <h6 class="text-muted fw-bold">Data ora ketemu, cah!</h6>
+        <h6 class="text-muted fw-bold">Data tidak ditemukan.</h6>
     </div>
 </div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active">
-        <i class="fas fa-home"></i>
-        <span>Portal</span>
-    </a>
-    <a href="update.html" class="nav-item">
-        <i class="fas fa-user-edit"></i>
-        <span>Update</span>
-    </a>
-    <a href="register.html" class="nav-item">
-        <i class="fas fa-user-plus"></i>
-        <span>Register</span>
-    </a>
-    <a href="booking.html" class="nav-item">
-        <i class="fas fa-calendar-check"></i>
-        <span>Booking</span>
-    </a>
+    <a href="index.html" class="nav-item active"><i class="fas fa-home"></i><span>Portal</span></a>
+    <a href="update.html" class="nav-item"><i class="fas fa-user-edit"></i><span>Update</span></a>
+    <a href="register.html" class="nav-item"><i class="fas fa-user-plus"></i><span>Register</span></a>
+    <a href="booking.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Booking</span></a>
 </nav>
 
 <script>
@@ -231,54 +120,32 @@
     let fullData = { jobs: [], notes: [], customer: {} };
 
     function cleanDate(str) {
-    if (!str || str === "-" || str === "undefined") return "-";
-    
-    const d = new Date(str);
-    if (isNaN(d.getTime())) {
-        // Nek dudu format date (misal string biasa), tampilne potongan ngarepe wae
-        return str.toString().split('T')[0]; 
+        if (!str || str === "-" || str === "undefined") return "-";
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? str.toString().split('T')[0] : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     }
-    
-    return d.toLocaleDateString('id-ID', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-    });
-}
 
     async function cariData() {
         const kw = document.getElementById('searchInput').value.trim();
         if(!kw) return;
         showLoader(true);
         resetUI();
-        
         try {
-            const res = await fetch(WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) 
-            });
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: kw }) });
             const r = await res.json();
             showLoader(false);
-
             if(r.success && r.type === 'LIST') {
                 fullData.customer = r.customer;
                 fullData.jobs = r.data.filter(i => i.type === 'WO');
                 fullData.notes = r.data.filter(i => i.type === 'Nota');
-                
                 showProfile(r.customer);
                 document.getElementById('tabContainer').style.display = 'flex';
                 switchTab('WO');
-            } else {
-                document.getElementById('noData').style.display = 'block';
-            }
-        } catch(e) {
-            showLoader(false);
-            console.error(e);
-        }
+            } else { document.getElementById('noData').style.display = 'block'; }
+        } catch(e) { showLoader(false); console.error(e); }
     }
 
     function showProfile(c) {
-        if(!c) return;
         document.getElementById('cardProfile').style.display = 'block';
         document.getElementById('pNama').innerText = c.nama || "Pelanggan";
         document.getElementById('pEmail').innerText = c.email || "-";
@@ -292,7 +159,6 @@
         document.getElementById('listPekerjaan').style.display = 'none';
         document.getElementById('listNota').style.display = 'none';
         document.getElementById('detailView').style.display = 'none';
-
         if(type === 'WO') {
             document.getElementById('tabWO').classList.add('active');
             renderList('listPekerjaan', fullData.jobs);
@@ -305,11 +171,7 @@
     function renderList(targetId, data) {
         const target = document.getElementById(targetId);
         target.style.display = 'block';
-        if(data.length === 0) {
-            target.innerHTML = `<div class="text-center p-4 text-muted small">Belum ada riwayat.</div>`;
-            return;
-        }
-
+        if(data.length === 0) { target.innerHTML = `<div class="text-center p-4 text-muted small">Belum ada riwayat.</div>`; return; }
         target.innerHTML = data.map(item => `
             <div class="history-item animate__animated animate__fadeInLeft" onclick="loadDeepDetail('${item.id}')">
                 <div>
@@ -325,10 +187,7 @@
     async function loadDeepDetail(id) {
         showLoader(true);
         try {
-            const res = await fetch(WEB_APP_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'getDetailAll', keyword: id }) 
-            });
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
             const r = await res.json();
             showLoader(false);
             if(r.success) showUIByDetail(r);
@@ -336,378 +195,254 @@
     }
 
 function showUIByDetail(r) {
-    const detailBox = document.getElementById('detailView');
-    const content = document.getElementById('detailContent');
-    detailBox.style.display = 'block';
-    
-    // --- BAGIAN 1: LOGIKA UNTUK WORK ORDER (PROGRESS PEKERJAAN) ---
-    if(r.type === 'WO') {
-        const d = r.data;
+        const detailBox = document.getElementById('detailView');
+        const content = document.getElementById('detailContent');
+        detailBox.style.display = 'block';
         
-        // Fungsi pembantu untuk ikon timeline
-        const getStatusStyle = (status) => {
-            const s = status.toLowerCase();
-            if(s.includes('selesai') || s.includes('success')) return { icon: 'fa-check-circle', color: 'text-success', bg: 'bg-success' };
-            if(s.includes('proses') || s.includes('jalan')) return { icon: 'fa-tools', color: 'text-primary', bg: 'bg-primary' };
-            return { icon: 'fa-clock', color: 'text-warning', bg: 'bg-warning' };
-        };
+        // Tombol kembali yang seragam untuk semua tipe
+        const backBtn = `<div class="d-flex justify-content-between mb-3">
+                            <button class="btn btn-sm btn-light border" onclick="document.getElementById('detailView').style.display='none'">
+                                <i class="fas fa-arrow-left me-1"></i> Kembali
+                            </button>
+                         </div>`;
 
-        content.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <button class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="document.getElementById('detailView').style.display='none'">
-                    <i class="fas fa-arrow-left me-1"></i> Kembali
-                </button>
-                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 border border-primary border-opacity-25">ID WO: ${d.woId}</span>
-            </div>
-
-            <div class="p-4 rounded-4 bg-primary text-white mb-4 shadow-lg animate__animated animate__fadeIn">
-                <small class="opacity-75 fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 2px;">Detail Pekerjaan</small>
-                <h5 class="fw-bold mb-0 mt-1">${d.pekerjaan}</h5>
-            </div>
-
-            <h6 class="fw-bold small mb-4 text-muted mx-1"><i class="fas fa-stream me-2"></i>TIMELINE PROGRES:</h6>
-            <div class="ps-2">
-                ${d.history.map((h, index) => {
-                    const style = getStatusStyle(h.status);
-                    return `
-                    <div class="status-step pb-4 position-relative">
-                        <div class="d-flex align-items-start">
-                            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
-                                 style="width: 32px; height: 32px; z-index: 2; border: 2px solid #fff; outline: 2px solid ${style.color === 'text-success' ? '#198754' : style.color === 'text-primary' ? '#0d6efd' : '#ffc107'}">
-                                <i class="fas ${style.icon} ${style.color}" style="font-size: 16px;"></i>
-                            </div>
-                            <div class="ms-3 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-dark" style="font-size: 14px;">${h.status}</span>
-                                    <small class="text-muted" style="font-size: 10px;">${cleanDate(h.tgl)}</small>
-                                </div>
-                                <div class="small p-3 bg-light rounded-3 text-secondary mt-2 border-start border-4 ${style.color.replace('text', 'border')}" style="font-size: 12px;">
-                                    ${h.detail || 'Tidak ada catatan tambahan.'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-        
-        // Panggil fungsi Disqus untuk WO
-        resetDisqus(d.woId, d.pekerjaan);
-
-    // --- BAGIAN 2: LOGIKA UNTUK NOTA / INVOICE ---
-    } else {
-        const n = r.data;
-        const isLunas = n.status === 'Lunas';
-        
-        content.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <button class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="document.getElementById('detailView').style.display='none'">
-                    <i class="fas fa-arrow-left me-1"></i> Kembali
-                </button>
-            </div>
-
-            <div class="text-center mb-4 position-relative">
-                <div style="position: absolute; right: 0; top: -10px;">
-                    <span class="badge ${isLunas ? 'bg-success' : 'bg-danger'} shadow-sm animate__animated animate__bounceIn" 
-                          style="padding: 10px 18px; border-radius: 50px; font-size: 11px; letter-spacing: 1px;">
-                          <i class="fas ${isLunas ? 'fa-check-circle' : 'fa-clock'} me-1"></i> 
-                          ${n.status.toUpperCase()}
-                    </span>
+        if(r.type === 'WO') {
+            const d = r.data;
+            content.innerHTML = `
+                ${backBtn}
+                <div class="p-3 rounded bg-primary text-white mb-3">
+                    <h5 class="mb-1">${d.pekerjaan}</h5>
+                    <small class="opacity-75">ID: ${d.woId}</small>
                 </div>
-                <h6 class="fw-bold mb-0 text-primary" style="letter-spacing: 1px;">INVOICE PEMBAYARAN</h6>
-                <small class="text-muted fw-bold">#${n.notaId} | ${cleanDate(n.tanggal)}</small>
-            </div>
+                <div class="px-2">
+                    ${d.history.map(h => `
+                        <div class="status-step">
+                            <strong class="text-dark">${h.status}</strong><br>
+                            <small class="text-muted">${cleanDate(h.tgl)}</small>
+                            <p class="small text-muted mb-0">${h.detail || ''}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            resetDisqus(d.woId, d.pekerjaan);
+        } else {
+            const n = r.data;
+            // Cek status lunas
+            const isLunas = n.status === 'Lunas';
+            const statusLabel = isLunas ? 
+                `<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check-circle me-1"></i> PEMBAYARAN LUNAS</span>` : 
+                `<span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-clock me-1"></i> MENUNGGU PEMBAYARAN</span>`;
 
-            ${isLunas ? `
-            <div style="position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); 
-                        opacity: 0.1; font-size: 70px; font-weight: 900; color: green; pointer-events: none; z-index: 0; width: 100%; text-align: center;">
-                PAID / LUNAS
-            </div>
-            ` : ''}
-
-            <div style="position: relative; z-index: 1;">
-                <div class="table-responsive rounded-4 border overflow-hidden mb-3">
-                    <table class="table table-sm small table-grey mb-0">
-                        <thead class="bg-light">
+            content.innerHTML = `
+                ${backBtn}
+                <div class="text-center mb-4">
+                    <h6 class="fw-bold text-primary mb-1">INVOICE PEMBAYARAN</h6>
+                    <small class="text-muted">#${n.notaId}</small>
+                    <div class="mt-2">${statusLabel}</div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm small">
+                        <thead class="table-light">
                             <tr>
-                                <th class="p-3">Deskripsi Layanan</th>
-                                <th class="text-end p-3">Subtotal</th>
+                                <th>Layanan</th>
+                                <th class="text-end">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${n.items.map(it => `
                                 <tr>
-                                    <td class="p-3 border-bottom">
-                                        <span class="fw-bold text-dark">${it.nama}</span><br>
-                                        <small class="text-muted">${it.qty} x Rp ${Number(it.harga).toLocaleString('id-ID')}</small>
-                                    </td>
-                                    <td class="text-end fw-bold p-3 align-middle border-bottom">
-                                        Rp ${(it.qty*it.harga).toLocaleString('id-ID')}
-                                    </td>
+                                    <td>${it.nama}<br><small class="text-muted">${it.qty}x @ Rp ${Number(it.harga).toLocaleString('id-ID')}</small></td>
+                                    <td class="text-end fw-bold">Rp ${(it.qty*it.harga).toLocaleString('id-ID')}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center p-4 ${isLunas ? 'bg-success' : 'bg-primary'} bg-opacity-10 rounded-4 mb-4">
-                    <div>
-                        <small class="d-block text-muted fw-bold" style="font-size: 10px; letter-spacing: 1px;">TOTAL TAGIHAN</small>
-                        <span class="fw-extrabold ${isLunas ? 'text-success' : 'text-primary'}" style="font-size: 22px;">
-                            Rp ${Number(n.total).toLocaleString('id-ID')}
-                        </span>
-                    </div>
-                    <i class="fas ${isLunas ? 'fa-file-invoice-dollar' : 'fa-receipt'} fa-3x opacity-25"></i>
+                <div class="bg-light p-3 rounded text-center mb-4 border">
+                    <small class="text-muted d-block mb-1">TOTAL TAGIHAN</small>
+                    <h4 class="fw-bold text-primary mb-0">Rp ${Number(n.total).toLocaleString('id-ID')}</h4>
                 </div>
 
-                <div class="row g-2">
-                    <div class="col-12">
-                        <button class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-sm" onclick="downloadPDF('${n.notaId}')">
-                            <i class="fas fa-file-pdf me-2 text-danger"></i> DOWNLOAD PDF INVOICE
-                        </button>
-                    </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-dark rounded-pill py-2 fw-bold" onclick="downloadPDF('${n.notaId}')">
+                        <i class="fas fa-file-pdf text-danger me-2"></i>DOWNLOAD PDF
+                    </button>
                     ${!isLunas ? `
-                    <div class="col-12">
-                        <a href="https://wa.me/6282331201148?text=Halo%20Nanda%20Teknik,%20saya%20ingin%20konfirmasi%20pembayaran%20Invoice%20${n.notaId}" 
-                           class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm">
-                            <i class="fab fa-whatsapp me-2"></i> KONFIRMASI PEMBAYARAN
+                        <a href="https://wa.me/6282331201148?text=Konfirmasi%20Pembayaran%20Nota%20${n.notaId}" 
+                           class="btn btn-success rounded-pill py-2 fw-bold">
+                            <i class="fab fa-whatsapp me-2"></i>KONFIRMASI PEMBAYARAN
                         </a>
-                    </div>
-                    ` : `
-                    <div class="col-12 text-center p-3">
-                        <div class="badge bg-success bg-opacity-10 text-success p-2 rounded-3 w-100">
-                            <i class="fas fa-heart me-1"></i> Terima kasih! Pembayaran telah kami terima.
-                        </div>
-                    </div>
-                    `}
+                    ` : ''}
                 </div>
-            </div>
-        `;
+            `;
+            resetDisqus(n.notaId, "Invoice " + n.notaId);
+        }
         
-        // Panggil fungsi Disqus untuk Nota
-        resetDisqus(n.notaId, "Invoice " + n.notaId);
+        // Scroll halus ke box detail biar user gak bingung
+        window.scrollTo({
+            top: detailBox.offsetTop - 20,
+            behavior: 'smooth'
+        });
+    }
+
+    async function downloadPDF(id) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({ 
+            title: 'Menyiapkan Nota...', 
+            text: 'Sedang mengambil data dari server...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading() 
+        });
     }
     
-    detailBox.scrollIntoView({ behavior: 'smooth' });
-}
-  async function downloadPDF(id) {
-    // 1. Ambil Data dari Database
-    Swal.fire({ title: 'Menyiapkan Nota...', didOpen: () => Swal.showLoading() });
-    
     try {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'getDetailAll', keyword: id }) });
+        const res = await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'getDetailAll', keyword: id }) 
+        });
         const r = await res.json();
-        const n = r.data;      // Data Transaksi
-        const c = r.customer;  // Data Pelanggan
         
+        // Data dari fetch
+        const n = r.data;      // Detail Nota & Items
+        const c = r.customer;  // Detail Customer
+        
+        if (!n || !n.items) throw new Error("Data tidak ditemukan");
+
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // --- 1. HEADER (ABU-ABU ELEGAN) ---
+        // --- 1. HEADER PREMIUM ---
         try { 
-            // Logo di pojok kiri (Pastikan file logo-none-text.png tersedia di folder root)
             doc.addImage('logo-none-text.png', 'PNG', 15, 12, 23, 23); 
-        } catch (e) { 
-            console.error("Logo tidak ditemukan, melewati bagian gambar.");
-        }
+        } catch (e) { console.warn("Logo tidak terload"); }
 
-        // Teks Header (Rata Kiri di samping logo)
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.setTextColor(40, 40, 40);
         doc.text("NANDA TEKNIK BANYUWANGI", 45, 20);
         
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.setTextColor(100); 
-        doc.text("Software, Network & Electrical Engineering", 45, 26);
+        doc.text("Software, Network & Electrical Engineering", 45, 25);
         doc.setFontSize(8);
-        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 31);
-        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | www.nandateknik.com", 45, 35);
+        doc.text("Sukowidi Indah Residence D-5, Klatak, Banyuwangi - Jawa Timur", 45, 29);
+        doc.setTextColor(100);
+        doc.text("WA: 082331201148 | Email: nandateknik02@gmail.com | www.nandateknik.com", 45, 33);
         
-        // Garis Kop Abu-abu
+        // Garis Kop Ganda
         doc.setDrawColor(80, 80, 80);
         doc.setLineWidth(0.5);
         doc.line(15, 40, 195, 40);
+        doc.setLineWidth(0.1);
+        doc.line(15, 41, 195, 41);
 
-        // --- 2. INFO TRANSAKSI ---
+        // --- 2. INFO TRANSAKSI & PELANGGAN ---
         doc.setTextColor(0); 
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
         doc.text("FAKTUR PEMBAYARAN", 105, 50, { align: "center" });
 
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
         doc.text(`No. Transaksi : #${n.notaId}`, 15, 60);
-        // Menggunakan helper cleanDate jika ada, atau default locale string
-        const tglNota = typeof cleanDate === "function" ? cleanDate(n.tanggal) : new Date(n.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-        doc.text(`Tanggal         : ${tglNota}`, 15, 65);
+        // Pakai fungsi cleanDate bawaanmu atau toLocaleDateString
+        const tgl = (typeof cleanDate === 'function') ? cleanDate(n.tanggal) : n.tanggal;
+        doc.text(`Tanggal       : ${tgl}`, 15, 65);
         
         doc.text("Kepada Yth:", 130, 60);
         doc.setFont("helvetica", "bold");
-        doc.text(c.nama || "Pelanggan", 130, 65); 
+        doc.text(c.nama || "Pelanggan", 130, 65);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        const splitAlamat = doc.splitTextToSize(c.alamat || 'Di Tempat', 65);
+        const splitAlamat = doc.splitTextToSize(c.alamat || '-', 65);
         doc.text(splitAlamat, 130, 69);
 
-        // --- 3. TABEL ITEM (WARNA ABU-ABU) ---
-        const tableBody = n.items.map((item, index) => [
-            index + 1, 
-            item.nama, 
-            item.qty, 
-            `Rp ${Number(item.harga).toLocaleString('id-ID')}`, 
-            `Rp ${Number(item.harga * item.qty).toLocaleString('id-ID')}`
+        // --- 3. TABEL ITEM ---
+        const tableBody = n.items.map((it, i) => [
+            i + 1, 
+            it.nama, 
+            it.qty, 
+            `Rp ${Number(it.harga).toLocaleString('id-ID')}`, 
+            `Rp ${Number(it.qty * it.harga).toLocaleString('id-ID')}`
         ]);
 
         doc.autoTable({
             startY: 85,
-            head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'JUMLAH']],
+            head: [['NO', 'DESKRIPSI PEKERJAAN / BARANG', 'QTY', 'HARGA', 'TOTAL']],
             body: tableBody,
             theme: 'grid',
-            headStyles: { 
-                fillColor: [80, 80, 80], 
-                halign: 'center',
-                fontSize: 9,
-                valign: 'middle'
-            },
+            headStyles: { fillColor: [60, 60, 60], halign: 'center' },
             columnStyles: {
-                0: { cellWidth: 12, halign: 'center' },
-                2: { cellWidth: 15, halign: 'center' },
+                0: { halign: 'center', cellWidth: 10 },
+                2: { halign: 'center', cellWidth: 15 },
                 3: { halign: 'right', cellWidth: 35 },
                 4: { halign: 'right', cellWidth: 35 }
             },
-            styles: { fontSize: 9, cellPadding: 3 }
+            styles: { fontSize: 8 }
         });
 
         // --- 4. TOTAL & REKENING ---
         const finalY = doc.lastAutoTable.finalY + 10;
-        
         doc.setFont("helvetica", "bold");
         doc.setFontSize(11);
         doc.text(`TOTAL PEMBAYARAN: Rp ${Number(n.total).toLocaleString('id-ID')}`, 195, finalY, { align: "right" });
 
-        // Kotak Rekening Garis Putus-putus
+        // Kotak Rekening
         const rekY = finalY + 10;
-        doc.setDrawColor(150, 150, 150);
-        doc.setLineDashPattern([2, 2], 0); 
-        doc.rect(15, rekY, 180, 18);
-        
-        doc.setLineDashPattern([], 0); 
-        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.setFillColor(245, 245, 245);
+        doc.rect(15, rekY, 120, 25, 'F');
+        doc.setDrawColor(200);
+        doc.rect(15, rekY, 120, 25);
+
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.setTextColor(50);
         doc.text("Informasi Pembayaran Transfer:", 20, rekY + 7);
-        doc.setFont("helvetica", "bold");
-        doc.text("Bank BCA - 1801826011 | A/N NANDA KRISBIANTO", 20, rekY + 13);
+        doc.setFontSize(10); doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 51, 102);
+        doc.text("BANK BCA - 1801826011", 20, rekY + 14);
+        doc.setFontSize(8);
+        doc.text("A/N NANDA KRISBIANTO", 20, rekY + 18);
 
         // --- 5. TANDA TANGAN ---
-        const ttdY = rekY + 35;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.text("Hormat Kami,", 155, ttdY);
+        const ttdY = rekY + 15;
+        doc.setTextColor(0);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text("Hormat Kami,", 155, ttdY + 5);
         doc.setFont("helvetica", "bold");
-        doc.text("NANDA KRISBIANTO", 155, ttdY + 20);
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.text("( Owner )", 155, ttdY + 25);
+        doc.text("NANDA KRISBIANTO", 148, ttdY + 25);
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text("( Owner )", 158, ttdY + 30);
         
-        Swal.close();
-        doc.save(`Invoice_${n.notaId}.pdf`);
-        
-    } catch (error) {
-        console.error(error);
-        Swal.fire('Error', 'Gagal membuat nota PDF.', 'error');
+        if (typeof Swal !== 'undefined') Swal.close();
+        doc.save(`Nota_${c.nama}_${n.notaId}.pdf`);
+
+    } catch (e) {
+        console.error(e);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('Error', 'Gagal memproses data atau membuat PDF: ' + e.message, 'error');
+        } else {
+            alert("Gagal download PDF.");
+        }
     }
 }
-
-    function resetUI() {
-        ['cardProfile', 'tabContainer', 'listPekerjaan', 'listNota', 'detailView', 'noData'].forEach(id => {
-            document.getElementById(id).style.display = 'none';
-        });
-    }
+    function resetUI() { ['cardProfile', 'tabContainer', 'listPekerjaan', 'listNota', 'detailView', 'noData'].forEach(id => document.getElementById(id).style.display = 'none'); }
     function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
-</script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker terdaftar!', reg))
-            .catch(err => console.error('Gagal daftar SW:', err));
-        });
-      }
-    </script>
-    <script>
-        // --- FUNGSI AUTO-LOAD DARI LINK EMAIL ---
+
+    // Disqus Logic
+    let currentWOId = ""; let currentWOTitle = "";
+    function resetDisqus(id, title) { currentWOId = id; currentWOTitle = title; document.getElementById('disqus_thread').style.display = 'none'; document.getElementById('disqus_loader').style.display = 'block'; document.getElementById('disqus_thread').innerHTML = ''; }
+    function loadDisqusExplicitly() {
+        const loader = document.getElementById('disqus_loader');
+        loader.innerHTML = 'Memuat...';
+        var disqus_config = function () { this.page.url = window.location.origin + window.location.pathname + "?id=" + currentWOId; this.page.identifier = currentWOId; this.page.title = currentWOTitle; };
+        if (window.DISQUS) { DISQUS.reset({ reload: true, config: disqus_config }); showThread(); } 
+        else { var d = document, s = d.createElement('script'); s.src = 'https://nandateknik.disqus.com/embed.js'; s.setAttribute('data-timestamp', +new Date()); s.onload = showThread; (d.head || d.body).appendChild(s); }
+        function showThread() { loader.style.display = 'none'; document.getElementById('disqus_thread').style.display = 'block'; }
+    }
+
     window.onload = function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const notaId = urlParams.get('id'); // Mengambil INV-xxxx dari URL
-
-    if (notaId) {
-        // Jika ada ID di URL, otomatis masukkan ke input dan cari
-        document.getElementById('searchInput').value = notaId;
-        
-        // Langsung panggil fungsi detail mendalam
-        loadDeepDetail(notaId);
-        
-        // Opsional: Hilangkan parameter di URL supaya rapi setelah diload
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-};
-    </script>
-    <script>
-    // Konfigurasi Disqus
-    var disqus_config = function () {
-        this.page.url = window.location.href;  
-        this.page.identifier = 'default'; 
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (id) { document.getElementById('searchInput').value = id; loadDeepDetail(id); }
     };
-
-    let currentWOId = "";
-let currentWOTitle = "";
-
-function resetDisqus(id, title) {
-    // Simpan data WO yang sedang dibuka ke variabel global
-    currentWOId = id;
-    currentWOTitle = title;
-    
-    // Reset tampilan: sembunyikan kolom komentar, munculkan tombol "Buka Diskusi"
-    document.getElementById('disqus_thread').style.display = 'none';
-    document.getElementById('disqus_loader').style.display = 'block';
-    
-    // Kosongkan isi Disqus lama agar tidak tabrakan data
-    document.getElementById('disqus_thread').innerHTML = '';
-}
-
-function loadDisqusExplicitly() {
-    const loader = document.getElementById('disqus_loader');
-    const thread = document.getElementById('disqus_thread');
-    
-    loader.innerHTML = '<div class="spinner-border text-primary spinner-border-sm"></div> <small class="ms-2">Memuat Diskusi...</small>';
-
-    // Konfigurasi Disqus
-    var disqus_config = function () {
-        this.page.url = window.location.origin + window.location.pathname + "?id=" + currentWOId;
-        this.page.identifier = currentWOId;
-        this.page.title = currentWOTitle;
-    };
-
-    // Load script Disqus secara dinamis
-    if (window.DISQUS) {
-        // Jika script sudah pernah di-load sebelumnya, cukup reset datanya
-        DISQUS.reset({
-            reload: true,
-            config: disqus_config
-        });
-        showThread();
-    } else {
-        // Jika belum pernah di-load sama sekali (pertama kali klik)
-        var d = document, s = d.createElement('script');
-        s.src = 'https://nandateknik.disqus.com/embed.js'; // PASTIKAN SHORTNAME BENAR
-        s.setAttribute('data-timestamp', +new Date());
-        s.onload = showThread; // Tampilkan kolom setelah script siap
-        (d.head || d.body).appendChild(s);
-    }
-
-    function showThread() {
-        loader.style.display = 'none';
-        thread.style.display = 'block';
-    }
-}
 </script>
 </body>
 </html>

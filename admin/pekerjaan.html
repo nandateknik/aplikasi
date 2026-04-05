@@ -50,7 +50,7 @@
 }
         
         /* HEADER & NAVIGASI (TETAP SESUAI ASLI) */
-        .action-bar { margin-top: -35px; padding: 0 20px; position: relative; z-index: 5; }
+        .action-bar { margin-top: -80px; padding: 0 20px; position: relative; z-index: 5; }
         
         /* CARD LIST */
         .wo-card { 
@@ -506,26 +506,60 @@
         }
     }
 
-    async function saveSemuaPerubahan() {
-        const btn = document.getElementById('btnSimpan');
-        btn.disabled = true;
-        Swal.fire({ title: 'Menyimpan Data...', target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading() });
-        const payload = {
-            action: 'updateFullData', id: currentId,
-            status: document.getElementById('statusSelect').value,
-            keterangan: document.getElementById('catatanProgres').value || "Pembaruan oleh Admin",
-            items: selectedItems, notifyCustomer: document.getElementById('kirimEmailNotif').checked
-        };
-        try {
-            const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            const r = await res.json();
-            btn.disabled = false;
-            if(r.success) { 
-                Swal.fire({ icon: 'success', title: 'Berhasil!', target: document.getElementById('modalUpdate') }).then(() => { myModal.hide(); loadRiwayat(); });
-            }
-        } catch(e) { btn.disabled = false; Swal.fire('Error', 'Gagal update!', 'error'); }
+async function saveSemuaPerubahan() {
+    const btn = document.getElementById('btnSimpan');
+    const statusVal = document.getElementById('statusSelect').value;
+    const catatanVal = document.getElementById('catatanProgres').value || "Pembaruan oleh Admin";
+    
+    // Pastikan data detail sudah terload
+    if(!fullDataDetail) return;
+
+    // Validasi sederhana jika ingin lunas/selesai tapi item kosong
+    if((statusVal === 'Lunas' || statusVal === 'Selesai') && selectedItems.length === 0) {
+        Swal.fire({
+            title: 'Peringatan',
+            text: 'Isi rincian biaya/item nota sebelum menyelesaikan pekerjaan!',
+            icon: 'warning',
+            target: document.getElementById('modalUpdate')
+        });
+        return;
     }
 
+    btn.disabled = true;
+    Swal.fire({ title: 'Menyimpan Data...', target: document.getElementById('modalUpdate'), didOpen: () => Swal.showLoading() });
+
+    const payload = {
+        action: 'updateFullData', 
+        id: currentId,            // Ini ID WO (ID Booking)
+        notaId: fullDataDetail.notaId, // TAMBAHKAN INI agar backend tahu ID Nota-nya
+        status: statusVal,
+        keterangan: catatanVal,
+        items: selectedItems, 
+        notifyCustomer: document.getElementById('kirimEmailNotif').checked
+    };
+
+    try {
+        const res = await fetch(CONFIG.WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const r = await res.json();
+        btn.disabled = false;
+        if(r.success) { 
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Berhasil!', 
+                text: r.message, 
+                target: document.getElementById('modalUpdate') 
+            }).then(() => { 
+                myModal.hide(); 
+                loadRiwayat(); 
+            });
+        } else {
+            Swal.fire('Gagal', r.message, 'error');
+        }
+    } catch(e) { 
+        btn.disabled = false; 
+        Swal.fire('Error', 'Gagal koneksi ke server!', 'error'); 
+    }
+}
     // 7. UTILS & DISQUS
     function loadAdminDisqus() {
         const loader = document.getElementById('disqus_loader');
