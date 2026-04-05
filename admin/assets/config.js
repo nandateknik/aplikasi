@@ -1,6 +1,6 @@
 const CONFIG = {
     // URL Google Apps Script sampeyan
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxGwMi-rdftD8oVnVLWou70Pa-5Atrn8TQXKsVlqyHQQSJWbNVZ7XAJR-jNsBIaLuNh/exec",
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbyK87d83B9BBTnFioXtTLHliL98dOd_0fry8gOUG3O4dzBl30ZMJvsIhRifixsELHI/exec",
     ASSET_APP_URL: "https://script.google.com/macros/s/AKfycbzM_ZoZoxHAeVY01v-2PZvEv6Q-hLO6RgmOuE9a1rEdjyu3bKZstuzVIGcfHJ47ThxW/exec", // <--- Tambahne iki
     EMAIL_APP_URL: "https://script.google.com/macros/s/AKfycbyKMqNq_i7GEJ4yQlWzmFk8VKD0AC1jovb296M8pNUVF2Co3K-VrAt_bCe6ggJOnQfM8g/exec", // <--- Tambahne iki
     // Lokasi Kantor Nanda Teknik (kanggo itungan jarak)

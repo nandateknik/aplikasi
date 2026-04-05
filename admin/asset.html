@@ -3,316 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset & Warranty Management | Nanda Teknik</title>
+    <title>Manajemen Asset | Nanda Teknik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="assets/layout.css">
     
     <style>
-        body { background: #f4f7fe !important; padding-top: 70px !important; padding-bottom: 100px !important; }
-        .card-custom { background: white; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; }
-        .nav-pills-custom .nav-link { border-radius: 12px; color: #64748b; font-weight: 600; padding: 10px 20px; transition: 0.3s; border: 1px solid transparent; }
-        .nav-pills-custom .nav-link.active { background-color: #4338ca; color: white; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3); }
-        .form-label { font-weight: 600; color: #374151; font-size: 0.85rem; margin-bottom: 5px; }
-        .btn-save { background: #4338ca; color: white; border-radius: 12px; padding: 12px; font-weight: bold; border: none; transition: 0.3s; width: 100%; }
-        .btn-save:hover { background: #3730a3; transform: translateY(-2px); }
-        .status-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
-        .bg-sales { background-color: #f0fdf4 !important; }
-        #checklistContainer { background: #f8fafc; border-radius: 12px; padding: 15px; border-left: 4px solid #4338ca; }
-        .input-group-text-scanner { background: #4338ca; color: white; border: none; cursor: pointer; border-radius: 0 12px 12px 0 !important; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 2px dashed #4338ca; }
+        body { background: #f4f7fe; padding-bottom: 110px; }
+        .search-floating { position: relative; margin-top: -80px; z-index: 100; background: white; border-radius: 20px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .nav-tabs-custom { display: flex; background: #e2e8f0; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
+        .nav-link-custom { flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 700; color: #64748b; transition: 0.3s; border: none; background: none; font-size: 13px; }
+        .nav-link-custom.active { background: white; color: #0052d4; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .asset-card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.04); cursor: pointer; }
+        .detail-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; padding: 30px 20px; }
+        .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* Timeline */
+        .history-box { background: #f8fafc; border-radius: 15px; padding: 15px; margin-top: 10px; }
+        .history-item { border-left: 2px solid #0052d4; padding-left: 15px; margin-bottom: 20px; position: relative; }
+        .history-item::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: #0052d4; border-radius: 50%; }
+        
+        #woResult { font-size: 0.75rem; transition: 0.3s; }
     </style>
 </head>
 <body>
 
+<div class="loader-overlay" id="loader">
+    <div class="spinner-border text-primary"></div>
+    <span class="mt-2 fw-bold small">Sinkronisasi Data...</span>
+</div>
+
 <div class="container">
-    <div class="d-flex justify-content-center mb-4">
-        <ul class="nav nav-pills nav-pills-custom bg-white p-2 rounded-4 shadow-sm" id="assetTab" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" id="input-tab" data-bs-toggle="pill" data-bs-target="#pills-input"><i class="fas fa-plus-circle me-2"></i>Log Baru</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#pills-history" onclick="loadHistory()"><i class="fas fa-history me-2"></i>Riwayat & Garansi</button>
-            </li>
-        </ul>
+    <div class="search-floating animate__animated animate__fadeInDown">
+        <div class="input-group">
+            <span class="input-group-text border-0 bg-transparent ps-3"><i class="fas fa-search text-primary"></i></span>
+            <input type="text" id="searchAsset" class="form-control border-0" placeholder="Cari Asset atau Email..." oninput="resetPagination(); filterAsset();">
+        </div>
     </div>
 
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="pills-input">
-            <div class="card card-custom animate__animated animate__fadeIn">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold text-primary mb-0"><i class="fas fa-file-signature me-2"></i> Asset Management</h5>
-                        <select class="form-select form-select-sm w-auto rounded-pill border-primary text-primary fw-bold" id="kategoriLog" onchange="toggleFormType()">
-                            <option value="SERVICE">🛠 MAINTENANCE / SERVICE</option>
-                            <option value="SALES">📦 PENJUALAN BARANG BARU</option>
-                        </select>
-                    </div>
-                    
-                    <form id="formAset">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div id="reader"></div>
-                            </div>
+    <div id="mainView">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0 text-dark">Inventory Asset</h5>
+            <span class="badge bg-primary rounded-pill px-3 py-2" id="countAsset">0 Items</span>
+        </div>
 
-                            <div class="col-12 col-md-6">
-                                <label class="form-label">Pilih Pelanggan (Email)</label>
-                                <select class="form-select border-0 bg-light" id="idPelanggan" required>
-                                    <option value="">-- Pilih Email Pelanggan --</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label">Tipe Aset</label>
-                                <select class="form-select border-0 bg-light" id="tipeAset" onchange="renderChecklist()" required>
-                                    <option value="">-- Pilih Jenis --</option>
-                                    <option value="CCTV">CCTV</option>
-                                    <option value="AC">AC</option>
-                                    <option value="Laptop">Laptop / PC</option>
-                                    <option value="Networking">Networking</option>
-                                    <option value="Elektronik Lain">Elektronik Lain</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-7">
-                                <label class="form-label">Nama Barang / Brand / Seri</label>
-                                <input type="text" class="form-control border-0 bg-light" id="brandAset" placeholder="Contoh: Dahua IPC-HFW1230" required>
-                            </div>
-                            <div class="col-12 col-md-5">
-                                <label class="form-label">Serial Number (SN)</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control border-0 bg-light fw-bold text-primary" id="snAset" placeholder="Ketik atau Scan">
-                                    <button class="input-group-text input-group-text-scanner" type="button" onclick="toggleScanner()" id="btnScanner">
-                                        <i class="fas fa-barcode"></i>
-                                    </button>
-                                </div>
-                            </div>
+        <div class="nav-tabs-custom">
+            <div class="nav-link-custom active" id="tabList" onclick="switchTab('list')">DAFTAR ASSET</div>
+            <div class="nav-link-custom" id="tabInput" onclick="switchTab('input')">INPUT BARU</div>
+        </div>
 
-                            <div id="salesFields" class="d-none">
-                                <div class="row g-3 pt-2">
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Beli di Toko / Supplier</label>
-                                        <input type="text" class="form-control border-0 bg-light" id="supplier" placeholder="Toko asal kulakan">
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Garansi (Bulan)</label>
-                                        <input type="number" class="form-control border-0 bg-light" id="garansiBulan" value="12">
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Harga Modal (Rp)</label>
-                                        <input type="number" class="form-control border-0 bg-light" id="hargaBeli" placeholder="0">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-12 mt-3" id="checklistSection">
-                                <label class="form-label small text-muted text-uppercase">Checklist Kondisi</label>
-                                <div id="checklistContainer"></div>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Catatan Tambahan</label>
-                                <textarea class="form-control border-0 bg-light" id="catatan" rows="3" placeholder="Tulis keterangan detail..."></textarea>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-save mt-4" id="btnSubmit">
-                            <i class="fas fa-save me-2"></i> SIMPAN DATA & PDF
-                        </button>
-                    </form>
-                </div>
+        <div id="sectionList" class="animate__animated animate__fadeIn">
+            <div id="assetContainer"></div>
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="changePage(-1)" id="btnPrev">Prev</button>
+                <span class="small fw-bold text-muted" id="pageInfo">Halaman 1</span>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="changePage(1)" id="btnNext">Next</button>
             </div>
         </div>
 
-        <div class="tab-pane fade" id="pills-history">
-            <div class="card card-custom animate__animated animate__fadeIn">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-primary mb-0"><i class="fas fa-history me-2"></i> Log Riwayat</h6>
-                        <input type="text" id="searchHistory" class="form-control form-control-sm w-auto rounded-pill" placeholder="Cari SN/Nama..." onkeyup="filterTable()">
+        <div id="sectionInput" style="display: none;">
+            <div class="form-section bg-white p-4 rounded-4 shadow-sm border">
+                <form id="formAsset">
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label small fw-bold">Email Pelanggan</label><input type="email" id="f-email" class="form-control" oninput="lookupPelanggan(this.value)" required><div id="pelangganStatus" class="mt-1 small fw-bold"></div></div>
+                        <div class="col-12"><label class="form-label small fw-bold">Nama Barang</label><input type="text" id="f-nama" class="form-control" required></div>
+                        <div class="col-6"><label class="form-label small fw-bold">Merek</label><input type="text" id="f-merek" class="form-control"></div>
+                        <div class="col-6"><label class="form-label small fw-bold">Serial Number</label><input type="text" id="f-sn" class="form-control"></div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle" style="font-size: 0.85rem;">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Unit & Pelanggan</th>
-                                    <th>SN / Supplier</th>
-                                    <th>Garansi</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 mt-4 fw-bold">SIMPAN ASSET</button>
+                </form>
             </div>
+        </div>
+    </div>
+
+    <div id="detailView" class="detail-view">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <button class="btn btn-light btn-sm rounded-pill px-3 border shadow-sm" onclick="closeDetail()"><i class="fas fa-arrow-left me-2"></i>Kembali</button>
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="editAsset()"><i class="fas fa-edit me-1"></i>Edit Asset</button>
+        </div>
+        
+        <div id="detailHeader"></div>
+
+        <div class="mt-4 p-4 rounded-4 bg-white border shadow-sm">
+            <h6 class="fw-bold mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Tambah Log History</h6>
+            <div class="input-group">
+                <input type="text" id="inputIDWO" class="form-control" placeholder="Ketik ID WO (Cth: 1024)" oninput="lookupWO(this.value)">
+                <button class="btn btn-primary px-4" onclick="addHistoryManual()" id="btnSaveLog" disabled>Simpan</button>
+            </div>
+            <div id="woResult" class="mt-2 fw-bold"></div>
+        </div>
+
+        <div class="mt-4">
+            <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-history text-primary me-2"></i>Maintenance History</h6>
+            <div id="historyTimeline" class="history-box"></div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
-
 <script src="assets/config.js"></script>
 <script src="assets/layout.js"></script>
 
 <script>
-    const masterChecklist = {
-        "CCTV": ["HDD Record", "Kualitas Gambar", "Online Mobile", "Power Supply"],
-        "AC": ["Tekanan Freon", "Amper Komp", "Evap/Kondensor", "Drainase"],
-        "Laptop": ["Suhu/Pasta", "Health SSD", "Battery Cycle", "Keyboard"],
-        "Networking": ["Signal/DB", "LAN Speed", "Config OK", "Adaptor"],
-        "Elektronik Lain": ["Fungsi Utama", "Kabel Power", "Kebersihan"]
-    };
+    let allAssets = [];
+    let filteredAssets = [];
+    let pelangganData = [];
+    let bookingData = [];
+    let currentPage = 1;
+    let currentAssetId = null;
+    const itemsPerPage = 10;
 
-    let html5QrCode;
-
-    window.onload = async () => {
-        if (typeof renderLayout === "function") renderLayout();
-        await loadPelanggan();
-    };
-
-    async function toggleScanner() {
-        const reader = document.getElementById('reader');
-        const btn = document.getElementById('btnScanner');
-        if (reader.style.display === 'block') { stopScanner(); return; }
-        reader.style.display = 'block';
-        btn.innerHTML = '<i class="fas fa-times"></i>';
-        btn.classList.replace('input-group-text-scanner', 'btn-danger');
-        html5QrCode = new Html5Qrcode("reader");
+    async function initData() {
+        showLoader(true);
         try {
-            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                document.getElementById('snAset').value = text;
-                stopScanner();
-            });
-        } catch (e) { stopScanner(); }
+            const [resA, resP, resB] = await Promise.all([
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Asset`),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`),
+                fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Booking`)
+            ]);
+            allAssets = (await resA.json()).data.reverse();
+            pelangganData = (await resP.json()).data;
+            bookingData = (await resB.json()).data;
+            filteredAssets = allAssets;
+            renderAssets();
+            document.getElementById('countAsset').innerText = `${allAssets.length} Items`;
+        } catch (e) { console.error(e); }
+        showLoader(false);
     }
 
-    function stopScanner() {
-        const reader = document.getElementById('reader');
-        const btn = document.getElementById('btnScanner');
-        reader.style.display = 'none';
-        btn.innerHTML = '<i class="fas fa-barcode"></i>';
-        btn.classList.replace('btn-danger', 'input-group-text-scanner');
-        if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear());
+    function renderAssets() {
+        const container = document.getElementById('assetContainer');
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginated = filteredAssets.slice(start, end);
+
+        container.innerHTML = paginated.map(item => `
+            <div class="asset-card animate__animated animate__fadeInUp border" onclick="showDetail('${item.id}')">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-primary border px-2 py-1" style="font-size:0.65rem">ID: ${item.id}</span>
+                    <i class="fas fa-chevron-right text-muted opacity-25"></i>
+                </div>
+                <div class="fw-bold mt-2 text-dark" style="font-size:1rem">${item.nama}</div>
+                <div class="small text-muted"><i class="fas fa-barcode me-1"></i> SN: ${item['serial number'] || item.serial_number || '-'}</div>
+                <div class="small text-primary fw-bold mt-1"><i class="fas fa-user-circle me-1"></i> ${item.email}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('pageInfo').innerText = `Hal ${currentPage} dari ${Math.ceil(filteredAssets.length / itemsPerPage) || 1}`;
+        document.getElementById('btnPrev').disabled = currentPage === 1;
+        document.getElementById('btnNext').disabled = end >= filteredAssets.length;
     }
 
-    function toggleFormType() {
-        const type = document.getElementById('kategoriLog').value;
-        document.getElementById('salesFields').classList.toggle('d-none', type !== 'SALES');
-        document.getElementById('checklistSection').classList.toggle('d-none', type === 'SALES');
-    }
+    function showDetail(id) {
+        currentAssetId = id;
+        const asset = allAssets.find(a => String(a.id) === String(id));
+        if (!asset) return;
 
-    async function loadPelanggan() {
-        try {
-            const res = await fetch(`${CONFIG.WEB_APP_URL}?action=read&sheet=Pelanggan`);
-            const json = await res.json();
-            const select = document.getElementById('idPelanggan');
-            json.data.forEach(p => {
-                if (p.email) {
-                    let opt = document.createElement('option');
-                    opt.value = p.email;
-                    opt.text = `${p.nama} (${p.email})`;
-                    opt.setAttribute('data-nama', p.nama);
-                    select.appendChild(opt);
-                }
-            });
-        } catch (e) { console.error("Gagal load pelanggan", e); }
-    }
+        // Mendukung penamaan kolom dengan spasi atau underscore
+        const sn = asset['serial number'] || asset.serial_number || '-';
 
-    function renderChecklist() {
-        const tipe = document.getElementById('tipeAset').value;
-        const container = document.getElementById('checklistContainer');
-        container.innerHTML = "";
-        if (!tipe) return;
-        const items = masterChecklist[tipe] || masterChecklist["Elektronik Lain"];
-        items.forEach(item => {
-            container.innerHTML += `<div class="form-check form-check-inline mb-2">
-                <input class="form-check-input" type="checkbox" value="${item}" checked>
-                <label class="form-check-label">${item}</label>
+        document.getElementById('detailView').style.display = 'block';
+        document.getElementById('detailHeader').innerHTML = `
+            <div class="p-4 bg-primary text-white rounded-4 shadow">
+                <h4 class="fw-bold mb-1">${asset.nama}</h4>
+                <div class="small opacity-75">S/N: ${sn} | Merek: ${asset.merek || '-'}</div>
+                <hr class="opacity-25">
+                <div class="small">Pemilik: <b>${asset.email}</b></div>
             </div>`;
-        });
+
+        renderTimeline(asset.service_json);
     }
 
-    document.getElementById('formAset').onsubmit = async (e) => {
-        e.preventDefault();
-        
-        // Proteksi: Cek URL Config
-        if(!CONFIG.ASSET_APP_URL || CONFIG.ASSET_APP_URL.includes("SCRIPT_URL_HERE")) {
-            Swal.fire('Konfigurasi Salah', 'URL Script neng config.js durung diisi bro!', 'error');
-            return;
+    // --- AUTO SEARCH ID WO ---
+    function lookupWO(val) {
+        const resultDiv = document.getElementById('woResult');
+        const btn = document.getElementById('btnSaveLog');
+        if(!val) { resultDiv.innerHTML = ""; btn.disabled = true; return; }
+
+        const found = bookingData.find(b => String(b.id) === val);
+        if(found) {
+            resultDiv.className = "mt-2 small text-success";
+            resultDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${found.tanggal} - ${found.judul}`;
+            btn.disabled = false;
+        } else {
+            resultDiv.className = "mt-2 small text-danger";
+            resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> ID WO tidak ditemukan`;
+            btn.disabled = true;
         }
+    }
 
-        const selPel = document.getElementById('idPelanggan');
-        const payload = {
-            action: 'create',
-            sheet: 'Aset_History',
-            data: {
-                Tanggal: new Date().toLocaleString('sv-SE'), // Format YYYY-MM-DD HH:mm:ss
-                Kategori: document.getElementById('kategoriLog').value,
-                ID_Pelanggan: selPel.value,
-                Nama_Pelanggan: selPel.options[selPel.selectedIndex].getAttribute('data-nama'),
-                Tipe_Aset: document.getElementById('tipeAset').value,
-                Brand_Seri: document.getElementById('brandAset').value,
-                SN: document.getElementById('snAset').value,
-                Supplier: document.getElementById('supplier').value || "-",
-                Garansi_Bulan: document.getElementById('garansiBulan').value || 0,
-                Harga_Modal: document.getElementById('hargaBeli').value || 0,
-                Catatan: document.getElementById('catatan').value,
-                Teknisi: "Admin Nanda Teknik"
+    // --- EDIT ASSET MODAL ---
+    async function editAsset() {
+        const asset = allAssets.find(a => String(a.id) === String(currentAssetId));
+        const { value: formValues } = await Swal.fire({
+            title: 'Edit Data Asset',
+            html:
+                `<label class="small fw-bold d-block text-start mb-1">Nama Asset</label>` +
+                `<input id="swal-nama" class="swal2-input mt-0 w-100" value="${asset.nama}">` +
+                `<label class="small fw-bold d-block text-start mb-1 mt-3">Merek</label>` +
+                `<input id="swal-merek" class="swal2-input mt-0 w-100" value="${asset.merek || ''}">` +
+                `<label class="small fw-bold d-block text-start mb-1 mt-3">Serial Number</label>` +
+                `<input id="swal-sn" class="swal2-input mt-0 w-100" value="${asset['serial number'] || asset.serial_number || ''}">`,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Update Data',
+            preConfirm: () => {
+                return {
+                    nama: document.getElementById('swal-nama').value,
+                    merek: document.getElementById('swal-merek').value,
+                    sn: document.getElementById('swal-sn').value
+                }
             }
-        };
-
-        Swal.fire({
-            title: 'Menyimpan...',
-            text: 'Ojo di-close yo bro',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
         });
 
-        try {
-            // Gunakan mode no-cors nek isih muter, tapi idealnya Apps Script kudu bener
-            const response = await fetch(CONFIG.ASSET_APP_URL, {
+        if (formValues) {
+            showLoader(true);
+            const res = await fetch(CONFIG.WEB_APP_URL, {
                 method: 'POST',
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    action: 'updateAsset',
+                    id: currentAssetId,
+                    ...formValues
+                })
             });
-
-            const result = await response.json();
-
-            if (result.success) {
-                Swal.fire('Sip!', 'Data wis mlebu neng Sheets.', 'success');
-                document.getElementById('formAset').reset();
-                document.getElementById('checklistContainer').innerHTML = "";
+            const r = await res.json();
+            if(r.success) {
+                Swal.fire("Berhasil", "Data asset diperbarui", "success");
+                initData().then(() => showDetail(currentAssetId));
             } else {
-                throw new Error(result.message || "Gagal simpan");
+                showLoader(false);
+                Swal.fire("Gagal", "Gagal update data", "error");
             }
-        } catch (error) {
-            console.error("Error Detail:", error);
-            Swal.fire('Waduh!', 'Gagal nyambung neng server. Cek internet utawa URL Script sampeyan.', 'error');
         }
-    };
-
-    async function loadHistory() {
-        const tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading data...</td></tr>';
-        try {
-            const res = await fetch(`${CONFIG.ASSET_APP_URL}?action=read&sheet=Aset_History`);
-            const json = await res.json();
-            tbody.innerHTML = "";
-            json.data.reverse().slice(0, 50).forEach(item => {
-                tbody.innerHTML += `<tr>
-                    <td>${item.Tanggal}</td>
-                    <td><b>${item.Nama_Pelanggan}</b><br><small>${item.Brand_Seri}</small></td>
-                    <td>${item.SN}</td>
-                    <td>${item.Garansi_Bulan} Bln</td>
-                    <td><span class="badge bg-primary">${item.Kategori}</span></td>
-                    <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-print"></i></button></td>
-                </tr>`;
-            });
-        } catch (e) { tbody.innerHTML = "Gagal narik riwayat."; }
     }
+
+    async function addHistoryManual() {
+        const idWO = document.getElementById('inputIDWO').value.trim();
+        const booking = bookingData.find(b => String(b.id) === idWO);
+        
+        showLoader(true);
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({
+                    action: 'updateAssetHistory',
+                    asset_id: currentAssetId,
+                    new_log: { id_wo: booking.id, tanggal: booking.tanggal, judul: booking.judul }
+                })
+            });
+            if((await res.json()).success) {
+                Swal.fire("Berhasil", "Log history ditambahkan", "success");
+                document.getElementById('inputIDWO').value = "";
+                document.getElementById('woResult').innerHTML = "";
+                initData().then(() => showDetail(currentAssetId));
+            }
+        } catch(e) { Swal.fire("Gagal", "Error koneksi", "error"); }
+        showLoader(false);
+    }
+
+    function renderTimeline(serviceJson) {
+        const timeline = document.getElementById('historyTimeline');
+        let data = [];
+        try { data = typeof serviceJson === 'string' ? JSON.parse(serviceJson) : (serviceJson || []); } catch(e) { data = []; }
+        if (data.length === 0) { timeline.innerHTML = `<div class="text-center text-muted p-4 small">Belum ada riwayat.</div>`; return; }
+
+        timeline.innerHTML = data.reverse().map(log => `
+            <div class="history-item">
+                <div class="small fw-extrabold text-muted" style="font-size:0.7rem">${log.tanggal}</div>
+                <div class="fw-bold text-dark" style="font-size:0.85rem">${log.judul}</div>
+                <a href="https://nandateknik.github.io/aplikasi/pelanggan/index.html?id=${log.id_wo}" target="_blank" class="btn btn-sm btn-light border py-1 px-2 mt-1" style="font-size:0.65rem">
+                    <i class="fas fa-file-invoice me-1 text-primary"></i> WO #${log.id_wo}
+                </a>
+            </div>
+        `).join('');
+    }
+
+    // Standard helpers
+    function changePage(step) { currentPage += step; renderAssets(); window.scrollTo(0,0); }
+    function resetPagination() { currentPage = 1; }
+    function filterAsset() {
+        const kw = document.getElementById('searchAsset').value.toLowerCase();
+        filteredAssets = allAssets.filter(a => a.nama.toLowerCase().includes(kw) || a.email.toLowerCase().includes(kw));
+        renderAssets();
+    }
+    function switchTab(t) {
+        document.querySelectorAll('.nav-link-custom').forEach(n => n.classList.remove('active'));
+        document.getElementById(t === 'list' ? 'tabList' : 'tabInput').classList.add('active');
+        document.getElementById('sectionList').style.display = t === 'list' ? 'block' : 'none';
+        document.getElementById('sectionInput').style.display = t === 'input' ? 'block' : 'none';
+    }
+    function closeDetail() { document.getElementById('detailView').style.display = 'none'; }
+    function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
+    window.addEventListener('load', initData);
 </script>
 </body>
 </html>
