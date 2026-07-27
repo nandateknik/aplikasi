@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pelanggan - Nanda Teknik Banyuwangi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json"> <!-- Persiapan PWA -->
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Container Utama -->
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
+        
+        <!-- Logo / Header -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-blue-700">Nanda Teknik</h1>
+            <p class="text-sm text-gray-500">Portal Layanan & Work Order</p>
+        </div>
+
+        <!-- Form Pencarian / Login -->
+        <form id="searchForm" class="space-y-4">
+            <div>
+                <input type="email" id="emailInput" required
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Masukkan email Anda...">
+            </div>
+            
+            <button type="submit" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+                Cari Data & Riwayat
+            </button>
+        </form>
+
+        <!-- Pesan Bantuan -->
+        <p class="mt-6 text-xs text-gray-400">
+            Jika email belum terdaftar, kami akan mengirimkan kode OTP untuk proses pendaftaran.
+        </p>
+    </div>
+
+</body>
+</html>
