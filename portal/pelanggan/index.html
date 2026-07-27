@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pelanggan - Nanda Teknik</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS & JS (Untuk Peta) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- SweetAlert2 (Untuk Pop-up OTP & Notifikasi) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* CSS tambahan untuk animasi transisi layar */
+        .screen { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .screen.active { display: block; opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-10">
+
+    <!-- GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA -->
+    <script>
+        const GAS_URL = "URL_WEB_APP_ANDA_DI_SINI"; 
+    </script>
+
+    <!-- ==========================================
+         SCREEN 1: LOGIN / PENCARIAN EMAIL
+         ========================================== -->
+    <div id="loginScreen" class="screen active max-w-md mx-auto mt-10 bg-white p-8 rounded-2xl shadow-lg text-center">
+        <h1 class="text-2xl font-bold text-blue-700 mb-1">Nanda Teknik</h1>
+        <p class="text-sm text-gray-500 mb-6">Portal Layanan & Work Order</p>
+
+        <form id="loginForm" class="space-y-4">
+            <input type="email" id="emailInput" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan email Anda...">
+            <button type="submit" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+                Cari Data & Riwayat
+            </button>
+        </form>
+    </div>
+
+
+    <!-- ==========================================
+         SCREEN 2: FORM PENDAFTARAN & MAPS
+         ========================================== -->
+    <div id="registerScreen" class="screen max-w-md mx-auto mt-10 bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h2 class="text-xl font-bold">Lengkapi Data Diri</h2>
+            <p class="text-sm opacity-80">Pendaftaran Pelanggan Baru</p>
+        </div>
+        <div class="p-6">
+            <form id="registerForm" class="space-y-4">
+                <input type="email" id="regEmail" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500">
+                <input type="text" id="regNama" required placeholder="Nama Lengkap" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <input type="tel" id="regWa" required placeholder="No. WhatsApp (08...)" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <textarea id="regAlamat" rows="2" required placeholder="Alamat Lengkap" class="w-full px-4 py-2 border border-gray-300 rounded-lg"></textarea>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tandai Lokasi Anda</label>
+                    <div id="map" class="w-full h-48 rounded-lg border border-gray-300 z-0"></div>
+                    <input type="hidden" id="lat" value="-8.2192">
+                    <input type="hidden" id="lng" value="114.3692">
+                </div>
+
+                <button type="submit" id="btnRegister" class="w-full mt-4 bg-green-600 text-white font-bold py-3 px-4 rounded-lg">
+                    Daftar & Lanjut
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ==========================================
+         SCREEN 3: DASHBOARD & WORK ORDER
+         ========================================== -->
+    <div id="dashboardScreen" class="screen max-w-lg mx-auto mt-6">
+        <!-- Header User -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm mb-4 flex justify-between items-center">
+            <div>
+                <h2 class="text-lg font-bold" id="dashNama">Halo, User</h2>
+                <p class="text-sm text-gray-500" id="dashEmail">user@email.com</p>
+            </div>
+            <button onclick="switchScreen('loginScreen')" class="text-sm text-red-500 font-semibold underline">Keluar</button>
+        </div>
+
+        <!-- Form Buat Work Order -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm mb-4">
+            <h3 class="font-bold text-blue-700 mb-4">Buat Work Order Baru</h3>
+            <form id="woForm" class="space-y-4">
+                <input type="date" id="woTanggal" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <input type="text" id="woKeluhan" required placeholder="Keluhan Utama (Contoh: AC Bocor, Pasang CCTV)" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <textarea id="woKeterangan" rows="2" placeholder="Keterangan tambahan..." class="w-full px-4 py-2 border border-gray-300 rounded-lg"></textarea>
+                
+                <!-- Toggle Notif Email -->
+                <div class="flex items-center">
+                    <input type="checkbox" id="woNotif" class="w-5 h-5 text-blue-600 rounded mr-2" checked>
+                    <label for="woNotif" class="text-sm text-gray-700">Kirim notifikasi update pekerjaan ke email saya</label>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Kirim Work Order</button>
+            </form>
+        </div>
+
+        <!-- Riwayat & Tracking Pekerjaan -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-4">Riwayat & Tracking Pekerjaan</h3>
+            <div id="woHistoryContainer" class="space-y-4">
+                <!-- Data WO dari Google Sheets akan dilooping dan dimunculkan di sini -->
+                <p class="text-sm text-gray-500">Belum ada riwayat pekerjaan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         JAVASCRIPT LOGIC
+         ========================================== -->
+    <script>
+        let currentUserEmail = '';
+        let mapInitialized = false;
+        let leafletMap, marker;
+
+        // Fungsi Pindah Layar
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            // Inisialisasi peta hanya saat layar pendaftaran terbuka
+            if (screenId === 'registerScreen' && !mapInitialized) {
+                initMap();
+                mapInitialized = true;
+            }
+        }
+
+        // 1. Submit Form Login/Cari Email
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const btn = document.getElementById('btnLogin');
+            
+            btn.innerHTML = 'Mencari...'; btn.disabled = true;
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'checkEmail', email: email })
+                });
+                const data = await response.json();
+
+                if (data.type === 'EXISTING_USER') {
+                    // Masuk ke Dashboard
+                    currentUserEmail = email;
+                    setupDashboard(data.user, data.workOrders);
+                    switchScreen('dashboardScreen');
+                } else if (data.type === 'NEW_USER') {
+                    // Munculkan pop-up OTP
+                    promptOTP(email);
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Gagal terhubung ke server', 'error');
+            } finally {
+                btn.innerHTML = 'Cari Data & Riwayat'; btn.disabled = false;
+            }
+        });
+
+        // 2. Fungsi Memunculkan Pop-Up OTP (SweetAlert2)
+        function promptOTP(email) {
+            Swal.fire({
+                title: 'Email Belum Terdaftar',
+                text: `Kami telah mengirim 6-digit OTP ke ${email}`,
+                input: 'text',
+                inputAttributes: { maxlength: 6, pattern: '[0-9]*', inputmode: 'numeric' },
+                inputPlaceholder: 'Masukkan 6 digit OTP',
+                showCancelButton: true,
+                confirmButtonText: 'Verifikasi',
+                showLoaderOnConfirm: true,
+                preConfirm: async (otp) => {
+                    if (!otp) { Swal.showValidationMessage('OTP harus diisi!'); return; }
+                    
+                    const response = await fetch(GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'verifyOTP', email: email, otp: otp })
+                    });
+                    return response.json();
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (result.value.status === 'success') {
+                        currentUserEmail = email;
+                        document.getElementById('regEmail').value = email;
+                        switchScreen('registerScreen');
+                    } else {
+                        Swal.fire('Gagal', 'OTP Salah atau Kadaluarsa', 'error');
+                    }
+                }
+            });
+        }
+
+        // 3. Inisialisasi Peta (Leaflet)
+        function initMap() {
+            leafletMap = L.map('map').setView([-8.2192, 114.3692], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafletMap);
+            marker = L.marker([-8.2192, 114.3692], {draggable: true}).addTo(leafletMap);
+            
+            marker.on('dragend', function () {
+                const pos = marker.getLatLng();
+                document.getElementById('lat').value = pos.lat;
+                document.getElementById('lng').value = pos.lng;
+            });
+
+            leafletMap.locate({setView: true, maxZoom: 16});
+            leafletMap.on('locationfound', function(e) {
+                marker.setLatLng(e.latlng);
+                document.getElementById('lat').value = e.latlng.lat;
+                document.getElementById('lng').value = e.latlng.lng;
+            });
+        }
+
+        // 4. Submit Pendaftaran User Baru
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnRegister');
+            btn.innerHTML = 'Menyimpan...'; btn.disabled = true;
+
+            const payload = {
+                action: 'registerUser',
+                email: document.getElementById('regEmail').value,
+                nama: document.getElementById('regNama').value,
+                whatsapp: document.getElementById('regWa').value,
+                alamat: document.getElementById('regAlamat').value,
+                latitude: document.getElementById('lat').value,
+                longitude: document.getElementById('lng').value
+            };
+
+            try {
+                const response = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    Swal.fire('Berhasil', 'Pendaftaran sukses!', 'success').then(() => {
+                        // Set data ke dashboard kosong dan pindah layar
+                        setupDashboard(payload, []);
+                        switchScreen('dashboardScreen');
+                    });
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Gagal menyimpan data', 'error');
+            } finally {
+                btn.innerHTML = 'Daftar & Lanjut'; btn.disabled = false;
+            }
+        });
+
+        // 5. Setup Tampilan Dashboard (Load data nama, email, dan riwayat WO)
+        function setupDashboard(user, workOrders) {
+            document.getElementById('dashNama').innerText = "Halo, " + user.nama;
+            document.getElementById('dashEmail').innerText = user.email;
+
+            // Set Tanggal Hari Ini untuk Form WO
+            document.getElementById('woTanggal').valueAsDate = new Date();
+
+            // Render Riwayat Work Order
+            const container = document.getElementById('woHistoryContainer');
+            if (workOrders && workOrders.length > 0) {
+                container.innerHTML = workOrders.map(wo => `
+                    <div class="border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-gray-50 rounded-r-lg">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-gray-800">${wo.keluhan}</h4>
+                                <p class="text-xs text-gray-500">${new Date(wo.tanggal).toLocaleDateString('id-ID')}</p>
+                            </div>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Dalam Proses</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 italic">Belum ada riwayat pekerjaan.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
