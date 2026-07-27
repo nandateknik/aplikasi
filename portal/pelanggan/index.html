@@ -3,40 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Pelanggan - Nanda Teknik Banyuwangi</title>
+    <title>Pendaftaran - Nanda Teknik</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json"> <!-- Persiapan PWA -->
+    
+    <!-- CSS & JS untuk Leaflet Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-50 p-4 font-sans text-gray-800">
 
-    <!-- Container Utama -->
-    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
         
-        <!-- Logo / Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-blue-700">Nanda Teknik</h1>
-            <p class="text-sm text-gray-500">Portal Layanan & Work Order</p>
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h2 class="text-xl font-bold">Lengkapi Data Diri</h2>
+            <p class="text-sm opacity-80">Portal Nanda Teknik Banyuwangi</p>
         </div>
 
-        <!-- Form Pencarian / Login -->
-        <form id="searchForm" class="space-y-4">
-            <div>
-                <input type="email" id="emailInput" required
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Masukkan email Anda...">
-            </div>
-            
-            <button type="submit" 
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
-                Cari Data & Riwayat
-            </button>
-        </form>
+        <div class="p-6">
+            <form id="registerForm" class="space-y-4">
+                
+                <!-- Email (Readonly, otomatis dari step sebelumnya) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="regEmail" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500">
+                </div>
 
-        <!-- Pesan Bantuan -->
-        <p class="mt-6 text-xs text-gray-400">
-            Jika email belum terdaftar, kami akan mengirimkan kode OTP untuk proses pendaftaran.
-        </p>
+                <!-- Nama -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="regNama" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <!-- WhatsApp -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp</label>
+                    <input type="tel" id="regWa" required placeholder="Contoh: 081234567890" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <!-- Alamat Detail -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap</label>
+                    <textarea id="regAlamat" rows="2" required placeholder="Nama jalan, RT/RW, Patokan rumah..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Peta Titik Lokasi -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tandai Lokasi Rumah (Bisa Digeser)</label>
+                    <div id="map" class="w-full h-48 rounded-lg border border-gray-300 z-0"></div>
+                    <p class="text-xs text-red-500 mt-1">*Geser pin merah ke lokasi persis rumah Anda</p>
+                    
+                    <!-- Input hidden untuk menyimpan koordinat yang akan dikirim ke backend -->
+                    <input type="hidden" id="lat" value="-8.2192">
+                    <input type="hidden" id="lng" value="114.3692">
+                </div>
+
+                <button type="submit" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Daftar & Lanjut Buat Order
+                </button>
+            </form>
+        </div>
     </div>
 
+    <!-- Script Logika Maps -->
+    <script>
+        // Inisialisasi Peta - Koordinat diset default ke area Banyuwangi
+        const defaultLat = -8.219238; 
+        const defaultLng = 114.369227;
+        
+        const map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+        // Menambahkan tile layer dari OpenStreetMap (Gratis)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Menambahkan Marker (Pin) yang bisa didrag/geser
+        const marker = L.marker([defaultLat, defaultLng], {draggable: true}).addTo(map);
+
+        // Event listener: Saat pin selesai digeser, update value input hidden
+        marker.on('dragend', function (e) {
+            const position = marker.getLatLng();
+            document.getElementById('lat').value = position.lat;
+            document.getElementById('lng').value = position.lng;
+        });
+
+        // Script untuk mencoba mendeteksi lokasi user secara otomatis menggunakan GPS HP
+        map.locate({setView: true, maxZoom: 16});
+        map.on('locationfound', function(e) {
+            marker.setLatLng(e.latlng);
+            document.getElementById('lat').value = e.latlng.lat;
+            document.getElementById('lng').value = e.latlng.lng;
+        });
+    </script>
 </body>
 </html>
