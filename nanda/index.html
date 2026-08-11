@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Manajemen Pelanggan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Transisi halus antar halaman */
+        .page-section { display: none; }
+        .active-section { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- LOGIN SECTION -->
+    <section id="loginView" class="page-section active-section flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mx-4 border border-slate-100">
+            <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">Login Sistem</h2>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600">Username</label>
+                    <input type="text" id="username" class="mt-1 w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600">Password</label>
+                    <input type="password" id="password" class="mt-1 w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                    Masuk
+                </button>
+                <p id="loginMessage" class="text-red-500 text-sm text-center hidden"></p>
+            </form>
+        </div>
+    </section>
+
+    <!-- DASHBOARD SECTION -->
+    <section id="dashboardView" class="page-section min-h-screen">
+        <!-- Navbar -->
+        <nav class="bg-blue-600 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="font-bold text-xl">Database Pelanggan</div>
+                    <button onclick="logout()" class="text-blue-100 hover:text-white font-medium">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-800">Daftar Pelanggan</h1>
+                <button onclick="toggleModal('modalPelanggan')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+                    + Tambah Data
+                </button>
+            </div>
+
+            <!-- Table for Desktop / Cards for Mobile -->
+            <div class="bg-white shadow rounded-lg overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full whitespace-nowrap hidden md:table">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 text-left text-sm uppercase font-semibold">
+                            <tr>
+                                <th class="px-6 py-4">Nama</th>
+                                <th class="px-6 py-4">No. Telpon</th>
+                                <th class="px-6 py-4">Email</th>
+                                <th class="px-6 py-4">Alamat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyDesktop" class="divide-y divide-slate-200 text-sm">
+                            <!-- Data dimuat via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Mobile Card View -->
+                <div id="cardBodyMobile" class="md:hidden divide-y divide-slate-200">
+                     <!-- Data dimuat via JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL TAMBAH PELANGGAN -->
+    <div id="modalPelanggan" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">Tambah Pelanggan</h3>
+                <button onclick="toggleModal('modalPelanggan')" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <form id="addPelangganForm" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm text-slate-600">Nama</label><input type="text" id="p_nama" class="w-full px-3 py-2 border rounded-lg" required></div>
+                    <div><label class="block text-sm text-slate-600">Tanggal Lahir</label><input type="date" id="p_tgl" class="w-full px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm text-slate-600">No. Telpon</label><input type="text" id="p_telp" class="w-full px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm text-slate-600">Email</label><input type="email" id="p_email" class="w-full px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-sm text-slate-600">Latitude</label><input type="text" id="p_lat" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+                    <div><label class="block text-sm text-slate-600">Longitude</label><input type="text" id="p_lang" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+                </div>
+                <div><label class="block text-sm text-slate-600">Alamat</label><textarea id="p_alamat" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea></div>
+                
+                <div class="pt-4 flex justify-end">
+                    <button type="submit" id="btnSimpan" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyP3eEEZQdtnAdGCvpTMTnu7E-9w1AlOuz04AKeDM3IjTAnTjwSR7KDm9cfx03YpyOP/exec'; 
+
+        // Navigasi UI
+        function showSection(sectionId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-section'));
+            document.getElementById(sectionId).classList.add('active-section');
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+        }
+
+        // Cek Sesi Login
+        window.onload = () => {
+            if (localStorage.getItem('isLoggedIn')) {
+                showSection('dashboardView');
+                loadDataPelanggan();
+            }
+        };
+
+        // Proses Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const msg = document.getElementById('loginMessage');
+            
+            btn.innerHTML = 'Memproses...';
+            btn.disabled = true;
+            
+            const payload = {
+                action: 'login',
+                username: e.target.username.value,
+                password: e.target.password.value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    showSection('dashboardView');
+                    loadDataPelanggan();
+                } else {
+                    msg.textContent = result.message;
+                    msg.classList.remove('hidden');
+                }
+            } catch (err) {
+                msg.textContent = 'Terjadi kesalahan jaringan.';
+                msg.classList.remove('hidden');
+            }
+            
+            btn.innerHTML = 'Masuk';
+            btn.disabled = false;
+        });
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            showSection('loginView');
+            document.getElementById('loginForm').reset();
+        }
+
+        // Load Data Pelanggan
+        async function loadDataPelanggan() {
+            const tbody = document.getElementById('tableBodyDesktop');
+            const mobileBody = document.getElementById('cardBodyMobile');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-500">Memuat data...</td></tr>';
+            mobileBody.innerHTML = '<div class="text-center py-4 text-slate-500">Memuat data...</div>';
+
+            try {
+                const response = await fetch(API_URL + '?action=getPelanggan');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    tbody.innerHTML = '';
+                    mobileBody.innerHTML = '';
+                    
+                    result.data.reverse().forEach(p => {
+                        // Desktop Table Row
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4 font-medium text-slate-800">${p.nama}</td>
+                                <td class="px-6 py-4 text-slate-600">${p.no_telpon || '-'}</td>
+                                <td class="px-6 py-4 text-slate-600">${p.email || '-'}</td>
+                                <td class="px-6 py-4 text-slate-600 truncate max-w-xs">${p.alamat || '-'}</td>
+                            </tr>
+                        `;
+                        // Mobile Card
+                        mobileBody.innerHTML += `
+                            <div class="p-4 hover:bg-slate-50 transition">
+                                <div class="font-bold text-slate-800 text-base">${p.nama}</div>
+                                <div class="text-sm text-slate-600 mt-1 flex flex-col gap-1">
+                                    <span>📞 ${p.no_telpon || '-'}</span>
+                                    <span>✉️ ${p.email || '-'}</span>
+                                    <span>📍 ${p.alamat || '-'}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Tambah Pelanggan
+        document.getElementById('addPelangganForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSimpan');
+            btn.innerHTML = 'Menyimpan...';
+            btn.disabled = true;
+
+            const payload = {
+                action: 'addPelanggan',
+                nama: document.getElementById('p_nama').value,
+                tanggal_lahir: document.getElementById('p_tgl').value,
+                no_telpon: document.getElementById('p_telp').value,
+                email: document.getElementById('p_email').value,
+                lat: document.getElementById('p_lat').value,
+                lang: document.getElementById('p_lang').value,
+                alamat: document.getElementById('p_alamat').value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    toggleModal('modalPelanggan');
+                    document.getElementById('addPelangganForm').reset();
+                    loadDataPelanggan(); // Refresh tabel
+                } else {
+                    alert('Gagal menyimpan data');
+                }
+            } catch (err) {
+                alert('Kesalahan jaringan');
+            }
+
+            btn.innerHTML = 'Simpan Data';
+            btn.disabled = false;
+        });
+    </script>
+</body>
+</html>
