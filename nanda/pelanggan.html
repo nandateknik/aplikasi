@@ -136,13 +136,15 @@
     <!-- Script Leaflet (Peta) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- ENGINE UTAMA: Memuat Sidebar & Navbar dari folder components -->
+    <!-- 1. PANGGIL CONFIG GLOBAL (Berisi API_URL & AppState) -->
+    <script src="./js/config.js"></script>
+
+    <!-- 2. ENGINE UTAMA: Memuat Sidebar & Navbar -->
     <script src="./js/app.js"></script>
 
-    <!-- SCRIPT LOGIKA HALAMAN PELANGGAN -->
+    <!-- 3. SCRIPT LOGIKA HALAMAN PELANGGAN -->
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwhdLK5XeJgQwlfElG-1t7hPyrADkJsM90zAdNUUW5ucTF2AaHTPBEYzWnuTHoKcY-D/exec';
-        let dataPelangganGlobal = [];
+        // API_URL dan array dataPelanggan tidak perlu dideklarasikan lagi di sini
         
         let map = null;
         let marker = null;
@@ -164,12 +166,14 @@
             mobileBody.innerHTML = `<div class="text-center py-10 text-slate-500 text-sm">Memuat data...</div>`;
 
             try {
+                // Memanggil API_URL dari file config.js
                 const response = await fetch(API_URL + '?action=getPelanggan');
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    dataPelangganGlobal = result.data.reverse(); 
-                    renderTable(dataPelangganGlobal);
+                    // Menyimpan data ke AppState di config.js
+                    AppState.dataPelanggan = result.data.reverse(); 
+                    renderTable(AppState.dataPelanggan);
                 }
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-500">Gagal mengambil data.</td></tr>`;
@@ -223,7 +227,8 @@
 
         function filterData() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = dataPelangganGlobal.filter(p => 
+            // Memfilter langsung dari AppState config
+            const filtered = AppState.dataPelanggan.filter(p => 
                 (p.nama && p.nama.toLowerCase().includes(keyword)) || 
                 (p.no_telpon && String(p.no_telpon).toLowerCase().includes(keyword)) ||
                 (p.alamat && p.alamat.toLowerCase().includes(keyword))
@@ -242,7 +247,8 @@
             document.getElementById('modalTitle').innerText = id ? 'Edit Data Pelanggan' : 'Tambah Pelanggan Baru';
 
             if (id) {
-                const p = dataPelangganGlobal.find(x => x.id == id);
+                // Mencari data dari AppState config
+                const p = AppState.dataPelanggan.find(x => x.id == id);
                 document.getElementById('p_id').value = p.id;
                 document.getElementById('p_nama').value = p.nama;
                 document.getElementById('p_tgl').value = p.tanggal_lahir ? p.tanggal_lahir.split('T')[0] : '';
