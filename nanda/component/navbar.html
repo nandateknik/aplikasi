@@ -1,0 +1,19 @@
+<!-- File: components/navbar.html -->
+<nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex items-center gap-4">
+                <!-- Tombol Menu Mobile (Opsional) -->
+                <button class="md:hidden text-slate-500 hover:text-blue-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <span id="pageTitle" class="font-bold text-lg text-slate-800 hidden sm:block">Nanda Teknik App</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <span id="userNameDisplay" class="text-sm font-medium text-slate-600 hidden sm:block">Memuat...</span>
+                <button onclick="prosesLogout()" class="text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">Logout</button>
+            </div>
+        </div>
+    </div>
+</nav>
