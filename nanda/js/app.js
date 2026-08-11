@@ -1,20 +1,10 @@
 // File: js/app.js
 
-// Fungsi cerdas untuk mendapatkan base path (kebal error di GitHub Pages)
-function getBasePath() {
-    const path = window.location.pathname;
-    return path.substring(0, path.lastIndexOf('/') + 1);
-}
-
-// Fungsi memuat komponen
+// Fungsi memuat komponen dengan path relatif (Aman untuk GitHub Pages)
 async function loadComponent(elementId, filePath) {
     try {
-        // Gabungkan base path dengan file path agar valid di GitHub Pages
-        const fullPath = getBasePath() + filePath; 
-        const response = await fetch(fullPath);
-        
-        if (!response.ok) throw new Error(`Gagal memuat ${fullPath}`);
-        
+        const response = await fetch(filePath);
+        if (!response.ok) throw new Error('Gagal muat ' + filePath);
         const htmlText = await response.text();
         document.getElementById(elementId).innerHTML = htmlText;
     } catch (error) {
@@ -22,60 +12,58 @@ async function loadComponent(elementId, filePath) {
     }
 }
 
-// Jalankan saat halaman siap
+// Jalankan setelah seluruh kerangka HTML siap
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Cek Login
+    // Proteksi: Lempar ke login jika belum ada sesi
     if (!localStorage.getItem('userData') && !window.location.pathname.includes('login.html')) {
         window.location.href = 'login.html';
         return;
     }
-
-    // 2. Muat Sidebar dan Navbar (Menggunakan ./ agar aman di GitHub Pages)
+    
+    // Muat Sidebar dan Navbar secara bersamaan
     Promise.all([
-        loadComponent('sidebar-container', 'components/sidebar.html'),
-        loadComponent('navbar-container', 'components/navbar.html')
+        loadComponent('sidebar-container', './components/sidebar.html'),
+        loadComponent('navbar-container', './components/navbar.html')
     ]).then(() => {
-        setupLayout();
+        // --- 1. Tampilkan Nama User ---
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const nameDisplay = document.getElementById('userNameDisplay');
+        if(nameDisplay && userData) nameDisplay.textContent = `Hai, ${userData.nama}`;
+
+        // --- 2. Deteksi Menu Aktif ---
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.nav-item').forEach(item => {
+            if (item.getAttribute('data-page') === currentPage) {
+                item.classList.add('bg-blue-50', 'text-blue-700', 'font-bold');
+                item.classList.remove('text-slate-600');
+                if(item.querySelector('svg')) item.querySelector('svg').classList.add('text-blue-600');
+            }
+        });
+
+        // --- 3. Fitur Buka Tutup Sidebar (Mobile) ---
+        const sidebar = document.getElementById('sidebar-container');
+        const toggleBtn = document.getElementById('mobileMenuBtn'); // Tombol di navbar
+        const closeBtn = document.getElementById('closeSidebarBtn'); // Tombol di sidebar
+
+        // Terapkan class responsif pada kontainer sidebar
+        if (sidebar) {
+            sidebar.className = "w-64 bg-white border-r border-slate-200 absolute md:relative z-50 h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex-shrink-0";
+        }
+
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
+        if (closeBtn && sidebar) {
+            closeBtn.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+            });
+        }
     });
 });
 
-// Setup interaksi setelah komponen dimuat
-function setupLayout() {
-    // Tampilkan Nama User
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    const nameDisplay = document.getElementById('userNameDisplay');
-    if(nameDisplay && userData) nameDisplay.textContent = `Hai, ${userData.nama}`;
-
-    // Aktifkan Warna Menu Sesuai Halaman
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.nav-item').forEach(item => {
-        if (item.getAttribute('data-page') === currentPage) {
-            item.classList.remove('text-slate-600');
-            item.classList.add('bg-blue-50', 'text-blue-700', 'font-semibold');
-            item.querySelector('svg').classList.add('text-blue-600');
-        }
-    });
-
-    // ================= FITUR MENU MOBILE =================
-    const sidebar = document.getElementById('main-sidebar');
-    const btnMenu = document.getElementById('mobileMenuBtn');
-    const overlay = document.getElementById('sidebar-overlay');
-
-    if(btnMenu && sidebar && overlay) {
-        // Buka Sidebar
-        btnMenu.addEventListener('click', () => {
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
-        });
-
-        // Tutup Sidebar jika klik area gelap
-        overlay.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        });
-    }
-}
-
+// Fungsi Logout Global
 function prosesLogout() {
     localStorage.removeItem('userData');
     window.location.href = 'login.html';
