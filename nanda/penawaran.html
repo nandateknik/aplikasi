@@ -1,1 +1,517 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penawaran - Nanda Teknik</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTML2PDF untuk Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Signature Pad untuk TTD Digital -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .signature-canvas { border: 1px dashed #cbd5e1; border-radius: 0.5rem; background-color: #f8fafc; cursor: crosshair; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- Kontainer Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Area Konten Utama -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative w-full">
+        <!-- Kontainer Navbar -->
+        <div id="navbar-container"></div>
+
+        <!-- Halaman Utama -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Surat Penawaran</h1>
+                    <p class="text-slate-500 text-sm mt-1">Buat, kelola, dan cetak penawaran harga ke PDF.</p>
+                </div>
+                <div class="flex w-full sm:w-auto gap-3">
+                    <div class="relative flex-grow sm:flex-grow-0">
+                        <input type="text" id="searchInput" onkeyup="filterPenawaran()" placeholder="Cari penawaran..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="bukaModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Buat Penawaran
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Kartu Penawaran -->
+            <div id="gridPenawaran" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Data akan dirender di sini -->
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL FORM PENAWARAN -->
+    <div id="modalPenawaran" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50/50">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-800">Buat Penawaran Baru</h3>
+                <button type="button" onclick="tutupModal()" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 rounded-full p-1 transition">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <form id="formPenawaran" onsubmit="simpanData(event)" class="space-y-6">
+                    <input type="hidden" id="p_id">
+                    
+                    <!-- Info Dasar -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-100 pb-5">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Tanggal</label>
+                            <input type="date" id="p_tgl" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Nomor Surat</label>
+                            <input type="text" id="p_nomor" placeholder="001/NT/PNW/2026" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Pelanggan Tujuan</label>
+                            <select id="p_id_pelanggan" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" required>
+                                <option value="">-- Pilih Pelanggan --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Isi Surat -->
+                    <div class="space-y-4 border-b border-slate-100 pb-5">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Perihal</label>
+                            <input type="text" id="p_perihal" placeholder="Penawaran Instalasi Jaringan & CCTV" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Kalimat Pembuka</label>
+                            <textarea id="p_pembuka" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" required>Dengan hormat, bersama surat ini kami mengajukan penawaran harga untuk pekerjaan...</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Item Penawaran (Dinamis) -->
+                    <div class="border-b border-slate-100 pb-5">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-medium text-slate-700">Detail Item / Pekerjaan</label>
+                            <button type="button" onclick="tambahItem()" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 font-medium transition">+ Tambah Item</button>
+                        </div>
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-slate-600">
+                                    <tr>
+                                        <th class="p-2 border-b">Nama Barang/Jasa</th>
+                                        <th class="p-2 border-b w-20">Qty</th>
+                                        <th class="p-2 border-b w-32">Harga Satuan</th>
+                                        <th class="p-2 border-b w-32">Subtotal</th>
+                                        <th class="p-2 border-b w-10 text-center">X</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelItemBody"></tbody>
+                                <tfoot class="bg-slate-50 font-bold">
+                                    <tr>
+                                        <td colspan="3" class="p-2 text-right text-slate-600">TOTAL:</td>
+                                        <td class="p-2 text-blue-600">Rp <span id="labelTotal">0</span></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Penutup & TTD -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Kalimat Penutup</label>
+                            <textarea id="p_penutup" rows="4" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" required>Demikian penawaran ini kami sampaikan. Atas perhatian dan kerjasamanya kami ucapkan terima kasih.</textarea>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="text-xs text-slate-500">Nama Pengirim</label><input type="text" id="p_nama_pengirim" value="Nanda Krisbianto" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-sm outline-none" required></div>
+                                <div><label class="text-xs text-slate-500">Jabatan</label><input type="text" id="p_jabatan" value="Direktur / Teknisi" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-sm outline-none" required></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-xs text-slate-500">Tanda Tangan Digital</label>
+                                    <button type="button" onclick="signaturePad.clear()" class="text-[10px] text-red-500 hover:underline">Hapus TTD</button>
+                                </div>
+                                <canvas id="ttdCanvas" width="350" height="120" class="signature-canvas w-full"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                <button type="button" onclick="tutupModal()" class="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Batal</button>
+                <button type="submit" form="formPenawaran" id="btnSimpan" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition">
+                    Simpan Penawaran
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== AREA RENDER PDF (Disembunyikan dari UI) ==================== -->
+    <div class="hidden">
+        <div id="printArea" class="w-[800px] min-h-[1100px] p-12 bg-white text-black font-sans text-sm mx-auto relative">
+            <!-- Kop Surat -->
+            <div class="flex items-center border-b-4 border-blue-900 pb-5 mb-8">
+                <!-- Logo Melayang -->
+                <div class="w-24 h-24 bg-blue-50 border-2 border-blue-100 rounded-xl flex items-center justify-center mr-6 float-left shrink-0 shadow-sm">
+                    <span class="text-blue-700 font-black text-2xl tracking-tighter">NT</span>
+                </div>
+                <!-- Detail Info -->
+                <div class="flex-1">
+                    <h1 class="text-3xl font-black text-blue-900 tracking-wide m-0">NANDA TEKNIK BANYUWANGI</h1>
+                    <p class="text-lg font-bold text-gray-800 uppercase mb-1">Electrical, Software dan Network Engineering</p>
+                    <p class="text-xs text-gray-600 m-0">Sukowidi Indah Residence | HP/WA: 082331201148</p>
+                    <p class="text-xs text-gray-600 m-0">Email: nandateknik02@gmail.com | Web: www.nandateknik.com</p>
+                </div>
+            </div>
+
+            <!-- Header Surat -->
+            <div class="flex justify-between mb-8">
+                <div>
+                    <p class="mb-1">Nomor &nbsp;&nbsp;&nbsp;: <strong id="pdfNomor"></strong></p>
+                    <p class="mb-1">Lampiran : -</p>
+                    <p class="mb-1">Perihal &nbsp;&nbsp;: <strong id="pdfPerihal"></strong></p>
+                </div>
+                <div class="text-right">
+                    <p class="mb-1">Banyuwangi, <span id="pdfTanggal"></span></p>
+                    <p class="mt-4 mb-0">Kepada Yth,</p>
+                    <p class="font-bold mb-0" id="pdfPelangganNama"></p>
+                    <p class="w-48 text-right ml-auto" id="pdfPelangganAlamat"></p>
+                </div>
+            </div>
+
+            <!-- Isi Surat -->
+            <div class="mb-6">
+                <p id="pdfPembuka" class="text-justify leading-relaxed"></p>
+            </div>
+
+            <!-- Tabel Item -->
+            <table class="w-full mb-6 border-collapse">
+                <thead>
+                    <tr class="bg-blue-50 border border-slate-800 text-black">
+                        <th class="p-2 border border-slate-800 text-center w-10">No</th>
+                        <th class="p-2 border border-slate-800 text-left">Deskripsi Pekerjaan / Barang</th>
+                        <th class="p-2 border border-slate-800 text-center w-16">Qty</th>
+                        <th class="p-2 border border-slate-800 text-right w-32">Harga Satuan</th>
+                        <th class="p-2 border border-slate-800 text-right w-32">Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfTabelBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="p-2 border border-slate-800 text-right font-bold bg-slate-50">TOTAL KESELURUHAN</td>
+                        <td class="p-2 border border-slate-800 text-right font-bold" id="pdfTotal"></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Penutup -->
+            <div class="mb-12">
+                <p id="pdfPenutup" class="text-justify leading-relaxed"></p>
+            </div>
+
+            <!-- Tanda Tangan -->
+            <div class="flex justify-end">
+                <div class="text-center w-48">
+                    <p class="mb-2">Hormat Kami,</p>
+                    <img id="pdfTTD" src="" class="h-20 mx-auto object-contain my-2 hidden" />
+                    <div id="pdfTTDKosong" class="h-20"></div>
+                    <p class="font-bold underline mb-0" id="pdfNamaPengirim"></p>
+                    <p class="text-xs" id="pdfJabatan"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANGGIL CONFIG & ENGINE UTAMA -->
+    <script src="./js/config.js"></script>
+    <script src="./js/app.js"></script>
+
+    <!-- LOGIKA HALAMAN PENAWARAN -->
+    <script>
+        let listItems = [];
+        let dataPenawaranGlobal = [];
+        let signaturePad;
+
+        window.addEventListener('load', async () => {
+            if (localStorage.getItem('userData')) {
+                initSignaturePad();
+                await loadPelangganKeDropdown();
+                await loadDataPenawaran();
+            }
+        });
+
+        // ================= INISIALISASI & LOAD DATA =================
+        function initSignaturePad() {
+            const canvas = document.getElementById('ttdCanvas');
+            signaturePad = new SignaturePad(canvas, { penColor: "rgb(15, 23, 42)" });
+            // Fix ukuran canvas agar tidak gepeng
+            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+
+        async function loadPelangganKeDropdown() {
+            try {
+                const res = await fetch(API_URL + '?action=getPelanggan');
+                const json = await res.json();
+                if(json.status === 'success') {
+                    AppState.dataPelanggan = json.data;
+                    const select = document.getElementById('p_id_pelanggan');
+                    json.data.forEach(p => {
+                        select.innerHTML += `<option value="${p.id}">${p.nama} (${p.no_telpon})</option>`;
+                    });
+                }
+            } catch (e) { console.error("Gagal meload pelanggan"); }
+        }
+
+        async function loadDataPenawaran() {
+            const grid = document.getElementById('gridPenawaran');
+            grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Memuat data penawaran...</div>`;
+            try {
+                const res = await fetch(API_URL + '?action=getPenawaran');
+                const json = await res.json();
+                if(json.status === 'success') {
+                    dataPenawaranGlobal = json.data.reverse();
+                    renderGrid(dataPenawaranGlobal);
+                } else { grid.innerHTML = ''; }
+            } catch(e) { grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Belum ada data penawaran.</div>`; }
+        }
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
+
+        function renderGrid(data) {
+            const grid = document.getElementById('gridPenawaran');
+            grid.innerHTML = '';
+            if(data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Belum ada penawaran dibuat.</div>`; return;
+            }
+            
+            data.forEach(p => {
+                // Cari nama pelanggan
+                let pel = AppState.dataPelanggan.find(x => x.id == p.id_pelanggan);
+                let namaPelanggan = pel ? pel.nama : 'Pelanggan Dihapus';
+                
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">${p.nomor}</span>
+                                <span class="text-xs text-slate-400">${p.tanggal ? p.tanggal.split('T')[0] : ''}</span>
+                            </div>
+                            <h3 class="font-bold text-lg text-slate-800 line-clamp-1" title="${p.perihal}">${p.perihal}</h3>
+                            <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">👤 ${namaPelanggan}</p>
+                            <p class="font-bold text-slate-800 mt-4">${formatRupiah(p.total)}</p>
+                        </div>
+                        <div class="mt-5 pt-4 border-t border-slate-100 flex gap-2">
+                            <button onclick="downloadPDF(${p.id})" class="flex-1 bg-green-50 text-green-700 hover:bg-green-600 hover:text-white text-sm font-semibold py-2 rounded-lg transition text-center">PDF</button>
+                            <button onclick="hapusPenawaran(${p.id})" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-3 py-2 rounded-lg transition">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterPenawaran() {
+            const key = document.getElementById('searchInput').value.toLowerCase();
+            renderGrid(dataPenawaranGlobal.filter(p => p.perihal.toLowerCase().includes(key) || p.nomor.toLowerCase().includes(key)));
+        }
+
+        // ================= LOGIKA ITEM (DINAMIS) =================
+        function tambahItem() {
+            listItems.push({ id: Date.now(), deskripsi: '', qty: 1, harga: 0, subtotal: 0 });
+            renderTabelItem();
+        }
+
+        function hapusItem(id) {
+            listItems = listItems.filter(i => i.id !== id);
+            renderTabelItem();
+        }
+
+        function updateItem(id, field, value) {
+            const item = listItems.find(i => i.id === id);
+            if(item) {
+                item[field] = value;
+                item.subtotal = item.qty * item.harga;
+                renderTabelItem();
+            }
+        }
+
+        function renderTabelItem() {
+            const tbody = document.getElementById('tabelItemBody');
+            tbody.innerHTML = '';
+            let total = 0;
+            
+            listItems.forEach(item => {
+                total += item.subtotal;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-1"><input type="text" value="${item.deskripsi}" onchange="updateItem(${item.id}, 'deskripsi', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-sm outline-none" placeholder="Nama barang..."></td>
+                        <td class="p-1"><input type="number" min="1" value="${item.qty}" onchange="updateItem(${item.id}, 'qty', parseInt(this.value)||0)" class="w-full border border-slate-200 rounded px-2 py-1 text-sm outline-none text-center"></td>
+                        <td class="p-1"><input type="number" value="${item.harga}" onchange="updateItem(${item.id}, 'harga', parseInt(this.value)||0)" class="w-full border border-slate-200 rounded px-2 py-1 text-sm outline-none"></td>
+                        <td class="p-1 text-right text-slate-700 font-medium align-middle pr-2">${formatRupiah(item.subtotal)}</td>
+                        <td class="p-1 text-center"><button type="button" onclick="hapusItem(${item.id})" class="text-red-500 hover:text-red-700 font-bold">&times;</button></td>
+                    </tr>
+                `;
+            });
+            document.getElementById('labelTotal').innerText = new Intl.NumberFormat('id-ID').format(total);
+        }
+
+        // ================= MODAL & SIMPAN =================
+        function bukaModal() {
+            document.getElementById('modalPenawaran').classList.remove('hidden');
+            document.getElementById('modalPenawaran').classList.add('flex');
+            document.getElementById('formPenawaran').reset();
+            
+            // Set Tanggal Hari ini
+            document.getElementById('p_tgl').value = new Date().toISOString().split('T')[0];
+            
+            listItems = [];
+            tambahItem(); // Beri 1 baris kosong
+            signaturePad.clear();
+        }
+
+        function tutupModal() {
+            document.getElementById('modalPenawaran').classList.add('hidden');
+            document.getElementById('modalPenawaran').classList.remove('flex');
+        }
+
+        async function simpanData(e) {
+            e.preventDefault();
+            if(listItems.length === 0) return alert('Tambahkan minimal 1 item.');
+            
+            const btn = document.getElementById('btnSimpan');
+            btn.innerHTML = 'Menyimpan...'; btn.disabled = true;
+
+            // Packing data ekstra ke dalam field penutup
+            const extraData = {
+                text: document.getElementById('p_penutup').value,
+                pengirim: document.getElementById('p_nama_pengirim').value,
+                jabatan: document.getElementById('p_jabatan').value,
+                ttd: signaturePad.isEmpty() ? null : signaturePad.toDataURL()
+            };
+
+            const total = listItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+            const payload = {
+                action: 'addPenawaran',
+                tanggal: document.getElementById('p_tgl').value,
+                nomor: document.getElementById('p_nomor').value,
+                id_pelanggan: document.getElementById('p_id_pelanggan').value,
+                perihal: document.getElementById('p_perihal').value,
+                pembuka: document.getElementById('p_pembuka').value,
+                list_json: JSON.stringify(listItems),
+                total: total,
+                penutup: JSON.stringify(extraData),
+                status: 'Draft'
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+                });
+                const res = await response.json();
+                if(res.status === 'success') { tutupModal(); loadDataPenawaran(); } 
+                else { alert('Gagal menyimpan.'); }
+            } catch(e) { alert('Kesalahan jaringan.'); }
+
+            btn.innerHTML = 'Simpan Penawaran'; btn.disabled = false;
+        }
+
+        async function hapusPenawaran(id) {
+            if(!confirm('Hapus penawaran ini?')) return;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'deletePenawaran', id: id })
+                });
+                loadDataPenawaran();
+            } catch(e) { alert('Terjadi kesalahan jaringan.'); }
+        }
+
+        // ================= EXPORT KE PDF =================
+        function downloadPDF(id) {
+            const data = dataPenawaranGlobal.find(x => x.id == id);
+            const pel = AppState.dataPelanggan.find(x => x.id == data.id_pelanggan);
+            if(!data || !pel) return alert("Data tidak lengkap.");
+
+            // 1. Parsing Data Ekstra
+            let penutupData = { text: data.penutup, pengirim: 'Nanda Krisbianto', jabatan: 'Teknisi', ttd: null };
+            try {
+                const parsed = JSON.parse(data.penutup);
+                if(parsed.text) penutupData = parsed;
+            } catch(e) {} // Fallback jika bukan JSON
+
+            let items = [];
+            try { items = JSON.parse(data.list_json); } catch(e){}
+
+            // 2. Suntik data ke Print Template
+            document.getElementById('pdfNomor').innerText = data.nomor;
+            document.getElementById('pdfPerihal').innerText = data.perihal;
+            document.getElementById('pdfTanggal').innerText = new Date(data.tanggal).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+            
+            document.getElementById('pdfPelangganNama').innerText = pel.nama;
+            document.getElementById('pdfPelangganAlamat').innerText = pel.alamat;
+            document.getElementById('pdfPembuka').innerText = data.pembuka;
+            document.getElementById('pdfPenutup').innerText = penutupData.text;
+            
+            document.getElementById('pdfNamaPengirim').innerText = penutupData.pengirim;
+            document.getElementById('pdfJabatan').innerText = penutupData.jabatan;
+
+            const imgTTD = document.getElementById('pdfTTD');
+            const boxKosong = document.getElementById('pdfTTDKosong');
+            if(penutupData.ttd) {
+                imgTTD.src = penutupData.ttd;
+                imgTTD.classList.remove('hidden');
+                boxKosong.classList.add('hidden');
+            } else {
+                imgTTD.classList.add('hidden');
+                boxKosong.classList.remove('hidden');
+            }
+
+            // 3. Render Tabel
+            const tbody = document.getElementById('pdfTabelBody');
+            tbody.innerHTML = '';
+            items.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-300">
+                        <td class="p-2 border-r border-slate-800 text-center">${index + 1}</td>
+                        <td class="p-2 border-r border-slate-800">${item.deskripsi}</td>
+                        <td class="p-2 border-r border-slate-800 text-center">${item.qty}</td>
+                        <td class="p-2 border-r border-slate-800 text-right">${formatRupiah(item.harga)}</td>
+                        <td class="p-2 text-right">${formatRupiah(item.subtotal)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('pdfTotal').innerText = formatRupiah(data.total);
+
+            // 4. Proses html2pdf
+            const element = document.getElementById('printArea');
+            element.parentElement.classList.remove('hidden'); // Munculkan sebentar untuk dibaca engine
+
+            const opt = {
+                margin: 0,
+                filename: `Penawaran_${data.nomor.replace(/\//g,'-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'px', format: [800, 1131], orientation: 'portrait' } // Ukuran A4 skala pixel
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.parentElement.classList.add('hidden'); // Sembunyikan lagi
+            });
+        }
+    </script>
+</body>
+</html>
