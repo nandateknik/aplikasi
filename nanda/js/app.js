@@ -1,10 +1,19 @@
 // File: js/app.js
 
-// Fungsi untuk memuat komponen HTML eksternal
+// Fungsi cerdas untuk mendapatkan base path (kebal error di GitHub Pages)
+function getBasePath() {
+    const path = window.location.pathname;
+    return path.substring(0, path.lastIndexOf('/') + 1);
+}
+
+// Fungsi memuat komponen
 async function loadComponent(elementId, filePath) {
     try {
-        const response = await fetch(filePath);
-        if (!response.ok) throw new Error(`Gagal memuat ${filePath}`);
+        // Gabungkan base path dengan file path agar valid di GitHub Pages
+        const fullPath = getBasePath() + filePath; 
+        const response = await fetch(fullPath);
+        
+        if (!response.ok) throw new Error(`Gagal memuat ${fullPath}`);
         
         const htmlText = await response.text();
         document.getElementById(elementId).innerHTML = htmlText;
@@ -13,41 +22,60 @@ async function loadComponent(elementId, filePath) {
     }
 }
 
-// Fungsi proteksi halaman (harus login)
-function checkAuth() {
-    if (!localStorage.getItem('userData')) {
-        window.location.href = 'login.html';
-    }
-}
-
-// Jalankan saat halaman selesai dimuat
+// Jalankan saat halaman siap
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth(); // Pastikan user sudah login
-    
-    // Muat komponen secara asinkron (bersamaan)
-Promise.all([
+    // 1. Cek Login
+    if (!localStorage.getItem('userData') && !window.location.pathname.includes('login.html')) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // 2. Muat Sidebar dan Navbar (Menggunakan ./ agar aman di GitHub Pages)
+    Promise.all([
         loadComponent('sidebar-container', 'components/sidebar.html'),
         loadComponent('navbar-container', 'components/navbar.html')
     ]).then(() => {
-        // 1. Tampilkan nama user di Navbar
-        const userData = JSON.parse(localStorage.getItem('userData'));
-        const nameDisplay = document.getElementById('userNameDisplay');
-        if(nameDisplay && userData) nameDisplay.textContent = `Hai, ${userData.nama}`;
-        
-        // 2. Deteksi otomatis halaman yang sedang dibuka untuk Sidebar
-        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-        const navItems = document.querySelectorAll('.nav-item');
-        
-        navItems.forEach(item => {
-            if (item.getAttribute('data-page') === currentPage) {
-                // Tambahkan warna biru tebal untuk halaman yang sedang aktif
-                item.classList.remove('text-slate-600');
-                item.classList.add('bg-blue-50', 'text-blue-700', 'font-semibold');
-                item.querySelector('svg').classList.add('text-blue-600');
-            }
-        });
+        setupLayout();
     });
-// Fungsi Logout Global
+});
+
+// Setup interaksi setelah komponen dimuat
+function setupLayout() {
+    // Tampilkan Nama User
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    const nameDisplay = document.getElementById('userNameDisplay');
+    if(nameDisplay && userData) nameDisplay.textContent = `Hai, ${userData.nama}`;
+
+    // Aktifkan Warna Menu Sesuai Halaman
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.nav-item').forEach(item => {
+        if (item.getAttribute('data-page') === currentPage) {
+            item.classList.remove('text-slate-600');
+            item.classList.add('bg-blue-50', 'text-blue-700', 'font-semibold');
+            item.querySelector('svg').classList.add('text-blue-600');
+        }
+    });
+
+    // ================= FITUR MENU MOBILE =================
+    const sidebar = document.getElementById('main-sidebar');
+    const btnMenu = document.getElementById('mobileMenuBtn');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    if(btnMenu && sidebar && overlay) {
+        // Buka Sidebar
+        btnMenu.addEventListener('click', () => {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        });
+
+        // Tutup Sidebar jika klik area gelap
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+    }
+}
+
 function prosesLogout() {
     localStorage.removeItem('userData');
     window.location.href = 'login.html';
