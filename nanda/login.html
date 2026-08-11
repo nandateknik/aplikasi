@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Nanda Teknik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-slate-100 min-h-screen flex items-center justify-center p-4 antialiased">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+        <div class="text-center mb-8">
+            <div class="h-12 w-12 bg-blue-600 rounded-lg mx-auto flex items-center justify-center mb-4 shadow-sm">
+                <span class="text-white font-bold text-xl">NT</span>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">Login Sistem</h2>
+            <p class="text-slate-500 text-sm mt-1">Nanda Teknik Banyuwangi</p>
+        </div>
+        
+        <form id="loginForm" class="space-y-5" onsubmit="prosesLogin(event)">
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Username</label>
+                <input type="text" id="username" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                <input type="password" id="password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required>
+            </div>
+            <button type="submit" id="btnLogin" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 hover:shadow-lg focus:ring-4 focus:ring-blue-200 transition-all">
+                Masuk
+            </button>
+            <div id="loginMessage" class="hidden p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-100"></div>
+        </form>
+    </div>
+
+    <script>
+        // GANTI DENGAN URL APPS SCRIPT ANDA
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwhdLK5XeJgQwlfElG-1t7hPyrADkJsM90zAdNUUW5ucTF2AaHTPBEYzWnuTHoKcY-D/exec';
+
+        // Cek jika sudah login, langsung lempar ke index.html
+        window.onload = () => {
+            if (localStorage.getItem('userData')) {
+                window.location.href = 'index.html';
+            }
+        };
+
+        async function prosesLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            const msg = document.getElementById('loginMessage');
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            btn.innerHTML = 'Memeriksa...'; btn.disabled = true;
+            msg.classList.add('hidden');
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'login', username: user, password: pass })
+                });
+                
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    localStorage.setItem('userData', JSON.stringify(result.data));
+                    window.location.href = 'index.html'; // Pindah halaman
+                } else {
+                    msg.textContent = result.message || 'Kredensial salah.';
+                    msg.classList.remove('hidden');
+                }
+            } catch (err) {
+                msg.textContent = 'Gagal terhubung ke server.';
+                msg.classList.remove('hidden');
+            }
+            
+            btn.innerHTML = 'Masuk'; btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
