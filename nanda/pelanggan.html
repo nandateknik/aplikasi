@@ -1,1 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pelanggan - Nanda Teknik</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS untuk Peta -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        #mapViewer { height: 250px; width: 100%; border-radius: 0.5rem; z-index: 10; border: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex h-screen overflow-hidden">
 
+    <!-- ==================== SIDEBAR INJECTION ==================== -->
+    <div id="sidebar-container" class="w-64 bg-white border-r border-slate-200 hidden md:block flex-shrink-0"></div>
+
+    <!-- ==================== KONTEN UTAMA ==================== -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden w-full">
+        
+        <!-- ==================== NAVBAR INJECTION ==================== -->
+        <div id="navbar-container"></div>
+
+        <!-- ==================== HALAMAN PELANGGAN ==================== -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
+            
+            <!-- Header Halaman & Pencarian -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Manajemen Pelanggan</h1>
+                    <p class="text-slate-500 text-sm mt-1">Kelola data klien, kontak, dan titik lokasi pengerjaan.</p>
+                </div>
+                <div class="flex w-full sm:w-auto gap-3">
+                    <div class="relative flex-grow sm:flex-grow-0">
+                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Cari nama / telpon..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="bukaModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> 
+                        Tambah Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabel Data -->
+            <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+                <!-- Tampilan Desktop (Tabel) -->
+                <div class="overflow-x-auto hidden md:block">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Nama Pelanggan</th>
+                                <th class="px-6 py-4 font-semibold">Kontak</th>
+                                <th class="px-6 py-4 font-semibold">Alamat & Lokasi</th>
+                                <th class="px-6 py-4 font-semibold text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyDesktop" class="divide-y divide-slate-100 text-sm">
+                            <!-- Data dirender dari JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Tampilan Mobile (Kartu) -->
+                <div id="cardBodyMobile" class="md:hidden divide-y divide-slate-100">
+                    <!-- Data dirender dari JS -->
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <!-- ==================== MODAL FORM PELANGGAN ==================== -->
+    <div id="modalPelanggan" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50/50">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-800">Tambah Pelanggan Baru</h3>
+                <button type="button" onclick="tutupModal()" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 rounded-full p-1 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="formPelanggan" onsubmit="simpanData(event)" class="space-y-4">
+                    <input type="hidden" id="p_id"> <!-- ID disembunyikan untuk keperluan Update/Edit -->
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Nama Lengkap <span class="text-red-500">*</span></label>
+                            <input type="text" id="p_nama" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Tanggal Lahir</label>
+                            <input type="date" id="p_tgl" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">No. Telpon / WA <span class="text-red-500">*</span></label>
+                            <input type="tel" id="p_telp" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Email</label>
+                            <input type="email" id="p_email" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Alamat Lengkap</label>
+                        <textarea id="p_alamat" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    </div>
+                    
+                    <!-- BAGIAN PETA & KOORDINAT -->
+                    <div class="border-t border-slate-100 pt-4 mt-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-medium text-slate-700">Tentukan Lokasi (Geser Pin atau Klik Peta)</label>
+                            <button type="button" onclick="dapatkanLokasiHP()" class="text-xs bg-green-100 text-green-700 px-2 py-1.5 rounded hover:bg-green-200 transition font-medium">📍 Gunakan GPS Saat Ini</button>
+                        </div>
+                        <!-- Container Peta -->
+                        <div id="mapViewer" class="mb-3"></div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-xs font-medium text-slate-500">Latitude</label>
+                                <input type="text" id="p_lat" class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm outline-none" readonly>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-medium text-slate-500">Longitude</label>
+                                <input type="text" id="p_lang" class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm outline-none" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                <button type="button" onclick="tutupModal()" class="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Batal</button>
+                <button type="submit" form="formPelanggan" id="btnSimpan" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition">
+                    Simpan Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPT LIBRARY & LOGIC ==================== -->
+    <!-- Script Leaflet (Peta) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- ENGINE UTAMA: Pemuat Layout & Keamanan (Wajib dipanggil paling bawah HTML) -->
+    <script src="js/app.js"></script>
+
+    <!-- SCRIPT KHUSUS HALAMAN PELANGGAN -->
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwhdLK5XeJgQwlfElG-1t7hPyrADkJsM90zAdNUUW5ucTF2AaHTPBEYzWnuTHoKcY-D/exec';
+        let dataPelangganGlobal = [];
+        
+        // Peta Variables
+        let map = null;
+        let marker = null;
+        const banyuwangiLat = -8.21923;
+        const banyuwangiLng = 114.36923;
+
+        // Ambil data pelanggan setelah layout selesai diload (DOM Ready di app.js)
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('userData')) {
+                loadDataPelanggan();
+            }
+        });
+
+        // ================= GET DATA & RENDER =================
+        async function loadDataPelanggan() {
+            const tbody = document.getElementById('tableBodyDesktop');
+            const mobileBody = document.getElementById('cardBodyMobile');
+            
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-slate-500">Memuat data dari server...</td></tr>`;
+            mobileBody.innerHTML = `<div class="text-center py-10 text-slate-500 text-sm">Memuat data...</div>`;
+
+            try {
+                const response = await fetch(API_URL + '?action=getPelanggan');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    dataPelangganGlobal = result.data.reverse(); // Terbaru di atas
+                    renderTable(dataPelangganGlobal);
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-500">Gagal mengambil data.</td></tr>`;
+                mobileBody.innerHTML = `<div class="text-center py-8 text-red-500 text-sm">Gagal mengambil data.</div>`;
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBodyDesktop');
+            const mobileBody = document.getElementById('cardBodyMobile');
+            tbody.innerHTML = ''; mobileBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Belum ada data pelanggan.</td></tr>`;
+                return;
+            }
+            
+            data.forEach(p => {
+                let mapLink = (p.lat && p.lang) 
+                    ? `<a href="https://maps.google.com/?q=${p.lat},${p.lang}" target="_blank" class="text-blue-500 hover:underline text-xs inline-flex items-center gap-1 mt-1">📍 Lihat Peta</a>` 
+                    : '';
+
+                // Baris Desktop
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50/50 transition-colors group">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-800">${p.nama}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">ID: ${p.id}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-slate-700">${p.no_telpon || '-'}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${p.email || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-slate-700 truncate max-w-xs" title="${p.alamat}">${p.alamat || '-'}</div>
+                            ${mapLink}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="editData(${p.id})" class="text-amber-600 hover:bg-amber-50 px-2 py-1 rounded text-sm font-medium transition mr-1">Edit</button>
+                            <button onclick="hapusData(${p.id})" class="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-sm font-medium transition">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+                
+                // Kartu Mobile
+                mobileBody.innerHTML += `
+                    <div class="p-5 hover:bg-slate-50 transition-colors">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="font-bold text-slate-800">${p.nama}</div>
+                                <div class="text-xs text-slate-500 mt-1">ID: ${p.id}</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="editData(${p.id})" class="text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs font-medium">Edit</button>
+                                <button onclick="hapusData(${p.id})" class="text-red-600 bg-red-50 px-2 py-1 rounded text-xs font-medium">Hapus</button>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 text-sm text-slate-600 bg-white p-3 rounded border border-slate-100">
+                            <div class="flex items-start gap-2"><span>📞</span> <span>${p.no_telpon || '-'}</span></div>
+                            <div class="flex items-start gap-2"><span>📍</span> <span class="break-words">${p.alamat || '-'}</span></div>
+                            <div class="ml-6">${mapLink}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterData() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = dataPelangganGlobal.filter(p => 
+                (p.nama && p.nama.toLowerCase().includes(keyword)) || 
+                (p.no_telpon && String(p.no_telpon).toLowerCase().includes(keyword)) ||
+                (p.alamat && p.alamat.toLowerCase().includes(keyword))
+            );
+            renderTable(filtered);
+        }
+
+        // ================= MODAL & PETA LEAFLET =================
+        function bukaModal(id = null) {
+            document.getElementById('modalPelanggan').classList.remove('hidden');
+            document.getElementById('modalPelanggan').classList.add('flex');
+            
+            const form = document.getElementById('formPelanggan');
+            form.reset();
+            document.getElementById('p_id').value = '';
+            document.getElementById('modalTitle').innerText = id ? 'Edit Data Pelanggan' : 'Tambah Pelanggan Baru';
+
+            // Jika mode Edit, populasi form dengan data lama
+            if (id) {
+                const p = dataPelangganGlobal.find(x => x.id == id);
+                document.getElementById('p_id').value = p.id;
+                document.getElementById('p_nama').value = p.nama;
+                document.getElementById('p_tgl').value = p.tanggal_lahir ? p.tanggal_lahir.split('T')[0] : '';
+                document.getElementById('p_telp').value = p.no_telpon;
+                document.getElementById('p_email').value = p.email;
+                document.getElementById('p_alamat').value = p.alamat;
+                document.getElementById('p_lat').value = p.lat;
+                document.getElementById('p_lang').value = p.lang;
+            }
+
+            // Init peta butuh timeout pendek agar div modal selesai dirender ukurannya
+            setTimeout(() => { initMap(id); }, 200);
+        }
+
+        function tutupModal() {
+            document.getElementById('modalPelanggan').classList.add('hidden');
+            document.getElementById('modalPelanggan').classList.remove('flex');
+        }
+
+        function initMap(isEdit) {
+            let lat = document.getElementById('p_lat').value || banyuwangiLat;
+            let lng = document.getElementById('p_lang').value || banyuwangiLng;
+
+            if (!map) {
+                map = L.map('mapViewer').setView([lat, lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+                marker.on('dragend', function (e) {
+                    const pos = marker.getLatLng();
+                    document.getElementById('p_lat').value = pos.lat;
+                    document.getElementById('p_lang').value = pos.lng;
+                });
+
+                map.on('click', function(e) {
+                    marker.setLatLng(e.latlng);
+                    document.getElementById('p_lat').value = e.latlng.lat;
+                    document.getElementById('p_lang').value = e.latlng.lng;
+                });
+            } else {
+                map.setView([lat, lng], 13);
+                marker.setLatLng([lat, lng]);
+                map.invalidateSize(); // Wajib agar peta tidak terpotong di dalam modal
+            }
+            
+            // Jika tambah data baru, set kotak input ke titik awal
+            if(!isEdit) {
+                document.getElementById('p_lat').value = lat;
+                document.getElementById('p_lang').value = lng;
+            }
+        }
+
+        function dapatkanLokasiHP() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    document.getElementById('p_lat').value = lat;
+                    document.getElementById('p_lang').value = lng;
+                    
+                    if(map && marker) {
+                        map.setView([lat, lng], 16);
+                        marker.setLatLng([lat, lng]);
+                    }
+                }, () => {
+                    alert("Gagal membaca GPS. Pastikan izin lokasi HP menyala.");
+                });
+            } else {
+                alert("Browser Anda tidak mendukung fitur GPS.");
+            }
+        }
+
+        // ================= CRUD ACTIONS =================
+        async function simpanData(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSimpan');
+            const p_id = document.getElementById('p_id').value;
+            
+            btn.innerHTML = 'Menyimpan...'; 
+            btn.disabled = true;
+
+            // Jika ada p_id berarti Edit, jika tidak berarti Tambah Baru
+            const payload = {
+                action: p_id ? 'editPelanggan' : 'addPelanggan',
+                id: p_id,
+                nama: document.getElementById('p_nama').value,
+                tanggal_lahir: document.getElementById('p_tgl').value,
+                no_telpon: document.getElementById('p_telp').value,
+                email: document.getElementById('p_email').value,
+                lat: document.getElementById('p_lat').value,
+                lang: document.getElementById('p_lang').value,
+                alamat: document.getElementById('p_alamat').value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    tutupModal();
+                    loadDataPelanggan(); // Refresh tabel otomatis
+                } else {
+                    alert('Gagal menyimpan data.');
+                }
+            } catch (err) {
+                alert('Terjadi kesalahan jaringan.');
+            }
+
+            btn.innerHTML = 'Simpan Data'; 
+            btn.disabled = false;
+        }
+
+        function editData(id) {
+            bukaModal(id);
+        }
+
+        async function hapusData(id) {
+            if(confirm('Anda yakin ingin menghapus pelanggan ini?')) {
+                try {
+                    // API Call untuk Hapus (Pastikan fungsi deletePelanggan sudah ada di Apps Script)
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'deletePelanggan', id: id })
+                    });
+                    const result = await response.json();
+                    
+                    if(result.status === 'success') {
+                        loadDataPelanggan();
+                    } else {
+                        alert('Gagal menghapus.');
+                    }
+                } catch(e) {
+                    alert('Terjadi kesalahan jaringan.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
