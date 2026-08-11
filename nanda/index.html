@@ -3,115 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Manajemen Pelanggan</title>
+    <title>Sistem Manajemen Pelanggan - Nanda Teknik</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Transisi halus antar halaman */
         .page-section { display: none; }
         .active-section { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Kustom scrollbar untuk tabel desktop */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
 
-    <!-- LOGIN SECTION -->
-    <section id="loginView" class="page-section active-section flex items-center justify-center min-h-screen">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mx-4 border border-slate-100">
-            <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">Login Sistem</h2>
-            <form id="loginForm" class="space-y-4">
+    <!-- ==================== LOGIN SECTION ==================== -->
+    <section id="loginView" class="page-section active-section flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-slate-100">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="h-12 w-12 bg-blue-600 rounded-lg mx-auto flex items-center justify-center mb-4 shadow-sm">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.071 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Login Sistem</h2>
+                <p class="text-slate-500 text-sm mt-1">Masukkan kredensial Anda untuk melanjutkan</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-slate-600">Username</label>
-                    <input type="text" id="username" class="mt-1 w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Username</label>
+                    <input type="text" id="username" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-600">Password</label>
-                    <input type="password" id="password" class="mt-1 w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" required>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                    Masuk
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 hover:shadow-lg focus:ring-4 focus:ring-blue-200 transition-all">
+                    Masuk ke Dashboard
                 </button>
-                <p id="loginMessage" class="text-red-500 text-sm text-center hidden"></p>
+                <div id="loginMessage" class="hidden p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-100"></div>
             </form>
         </div>
     </section>
 
-    <!-- DASHBOARD SECTION -->
-    <section id="dashboardView" class="page-section min-h-screen">
+    <!-- ==================== DASHBOARD SECTION ==================== -->
+    <section id="dashboardView" class="page-section min-h-screen flex flex-col">
         <!-- Navbar -->
-        <nav class="bg-blue-600 text-white shadow-md">
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16 items-center">
-                    <div class="font-bold text-xl">Database Pelanggan</div>
-                    <button onclick="logout()" class="text-blue-100 hover:text-white font-medium">Logout</button>
+                    <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">NT</span>
+                        </div>
+                        <span class="font-bold text-lg text-slate-800">Database Pelanggan</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span id="userNameDisplay" class="text-sm font-medium text-slate-600 hidden sm:block">Hai, Nanda</span>
+                        <button onclick="logout()" class="text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Logout</button>
+                    </div>
                 </div>
             </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-slate-800">Daftar Pelanggan</h1>
-                <button onclick="toggleModal('modalPelanggan')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
-                    + Tambah Data
-                </button>
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Header & Actions -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Manajemen Data</h1>
+                    <p class="text-slate-500 text-sm mt-1">Kelola data pelanggan dan relasi bisnis Anda.</p>
+                </div>
+                <div class="flex w-full sm:w-auto gap-3">
+                    <div class="relative flex-grow sm:flex-grow-0">
+                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Cari nama pelanggan..." class="w-full sm:w-64 pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="toggleModal('modalPelanggan')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <span class="hidden sm:inline">Tambah Data</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Table for Desktop / Cards for Mobile -->
-            <div class="bg-white shadow rounded-lg overflow-hidden border border-slate-200">
-                <div class="overflow-x-auto">
-                    <table class="w-full whitespace-nowrap hidden md:table">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 text-left text-sm uppercase font-semibold">
-                            <tr>
-                                <th class="px-6 py-4">Nama</th>
-                                <th class="px-6 py-4">No. Telpon</th>
-                                <th class="px-6 py-4">Email</th>
+            <!-- Data Container -->
+            <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+                <!-- Tabel Desktop -->
+                <div class="overflow-x-auto hidden md:block">
+                    <table class="w-full text-left border-collapse" id="pelangganTable">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                                <th class="px-6 py-4">Nama Pelanggan</th>
+                                <th class="px-6 py-4">Kontak</th>
                                 <th class="px-6 py-4">Alamat</th>
+                                <th class="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBodyDesktop" class="divide-y divide-slate-200 text-sm">
+                        <tbody id="tableBodyDesktop" class="divide-y divide-slate-100 text-sm">
                             <!-- Data dimuat via JS -->
                         </tbody>
                     </table>
                 </div>
                 
-                <!-- Mobile Card View -->
-                <div id="cardBodyMobile" class="md:hidden divide-y divide-slate-200">
+                <!-- Kartu Mobile -->
+                <div id="cardBodyMobile" class="md:hidden divide-y divide-slate-100">
                      <!-- Data dimuat via JS -->
                 </div>
             </div>
-        </div>
+        </main>
     </section>
 
-    <!-- MODAL TAMBAH PELANGGAN -->
-    <div id="modalPelanggan" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-slate-800">Tambah Pelanggan</h3>
-                <button onclick="toggleModal('modalPelanggan')" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+    <!-- ==================== MODAL TAMBAH PELANGGAN ==================== -->
+    <div id="modalPelanggan" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="text-lg font-bold text-slate-800">Form Pelanggan Baru</h3>
+                <button onclick="toggleModal('modalPelanggan')" class="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 rounded-full p-1 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <form id="addPelangganForm" class="p-6 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label class="block text-sm text-slate-600">Nama</label><input type="text" id="p_nama" class="w-full px-3 py-2 border rounded-lg" required></div>
-                    <div><label class="block text-sm text-slate-600">Tanggal Lahir</label><input type="date" id="p_tgl" class="w-full px-3 py-2 border rounded-lg"></div>
-                    <div><label class="block text-sm text-slate-600">No. Telpon</label><input type="text" id="p_telp" class="w-full px-3 py-2 border rounded-lg"></div>
-                    <div><label class="block text-sm text-slate-600">Email</label><input type="email" id="p_email" class="w-full px-3 py-2 border rounded-lg"></div>
-                    <div><label class="block text-sm text-slate-600">Latitude</label><input type="text" id="p_lat" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
-                    <div><label class="block text-sm text-slate-600">Longitude</label><input type="text" id="p_lang" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
-                </div>
-                <div><label class="block text-sm text-slate-600">Alamat</label><textarea id="p_alamat" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea></div>
-                
-                <div class="pt-4 flex justify-end">
-                    <button type="submit" id="btnSimpan" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700">Simpan Data</button>
-                </div>
-            </form>
+            
+            <div class="p-6 overflow-y-auto">
+                <form id="addPelangganForm" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Nama Lengkap <span class="text-red-500">*</span></label>
+                            <input type="text" id="p_nama" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Tanggal Lahir</label>
+                            <input type="date" id="p_tgl" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">No. Telpon / WA <span class="text-red-500">*</span></label>
+                            <input type="tel" id="p_telp" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Email</label>
+                            <input type="email" id="p_email" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Alamat Lengkap</label>
+                        <textarea id="p_alamat" rows="2" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Latitude (Opsional)</label>
+                            <input type="text" id="p_lat" placeholder="-8.21923" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Longitude (Opsional)</label>
+                            <input type="text" id="p_lang" placeholder="114.36923" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                <button type="button" onclick="toggleModal('modalPelanggan')" class="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Batal</button>
+                <button type="submit" form="addPelangganForm" id="btnSimpan" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2">
+                    Simpan Data
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
     <script>
-        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        // URL Apps Script Anda - Pastikan tidak berubah kecuali Anda deploy ulang
         const API_URL = 'https://script.google.com/macros/s/AKfycbwhdLK5XeJgQwlfElG-1t7hPyrADkJsM90zAdNUUW5ucTF2AaHTPBEYzWnuTHoKcY-D/exec'; 
 
-        // Navigasi UI
+        // Variabel penampung data untuk fitur pencarian
+        let dataPelangganGlobal = [];
+
+        // 1. Fungsi Navigasi & Modal
         function showSection(sectionId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-section'));
             document.getElementById(sectionId).classList.add('active-section');
@@ -121,24 +189,31 @@
             const modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
             modal.classList.toggle('flex');
+            if(modal.classList.contains('flex')) {
+                document.getElementById('p_nama').focus();
+            }
         }
 
-        // Cek Sesi Login
+        // 2. Cek Sesi Saat Halaman Dimuat
         window.onload = () => {
-            if (localStorage.getItem('isLoggedIn')) {
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                const user = JSON.parse(userData);
+                document.getElementById('userNameDisplay').textContent = `Hai, ${user.nama}`;
                 showSection('dashboardView');
                 loadDataPelanggan();
             }
         };
 
-        // Proses Login
+        // 3. Proses Login - DIPERBAIKI DENGAN text/plain UNTUK MENGHINDARI CORS
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
             const msg = document.getElementById('loginMessage');
             
-            btn.innerHTML = 'Memproses...';
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memeriksa...';
             btn.disabled = true;
+            msg.classList.add('hidden');
             
             const payload = {
                 action: 'login',
@@ -149,82 +224,148 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    // PERBAIKAN CORS: Menggunakan text/plain agar Google tidak memblokir preflight request
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', 
+                    },
                     body: JSON.stringify(payload)
                 });
+                
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    localStorage.setItem('isLoggedIn', 'true');
+                    // Simpan data user ke lokal storage
+                    localStorage.setItem('userData', JSON.stringify(result.data));
+                    document.getElementById('userNameDisplay').textContent = `Hai, ${result.data.nama}`;
                     showSection('dashboardView');
                     loadDataPelanggan();
                 } else {
-                    msg.textContent = result.message;
+                    msg.textContent = result.message || 'Username, password salah, atau akun tidak aktif.';
                     msg.classList.remove('hidden');
                 }
             } catch (err) {
-                msg.textContent = 'Terjadi kesalahan jaringan.';
+                console.error("Login Error:", err);
+                msg.textContent = 'Terjadi kesalahan jaringan. Cek koneksi internet Anda.';
                 msg.classList.remove('hidden');
             }
             
-            btn.innerHTML = 'Masuk';
+            btn.innerHTML = 'Masuk ke Dashboard';
             btn.disabled = false;
         });
 
-        // Logout
+        // 4. Proses Logout
         function logout() {
-            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userData');
             showSection('loginView');
             document.getElementById('loginForm').reset();
+            document.getElementById('loginMessage').classList.add('hidden');
         }
 
-        // Load Data Pelanggan
+        // 5. Load Data & Render HTML
         async function loadDataPelanggan() {
             const tbody = document.getElementById('tableBodyDesktop');
             const mobileBody = document.getElementById('cardBodyMobile');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-500">Memuat data...</td></tr>';
-            mobileBody.innerHTML = '<div class="text-center py-4 text-slate-500">Memuat data...</div>';
+            
+            const loadingHTML = `<tr><td colspan="4" class="text-center py-10"><div class="inline-flex items-center gap-2 text-slate-500"><svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memuat data dari server...</div></td></tr>`;
+            
+            tbody.innerHTML = loadingHTML;
+            mobileBody.innerHTML = `<div class="text-center py-10 text-slate-500 text-sm">Memuat data...</div>`;
 
             try {
                 const response = await fetch(API_URL + '?action=getPelanggan');
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    tbody.innerHTML = '';
-                    mobileBody.innerHTML = '';
-                    
-                    result.data.reverse().forEach(p => {
-                        // Desktop Table Row
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="px-6 py-4 font-medium text-slate-800">${p.nama}</td>
-                                <td class="px-6 py-4 text-slate-600">${p.no_telpon || '-'}</td>
-                                <td class="px-6 py-4 text-slate-600">${p.email || '-'}</td>
-                                <td class="px-6 py-4 text-slate-600 truncate max-w-xs">${p.alamat || '-'}</td>
-                            </tr>
-                        `;
-                        // Mobile Card
-                        mobileBody.innerHTML += `
-                            <div class="p-4 hover:bg-slate-50 transition">
-                                <div class="font-bold text-slate-800 text-base">${p.nama}</div>
-                                <div class="text-sm text-slate-600 mt-1 flex flex-col gap-1">
-                                    <span>📞 ${p.no_telpon || '-'}</span>
-                                    <span>✉️ ${p.email || '-'}</span>
-                                    <span>📍 ${p.alamat || '-'}</span>
-                                </div>
-                            </div>
-                        `;
-                    });
+                    // Simpan ke variabel global (dibalik agar data terbaru di atas)
+                    dataPelangganGlobal = result.data.reverse(); 
+                    renderTable(dataPelangganGlobal);
                 }
             } catch (err) {
                 console.error(err);
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-500">Gagal mengambil data.</td></tr>`;
+                mobileBody.innerHTML = `<div class="text-center py-8 text-red-500 text-sm">Gagal mengambil data.</div>`;
             }
         }
 
-        // Tambah Pelanggan
+        // Fungsi mencetak data ke layar
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBodyDesktop');
+            const mobileBody = document.getElementById('cardBodyMobile');
+            
+            tbody.innerHTML = '';
+            mobileBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500">Belum ada data pelanggan / Tidak ditemukan</td></tr>`;
+                mobileBody.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">Belum ada data pelanggan / Tidak ditemukan</div>`;
+                return;
+            }
+            
+            data.forEach(p => {
+                // Konversi tanggal jika ada
+                let tglLahir = p.tanggal_lahir ? new Date(p.tanggal_lahir).toLocaleDateString('id-ID') : '-';
+                
+                // Desktop Table Row
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50/50 transition-colors group">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-800">${p.nama}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">ID: ${p.id}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-slate-700">${p.no_telpon || '-'}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${p.email || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-slate-700 truncate max-w-xs" title="${p.alamat}">${p.alamat || '-'}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">Tgl Lahir: ${tglLahir}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="alert('Fitur edit segera hadir untuk ${p.nama}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">Detail</button>
+                        </td>
+                    </tr>
+                `;
+                
+                // Mobile Card Layout
+                mobileBody.innerHTML += `
+                    <div class="p-5 hover:bg-slate-50 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-bold text-slate-800">${p.nama}</div>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">ID: ${p.id}</span>
+                        </div>
+                        <div class="space-y-1.5 mt-3">
+                            <div class="flex items-start gap-2 text-sm text-slate-600">
+                                <svg class="w-4 h-4 mt-0.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                <span>${p.no_telpon || '-'}</span>
+                            </div>
+                            <div class="flex items-start gap-2 text-sm text-slate-600">
+                                <svg class="w-4 h-4 mt-0.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span>${p.alamat || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 6. Fitur Pencarian Data
+        function filterData() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filteredData = dataPelangganGlobal.filter(p => {
+                return (p.nama && p.nama.toLowerCase().includes(keyword)) || 
+                       (p.no_telpon && String(p.no_telpon).toLowerCase().includes(keyword)) ||
+                       (p.alamat && p.alamat.toLowerCase().includes(keyword));
+            });
+            renderTable(filteredData);
+        }
+
+        // 7. Proses Tambah Pelanggan
         document.getElementById('addPelangganForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSimpan');
-            btn.innerHTML = 'Menyimpan...';
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...';
             btn.disabled = true;
 
             const payload = {
@@ -241,6 +382,10 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    // PERBAIKAN CORS
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
@@ -248,15 +393,17 @@
                 if (result.status === 'success') {
                     toggleModal('modalPelanggan');
                     document.getElementById('addPelangganForm').reset();
-                    loadDataPelanggan(); // Refresh tabel
+                    document.getElementById('searchInput').value = ''; // Reset pencarian
+                    loadDataPelanggan(); // Refresh tabel dari server
                 } else {
-                    alert('Gagal menyimpan data');
+                    alert('Gagal menyimpan data ke server Google Sheets.');
                 }
             } catch (err) {
-                alert('Kesalahan jaringan');
+                console.error("Save Error:", err);
+                alert('Kesalahan jaringan. Pastikan URL API sudah benar.');
             }
 
-            btn.innerHTML = 'Simpan Data';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         });
     </script>
