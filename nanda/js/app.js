@@ -25,19 +25,28 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth(); // Pastikan user sudah login
     
     // Muat komponen secara asinkron (bersamaan)
-    Promise.all([
+Promise.all([
         loadComponent('sidebar-container', 'components/sidebar.html'),
         loadComponent('navbar-container', 'components/navbar.html')
     ]).then(() => {
-        // Setelah navbar dimuat, pasang nama user
+        // 1. Tampilkan nama user di Navbar
         const userData = JSON.parse(localStorage.getItem('userData'));
         const nameDisplay = document.getElementById('userNameDisplay');
-        if(nameDisplay && userData) {
-            nameDisplay.textContent = `Hai, ${userData.nama}`;
-        }
+        if(nameDisplay && userData) nameDisplay.textContent = `Hai, ${userData.nama}`;
+        
+        // 2. Deteksi otomatis halaman yang sedang dibuka untuk Sidebar
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            if (item.getAttribute('data-page') === currentPage) {
+                // Tambahkan warna biru tebal untuk halaman yang sedang aktif
+                item.classList.remove('text-slate-600');
+                item.classList.add('bg-blue-50', 'text-blue-700', 'font-semibold');
+                item.querySelector('svg').classList.add('text-blue-600');
+            }
+        });
     });
-});
-
 // Fungsi Logout Global
 function prosesLogout() {
     localStorage.removeItem('userData');
