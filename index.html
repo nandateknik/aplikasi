@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WorkFlow Pro</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="login" class="login-wrap"><div class="login-card"><div class="logo">W</div><p class="eyebrow">SERVICE BUSINESS MANAGER</p><h1>WorkFlow <span>Pro</span></h1><p class="muted">Penawaran, invoice, dan penjadwalan pekerjaan.</p><label>Apps Script Web App URL<input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec"></label><label>PIN aplikasi<input id="pin" type="password" placeholder="PIN dari Script Properties"></label><button class="btn primary full" id="connect">Hubungkan workspace</button><p class="hint">URL dan PIN disimpan di browser ini.</p><p id="loginError" class="error"></p></div></div>
+<div id="app" class="shell hidden">
+<aside class="sidebar"><div class="brand"><div class="logo small">W</div><div><b>WorkFlow Pro</b><small>OPERATIONS</small></div></div><div class="side-caption">MENU UTAMA</div><button class="nav active" data-page="dashboard">▦ <span>Dashboard</span></button><button class="nav" data-page="customers">♙ <span>Pelanggan</span></button><button class="nav" data-page="quotations">▤ <span>Quotation</span></button><button class="nav" data-page="invoices">▧ <span>Invoice</span></button><button class="nav" data-page="jobs">⚒ <span>Jadwal pekerjaan</span></button><div class="side-bottom"><span class="dot"></span> Terhubung ke Google Sheets <button id="disconnect">Keluar</button></div></aside>
+<main class="main"><header class="topbar"><div><small>WORKSPACE /</small> <b id="pageName">Dashboard</b></div><button class="btn ghost" id="refresh">↻ Refresh</button></header><section class="content">
+<div class="page-head"><div><p class="eyebrow">OVERVIEW</p><h1 id="heading">Dashboard</h1><p class="muted">Pantau pelanggan, tagihan, dan urutan pekerjaan tim.</p></div><button class="btn primary" id="primaryAction">＋ Tambah pekerjaan</button></div>
+<div id="pageBody"></div>
+</section></main></div>
+<div id="modal" class="modal hidden"><div class="modal-card"><div class="modal-head"><h2 id="modalTitle">Tambah data</h2><button id="closeModal" class="close">×</button></div><form id="modalForm"></form></div></div>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body></html>
