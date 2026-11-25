@@ -107,7 +107,7 @@ window.editRecord=async(type,id)=>{
  }catch(e){toast(e.message)}
 };
 window.editJob=async id=>{const j=CACHE.jobs.find(x=>x.id===id);if(!j)return;const title=prompt('Judul pekerjaan',j.title);if(title===null)return;const scheduledStart=prompt('Tanggal dan waktu (YYYY-MM-DDTHH:mm)',String(j.scheduledStart||'').slice(0,16));if(scheduledStart===null)return;const assignedTo=prompt('Teknisi',j.assignedTo||'');if(assignedTo===null)return;const priority=prompt('Prioritas: Urgent / Tinggi / Normal / Rendah',j.priority||'Normal');if(priority===null)return;try{await call('saveJob',{...j,title,scheduledStart,assignedTo});toast('Jadwal diperbarui.');await loadAll()}catch(e){toast(e.message)}};
-window.deleteRecord=async(type,id)=>{if(!confirm('Yakin ingin menghapus data ini?'))return;const action={customer:'deleteCustomer',quotation:'deleteQuotation',invoice:'deleteInvoice',job:'deleteJob'}[type];try{await call(action,{id});toast('Data dihapus.');await loadAll()}catch(e){toast(e.message)}};
+window.deleteRecord=async(type,id)=>{if(!confirm('Yakin ingin menghapus data ini?'))return;const action={customer:'deleteCustomer',quotation:'deleteQuotation',invoice:'deleteInvoice',job:'deleteJob',service:'deleteService'}[type];try{await call(action,{id});toast('Data dihapus.');await loadAll()}catch(e){toast(e.message)}};
 window.pdfDoc=async(type,id)=>{try{const r=await call(type==='quotation'?'pdfQuotation':'pdfInvoice',{id});window.open(r.url,'_blank');}catch(e){toast(e.message)}};
 window.shareInvoice=token=>{if(!token){toast('Token invoice belum tersedia.');return}const url=location.origin+location.pathname.replace(/index\.html$/,'')+'invoice.html?token='+encodeURIComponent(token);navigator.clipboard.writeText(url).then(()=>toast('Link invoice disalin.')).catch(()=>prompt('Salin link invoice ini:',url))};
 window.changeStatus=async id=>{const j=CACHE.jobs.find(x=>x.id===id);if(!j)return;const status=prompt('Status: Permintaan baru / Menunggu konfirmasi / Terjadwal / Teknisi dalam perjalanan / Sedang dikerjakan / Menunggu material / Selesai / Dibatalkan',j.status||'Terjadwal');if(status===null)return;const progress=prompt('Progress pekerjaan 0–100',j.progress||0);if(progress===null)return;try{await call('updateJobStatus',{id,status,progress,note:'Progress diperbarui dari admin'});toast('Progress diperbarui.');await loadAll()}catch(e){toast(e.message)}};
@@ -166,3 +166,176 @@ window.manageChecklist=async id=>{
   await loadAll();
  }catch(e){toast(e.message)}
 };
+
+
+// ===== V2.2: FULL-FIELD EDITORS + SETTINGS PAGE =====
+function valEsc(v){return esc(v===undefined||v===null?"":String(v));}
+function formField(label,name,value="",type="text",required=false){
+ return `<label class="field">${label}<input name="${name}" type="${type}" value="${valEsc(value)}" ${required?"required":""}></label>`;
+}
+function formSelect(label,name,options,value=""){
+ return `<label class="field">${label}<select name="${name}">${options.map(o=>`<option value="${valEsc(o[0])}" ${String(o[0])===String(value)?"selected":""}>${valEsc(o[1])}</option>`).join("")}</select></label>`;
+}
+function openFullEditor(type,row=null){
+ const isEdit=!!row, customers=CACHE.customers.map(c=>[c.id,c.name]);
+ let title="",html="", itemCount=0;
+ const customerOptions=[["","Pilih pelanggan"],...customers];
+ if(type==="customer"){
+  title=isEdit?"Edit seluruh data pelanggan":"Tambah pelanggan";
+  html=`<div class="form-grid">
+   ${formField("Nama pelanggan *","name",row?.name,"text",true)}
+   ${formField("Nama perusahaan","company",row?.company)}
+   ${formField("Email","email",row?.email,"email")}
+   ${formField("Telepon","phone",row?.phone)}
+   ${formField("WhatsApp","whatsapp",row?.whatsapp)}
+   ${formField("Alamat","address",row?.address)}
+  </div><label class="field">Catatan<textarea name="notes" rows="3">${valEsc(row?.notes)}</textarea></label>
+  <div class="actions"><button type="button" class="btn secondary" onclick="closeFullEditor()">Batal</button><button class="btn primary">Simpan semua perubahan</button></div>`;
+ }
+ if(type==="service"){
+  title=isEdit?"Edit katalog jasa":"Tambah katalog jasa";
+  html=`<div class="form-grid">${formField("Nama jasa *","name",row?.name,"text",true)}${formField("Satuan","unit",row?.unit||"paket")}${formField("Harga default (Rp)","price",row?.price||0,"number")}${formSelect("Status","active",[["TRUE","Aktif"],["FALSE","Nonaktif"]],row?.active||"TRUE")}</div>
+  <label class="field">Deskripsi<textarea name="description" rows="3">${valEsc(row?.description)}</textarea></label>
+  <div class="actions"><button type="button" class="btn secondary" onclick="closeFullEditor()">Batal</button><button class="btn primary">Simpan katalog jasa</button></div>`;
+ }
+ if(type==="job"){
+  title=isEdit?"Edit seluruh data work order":"Buat work order";
+  html=`<div class="form-grid">
+   ${formSelect("Pelanggan *","customerId",customerOptions,row?.customerId||"")}
+   ${formField("Judul pekerjaan *","title",row?.title,"text",true)}
+   ${formField("Mulai (tanggal & jam) *","scheduledStart",String(row?.scheduledStart||"").slice(0,16),"datetime-local",true)}
+   ${formField("Selesai (tanggal & jam)","scheduledEnd",String(row?.scheduledEnd||"").slice(0,16),"datetime-local")}
+   ${formField("Nama teknisi","assignedTo",row?.assignedTo)}
+   ${formField("Email teknisi","assignedEmail",row?.assignedEmail,"email")}
+   ${formSelect("Prioritas","priority",[["Urgent","Urgent"],["Tinggi","Tinggi"],["Normal","Normal"],["Rendah","Rendah"]],row?.priority||"Normal")}
+   ${formSelect("Status","status",[["Menunggu konfirmasi","Menunggu konfirmasi"],["Terjadwal","Terjadwal"],["Teknisi dalam perjalanan","Teknisi dalam perjalanan"],["Sedang dikerjakan","Sedang dikerjakan"],["Menunggu material","Menunggu material"],["Selesai","Selesai"],["Dibatalkan","Dibatalkan"]],row?.status||"Menunggu konfirmasi")}
+   ${formField("Lokasi","location",row?.location)}
+   ${formField("Estimasi (menit)","estimatedMinutes",row?.estimatedMinutes||60,"number")}
+   ${formField("Progress (%)","progress",row?.progress||0,"number")}
+  </div><label class="field">Deskripsi pekerjaan<textarea name="description" rows="3">${valEsc(row?.description)}</textarea></label>
+  <div class="actions"><button type="button" class="btn secondary" onclick="closeFullEditor()">Batal</button><button class="btn primary">Simpan seluruh data pekerjaan</button></div>`;
+ }
+ if(type==="quotation"||type==="invoice"){
+  title=isEdit?(type==="quotation"?"Edit seluruh quotation":"Edit seluruh invoice"):(type==="quotation"?"Buat quotation":"Buat invoice");
+  const items=row?.items?.length?row.items:[{description:"",qty:1,unit:"unit",unitPrice:0}];
+  itemCount=items.length;
+  html=`<div class="form-grid">
+   ${formSelect("Pelanggan *","customerId",customerOptions,row?.customerId||"")}
+   ${formField("Judul *","title",row?.title,"text",true)}
+   ${formField("Tanggal","date",row?.date||new Date().toISOString().slice(0,10),"date")}
+   ${type==="quotation"?formField("Berlaku sampai","validUntil",row?.validUntil,"date"):formField("Jatuh tempo","dueDate",row?.dueDate,"date")}
+   ${type==="invoice"?formField("Referensi quotation ID","quotationId",row?.quotationId):""}
+   ${formField("Diskon (Rp)","discount",row?.discount||0,"number")}
+   ${formField("Pajak (%)","taxPercent",row?.taxPercent||0,"number")}
+   ${type==="quotation"?formSelect("Status","status",[["Draft","Draft"],["Dikirim","Dikirim"],["Disetujui","Disetujui"],["Ditolak","Ditolak"],["Kedaluwarsa","Kedaluwarsa"]],row?.status||"Draft"):""}
+  </div>
+  <div class="toolbar"><h3>Rincian item</h3><button type="button" class="btn secondary" id="fullAddItem">＋ Tambah item</button></div>
+  <div id="fullItems">${items.map((x,i)=>fullItemHTML(x,i)).join("")}</div>
+  ${type==="invoice"?`<p class="hint">Pembayaran diterima (${money(row?.paid||0)}) dikelola melalui catatan pembayaran/webhook, bukan diedit manual agar riwayat transaksi tetap akurat.</p>`:""}
+  <label class="field">Catatan<textarea name="notes" rows="3">${valEsc(row?.notes)}</textarea></label>
+  <div class="actions"><button type="button" class="btn secondary" onclick="closeFullEditor()">Batal</button><button class="btn primary">Simpan seluruh perubahan</button></div>`;
+ }
+ $("modalTitle").textContent=title;
+ $("modalForm").innerHTML=html;
+ $("modal").classList.remove("hidden");
+ const add=$("fullAddItem");
+ if(add)add.onclick=()=>{const i=itemCount++;$("fullItems").insertAdjacentHTML("beforeend",fullItemHTML({description:"",qty:1,unit:"unit",unitPrice:0},i));};
+ $("modalForm").onsubmit=async e=>{
+  e.preventDefault();
+  const fd=new FormData(e.currentTarget),v=Object.fromEntries(fd);
+  try{
+   if(type==="customer")await call("saveCustomer",{...v,id:row?.id||""});
+   else if(type==="service")await call("saveService",{...v,id:row?.id||"",price:Number(v.price||0),active:v.active==="TRUE"});
+   else if(type==="job")await call("saveJob",{...v,id:row?.id||"",progress:Number(v.progress||0),estimatedMinutes:Number(v.estimatedMinutes||60)});
+   else {
+    const items=[];
+    for(let i=0;i<itemCount;i++){
+     const description=v["desc_"+i];
+     if(description)items.push({description,qty:Number(v["qty_"+i]||0),unit:v["unit_"+i]||"unit",unitPrice:Number(v["price_"+i]||0)});
+    }
+    const payload={...v,id:row?.id||"",items:JSON.stringify(items)};
+    await call(type==="quotation"?"saveQuotation":"saveInvoice",payload);
+   }
+   closeFullEditor();toast("Seluruh data berhasil disimpan.");await loadAll();
+  }catch(err){toast(err.message);}
+ };
+}
+function fullItemHTML(x,i){
+ return `<div class="item-line form-grid" style="border:1px solid #e8edf4;border-radius:8px;padding:10px;margin:8px 0;position:relative">
+ ${formField("Deskripsi item","desc_"+i,x.description,"text",true)}
+ ${formField("Jumlah","qty_"+i,x.qty||1,"number",true)}
+ ${formField("Satuan","unit_"+i,x.unit||"unit")}
+ ${formField("Harga satuan","price_"+i,x.unitPrice||0,"number",true)}
+ <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn secondary" onclick="this.closest('.item-line').remove()">Hapus baris item</button></div>
+ </div>`;
+}
+window.closeFullEditor=()=> $("modal").classList.add("hidden");
+window.editRecord=(type,id)=>{
+ const map={customer:CACHE.customers,quotation:CACHE.quotations,invoice:CACHE.invoices,job:CACHE.jobs,service:CACHE.services};
+ const row=(map[type]||[]).find(x=>String(x.id)===String(id));
+ if(!row){toast("Data tidak ditemukan.");return;}
+ openFullEditor(type,row);
+};
+window.editJob=id=>window.editRecord("job",id);
+openForm=function(type){openFullEditor(type,null);};
+window.openFullEditor=openFullEditor;
+
+// Full editable list renderers (including catalogue and configuration).
+const _renderV22=render;
+render=function(){
+ if(PAGE==="settings"){
+  $("pageName").textContent="Pengaturan";$("heading").textContent="Pengaturan integrasi";
+  document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active",b.dataset.page==="settings"));
+  $("primaryAction").style.display="none";$("pageBody").innerHTML=settingsHTML();loadSettingsStatus();return;
+ }
+ $("primaryAction").style.display="";
+ if(PAGE==="services"){
+  $("pageName").textContent="Katalog jasa";$("heading").textContent="Katalog jasa";
+  document.querySelectorAll(".nav").forEach(b=>b.classList.toggle("active",b.dataset.page==="services"));
+  $("primaryAction").textContent="＋ Tambah jasa";
+  $("pageBody").innerHTML=servicesHTML();return;
+ }
+ _renderV22();
+};
+function servicesHTML(){return `<div class="panel"><div class="toolbar"><h2>Daftar katalog jasa</h2></div><div class="table-wrap"><table><thead><tr><th>Nama jasa</th><th>Deskripsi</th><th>Satuan</th><th>Harga default</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${CACHE.services.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.description)}</td><td>${esc(x.unit)}</td><td>${money(x.price)}</td><td>${esc(x.active)}</td><td><button class="btn secondary" onclick="editRecord('service','${x.id}')">Edit</button> <button class="btn secondary" onclick="deleteRecord('service','${x.id}')">Hapus</button></td></tr>`).join("")}</tbody></table></div>${CACHE.services.length?"":'<div class="empty">Belum ada katalog jasa.</div>'}</div>`;}
+function settingsHTML(){return `<div class="panel"><h2>Konfigurasi integrasi</h2><p class="muted">Simpan konfigurasi langsung ke Apps Script Script Properties. Secret hanya dikirim melalui POST body dan tidak pernah dibaca kembali ke browser.</p><div id="configStatus" class="config-status">Memeriksa konfigurasi…</div><form id="settingsForm">
+ <div class="form-grid">
+ ${formField("Email admin untuk notifikasi","ADMIN_EMAIL","","email")}
+ ${formField("Kapasitas work order per hari","MAX_JOBS_PER_DAY","2","number")}
+ ${formField("Telegram Bot Token","TELEGRAM_BOT_TOKEN","","password")}
+ ${formField("Telegram Chat ID","TELEGRAM_CHAT_ID","","text")}
+ ${formField("Midtrans Server Key","MIDTRANS_SERVER_KEY","","password")}
+ ${formField("Midtrans Client Key","MIDTRANS_CLIENT_KEY","","password")}
+ ${formSelect("Mode Midtrans","MIDTRANS_IS_PRODUCTION",[["false","Sandbox"],["true","Production"]],"false")}
+ ${formField("Ganti APP_PIN (opsional, min. 20 karakter)","APP_PIN","","password")}
+ </div><p class="hint">Kosongkan field secret jika tidak ingin mengubah nilai yang sudah tersimpan. APP_PIN baru akan mengganti PIN admin yang sedang dipakai.</p>
+ <div class="actions"><button type="button" class="btn secondary" onclick="testTelegramUI()">Tes Telegram</button><button class="btn primary">Simpan pengaturan</button></div></form>
+ <iframe name="wfpSettingsFrame" id="wfpSettingsFrame" style="display:none"></iframe>
+ </div>
+ <div class="panel"><h2>Daftar Script Properties</h2><p class="muted">Status di bawah hanya menunjukkan apakah konfigurasi tersedia. Nilai token/key tidak ditampilkan demi keamanan.</p><div id="configChecklist" class="config-status">Memuat…</div></div>`;}
+async function loadSettingsStatus(){
+ try{
+  const r=await call("getConfigStatus"),d=r.data;
+  $("configStatus").innerHTML=`<b>Mode Midtrans:</b> ${esc(d.midtransMode)} · <b>Kapasitas:</b> ${d.capacity} work order/hari`;
+  const items=[["ADMIN_EMAIL",d.adminEmail],["TELEGRAM_BOT_TOKEN",d.telegramBot],["TELEGRAM_CHAT_ID",d.telegramChat],["MIDTRANS_SERVER_KEY",d.midtransServer],["MIDTRANS_CLIENT_KEY",d.midtransClient],["JOB_PHOTO_FOLDER_ID",d.photoFolder]];
+  $("configChecklist").innerHTML=items.map(([k,v])=>`<div class="priority-item"><b>${k}</b><span class="pill ${v?"green":"red"}">${v?"Tersimpan":"Belum diatur"}</span></div>`).join("");
+  $("settingsForm").onsubmit=e=>{
+   e.preventDefault();
+   const fd=new FormData(e.currentTarget),values=Object.fromEntries(fd);
+   if(values.APP_PIN&&values.APP_PIN.length<20){toast("APP_PIN minimal 20 karakter.");return;}
+   const frame=$("wfpSettingsFrame"),form=document.createElement("form");
+   form.method="POST";form.action=API;form.target=frame.name;form.style.display="none";
+   const payload={action:"saveSettings",pin:PIN,...values};
+   Object.entries(payload).forEach(([k,v])=>{const input=document.createElement("input");input.type="hidden";input.name=k;input.value=String(v??"");form.appendChild(input)});
+   document.body.appendChild(form);form.submit();form.remove();
+   toast("Pengaturan dikirim ke Apps Script…");
+   if(values.APP_PIN){PIN=values.APP_PIN;sessionStorage.setItem("wf_pin",PIN);}
+   setTimeout(async()=>{try{await loadSettingsStatus();toast("Pengaturan tersimpan. Cek status konfigurasi.");}catch(err){toast("Belum terverifikasi: "+err.message)}},3500);
+  };
+ }catch(e){$("configStatus").textContent=e.message;}
+}
+window.testTelegramUI=async()=>{try{await call("testTelegram");toast("Permintaan tes Telegram dikirim.");}catch(e){toast(e.message)}};
+
+// Replace primary action handler so every module has a proper create form.
+$("primaryAction").onclick=()=>openFullEditor(PAGE==="customers"?"customer":PAGE==="quotations"?"quotation":PAGE==="invoices"?"invoice":PAGE==="services"?"service":"job",null);
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{PAGE=b.dataset.page;render()});
